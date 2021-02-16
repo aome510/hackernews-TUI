@@ -1,25 +1,21 @@
-// use std::collections::HashMap;
-
-// use cursive::views::{Dialog, TextView};
+use cursive::views::TextView;
 
 mod hn_client;
 
-fn main() {
-    // let resp = reqwest::get("https://hacker-news.firebaseio.com/v0/topstories.json")
-    //     .await?
-    //     .json::<Vec<i32>>()
-    //     .await?;
-    // println!("{:#?}", resp);
-    // // // Creates the cursive root - required for every application.
-    // // let mut siv = cursive::default();
+use hn_client::HNClient;
 
-    // // // Creates a dialog with a single "Quit" button
-    // // siv.add_layer(Dialog::around(TextView::new("Hello Dialog!"))
-    // //               .title("Cursive")
-    // //               .button("Quit", |s| s.quit()));
+#[tokio::main]
+async fn main() {
+    let client = HNClient::new();
+    if let Ok(stories) = client.get_top_stories().await {
+        let stories_str = stories.into_iter()
+            .map(|story| format!("title: {}, url: {}", story.title, story.url))
+            .collect::<Vec<String>>()
+            .join("\n");
 
-    // // // Starts the event loop.
-    // // siv.run();
-
-    // Ok(())
+        let mut siv = cursive::default();
+        siv.add_layer(TextView::new(stories_str));
+        siv.add_global_callback('q', |s| s.quit());
+        siv.run();
+    }
 }
