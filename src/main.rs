@@ -14,6 +14,10 @@ async fn main() {
             .join("\n");
 
         let mut siv = cursive::default();
+
+        // load theme
+        siv.load_toml(include_str!("../theme.toml")).unwrap();
+
         siv.add_layer(TextView::new(stories_str));
         siv.add_global_callback('q', |s| s.quit());
         siv.run();
