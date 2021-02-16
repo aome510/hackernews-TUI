@@ -1,4 +1,7 @@
-use cursive::views::TextView;
+use cursive::{
+    traits::{With, Scrollable},
+    views::{TextView, ListView}
+};
 
 mod hn_client;
 
@@ -8,17 +11,25 @@ use hn_client::HNClient;
 async fn main() {
     let client = HNClient::new();
     if let Ok(stories) = client.get_top_stories().await {
-        let stories_str = stories.into_iter()
+        let stories = stories.into_iter()
             .map(|story| format!("title: {}, url: {}", story.title, story.url))
-            .collect::<Vec<String>>()
-            .join("\n");
+            .collect::<Vec<String>>();
 
         let mut siv = cursive::default();
 
         // load theme
         siv.load_toml(include_str!("../theme.toml")).unwrap();
 
-        siv.add_layer(TextView::new(stories_str));
+        siv.add_layer(ListView::new()
+                      .with(|list| {
+                          stories.iter().enumerate().for_each(|(id, story)| {
+                              list.add_child(
+                                  &format!("{}.", id),
+                                  TextView::new(story)
+                              );
+                          });
+                      })
+                      .scrollable());
         siv.add_global_callback('q', |s| s.quit());
         siv.run();
     }
