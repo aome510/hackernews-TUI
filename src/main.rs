@@ -4,16 +4,9 @@ use anyhow::Result;
 mod hn_client;
 mod view;
 
-#[tokio::main]
-async fn main() {
-    if let Err(err) = start().await {
-        eprintln!("{:?}", err);
-    }
-}
-
-async fn start() -> Result<()> {
+fn main() -> Result<()> {
     let client = hn_client::HNClient::new();
-    let stories = client.get_top_stories().await?;
+    let stories = client.get_top_stories()?;
     let mut siv = cursive::default();
 
     // load theme

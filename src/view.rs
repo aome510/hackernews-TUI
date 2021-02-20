@@ -29,16 +29,9 @@ pub fn get_story_view(stories: Vec<Story>, hn_client: &HNClient) -> Result<OnEve
                     .map(|story| (format!("title: {}, url: {}", story.title, story.url), story)),
             )
             .on_submit(move |s, story| {
-                let hn_client = hn_client.clone();
-                let story = story.clone();
                 s.pop_layer();
-                let cb_sink = s.cb_sink().clone();
-                tokio::spawn(async move {
-                    let comments = story.get_all_comments(&hn_client).await.unwrap();
-                    cb_sink.send(Box::new(move |s| {
-                        s.add_layer(cursive::views::TextView::new(format!("{:#?}", comments)));
-                    })).unwrap();
-                });
+                let comments = story.get_all_comments(&hn_client);
+                s.add_layer(cursive::views::TextView::new(format!("{:#?}", comments)));
             }),
     ))
 }
