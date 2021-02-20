@@ -8,8 +8,10 @@ const HN_URI_PREFIX: &str = "https://hacker-news.firebaseio.com/v0/";
 /// Story represents a story post in Hacker News.
 pub struct Story {
     id: i32,
+    #[serde(default)]
     kids: Vec<i32>,
     pub title: String,
+    #[serde(default)]
     pub url: String,
     pub time: i64,
 }
@@ -18,6 +20,7 @@ pub struct Story {
 /// Comment represents a comment in Hacker News.
 pub struct Comment {
     id: i32,
+    #[serde(default)]
     kids: Vec<i32>,
     #[serde(skip_deserializing)]
     pub subcomments: Vec<Box<Comment>>,
@@ -35,19 +38,22 @@ pub struct HNClient {
 impl Story {
     /// Retrieve all comments in a story post
     pub fn get_all_comments(&self, hn_client: &HNClient) -> Vec<Comment> {
-        hn_client.get_items_from_ids::<Comment>(&self.kids)
+        let mut comments = hn_client.get_items_from_ids::<Comment>(&self.kids);
+        comments.iter_mut().for_each(|comment| {
+            comment.get_all_subcomments(hn_client);
+        });
+        comments
     }
 }
 
 impl Comment {
     /// Retrieve all subcomments of a comment
-    pub fn get_all_subcomments(&mut self, hn_client: &HNClient) -> Result<()> {
+    pub fn get_all_subcomments(&mut self, hn_client: &HNClient) {
         self.subcomments = hn_client
             .get_items_from_ids::<Comment>(&self.kids)
             .into_iter()
             .map(|comment| Box::new(comment))
             .collect();
-        Ok(())
     }
 }
 
@@ -74,25 +80,21 @@ impl HNClient {
     where
         T: DeserializeOwned,
     {
-        let (results, errors): (Vec<_>, Vec<_>) = ids
-            .par_iter()
-            .map(|id| self.get_item_from_id::<T>(*id))
-            .partition(Result::is_ok);
-        errors.into_iter().for_each(|e| {
-            if let Err(err) = e {
-                eprintln!("failed to retrieve item: {:#?}", err);
-            }
-        });
-        results
-            .into_iter()
-            .map(|result| result.unwrap())
-            .collect::<Vec<T>>()
+        ids.par_iter()
+            .flat_map(|id| match self.get_item_from_id::<T>(*id) {
+                Ok(item) => vec![item],
+                Err(err) => {
+                    eprintln!("failed to get item {}: {:#?}", id, err);
+                    vec![]
+                }
+            })
+            .collect()
     }
 
     /// Retrieve a list of HN's top stories
     pub fn get_top_stories(&self) -> Result<Vec<Story>> {
         let request_url = format!("{}/topstories.json", HN_URI_PREFIX);
-        let mut story_ids = self.client.get(&request_url).send()?.json::<Vec<i32>>()?;
+        let story_ids = self.client.get(&request_url).send()?.json::<Vec<i32>>()?;
         Ok(self.get_items_from_ids::<Story>(&story_ids))
     }
 }
