@@ -5,7 +5,7 @@ use anyhow::Result;
 
 const HN_URI_PREFIX: &str = "https://hacker-news.firebaseio.com/v0/";
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 /// Story represents a story post in Hacker News.
 pub struct Story {
     id: i32,
@@ -27,6 +27,7 @@ pub struct Comment {
 }
 
 /// HNClient is a http client to communicate with Hacker News APIs.
+#[derive(Clone)]
 pub struct HNClient {
     client: reqwest::Client,
 }
@@ -76,7 +77,7 @@ impl HNClient {
 
     /// Retrieve data of multiple items from their ids and parse to a Vector of
     /// the corresponding struct
-    pub async fn get_items_from_ids<T>(&self, ids: &Vec<i32>) -> Result<Vec<T>>
+    pub async fn get_items_from_ids<T: std::fmt::Debug>(&self, ids: &Vec<i32>) -> Result<Vec<T>>
     where
         T: DeserializeOwned,
     {
@@ -84,7 +85,10 @@ impl HNClient {
         Ok(results
             .into_iter()
             .filter(|result| match result {
-                Ok(_) => true,
+                Ok(s) => {
+                    eprintln!("{:#?}", s);
+                    true
+                },
                 Err(_) => false,
             })
             .map(|result| result.unwrap())
@@ -94,13 +98,14 @@ impl HNClient {
     /// Retrieve a list of HN's top stories
     pub async fn get_top_stories(&self) -> Result<Vec<Story>> {
         let request_url = format!("{}/topstories.json", HN_URI_PREFIX);
-        let story_ids = self
+        let mut story_ids = self
             .client
             .get(&request_url)
             .send()
             .await?
             .json::<Vec<i32>>()
             .await?;
+        story_ids.truncate(10);
         self.get_items_from_ids::<Story>(&story_ids).await
     }
 }
