@@ -8,18 +8,19 @@ const HN_URI_PREFIX: &str = "https://hacker-news.firebaseio.com/v0/";
 #[derive(Debug, Deserialize)]
 /// Story represents a story post in Hacker News.
 pub struct Story {
+    id: i32,
+    kids: Vec<i32>,
     pub title: String,
     pub url: String,
     pub time: i64,
-    id: i32,
-    kids: Vec<i32>,
 }
 
 #[derive(Debug, Deserialize)]
 /// Comment represents a comment in Hacker News.
 pub struct Comment {
+    id: i32,
     kids: Vec<i32>,
-    subcomments: Vec<Box<Comment>>,
+    pub subcomments: Vec<Box<Comment>>,
     pub text: String,
     pub by: String,
     pub time: i64,
