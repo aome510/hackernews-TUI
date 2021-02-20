@@ -40,7 +40,7 @@ impl Story {
     /// Retrieve all comments in a story post
     pub fn get_all_comments(&self, hn_client: &HNClient) -> Vec<Comment> {
         let mut comments = hn_client.get_items_from_ids::<Comment>(&self.kids);
-        comments.iter_mut().for_each(|comment| {
+        comments.par_iter_mut().for_each(|comment| {
             comment.get_all_subcomments(hn_client);
         });
         comments
@@ -55,6 +55,9 @@ impl Comment {
             .into_iter()
             .map(|comment| Box::new(comment))
             .collect();
+        self.subcomments.par_iter_mut().for_each(|comment| {
+            comment.get_all_subcomments(hn_client);
+        });
     }
 }
 
@@ -95,7 +98,9 @@ impl HNClient {
     /// Retrieve a list of HN's top stories
     pub fn get_top_stories(&self) -> Result<Vec<Story>> {
         let request_url = format!("{}/topstories.json", HN_URI_PREFIX);
-        let story_ids = self.client.get(&request_url).send()?.json::<Vec<i32>>()?;
+        let mut story_ids = self.client.get(&request_url).send()?.json::<Vec<i32>>()?;
+        // only get top 50 stories
+        story_ids.truncate(50);
         Ok(self.get_items_from_ids::<Story>(&story_ids))
     }
 }
