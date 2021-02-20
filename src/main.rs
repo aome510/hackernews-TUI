@@ -1,4 +1,5 @@
 use anyhow::Result;
+use view::get_story_view;
 
 // modules
 mod hn_client;
@@ -12,7 +13,7 @@ fn main() -> Result<()> {
     // load theme
     siv.load_toml(include_str!("../theme.toml")).unwrap();
 
-    siv.add_layer(view::get_story_view(stories, &client)?);
+    siv.add_layer(get_story_view(stories, &client));
     siv.add_global_callback('q', |s| s.quit());
     siv.run();
     Ok(())

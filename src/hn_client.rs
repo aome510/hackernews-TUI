@@ -13,6 +13,7 @@ pub struct Story {
     pub title: String,
     #[serde(default)]
     pub url: String,
+    pub by: String,
     pub time: i64,
 }
 
