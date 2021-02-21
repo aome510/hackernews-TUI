@@ -1,4 +1,5 @@
 use anyhow::Result;
+use log::warn;
 use rayon::prelude::*;
 use serde::{de::DeserializeOwned, Deserialize};
 
@@ -21,6 +22,7 @@ pub struct Story {
 /// Comment represents a comment in Hacker News.
 pub struct Comment {
     id: i32,
+    parent: i32,
     #[serde(default)]
     kids: Vec<i32>,
     #[serde(skip_deserializing)]
@@ -91,7 +93,7 @@ impl HNClient {
             .flat_map(|id| match self.get_item_from_id::<T>(*id) {
                 Ok(item) => vec![item],
                 Err(err) => {
-                    eprintln!("failed to get item {}: {:#?}", id, err);
+                    warn!("failed to get item {}: {:#?}", id, err);
                     vec![]
                 }
             })

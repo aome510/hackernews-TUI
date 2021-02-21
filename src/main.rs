@@ -5,7 +5,15 @@ use view::get_story_view;
 mod hn_client;
 mod view;
 
-fn main() -> Result<()> {
+fn main() {
+    if let Err(err) = start() {
+        log::error!("{:#?}", err)
+    }
+}
+
+fn start() -> Result<()> {
+    env_logger::init();
+
     let client = hn_client::HNClient::new();
     let stories = client.get_top_stories()?;
     let mut siv = cursive::default();
