@@ -1,4 +1,5 @@
 [colors]
-    background = "black"
-    view = "black"
-    primary = "white"
+    background = "white"
+    view = "white"
+    shadow = "white"
+    primary = "black"

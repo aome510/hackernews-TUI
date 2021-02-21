@@ -1,6 +1,7 @@
 use super::hn_client::*;
 use cursive::{event::EventResult, traits::*, view::IntoBoxedView, views::*};
 use log::warn;
+use rayon::prelude::*;
 use regex::Regex;
 
 /// Construct a new Event view from a SelectView by adding
@@ -45,17 +46,50 @@ fn format_hn_text(s: String, link_re: &Regex) -> String {
         .to_string()
 }
 
+/// Retrieve all comments recursively and parse them into readable texts
+fn parse_comment_text_list(comments: &Vec<Box<Comment>>, height: usize) -> Vec<(String, usize)> {
+    let link_re = Regex::new(r#"<a\s+?href=(?P<l>".+?").+?</a>"#).unwrap();
+
+    comments
+        .par_iter()
+        .flat_map(|comment| {
+            let mut comments = parse_comment_text_list(&comment.as_ref().subcomments, height + 1);
+            comments.insert(
+                0,
+                (
+                    format_hn_text(
+                        format!("- {}: {}", comment.as_ref().by, comment.as_ref().text),
+                        &link_re,
+                    ),
+                    height,
+                ),
+            );
+            comments
+        })
+        .collect()
+}
+
 /// Return a cursive's View from a comment list
 fn get_comment_view(comments: Vec<Comment>, hn_client: &HNClient) -> impl IntoBoxedView {
     let hn_client = hn_client.clone();
-    let link_re = Regex::new(r#"<a\s+?href=(?P<l>".+?").+?</a>"#).unwrap();
+
+    let comments = parse_comment_text_list(
+        &comments
+            .into_iter()
+            .map(|comment| Box::new(comment))
+            .collect(),
+        0,
+    );
 
     OnEventView::new(LinearLayout::vertical().with(|v| {
         comments.into_iter().for_each(|comment| {
-            v.add_child(Panel::new(TextView::new(format_hn_text(
-                format!("{}: {}", comment.by, comment.text),
-                &link_re,
-            ))));
+            v.add_child(PaddedView::lrtb(
+                comment.1 * 3,
+                0,
+                0,
+                0,
+                TextView::new(comment.0),
+            ));
         })
     }))
     .on_event(cursive::event::Key::Backspace, move |s| {
