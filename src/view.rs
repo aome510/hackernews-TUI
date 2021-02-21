@@ -1,10 +1,5 @@
 use super::hn_client::*;
-use cursive::{
-    event::EventResult,
-    traits::*,
-    view::IntoBoxedView,
-    views::{self, LinearLayout, OnEventView, SelectView},
-};
+use cursive::{event::EventResult, traits::*, view::IntoBoxedView, views::*};
 use log::warn;
 use regex::Regex;
 
@@ -45,8 +40,9 @@ pub fn get_story_view(stories: Vec<Story>, hn_client: &HNClient) -> impl IntoBox
 /// Parse a raw text from HN API to human-readable string
 fn format_hn_text(s: String, link_re: &Regex) -> String {
     let s = htmlescape::decode_html(&s).unwrap_or(s);
-    // replace all pattern "<a href=$link...</a>" to $link
-    link_re.replace_all(&s.replace("<p>", "\n"), "$l").to_string()
+    link_re
+        .replace_all(&s.replace("<p>", "\n"), "$l")
+        .to_string()
 }
 
 /// Return a cursive's View from a comment list
@@ -56,16 +52,10 @@ fn get_comment_view(comments: Vec<Comment>, hn_client: &HNClient) -> impl IntoBo
 
     OnEventView::new(LinearLayout::vertical().with(|v| {
         comments.into_iter().for_each(|comment| {
-            v.add_child(cursive::views::PaddedView::lrtb(
-                0,
-                0,
-                0,
-                1,
-                cursive::views::TextView::new(format_hn_text(format!(
-                    "{}: {}",
-                    comment.by, comment.text
-                ), &link_re)),
-            ));
+            v.add_child(Panel::new(TextView::new(format_hn_text(
+                format!("{}: {}", comment.by, comment.text),
+                &link_re,
+            ))));
         })
     }))
     .on_event(cursive::event::Key::Backspace, move |s| {
