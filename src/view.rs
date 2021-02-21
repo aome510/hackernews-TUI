@@ -6,6 +6,8 @@ use cursive::{
     views::{OnEventView, SelectView},
 };
 
+/// Construct a new Event view from a SelectView by adding
+/// event handlers for a key pressed
 fn construct_event_view<T: 'static>(view: SelectView<T>) -> OnEventView<SelectView<T>> {
     // add "j" and "k" for moving down and up the story list
     OnEventView::new(view)
@@ -38,7 +40,8 @@ pub fn get_story_view(stories: Vec<Story>, hn_client: &HNClient) -> impl IntoBox
     .scrollable()
 }
 
-pub fn get_comment_view(comments: Vec<Comment>) -> impl IntoBoxedView {
+/// Return a cursive's View from a comment list
+fn get_comment_view(comments: Vec<Comment>) -> impl IntoBoxedView {
     construct_event_view(
         SelectView::new().with_all(
             comments

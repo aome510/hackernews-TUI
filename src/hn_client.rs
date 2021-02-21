@@ -41,22 +41,25 @@ impl Story {
     pub fn get_all_comments(&self, hn_client: &HNClient) -> Vec<Comment> {
         let mut comments = hn_client.get_items_from_ids::<Comment>(&self.kids);
         comments.par_iter_mut().for_each(|comment| {
-            comment.get_all_subcomments(hn_client);
+            comment.update_subcomments(hn_client);
         });
         comments
     }
 }
 
 impl Comment {
-    /// Retrieve all subcomments of a comment
-    pub fn get_all_subcomments(&mut self, hn_client: &HNClient) {
+    /// Update the subcomment list of a comment and its subcomments
+    pub fn update_subcomments(&mut self, hn_client: &HNClient) {
         self.subcomments = hn_client
             .get_items_from_ids::<Comment>(&self.kids)
             .into_iter()
             .map(|comment| Box::new(comment))
             .collect();
+
+        // recursively update subcomment list for each subcomment of
+        // the current comment
         self.subcomments.par_iter_mut().for_each(|comment| {
-            comment.get_all_subcomments(hn_client);
+            comment.update_subcomments(hn_client);
         });
     }
 }
