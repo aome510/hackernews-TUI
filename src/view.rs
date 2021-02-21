@@ -81,17 +81,21 @@ fn get_comment_view(comments: Vec<Comment>, hn_client: &HNClient) -> impl IntoBo
         0,
     );
 
-    OnEventView::new(LinearLayout::vertical().with(|v| {
-        comments.into_iter().for_each(|comment| {
-            v.add_child(PaddedView::lrtb(
-                comment.1 * 3,
-                0,
-                0,
-                0,
-                TextView::new(comment.0),
-            ));
-        })
-    }))
+    OnEventView::new(
+        LinearLayout::vertical()
+            .with(|v| {
+                comments.into_iter().for_each(|comment| {
+                    v.add_child(PaddedView::lrtb(
+                        comment.1 * 3,
+                        0,
+                        0,
+                        0,
+                        TextView::new(comment.0),
+                    ));
+                })
+            })
+            .scrollable(),
+    )
     .on_event(cursive::event::Key::Backspace, move |s| {
         match hn_client.get_top_stories() {
             Ok(stories) => {
@@ -103,5 +107,4 @@ fn get_comment_view(comments: Vec<Comment>, hn_client: &HNClient) -> impl IntoBo
             }
         }
     })
-    .scrollable()
 }
