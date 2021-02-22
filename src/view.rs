@@ -40,11 +40,14 @@ pub fn get_story_view(stories: Vec<Story>, hn_client: &HNClient) -> impl IntoBox
 }
 
 /// Parse a raw text from HN API to human-readable string
-fn format_hn_text(s: String, link_re: &Regex) -> String {
-    let s = htmlescape::decode_html(&s).unwrap_or(s);
-    link_re
-        .replace_all(&s.replace("<p>", "\n"), "$l")
-        .to_string()
+fn format_hn_text(s: String, italic_re: &Regex, code_re: &Regex, link_re: &Regex) -> String {
+    let mut s = htmlescape::decode_html(&s).unwrap_or(s);
+    s = link_re
+        .replace_all(&s.replace("<p>", "\n"), "${link}")
+        .to_string();
+    s = italic_re.replace_all(&s, "${text}").to_string();
+    s = code_re.replace_all(&s, "${code}").to_string();
+    s
 }
 
 /// Calculate the elapsed time and result the result
@@ -66,7 +69,9 @@ fn get_elapsed_time_as_text(time: u64) -> String {
 
 /// Retrieve all comments recursively and parse them into readable texts
 fn parse_comment_text_list(comments: &Vec<Box<Comment>>, height: usize) -> Vec<(String, usize)> {
-    let link_re = Regex::new(r#"<a\s+?href=(?P<l>".+?").+?</a>"#).unwrap();
+    let italic_re = Regex::new(r"<i>(?P<text>.+?)</i>").unwrap();
+    let code_re = Regex::new(r"<pre><code>(?s)(?P<code>.+?)</code></pre>").unwrap();
+    let link_re = Regex::new(r#"<a\s+?href=(?P<link>".+?").+?</a>"#).unwrap();
 
     comments
         .par_iter()
@@ -83,6 +88,8 @@ fn parse_comment_text_list(comments: &Vec<Box<Comment>>, height: usize) -> Vec<(
                             get_elapsed_time_as_text(comment.time),
                             comment.text
                         ),
+                        &italic_re,
+                        &code_re,
                         &link_re,
                     ),
                     height,
