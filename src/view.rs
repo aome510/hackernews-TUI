@@ -45,8 +45,8 @@ fn format_hn_text(s: String, italic_re: &Regex, code_re: &Regex, link_re: &Regex
     s = link_re
         .replace_all(&s.replace("<p>", "\n"), "${link}")
         .to_string();
-    s = italic_re.replace_all(&s, "${text}").to_string();
-    s = code_re.replace_all(&s, "${code}").to_string();
+    s = italic_re.replace_all(&s, "*${text}*").to_string();
+    s = code_re.replace_all(&s, "```\n${code}\n```").to_string();
     s
 }
 
@@ -70,7 +70,7 @@ fn get_elapsed_time_as_text(time: u64) -> String {
 /// Retrieve all comments recursively and parse them into readable texts
 fn parse_comment_text_list(comments: &Vec<Box<Comment>>, height: usize) -> Vec<(String, usize)> {
     let italic_re = Regex::new(r"<i>(?P<text>.+?)</i>").unwrap();
-    let code_re = Regex::new(r"<pre><code>(?s)(?P<code>.+?)</code></pre>").unwrap();
+    let code_re = Regex::new(r"<pre><code>(?s)(?P<code>.+?)[\n]*</code></pre>").unwrap();
     let link_re = Regex::new(r#"<a\s+?href=(?P<link>".+?").+?</a>"#).unwrap();
 
     comments
