@@ -3,6 +3,7 @@ use cursive::{event::EventResult, traits::*, view::IntoBoxedView, views::*};
 use log::warn;
 use rayon::prelude::*;
 use regex::Regex;
+use std::time::{Duration, SystemTime};
 
 /// Construct a new Event view from a SelectView by adding
 /// event handlers for a key pressed
@@ -46,6 +47,23 @@ fn format_hn_text(s: String, link_re: &Regex) -> String {
         .to_string()
 }
 
+/// Calculate the elapsed time and result the result
+/// in an appropriate format depending the duration
+fn get_elapsed_time_as_text(time: u64) -> String {
+    let now = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap();
+    let then = Duration::new(time, 0);
+    let elapsed_time_in_minutes = (now.as_secs() - then.as_secs()) / 60;
+    if elapsed_time_in_minutes < 60 {
+        format!("{} minutes", elapsed_time_in_minutes)
+    } else if elapsed_time_in_minutes < 60 * 24 {
+        format!("{} hours", elapsed_time_in_minutes / 60)
+    } else {
+        format!("{} days", elapsed_time_in_minutes / 60 / 24)
+    }
+}
+
 /// Retrieve all comments recursively and parse them into readable texts
 fn parse_comment_text_list(comments: &Vec<Box<Comment>>, height: usize) -> Vec<(String, usize)> {
     let link_re = Regex::new(r#"<a\s+?href=(?P<l>".+?").+?</a>"#).unwrap();
@@ -53,12 +71,18 @@ fn parse_comment_text_list(comments: &Vec<Box<Comment>>, height: usize) -> Vec<(
     comments
         .par_iter()
         .flat_map(|comment| {
-            let mut comments = parse_comment_text_list(&comment.as_ref().subcomments, height + 1);
+            let comment = &comment.as_ref();
+            let mut comments = parse_comment_text_list(&comment.subcomments, height + 1);
             comments.insert(
                 0,
                 (
                     format_hn_text(
-                        format!("- {}: {}", comment.as_ref().by, comment.as_ref().text),
+                        format!(
+                            "{} {} ago\n{}",
+                            comment.by,
+                            get_elapsed_time_as_text(comment.time),
+                            comment.text
+                        ),
                         &link_re,
                     ),
                     height,
@@ -86,10 +110,10 @@ fn get_comment_view(comments: Vec<Comment>, hn_client: &HNClient) -> impl IntoBo
             .with(|v| {
                 comments.into_iter().for_each(|comment| {
                     v.add_child(PaddedView::lrtb(
-                        comment.1 * 3,
+                        comment.1 * 2,
                         0,
                         0,
-                        0,
+                        1,
                         TextView::new(comment.0),
                     ));
                 })

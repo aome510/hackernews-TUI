@@ -15,7 +15,7 @@ pub struct Story {
     #[serde(default)]
     pub url: String,
     pub by: String,
-    pub time: i64,
+    pub time: u64,
 }
 
 #[derive(Debug, Deserialize)]
@@ -29,7 +29,7 @@ pub struct Comment {
     pub subcomments: Vec<Box<Comment>>,
     pub text: String,
     pub by: String,
-    pub time: i64,
+    pub time: u64,
 }
 
 /// HNClient is a http client to communicate with Hacker News APIs.
