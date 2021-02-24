@@ -1,19 +1,19 @@
 use crate::prelude::*;
 
-pub struct CommentTextView {
+pub struct TextView {
     content: utils::markup::StyledString,
     rows: Vec<lines::spans::Row>,
     width: usize,
     size_cache: Option<XY<SizeCache>>,
 }
 
-impl CommentTextView {
+impl TextView {
     pub fn new<S>(content: S) -> Self
     where
         S: Into<utils::markup::StyledString>,
     {
         let content = content.into();
-        CommentTextView {
+        TextView {
             content,
             rows: Vec::new(),
             width: 0,
@@ -38,9 +38,9 @@ impl CommentTextView {
     }
 }
 
-impl View for CommentTextView {
+impl View for TextView {
     fn draw(&self, printer: &Printer) {
-        printer.with_selection(true, |printer| {
+        printer.with_selection(printer.focused, |printer| {
             self.rows.iter().enumerate().for_each(|(y, row)| {
                 row.resolve(&self.content).iter().for_each(|span| {
                     let l = span.content.chars().count();

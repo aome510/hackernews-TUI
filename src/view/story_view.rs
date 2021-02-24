@@ -27,7 +27,7 @@ pub fn get_story_view(
                 (
                     format!(
                         "{}. {} (author: {}, {} comments, {} points)",
-                        i,
+                        i + 1,
                         story.title.clone().unwrap_or("unknown title".to_string()),
                         story.author.clone().unwrap_or("-unknown_user-".to_string()),
                         story.num_comments,

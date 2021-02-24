@@ -1,4 +1,4 @@
-use super::comment_text_view::CommentTextView;
+use super::text_view;
 use crate::prelude::*;
 
 /// Parse a raw text from HN API to human-readable string
@@ -94,7 +94,7 @@ pub fn get_comment_view(
                         0,
                         0,
                         1,
-                        CommentTextView::new(comment.0),
+                        text_view::TextView::new(comment.0),
                     ));
                 })
             })
