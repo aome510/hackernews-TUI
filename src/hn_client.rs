@@ -47,7 +47,9 @@ pub struct Story {
 /// Comment represents a comment in Hacker News.
 pub struct Comment {
     id: i32,
+    #[serde(deserialize_with = "parse_null_default")]
     parent_id: i32,
+    #[serde(deserialize_with = "parse_null_default")]
     story_id: i32,
     #[serde(default)]
     pub children: Vec<Box<Comment>>,
