@@ -49,11 +49,16 @@ pub fn get_story_view(stories: Vec<Story>, hn_client: &HNClient) -> impl IntoBox
 }
 
 /// Parse a raw text from HN API to human-readable string
-fn format_hn_text(s: String, italic_re: &Regex, code_re: &Regex, link_re: &Regex) -> String {
+fn format_hn_text(
+    s: String,
+    paragraph_re: &Regex,
+    italic_re: &Regex,
+    code_re: &Regex,
+    link_re: &Regex,
+) -> String {
     let mut s = htmlescape::decode_html(&s).unwrap_or(s);
-    s = link_re
-        .replace_all(&s.replace("<p>", "\n"), "${link}")
-        .to_string();
+    s = paragraph_re.replace_all(&s, "${paragraph}\n").to_string();
+    s = link_re.replace_all(&s, "${link}").to_string();
     s = italic_re.replace_all(&s, "*${text}*").to_string();
     s = code_re.replace_all(&s, "```\n${code}\n```").to_string();
     s
@@ -78,7 +83,8 @@ fn get_elapsed_time_as_text(time: u64) -> String {
 
 /// Retrieve all comments recursively and parse them into readable texts
 fn parse_comment_text_list(comments: &Vec<Box<Comment>>, height: usize) -> Vec<(String, usize)> {
-    let italic_re = Regex::new(r"<i>(?P<text>.+?)</i>").unwrap();
+    let paragraph_re = Regex::new(r"<p>(?s)(?P<paragraph>.*?)</p>").unwrap();
+    let italic_re = Regex::new(r"<i>(?s)(?P<text>.+?)</i>").unwrap();
     let code_re = Regex::new(r"<pre><code>(?s)(?P<code>.+?)[\n]*</code></pre>").unwrap();
     let link_re = Regex::new(r#"<a\s+?href=(?P<link>".+?").+?</a>"#).unwrap();
 
@@ -87,23 +93,19 @@ fn parse_comment_text_list(comments: &Vec<Box<Comment>>, height: usize) -> Vec<(
         .flat_map(|comment| {
             let comment = &comment.as_ref();
             let mut comments = parse_comment_text_list(&comment.children, height + 1);
-            comments.insert(
-                0,
-                (
-                    format_hn_text(
-                        format!(
-                            "{} {} ago\n{}",
-                            comment.author,
-                            get_elapsed_time_as_text(comment.time),
-                            comment.text
-                        ),
-                        &italic_re,
-                        &code_re,
-                        &link_re,
-                    ),
-                    height,
+            let formatted_text = format_hn_text(
+                format!(
+                    "{} {} ago\n{}",
+                    comment.author,
+                    get_elapsed_time_as_text(comment.time),
+                    comment.text
                 ),
+                &paragraph_re,
+                &italic_re,
+                &code_re,
+                &link_re,
             );
+            comments.insert(0, (formatted_text, height));
             comments
         })
         .collect()
