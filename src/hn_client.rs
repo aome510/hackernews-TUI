@@ -94,7 +94,7 @@ impl HNClient {
         })
     }
 
-    // /// Retrieve data from an item id and parse it to the corresponding struct
+    /// Retrieve data from an item id and parse it to the corresponding struct
     pub fn get_item_from_id<T>(&self, id: i32) -> Result<T>
     where
         T: serde::de::DeserializeOwned,
@@ -102,23 +102,6 @@ impl HNClient {
         let request_url = format!("{}/items/{}", HN_ALGOLIA_PREFIX, id);
         Ok(self.client.get(&request_url).send()?.json::<T>()?)
     }
-
-    // /// Retrieve data of multiple items from their ids and parse to a Vector of
-    // /// the corresponding struct
-    // pub fn get_items_from_ids<T: Send>(&self, ids: &Vec<i32>) -> Vec<T>
-    // where
-    //     T: DeserializeOwned,
-    // {
-    //     ids.par_iter()
-    //         .flat_map(|id| match self.get_item_from_id::<T>(*id) {
-    //             Ok(item) => vec![item],
-    //             Err(err) => {
-    //                 warn!("failed to get item {}: {:#?}", id, err);
-    //                 vec![]
-    //             }
-    //         })
-    //         .collect()
-    // }
 
     /// Retrieve a list of stories on HN frontpage
     pub fn get_top_stories(&self) -> Result<Vec<Story>> {
