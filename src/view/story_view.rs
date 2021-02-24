@@ -1,6 +1,4 @@
-use super::comment_view;
-use crate::hn_client::*;
-use cursive::{event::EventResult, traits::*, view::IntoBoxedView, views::*};
+use crate::prelude::*;
 
 /// Construct a new Event view from a SelectView by adding
 /// event handlers for a key pressed
@@ -18,7 +16,10 @@ fn construct_event_view<T: 'static>(view: SelectView<T>) -> OnEventView<SelectVi
 }
 
 /// Return a cursive's View from a story list
-pub fn get_story_view(stories: Vec<Story>, hn_client: &HNClient) -> impl IntoBoxedView {
+pub fn get_story_view(
+    stories: Vec<hn_client::Story>,
+    hn_client: &hn_client::HNClient,
+) -> impl IntoBoxedView {
     let hn_client = hn_client.clone();
     construct_event_view(
         SelectView::new()
@@ -28,7 +29,7 @@ pub fn get_story_view(stories: Vec<Story>, hn_client: &HNClient) -> impl IntoBox
                         "{}. {} (author: {}, {} comments, {} points)",
                         i,
                         story.title.clone().unwrap_or("unknown title".to_string()),
-                        story.author.clone().unwrap_or("unknown_user".to_string()),
+                        story.author.clone().unwrap_or("-unknown_user-".to_string()),
                         story.num_comments,
                         story.points
                     ),
@@ -38,7 +39,7 @@ pub fn get_story_view(stories: Vec<Story>, hn_client: &HNClient) -> impl IntoBox
             .on_submit(
                 move |s, story| match comment_view::get_comment_view(story, &hn_client) {
                     Err(err) => {
-                        log::error!("failed to construct comment view: {:#?}", err);
+                        error!("failed to construct comment view: {:#?}", err);
                     }
                     Ok(comment_view) => {
                         s.pop_layer();

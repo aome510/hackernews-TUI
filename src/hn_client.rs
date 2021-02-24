@@ -1,22 +1,20 @@
-use anyhow::Result;
-use serde::Deserialize;
-use std::time::Duration;
+use crate::prelude::*;
 
 const HN_ALGOLIA_PREFIX: &'static str = "https://hn.algolia.com/api/v1";
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(60);
 
 fn parse_id<'de, D>(d: D) -> std::result::Result<i32, D::Error>
 where
-    D: serde::Deserializer<'de>,
+    D: Deserializer<'de>,
 {
     let s = String::deserialize(d)?;
-    s.parse::<i32>().map_err(serde::de::Error::custom)
+    s.parse::<i32>().map_err(de::Error::custom)
 }
 
 fn parse_null_default<'de, D, T>(deserializer: D) -> Result<T, D::Error>
 where
     T: Default + Deserialize<'de>,
-    D: serde::Deserializer<'de>,
+    D: Deserializer<'de>,
 {
     let opt = Option::deserialize(deserializer)?;
     Ok(opt.unwrap_or_default())
@@ -92,7 +90,7 @@ impl HNClient {
     /// Retrieve data from an item id and parse it to the corresponding struct
     pub fn get_item_from_id<T>(&self, id: i32) -> Result<T>
     where
-        T: serde::de::DeserializeOwned,
+        T: DeserializeOwned,
     {
         let request_url = format!("{}/items/{}", HN_ALGOLIA_PREFIX, id);
         Ok(self.client.get(&request_url).send()?.json::<T>()?)

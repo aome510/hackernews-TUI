@@ -1,10 +1,4 @@
-use super::story_view::get_story_view;
-use crate::hn_client::*;
-use anyhow::Result;
-use cursive::{traits::*, view::IntoBoxedView, views::*};
-use rayon::prelude::*;
-use regex::Regex;
-use std::time::{Duration, SystemTime};
+use crate::prelude::*;
 
 /// Parse a raw text from HN API to human-readable string
 fn format_hn_text(
@@ -40,7 +34,10 @@ fn get_elapsed_time_as_text(time: u64) -> String {
 }
 
 /// Retrieve all comments recursively and parse them into readable texts
-fn parse_comment_text_list(comments: &Vec<Box<Comment>>, height: usize) -> Vec<(String, usize)> {
+fn parse_comment_text_list(
+    comments: &Vec<Box<hn_client::Comment>>,
+    height: usize,
+) -> Vec<(String, usize)> {
     let paragraph_re = Regex::new(r"<p>(?s)(?P<paragraph>.*?)</p>").unwrap();
     let italic_re = Regex::new(r"<i>(?s)(?P<text>.+?)</i>").unwrap();
     let code_re = Regex::new(r"<pre><code>(?s)(?P<code>.+?)[\n]*</code></pre>").unwrap();
@@ -54,7 +51,10 @@ fn parse_comment_text_list(comments: &Vec<Box<Comment>>, height: usize) -> Vec<(
             let first_subcomment = (
                 format!(
                     "{} {} ago\n{}",
-                    comment.author.clone().unwrap_or("unknown_user".to_string()),
+                    comment
+                        .author
+                        .clone()
+                        .unwrap_or("-unknown_user-".to_string()),
                     get_elapsed_time_as_text(comment.time),
                     format_hn_text(
                         comment
@@ -76,7 +76,10 @@ fn parse_comment_text_list(comments: &Vec<Box<Comment>>, height: usize) -> Vec<(
 }
 
 /// Return a cursive's View from a comment list
-pub fn get_comment_view(story: &Story, hn_client: &HNClient) -> Result<impl IntoBoxedView> {
+pub fn get_comment_view(
+    story: &hn_client::Story,
+    hn_client: &hn_client::HNClient,
+) -> Result<impl IntoBoxedView> {
     let hn_client = hn_client.clone();
 
     let comments = parse_comment_text_list(&story.get_comments(&hn_client)?, 0);
@@ -96,15 +99,13 @@ pub fn get_comment_view(story: &Story, hn_client: &HNClient) -> Result<impl Into
             })
             .scrollable(),
     )
-    .on_event(cursive::event::Key::Backspace, move |s| {
-        match hn_client.get_top_stories() {
-            Ok(stories) => {
-                s.pop_layer();
-                s.add_layer(get_story_view(stories, &hn_client))
-            }
-            Err(err) => {
-                log::error!("failed to get top stories: {:#?}", err);
-            }
+    .on_event(Key::Backspace, move |s| match hn_client.get_top_stories() {
+        Ok(stories) => {
+            s.pop_layer();
+            s.add_layer(story_view::get_story_view(stories, &hn_client))
+        }
+        Err(err) => {
+            error!("failed to get top stories: {:#?}", err);
         }
     }))
 }
