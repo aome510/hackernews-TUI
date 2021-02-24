@@ -25,15 +25,18 @@ pub fn get_story_view(stories: Vec<Story>, hn_client: &HNClient) -> impl IntoBox
     let hn_client = hn_client.clone();
     construct_event_view(
         SelectView::new()
-            .with_all(
-                stories
-                    .into_iter()
-                    .map(|story| (format!("{} ({})", story.title, story.by), story)),
-            )
+            .with_all(stories.into_iter().map(|story| {
+                (
+                    format!(
+                        "{} ({}) - {} comments",
+                        story.title, story.author, story.num_comments
+                    ),
+                    story,
+                )
+            }))
             .on_submit(move |s, story| {
                 s.pop_layer();
-                let comments = story.get_all_comments(&hn_client);
-                s.add_layer(get_comment_view(comments, &hn_client));
+                s.add_layer(get_comment_view(&story.children, &hn_client));
             }),
     )
     .scrollable()
@@ -77,14 +80,14 @@ fn parse_comment_text_list(comments: &Vec<Box<Comment>>, height: usize) -> Vec<(
         .par_iter()
         .flat_map(|comment| {
             let comment = &comment.as_ref();
-            let mut comments = parse_comment_text_list(&comment.subcomments, height + 1);
+            let mut comments = parse_comment_text_list(&comment.children, height + 1);
             comments.insert(
                 0,
                 (
                     format_hn_text(
                         format!(
                             "{} {} ago\n{}",
-                            comment.by,
+                            comment.author,
                             get_elapsed_time_as_text(comment.time),
                             comment.text
                         ),
@@ -101,16 +104,10 @@ fn parse_comment_text_list(comments: &Vec<Box<Comment>>, height: usize) -> Vec<(
 }
 
 /// Return a cursive's View from a comment list
-fn get_comment_view(comments: Vec<Comment>, hn_client: &HNClient) -> impl IntoBoxedView {
+fn get_comment_view(comments: &Vec<Box<Comment>>, hn_client: &HNClient) -> impl IntoBoxedView {
     let hn_client = hn_client.clone();
 
-    let comments = parse_comment_text_list(
-        &comments
-            .into_iter()
-            .map(|comment| Box::new(comment))
-            .collect(),
-        0,
-    );
+    let comments = parse_comment_text_list(comments, 0);
 
     OnEventView::new(
         LinearLayout::vertical()
