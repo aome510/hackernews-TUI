@@ -34,12 +34,9 @@ pub struct Story {
     #[serde(default)]
     pub children: Vec<Box<Comment>>,
 
-    #[serde(deserialize_with = "parse_null_default")]
-    pub title: String,
-    #[serde(deserialize_with = "parse_null_default")]
-    pub author: String,
-    #[serde(deserialize_with = "parse_null_default")]
-    pub url: String,
+    pub title: Option<String>,
+    pub author: Option<String>,
+    pub url: Option<String>,
     #[serde(rename(deserialize = "created_at_i"))]
     pub time: u64,
     #[serde(deserialize_with = "parse_null_default")]
@@ -58,10 +55,8 @@ pub struct Comment {
     #[serde(default)]
     pub children: Vec<Box<Comment>>,
 
-    #[serde(deserialize_with = "parse_null_default")]
-    pub text: String,
-    #[serde(deserialize_with = "parse_null_default")]
-    pub author: String,
+    pub text: Option<String>,
+    pub author: Option<String>,
     #[serde(rename(deserialize = "created_at_i"))]
     pub time: u64,
 }

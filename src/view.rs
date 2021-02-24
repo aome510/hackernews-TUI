@@ -25,11 +25,15 @@ pub fn get_story_view(stories: Vec<Story>, hn_client: &HNClient) -> impl IntoBox
     let hn_client = hn_client.clone();
     construct_event_view(
         SelectView::new()
-            .with_all(stories.into_iter().map(|story| {
+            .with_all(stories.into_iter().enumerate().map(|(i, story)| {
                 (
                     format!(
-                        "{} (author: {}, {} comments, {} points)",
-                        story.title, story.author, story.num_comments, story.points
+                        "{}. {} (author: {}, {} comments, {} points)",
+                        i,
+                        story.title.clone().unwrap_or("unknown title".to_string()),
+                        story.author.clone().unwrap_or("unknown_user".to_string()),
+                        story.num_comments,
+                        story.points
                     ),
                     story,
                 )
@@ -91,21 +95,27 @@ fn parse_comment_text_list(comments: &Vec<Box<Comment>>, height: usize) -> Vec<(
         .par_iter()
         .flat_map(|comment| {
             let comment = &comment.as_ref();
-            let mut comments = parse_comment_text_list(&comment.children, height + 1);
-            let formatted_text = format_hn_text(
+            let mut subcomments = parse_comment_text_list(&comment.children, height + 1);
+            let first_subcomment = (
                 format!(
                     "{} {} ago\n{}",
-                    comment.author,
+                    comment.author.clone().unwrap_or("unknown_user".to_string()),
                     get_elapsed_time_as_text(comment.time),
-                    comment.text
+                    format_hn_text(
+                        comment
+                            .text
+                            .clone()
+                            .unwrap_or("---deleted comment---".to_string()),
+                        &paragraph_re,
+                        &italic_re,
+                        &code_re,
+                        &link_re,
+                    )
                 ),
-                &paragraph_re,
-                &italic_re,
-                &code_re,
-                &link_re,
+                height,
             );
-            comments.insert(0, (formatted_text, height));
-            comments
+            subcomments.insert(0, first_subcomment);
+            subcomments
         })
         .collect()
 }
