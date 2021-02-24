@@ -1,7 +1,6 @@
-use std::time::Duration;
-
 use anyhow::Result;
 use serde::Deserialize;
+use std::time::Duration;
 
 const HN_ALGOLIA_PREFIX: &'static str = "https://hn.algolia.com/api/v1";
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(60);
@@ -73,6 +72,7 @@ pub struct HNClient {
 }
 
 impl Story {
+    /// Returns all the comments in the story
     pub fn get_comments(&self, client: &HNClient) -> Result<Vec<Box<Comment>>> {
         let story = client.get_item_from_id::<Story>(self.id)?;
         Ok(story.children)

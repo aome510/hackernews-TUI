@@ -1,9 +1,9 @@
 use anyhow::Result;
-use view::get_story_view;
+use view::story_view::get_story_view;
 
 // modules
-mod hn_client;
-mod view;
+pub mod hn_client;
+pub mod view;
 
 fn main() {
     if let Err(err) = start() {
