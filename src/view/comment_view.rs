@@ -1,3 +1,4 @@
+use super::event_view;
 use super::text_view;
 use crate::prelude::*;
 
@@ -15,23 +16,6 @@ fn format_hn_text(
     s = italic_re.replace_all(&s, "*${text}*").to_string();
     s = code_re.replace_all(&s, "```\n${code}\n```").to_string();
     s
-}
-
-/// Calculate the elapsed time and result the result
-/// in an appropriate format depending the duration
-fn get_elapsed_time_as_text(time: u64) -> String {
-    let now = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap();
-    let then = Duration::new(time, 0);
-    let elapsed_time_in_minutes = (now.as_secs() - then.as_secs()) / 60;
-    if elapsed_time_in_minutes < 60 {
-        format!("{} minutes", elapsed_time_in_minutes)
-    } else if elapsed_time_in_minutes < 60 * 24 {
-        format!("{} hours", elapsed_time_in_minutes / 60)
-    } else {
-        format!("{} days", elapsed_time_in_minutes / 60 / 24)
-    }
 }
 
 /// Retrieve all comments recursively and parse them into readable texts
@@ -56,7 +40,7 @@ fn parse_comment_text_list(
                         .author
                         .clone()
                         .unwrap_or("-unknown_user-".to_string()),
-                    get_elapsed_time_as_text(comment.time),
+                    super::get_elapsed_time_as_text(comment.time),
                     format_hn_text(
                         comment
                             .text
@@ -78,28 +62,24 @@ fn parse_comment_text_list(
 
 /// Return a cursive's View from a comment list
 pub fn get_comment_view(
-    story: &hn_client::Story,
+    comments: &Vec<Box<hn_client::Comment>>,
     hn_client: &hn_client::HNClient,
-) -> Result<impl IntoBoxedView> {
+) -> impl IntoBoxedView {
     let hn_client = hn_client.clone();
 
-    let comments = parse_comment_text_list(&story.get_comments(&hn_client)?, 0);
+    let comments = parse_comment_text_list(&comments, 0);
 
-    Ok(OnEventView::new(
-        LinearLayout::vertical()
-            .with(|v| {
-                comments.into_iter().for_each(|comment| {
-                    v.add_child(PaddedView::lrtb(
-                        comment.1 * 2,
-                        0,
-                        0,
-                        1,
-                        text_view::TextView::new(comment.0),
-                    ));
-                })
-            })
-            .scrollable(),
-    )
+    event_view::construct_event_view(LinearLayout::vertical().with(|v| {
+        comments.into_iter().for_each(|comment| {
+            v.add_child(PaddedView::lrtb(
+                comment.1 * 2,
+                0,
+                0,
+                1,
+                text_view::TextView::new(comment.0),
+            ));
+        })
+    }))
     .on_event(Key::Backspace, move |s| match hn_client.get_top_stories() {
         Ok(stories) => {
             s.pop_layer();
@@ -108,5 +88,6 @@ pub fn get_comment_view(
         Err(err) => {
             error!("failed to get top stories: {:#?}", err);
         }
-    }))
+    })
+    .scrollable()
 }

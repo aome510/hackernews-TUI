@@ -1,5 +1,7 @@
 use crate::prelude::*;
 
+/// TextView wraps a text string based on the view port
+/// and the text alignment
 pub struct TextView {
     content: utils::markup::StyledString,
     rows: Vec<lines::spans::Row>,

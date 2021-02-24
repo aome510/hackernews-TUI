@@ -26,7 +26,7 @@ pub struct Story {
     #[serde(default)]
     #[serde(rename(deserialize = "objectID"))]
     #[serde(deserialize_with = "parse_id")]
-    id: i32,
+    pub id: i32,
 
     #[serde(default)]
     pub children: Vec<Box<Comment>>,
@@ -46,11 +46,11 @@ pub struct Story {
 #[derive(Debug, Deserialize)]
 /// Comment represents a comment in Hacker News.
 pub struct Comment {
-    id: i32,
+    pub id: i32,
     #[serde(deserialize_with = "parse_null_default")]
-    parent_id: i32,
+    pub parent_id: i32,
     #[serde(deserialize_with = "parse_null_default")]
-    story_id: i32,
+    pub story_id: i32,
     #[serde(default)]
     pub children: Vec<Box<Comment>>,
 
@@ -71,12 +71,10 @@ pub struct HNClient {
     client: reqwest::blocking::Client,
 }
 
-impl Story {
-    /// Returns all the comments in the story
-    pub fn get_comments(&self, client: &HNClient) -> Result<Vec<Box<Comment>>> {
-        let story = client.get_item_from_id::<Story>(self.id)?;
-        Ok(story.children)
-    }
+/// Retrieves all comments from a story with a given id
+pub fn get_comments_from_story_id(id: i32, client: &HNClient) -> Result<Vec<Box<Comment>>> {
+    let story = client.get_item_from_id::<Story>(id)?;
+    Ok(story.children)
 }
 
 impl HNClient {
