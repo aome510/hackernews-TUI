@@ -14,7 +14,7 @@ fn main() {
 fn start() -> Result<()> {
     env_logger::init();
 
-    let client = hn_client::HNClient::new();
+    let client = hn_client::HNClient::new()?;
     let stories = client.get_top_stories()?;
     let mut siv = cursive::default();
 

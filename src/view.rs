@@ -1,7 +1,6 @@
 use super::hn_client::*;
 use anyhow::Result;
 use cursive::{event::EventResult, traits::*, view::IntoBoxedView, views::*};
-use log::warn;
 use rayon::prelude::*;
 use regex::Regex;
 use std::time::{Duration, SystemTime};
@@ -139,7 +138,7 @@ fn get_comment_view(story: &Story, hn_client: &HNClient) -> Result<impl IntoBoxe
                 s.add_layer(get_story_view(stories, &hn_client))
             }
             Err(err) => {
-                warn!("failed to get top stories: {:#?}", err);
+                log::error!("failed to get top stories: {:#?}", err);
             }
         }
     }))

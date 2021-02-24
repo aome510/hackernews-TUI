@@ -1,7 +1,10 @@
+use std::time::Duration;
+
 use anyhow::Result;
 use serde::Deserialize;
 
 const HN_ALGOLIA_PREFIX: &'static str = "https://hn.algolia.com/api/v1";
+const CLIENT_TIMEOUT: Duration = Duration::from_secs(60);
 
 fn parse_id<'de, D>(d: D) -> std::result::Result<i32, D::Error>
 where
@@ -83,10 +86,12 @@ impl Story {
 
 impl HNClient {
     /// Create new Hacker News Client
-    pub fn new() -> HNClient {
-        HNClient {
-            client: reqwest::blocking::Client::new(),
-        }
+    pub fn new() -> Result<HNClient> {
+        Ok(HNClient {
+            client: reqwest::blocking::Client::builder()
+                .timeout(CLIENT_TIMEOUT)
+                .build()?,
+        })
     }
 
     // /// Retrieve data from an item id and parse it to the corresponding struct
