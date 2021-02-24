@@ -2,8 +2,6 @@ use super::event_view;
 use super::text_view;
 use crate::prelude::*;
 
-// .on_p(
-// ),
 /// Return a cursive's View from a story list
 pub fn get_story_view(
     stories: Vec<hn_client::Story>,

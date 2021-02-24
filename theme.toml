@@ -1,6 +1,6 @@
 [colors]
     background = "black"
     view = "black"
-    highlight = "red"
+    highlight = "#DC143C"
     shadow = "black"
     primary = "white"
