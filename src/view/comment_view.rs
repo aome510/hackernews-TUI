@@ -98,15 +98,11 @@ pub fn get_comment_view(
         move |s, _| {
             let id = s.get_focus_index();
             let (_, right) = heights.split_at(id + 1);
-            let offset = right.iter().position(|&h| {
-                debug!("h: {}", h);
-                h <= heights[id]
-            });
+            let offset = right.iter().position(|&h| h <= heights[id]);
             let next_id = match offset {
                 None => id,
                 Some(offset) => id + offset + 1,
             };
-            debug!("id: {}, next_id: {}", id, next_id);
             match s.set_focus_index(next_id) {
                 Ok(_) => Some(EventResult::Consumed(None)),
                 Err(_) => Some(EventResult::Ignored),
