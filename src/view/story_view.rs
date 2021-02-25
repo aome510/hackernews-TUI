@@ -36,5 +36,6 @@ pub fn get_story_view(
             }
         }
     })
+    .on_event('q', |s| s.quit())
     .scrollable()
 }

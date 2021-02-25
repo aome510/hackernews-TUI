@@ -80,7 +80,7 @@ pub fn get_comment_view(
             ));
         })
     }))
-    .on_event(Key::Backspace, move |s| match hn_client.get_top_stories() {
+    .on_event('q', move |s| match hn_client.get_top_stories() {
         Ok(stories) => {
             s.pop_layer();
             s.add_layer(story_view::get_story_view(stories, &hn_client))
