@@ -68,6 +68,10 @@ pub fn get_comment_view(
     let hn_client = hn_client.clone();
 
     let comments = parse_comment_text_list(&comments, 0);
+    let heights = comments
+        .iter()
+        .map(|comment| comment.1)
+        .collect::<Vec<usize>>();
 
     event_view::construct_event_view(LinearLayout::vertical().with(|v| {
         comments.into_iter().for_each(|comment| {
@@ -87,6 +91,58 @@ pub fn get_comment_view(
         }
         Err(err) => {
             error!("failed to get top stories: {:#?}", err);
+        }
+    })
+    .on_pre_event_inner('l', {
+        let heights = heights.clone();
+        move |s, _| {
+            let id = s.get_focus_index();
+            let (_, right) = heights.split_at(id + 1);
+            let offset = right.iter().position(|&h| {
+                debug!("h: {}", h);
+                h <= heights[id]
+            });
+            let next_id = match offset {
+                None => id,
+                Some(offset) => id + offset + 1,
+            };
+            debug!("id: {}, next_id: {}", id, next_id);
+            match s.set_focus_index(next_id) {
+                Ok(_) => Some(EventResult::Consumed(None)),
+                Err(_) => Some(EventResult::Ignored),
+            }
+        }
+    })
+    .on_pre_event_inner('h', {
+        let heights = heights.clone();
+        move |s, _| {
+            let id = s.get_focus_index();
+            let (left, _) = heights.split_at(id);
+            let next_id = left.iter().rposition(|&h| h <= heights[id]).unwrap_or(id);
+            match s.set_focus_index(next_id) {
+                Ok(_) => Some(EventResult::Consumed(None)),
+                Err(_) => Some(EventResult::Ignored),
+            }
+        }
+    })
+    .on_pre_event_inner('t', |s, _| {
+        if s.len() > 0 {
+            match s.set_focus_index(0) {
+                Ok(_) => Some(EventResult::Consumed(None)),
+                Err(_) => Some(EventResult::Ignored),
+            }
+        } else {
+            Some(EventResult::Consumed(None))
+        }
+    })
+    .on_pre_event_inner('b', |s, _| {
+        if s.len() > 0 {
+            match s.set_focus_index(s.len() - 1) {
+                Ok(_) => Some(EventResult::Consumed(None)),
+                Err(_) => Some(EventResult::Ignored),
+            }
+        } else {
+            Some(EventResult::Consumed(None))
         }
     })
     .scrollable()
