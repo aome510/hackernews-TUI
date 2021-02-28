@@ -4,8 +4,7 @@ use super::theme::*;
 use crate::prelude::*;
 
 pub struct CommentView {
-    comments: Vec<(StyledString, usize)>,
-    links: Vec<String>,
+    comments: Vec<(StyledString, usize, Vec<String>)>,
 }
 
 /// Parse a raw text from HN API to human-readable string
@@ -15,11 +14,12 @@ fn format_hn_text(
     italic_re: &Regex,
     code_re: &Regex,
     link_re: &Regex,
-) -> StyledString {
+) -> (StyledString, Vec<String>) {
     let mut s = htmlescape::decode_html(&s).unwrap_or(s);
     s = paragraph_re.replace_all(&s, "${paragraph}\n").to_string();
     s = italic_re.replace_all(&s, "*${text}*").to_string();
     s = code_re.replace_all(&s, "```\n${code}\n```").to_string();
+    let mut links: Vec<String> = vec![];
     let mut styled_s = StyledString::new();
     loop {
         match link_re.captures(&s.clone()) {
@@ -40,7 +40,13 @@ fn format_hn_text(
                 if prefix.len() > 0 {
                     styled_s.append_plain(&prefix);
                 }
+
                 styled_s.append_styled(link, Style::from(LINK_COLOR));
+                styled_s.append_styled(
+                    links.len().to_string(),
+                    ColorStyle::new(LINK_ID_FRONT, LINK_ID_BACK),
+                );
+                links.push(link.to_string());
                 continue;
             }
         }
@@ -48,14 +54,14 @@ fn format_hn_text(
     if s.len() > 0 {
         styled_s.append_plain(&s)
     }
-    styled_s
+    (styled_s, links)
 }
 
 /// Retrieve all comments recursively and parse them into readable texts with styles and colors
 fn parse_comment_text_list(
     comments: &Vec<Box<hn_client::Comment>>,
     height: usize,
-) -> Vec<(StyledString, usize)> {
+) -> Vec<(StyledString, usize, Vec<String>)> {
     let paragraph_re = Regex::new(r"<p>(?s)(?P<paragraph>.*?)</p>").unwrap();
     let italic_re = Regex::new(r"<i>(?s)(?P<text>.+?)</i>").unwrap();
     let code_re = Regex::new(r"<pre><code>(?s)(?P<code>.+?)[\n]*</code></pre>").unwrap();
@@ -71,14 +77,17 @@ fn parse_comment_text_list(
                 comment.author.clone().unwrap_or("[deleted]".to_string()),
                 super::get_elapsed_time_as_text(comment.time),
             ));
-            comment_string.append(format_hn_text(
+
+            let (comment_content, links) = format_hn_text(
                 comment.text.clone().unwrap_or("[deleted]".to_string()),
                 &paragraph_re,
                 &italic_re,
                 &code_re,
                 &link_re,
-            ));
-            subcomments.insert(0, (comment_string, height));
+            );
+            comment_string.append(comment_content);
+
+            subcomments.insert(0, (comment_string, height, links));
             subcomments
         })
         .collect()
@@ -89,7 +98,6 @@ impl CommentView {
     pub fn new(comments: &Vec<Box<hn_client::Comment>>) -> Self {
         CommentView {
             comments: parse_comment_text_list(&comments, 0),
-            links: vec![],
         }
     }
 
