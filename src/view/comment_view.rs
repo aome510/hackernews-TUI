@@ -1,6 +1,7 @@
 use super::event_view;
 use super::text_view;
 use crate::prelude::*;
+use markup::StyledString;
 
 /// Parse a raw text from HN API to human-readable string
 fn format_hn_text(
@@ -9,20 +10,52 @@ fn format_hn_text(
     italic_re: &Regex,
     code_re: &Regex,
     link_re: &Regex,
-) -> String {
+) -> StyledString {
     let mut s = htmlescape::decode_html(&s).unwrap_or(s);
     s = paragraph_re.replace_all(&s, "${paragraph}\n").to_string();
-    s = link_re.replace_all(&s, "${link}").to_string();
     s = italic_re.replace_all(&s, "*${text}*").to_string();
     s = code_re.replace_all(&s, "```\n${code}\n```").to_string();
-    s
+    let mut styled_s = StyledString::new();
+    loop {
+        match link_re.captures(&s.clone()) {
+            None => break,
+            Some(c) => {
+                let m = c.get(0).unwrap();
+                let link = c.name("link").unwrap().as_str();
+
+                debug!("link before: {}", link);
+
+                let range = m.range();
+                let mut prefix: String = s
+                    .drain(std::ops::Range {
+                        start: 0,
+                        end: m.end(),
+                    })
+                    .collect();
+                prefix.drain(range);
+
+                debug!("link after: {}", link);
+                debug!("prefix: {}", prefix);
+
+                if prefix.len() > 0 {
+                    styled_s.append_plain(&prefix);
+                }
+                styled_s.append_plain(link);
+                continue;
+            }
+        }
+    }
+    if s.len() > 0 {
+        styled_s.append_plain(&s)
+    }
+    styled_s
 }
 
 /// Retrieve all comments recursively and parse them into readable texts
 fn parse_comment_text_list(
     comments: &Vec<Box<hn_client::Comment>>,
     height: usize,
-) -> Vec<(String, usize)> {
+) -> Vec<(StyledString, usize)> {
     let paragraph_re = Regex::new(r"<p>(?s)(?P<paragraph>.*?)</p>").unwrap();
     let italic_re = Regex::new(r"<i>(?s)(?P<text>.+?)</i>").unwrap();
     let code_re = Regex::new(r"<pre><code>(?s)(?P<code>.+?)[\n]*</code></pre>").unwrap();
@@ -33,28 +66,25 @@ fn parse_comment_text_list(
         .flat_map(|comment| {
             let comment = &comment.as_ref();
             let mut subcomments = parse_comment_text_list(&comment.children, height + 1);
-            let first_subcomment = (
-                format!(
-                    "{} {} ago\n{}",
-                    comment
-                        .author
-                        .clone()
-                        .unwrap_or("-unknown_user-".to_string()),
-                    super::get_elapsed_time_as_text(comment.time),
-                    format_hn_text(
-                        comment
-                            .text
-                            .clone()
-                            .unwrap_or("---deleted comment---".to_string()),
-                        &paragraph_re,
-                        &italic_re,
-                        &code_re,
-                        &link_re,
-                    )
-                ),
-                height,
-            );
-            subcomments.insert(0, first_subcomment);
+            let mut comment_string = StyledString::plain(format!(
+                "{} {} ago\n",
+                comment
+                    .author
+                    .clone()
+                    .unwrap_or("-unknown_user-".to_string()),
+                super::get_elapsed_time_as_text(comment.time),
+            ));
+            comment_string.append(format_hn_text(
+                comment
+                    .text
+                    .clone()
+                    .unwrap_or("---deleted comment---".to_string()),
+                &paragraph_re,
+                &italic_re,
+                &code_re,
+                &link_re,
+            ));
+            subcomments.insert(0, (comment_string, height));
             subcomments
         })
         .collect()
