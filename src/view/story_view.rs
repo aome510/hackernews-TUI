@@ -14,9 +14,9 @@ pub fn get_story_view(
             s.add_child(text_view::TextView::new(format!(
                 "{}. {}\n{} points | by {} | {} ago | {} comments",
                 i + 1,
-                story.title.clone().unwrap_or("unknown title".to_string()),
+                story.title.clone().unwrap_or("[deleted]".to_string()),
                 story.points,
-                story.author.clone().unwrap_or("-unknown_user-".to_string()),
+                story.author.clone().unwrap_or("[deleted]".to_string()),
                 super::get_elapsed_time_as_text(story.time),
                 story.num_comments,
             )));

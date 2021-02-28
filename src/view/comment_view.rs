@@ -1,7 +1,7 @@
 use super::event_view;
 use super::text_view;
+use super::theme::*;
 use crate::prelude::*;
-use markup::StyledString;
 
 /// Parse a raw text from HN API to human-readable string
 fn format_hn_text(
@@ -23,8 +23,6 @@ fn format_hn_text(
                 let m = c.get(0).unwrap();
                 let link = c.name("link").unwrap().as_str();
 
-                debug!("link before: {}", link);
-
                 let range = m.range();
                 let mut prefix: String = s
                     .drain(std::ops::Range {
@@ -34,13 +32,10 @@ fn format_hn_text(
                     .collect();
                 prefix.drain(range);
 
-                debug!("link after: {}", link);
-                debug!("prefix: {}", prefix);
-
                 if prefix.len() > 0 {
                     styled_s.append_plain(&prefix);
                 }
-                styled_s.append_plain(link);
+                styled_s.append_styled(link, Style::from(LINK_COLOR));
                 continue;
             }
         }
@@ -68,17 +63,11 @@ fn parse_comment_text_list(
             let mut subcomments = parse_comment_text_list(&comment.children, height + 1);
             let mut comment_string = StyledString::plain(format!(
                 "{} {} ago\n",
-                comment
-                    .author
-                    .clone()
-                    .unwrap_or("-unknown_user-".to_string()),
+                comment.author.clone().unwrap_or("[deleted]".to_string()),
                 super::get_elapsed_time_as_text(comment.time),
             ));
             comment_string.append(format_hn_text(
-                comment
-                    .text
-                    .clone()
-                    .unwrap_or("---deleted comment---".to_string()),
+                comment.text.clone().unwrap_or("[deleted]".to_string()),
                 &paragraph_re,
                 &italic_re,
                 &code_re,

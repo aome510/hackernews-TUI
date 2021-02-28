@@ -47,7 +47,9 @@ impl View for TextView {
                 let mut x: usize = 0;
                 row.resolve(&self.content).iter().for_each(|span| {
                     let l = span.content.chars().count();
-                    printer.print((x, y), span.content);
+                    printer.with_style(*span.attr, |printer| {
+                        printer.print((x, y), span.content);
+                    });
                     x += l;
                 });
                 if x < printer.size.x {
