@@ -7,8 +7,8 @@ pub struct CommentView {
     comments: Vec<(StyledString, usize, Vec<String>)>,
 }
 
-/// Parse a raw text from HN API to human-readable string
-fn format_hn_text(
+/// Parse a raw comment in HTML text to markdown text (with colors)
+fn parse_raw_comment(
     s: String,
     paragraph_re: &Regex,
     italic_re: &Regex,
@@ -78,7 +78,7 @@ fn parse_comment_text_list(
                 super::get_elapsed_time_as_text(comment.time),
             ));
 
-            let (comment_content, links) = format_hn_text(
+            let (comment_content, links) = parse_raw_comment(
                 comment.text.clone().unwrap_or("[deleted]".to_string()),
                 &paragraph_re,
                 &italic_re,
@@ -115,6 +115,7 @@ impl CommentView {
         CommentView { view, comments }
     }
 
+    /// Get the height of each comment in the comment tree
     pub fn get_heights(&self) -> Vec<usize> {
         self.comments.iter().map(|comment| comment.1).collect()
     }
@@ -122,7 +123,8 @@ impl CommentView {
     inner_getters!(self.view: LinearLayout);
 }
 
-/// Return a cursive's View representing a CommentView
+/// Return a cursive's View representing a CommentView with
+/// registered event handlers and scrollable trait.
 pub fn get_comment_view(
     hn_client: &hn_client::HNClient,
     comments: &Vec<Box<hn_client::Comment>>,
