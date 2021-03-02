@@ -28,8 +28,7 @@ pub fn get_story_view(
         match hn_client::get_comments_from_story_id(ids[id], &hn_client) {
             Ok(comments) => Some(EventResult::with_cb(move |s| {
                 s.pop_layer();
-                let comment_view = comment_view::CommentView::new(&comments);
-                s.add_layer(comment_view.get_comment_view(&hn_client));
+                s.add_layer(comment_view::get_comment_view(&hn_client, &comments));
             })),
             Err(err) => {
                 error!("failed to get comments from story {}: {:#?}", ids[id], err);

@@ -1,9 +1,9 @@
-use super::event_view;
 use super::text_view;
 use super::theme::*;
 use crate::prelude::*;
 
 pub struct CommentView {
+    view: LinearLayout,
     comments: Vec<(StyledString, usize, Vec<String>)>,
 }
 
@@ -93,26 +93,16 @@ fn parse_comment_text_list(
         .collect()
 }
 
+impl ViewWrapper for CommentView {
+    wrap_impl!(self.view: LinearLayout);
+}
+
 impl CommentView {
     /// Return a new CommentView based on the list of comments received from HN Client
     pub fn new(comments: &Vec<Box<hn_client::Comment>>) -> Self {
-        CommentView {
-            comments: parse_comment_text_list(&comments, 0),
-        }
-    }
-
-    /// Return a cursive's View representing a CommentView
-    pub fn get_comment_view(&self, hn_client: &hn_client::HNClient) -> impl IntoBoxedView {
-        let hn_client = hn_client.clone();
-
-        let heights = self
-            .comments
-            .iter()
-            .map(|comment| comment.1)
-            .collect::<Vec<usize>>();
-
-        event_view::construct_event_view(LinearLayout::vertical().with(|v| {
-            self.comments.iter().for_each(|comment| {
+        let comments = parse_comment_text_list(&comments, 0);
+        let view = LinearLayout::vertical().with(|v| {
+            comments.iter().for_each(|comment| {
                 v.add_child(PaddedView::lrtb(
                     comment.1 * 2,
                     0,
@@ -121,7 +111,25 @@ impl CommentView {
                     text_view::TextView::new(comment.0.clone()),
                 ));
             })
-        }))
+        });
+        CommentView { view, comments }
+    }
+
+    pub fn get_heights(&self) -> Vec<usize> {
+        self.comments.iter().map(|comment| comment.1).collect()
+    }
+
+    inner_getters!(self.view: LinearLayout);
+}
+
+/// Return a cursive's View representing a CommentView
+pub fn get_comment_view(
+    hn_client: &hn_client::HNClient,
+    comments: &Vec<Box<hn_client::Comment>>,
+) -> impl IntoBoxedView {
+    let hn_client = hn_client.clone();
+
+    OnEventView::new(CommentView::new(comments))
         .on_event('q', move |s| match hn_client.get_top_stories() {
             Ok(stories) => {
                 s.pop_layer();
@@ -131,35 +139,58 @@ impl CommentView {
                 error!("failed to get top stories: {:#?}", err);
             }
         })
-        .on_pre_event_inner('l', {
-            let heights = heights.clone();
-            move |s, _| {
-                let id = s.get_focus_index();
-                let (_, right) = heights.split_at(id + 1);
-                let offset = right.iter().position(|&h| h <= heights[id]);
-                let next_id = match offset {
-                    None => id,
-                    Some(offset) => id + offset + 1,
-                };
-                match s.set_focus_index(next_id) {
+        .on_pre_event_inner('k', |s, _| {
+            let s = s.get_inner_mut();
+            let id = s.get_focus_index();
+            if id > 0 {
+                match s.set_focus_index(id - 1) {
                     Ok(_) => Some(EventResult::Consumed(None)),
                     Err(_) => Some(EventResult::Ignored),
                 }
+            } else {
+                Some(EventResult::Ignored)
             }
         })
-        .on_pre_event_inner('h', {
-            let heights = heights.clone();
-            move |s, _| {
-                let id = s.get_focus_index();
-                let (left, _) = heights.split_at(id);
-                let next_id = left.iter().rposition(|&h| h <= heights[id]).unwrap_or(id);
-                match s.set_focus_index(next_id) {
+        .on_pre_event_inner('j', |s, _| {
+            let s = s.get_inner_mut();
+            let id = s.get_focus_index();
+            if id + 1 < s.len() {
+                match s.set_focus_index(id + 1) {
                     Ok(_) => Some(EventResult::Consumed(None)),
                     Err(_) => Some(EventResult::Ignored),
                 }
+            } else {
+                Some(EventResult::Ignored)
+            }
+        })
+        .on_pre_event_inner('l', move |s, _| {
+            let heights = s.get_heights();
+            let s = s.get_inner_mut();
+            let id = s.get_focus_index();
+            let (_, right) = heights.split_at(id + 1);
+            let offset = right.iter().position(|&h| h <= heights[id]);
+            let next_id = match offset {
+                None => id,
+                Some(offset) => id + offset + 1,
+            };
+            match s.set_focus_index(next_id) {
+                Ok(_) => Some(EventResult::Consumed(None)),
+                Err(_) => Some(EventResult::Ignored),
+            }
+        })
+        .on_pre_event_inner('h', move |s, _| {
+            let heights = s.get_heights();
+            let s = s.get_inner_mut();
+            let id = s.get_focus_index();
+            let (left, _) = heights.split_at(id);
+            let next_id = left.iter().rposition(|&h| h <= heights[id]).unwrap_or(id);
+            match s.set_focus_index(next_id) {
+                Ok(_) => Some(EventResult::Consumed(None)),
+                Err(_) => Some(EventResult::Ignored),
             }
         })
         .on_pre_event_inner('t', |s, _| {
+            let s = s.get_inner_mut();
             if s.len() > 0 {
                 match s.set_focus_index(0) {
                     Ok(_) => Some(EventResult::Consumed(None)),
@@ -170,6 +201,7 @@ impl CommentView {
             }
         })
         .on_pre_event_inner('b', |s, _| {
+            let s = s.get_inner_mut();
             if s.len() > 0 {
                 match s.set_focus_index(s.len() - 1) {
                     Ok(_) => Some(EventResult::Consumed(None)),
@@ -180,5 +212,4 @@ impl CommentView {
             }
         })
         .scrollable()
-    }
 }
