@@ -1,3 +1,4 @@
+use super::event_view;
 use super::text_view;
 use super::theme::*;
 use crate::prelude::*;
@@ -131,7 +132,7 @@ pub fn get_comment_view(
 ) -> impl IntoBoxedView {
     let hn_client = hn_client.clone();
 
-    OnEventView::new(CommentView::new(comments))
+    event_view::construct_event_view(CommentView::new(comments))
         .on_event('q', move |s| match hn_client.get_top_stories() {
             Ok(stories) => {
                 s.pop_layer();
@@ -139,30 +140,6 @@ pub fn get_comment_view(
             }
             Err(err) => {
                 error!("failed to get top stories: {:#?}", err);
-            }
-        })
-        .on_pre_event_inner('k', |s, _| {
-            let s = s.get_inner_mut();
-            let id = s.get_focus_index();
-            if id > 0 {
-                match s.set_focus_index(id - 1) {
-                    Ok(_) => Some(EventResult::Consumed(None)),
-                    Err(_) => Some(EventResult::Ignored),
-                }
-            } else {
-                Some(EventResult::Ignored)
-            }
-        })
-        .on_pre_event_inner('j', |s, _| {
-            let s = s.get_inner_mut();
-            let id = s.get_focus_index();
-            if id + 1 < s.len() {
-                match s.set_focus_index(id + 1) {
-                    Ok(_) => Some(EventResult::Consumed(None)),
-                    Err(_) => Some(EventResult::Ignored),
-                }
-            } else {
-                Some(EventResult::Ignored)
             }
         })
         .on_pre_event_inner('l', move |s, _| {
