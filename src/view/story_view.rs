@@ -1,5 +1,7 @@
 use super::event_view;
 use super::text_view;
+use super::theme::*;
+use super::utils::*;
 use crate::prelude::*;
 
 /// StoryView is a View displaying a list stories corresponding
@@ -13,15 +15,28 @@ impl StoryView {
     pub fn new(stories: Vec<hn_client::Story>) -> Self {
         let view = LinearLayout::vertical().with(|s| {
             stories.iter().enumerate().for_each(|(i, story)| {
-                s.add_child(text_view::TextView::new(format!(
-                    "{}. {}\n{} points | by {} | {} ago | {} comments",
+                let mut story_text = StyledString::plain(format!(
+                    "{}. {}",
                     i + 1,
                     story.title.clone().unwrap_or("[deleted]".to_string()),
-                    story.points,
-                    story.author.clone().unwrap_or("[deleted]".to_string()),
-                    super::get_elapsed_time_as_text(story.time),
-                    story.num_comments,
-                )));
+                ));
+                if story.url.is_some() {
+                    story_text.append_styled(
+                        format!("\n({})", shorten_url(story.url.clone().unwrap())),
+                        ColorStyle::from(LINK_COLOR),
+                    );
+                }
+                story_text.append_styled(
+                    format!(
+                        "\n{} points | by {} | {} ago | {} comments",
+                        story.points,
+                        story.author.clone().unwrap_or("[deleted]".to_string()),
+                        get_elapsed_time_as_text(story.time),
+                        story.num_comments,
+                    ),
+                    ColorStyle::from(STORY_DESC_COLOR),
+                );
+                s.add_child(text_view::TextView::new(story_text));
             })
         });
         StoryView { view, stories }

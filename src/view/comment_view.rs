@@ -1,6 +1,7 @@
 use super::event_view;
 use super::text_view;
 use super::theme::*;
+use super::utils::*;
 use crate::prelude::*;
 
 /// CommentView is a View displaying a comment thread of a HN story
@@ -47,7 +48,10 @@ fn parse_raw_comment(
                     styled_s.append_plain(&prefix);
                 }
 
-                styled_s.append_styled(format!("\"{}\"", link), Style::from(LINK_COLOR));
+                styled_s.append_styled(
+                    format!("\"{}\"", shorten_url(link.to_string())),
+                    Style::from(LINK_COLOR),
+                );
                 styled_s.append_styled(
                     links.len().to_string(),
                     ColorStyle::new(LINK_ID_FRONT, LINK_ID_BACK),
@@ -81,7 +85,7 @@ fn parse_comment_text_list(
             let mut comment_string = StyledString::plain(format!(
                 "{} {} ago\n",
                 comment.author.clone().unwrap_or("[deleted]".to_string()),
-                super::get_elapsed_time_as_text(comment.time),
+                get_elapsed_time_as_text(comment.time),
             ));
 
             let (comment_content, links) = parse_raw_comment(
