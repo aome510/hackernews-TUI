@@ -1,4 +1,5 @@
 use super::comment_view::CommentView;
+use super::story_view::StoryView;
 use crate::prelude::*;
 
 /// Construct a new Event view from a LinearLayout by adding
@@ -76,5 +77,14 @@ impl ListEventView for CommentView {
     fn handle_digit(&mut self, c: char) -> Option<EventResult> {
         self.add_raw_command_char(c);
         Some(EventResult::Consumed(None))
+    }
+}
+
+impl ListEventView for StoryView {
+    fn focus_up(&mut self) -> Option<EventResult> {
+        self.get_inner_mut().focus_up()
+    }
+    fn focus_down(&mut self) -> Option<EventResult> {
+        self.get_inner_mut().focus_down()
     }
 }

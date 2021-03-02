@@ -2,9 +2,9 @@ use super::event_view;
 use super::text_view;
 use super::theme::*;
 use crate::prelude::*;
-use crate::webbrowser;
 
 pub struct CommentView {
+    story_url: Option<String>,
     raw_command: String,
     view: LinearLayout,
     comments: Vec<(StyledString, usize, Vec<String>)>,
@@ -102,7 +102,7 @@ impl ViewWrapper for CommentView {
 
 impl CommentView {
     /// Return a new CommentView based on the list of comments received from HN Client
-    pub fn new(comments: &Vec<Box<hn_client::Comment>>) -> Self {
+    pub fn new(story_url: Option<String>, comments: &Vec<Box<hn_client::Comment>>) -> Self {
         let comments = parse_comment_text_list(&comments, 0);
         let view = LinearLayout::vertical().with(|v| {
             comments.iter().for_each(|comment| {
@@ -116,6 +116,7 @@ impl CommentView {
             })
         });
         CommentView {
+            story_url,
             raw_command: "".to_string(),
             view,
             comments,
@@ -145,12 +146,13 @@ impl CommentView {
 /// Return a cursive's View representing a CommentView with
 /// registered event handlers and scrollable trait.
 pub fn get_comment_view(
+    story_url: Option<String>,
     hn_client: &hn_client::HNClient,
     comments: &Vec<Box<hn_client::Comment>>,
 ) -> impl IntoBoxedView {
     let hn_client = hn_client.clone();
 
-    event_view::construct_event_view(CommentView::new(comments))
+    event_view::construct_event_view(CommentView::new(story_url, comments))
         .on_event('q', move |s| match hn_client.get_top_stories() {
             Ok(stories) => {
                 s.pop_layer();
@@ -226,6 +228,20 @@ pub fn get_comment_view(
                 }
             }
             Err(_) => None,
+        })
+        .on_pre_event_inner('O', move |s, _| {
+            if s.story_url.is_some() {
+                let url = s.story_url.clone().unwrap();
+                match webbrowser::open(&url) {
+                    Ok(_) => Some(EventResult::Consumed(None)),
+                    Err(err) => {
+                        error!("failed to open link {}: {}", url, err);
+                        None
+                    }
+                }
+            } else {
+                Some(EventResult::Consumed(None))
+            }
         })
         .scrollable()
 }
