@@ -44,14 +44,16 @@ impl View for TextView {
     fn draw(&self, printer: &Printer) {
         printer.with_selection(printer.focused, |printer| {
             self.rows.iter().enumerate().for_each(|(y, row)| {
-                let mut total_width: usize = 0;
+                let mut x: usize = 0;
                 row.resolve(&self.content).iter().for_each(|span| {
                     let l = span.content.chars().count();
-                    printer.print((0, y), span.content);
-                    total_width += l;
+                    printer.with_style(*span.attr, |printer| {
+                        printer.print((x, y), span.content);
+                    });
+                    x += l;
                 });
-                if total_width < printer.size.x {
-                    printer.print_hline((total_width, y), printer.size.x - total_width, " ");
+                if x < printer.size.x {
+                    printer.print_hline((x, y), printer.size.x - x, " ");
                 }
             });
         });

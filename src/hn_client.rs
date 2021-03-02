@@ -43,7 +43,7 @@ pub struct Story {
     pub num_comments: i32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 /// Comment represents a comment in Hacker News.
 pub struct Comment {
     pub id: i32,
