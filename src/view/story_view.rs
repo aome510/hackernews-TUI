@@ -2,6 +2,8 @@ use super::event_view;
 use super::text_view;
 use crate::prelude::*;
 
+/// StoryView is a View displaying a list stories corresponding
+/// to a particular category (top stories, newest stories, most popular stories, etc).
 pub struct StoryView {
     view: LinearLayout,
     stories: Vec<hn_client::Story>,

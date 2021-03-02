@@ -3,6 +3,7 @@ use super::text_view;
 use super::theme::*;
 use crate::prelude::*;
 
+/// CommentView is a View displaying a comment thread of a HN story
 pub struct CommentView {
     story_url: Option<String>,
     raw_command: String,
@@ -24,6 +25,8 @@ fn parse_raw_comment(
     s = code_re.replace_all(&s, "```\n${code}\n```").to_string();
     let mut links: Vec<String> = vec![];
     let mut styled_s = StyledString::new();
+    // replace the <a href="${link}">...</a> pattern one-by-one with "${link}".
+    // cannot use replace_all as above because we want to color links and link ids
     loop {
         match link_re.captures(&s.clone()) {
             None => break,
