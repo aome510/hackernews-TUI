@@ -12,3 +12,4 @@ pub use serde::{
     Deserialize, Deserializer,
 };
 pub use std::time::{Duration, SystemTime};
+pub use webbrowser;

@@ -2,8 +2,10 @@ use super::event_view;
 use super::text_view;
 use super::theme::*;
 use crate::prelude::*;
+use crate::webbrowser;
 
 pub struct CommentView {
+    raw_command: String,
     view: LinearLayout,
     comments: Vec<(StyledString, usize, Vec<String>)>,
 }
@@ -42,7 +44,7 @@ fn parse_raw_comment(
                     styled_s.append_plain(&prefix);
                 }
 
-                styled_s.append_styled(link, Style::from(LINK_COLOR));
+                styled_s.append_styled(format!("\"{}\"", link), Style::from(LINK_COLOR));
                 styled_s.append_styled(
                     links.len().to_string(),
                     ColorStyle::new(LINK_ID_FRONT, LINK_ID_BACK),
@@ -66,7 +68,7 @@ fn parse_comment_text_list(
     let paragraph_re = Regex::new(r"<p>(?s)(?P<paragraph>.*?)</p>").unwrap();
     let italic_re = Regex::new(r"<i>(?s)(?P<text>.+?)</i>").unwrap();
     let code_re = Regex::new(r"<pre><code>(?s)(?P<code>.+?)[\n]*</code></pre>").unwrap();
-    let link_re = Regex::new(r#"<a\s+?href=(?P<link>".+?").+?</a>"#).unwrap();
+    let link_re = Regex::new(r#"<a\s+?href="(?P<link>.+?)".+?</a>"#).unwrap();
 
     comments
         .par_iter()
@@ -113,12 +115,28 @@ impl CommentView {
                 ));
             })
         });
-        CommentView { view, comments }
+        CommentView {
+            raw_command: "".to_string(),
+            view,
+            comments,
+        }
     }
 
     /// Get the height of each comment in the comment tree
     pub fn get_heights(&self) -> Vec<usize> {
         self.comments.iter().map(|comment| comment.1).collect()
+    }
+
+    pub fn add_raw_command_char(&mut self, c: char) {
+        self.raw_command.push(c);
+    }
+
+    pub fn clear_raw_command(&mut self) {
+        self.raw_command.clear();
+    }
+
+    pub fn get_raw_command_as_number(&self) -> Result<usize> {
+        Ok(self.raw_command.parse::<usize>()?)
     }
 
     inner_getters!(self.view: LinearLayout);
@@ -154,7 +172,7 @@ pub fn get_comment_view(
             };
             match s.set_focus_index(next_id) {
                 Ok(_) => Some(EventResult::Consumed(None)),
-                Err(_) => Some(EventResult::Ignored),
+                Err(_) => None,
             }
         })
         .on_pre_event_inner('h', move |s, _| {
@@ -165,7 +183,7 @@ pub fn get_comment_view(
             let next_id = left.iter().rposition(|&h| h <= heights[id]).unwrap_or(id);
             match s.set_focus_index(next_id) {
                 Ok(_) => Some(EventResult::Consumed(None)),
-                Err(_) => Some(EventResult::Ignored),
+                Err(_) => None,
             }
         })
         .on_pre_event_inner('t', |s, _| {
@@ -173,7 +191,7 @@ pub fn get_comment_view(
             if s.len() > 0 {
                 match s.set_focus_index(0) {
                     Ok(_) => Some(EventResult::Consumed(None)),
-                    Err(_) => Some(EventResult::Ignored),
+                    Err(_) => None,
                 }
             } else {
                 Some(EventResult::Consumed(None))
@@ -184,11 +202,30 @@ pub fn get_comment_view(
             if s.len() > 0 {
                 match s.set_focus_index(s.len() - 1) {
                     Ok(_) => Some(EventResult::Consumed(None)),
-                    Err(_) => Some(EventResult::Ignored),
+                    Err(_) => None,
                 }
             } else {
                 Some(EventResult::Consumed(None))
             }
+        })
+        .on_pre_event_inner('f', |s, _| match s.get_raw_command_as_number() {
+            Ok(num) => {
+                s.clear_raw_command();
+                let id = s.get_inner().get_focus_index();
+                let links = s.comments[id].2.clone();
+                if num < links.len() {
+                    match webbrowser::open(&links[num]) {
+                        Ok(_) => Some(EventResult::Consumed(None)),
+                        Err(err) => {
+                            error!("failed to open link {}: {}", links[num], err);
+                            None
+                        }
+                    }
+                } else {
+                    Some(EventResult::Consumed(None))
+                }
+            }
+            Err(_) => None,
         })
         .scrollable()
 }

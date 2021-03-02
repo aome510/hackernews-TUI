@@ -8,6 +8,22 @@ pub fn construct_event_view<T: ListEventView>(view: T) -> OnEventView<T> {
     OnEventView::new(view)
         .on_pre_event_inner('k', |s, _| s.focus_up())
         .on_pre_event_inner('j', |s, _| s.focus_down())
+        .on_pre_event_inner(
+            EventTrigger::from_fn(|e| match *e {
+                Event::Char(c) => '0' <= c && c <= '9',
+                _ => false,
+            }),
+            |s, e| match *e {
+                Event::Char(c) => {
+                    if '0' <= c && c <= '9' {
+                        s.handle_digit(c)
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            },
+        )
 }
 
 /// ListEventView is a trait that implements method interfaces
@@ -17,6 +33,9 @@ pub trait ListEventView {
         None
     }
     fn focus_down(&mut self) -> Option<EventResult> {
+        None
+    }
+    fn handle_digit(&mut self, _: char) -> Option<EventResult> {
         None
     }
 }
@@ -53,5 +72,9 @@ impl ListEventView for CommentView {
     }
     fn focus_down(&mut self) -> Option<EventResult> {
         self.get_inner_mut().focus_down()
+    }
+    fn handle_digit(&mut self, c: char) -> Option<EventResult> {
+        self.add_raw_command_char(c);
+        Some(EventResult::Consumed(None))
     }
 }
