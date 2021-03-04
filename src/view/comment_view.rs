@@ -82,11 +82,14 @@ fn parse_comment_text_list(
         .flat_map(|comment| {
             let comment = &comment.as_ref();
             let mut subcomments = parse_comment_text_list(&comment.children, height + 1);
-            let mut comment_string = StyledString::plain(format!(
-                "{} {} ago\n",
-                comment.author.clone().unwrap_or("[deleted]".to_string()),
-                get_elapsed_time_as_text(comment.time),
-            ));
+            let mut comment_string = StyledString::styled(
+                format!(
+                    "{} {} ago\n",
+                    comment.author.clone().unwrap_or("[deleted]".to_string()),
+                    get_elapsed_time_as_text(comment.time),
+                ),
+                DESC_COLOR,
+            );
 
             let (comment_content, links) = parse_raw_comment(
                 comment.text.clone().unwrap_or("[deleted]".to_string()),

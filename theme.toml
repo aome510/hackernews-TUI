@@ -1,6 +1,6 @@
 [colors]
-    background = "black"
-    view = "black"
-    highlight = "#DC143C"
-    shadow = "black"
-    primary = "white"
+    background = "#f6f6ef"
+    view = "#f6f6ef"
+    highlight = "#6c6c6c"
+    shadow = "#f6f6ef"
+    primary = "#4a4a48"

@@ -34,7 +34,7 @@ impl StoryView {
                         get_elapsed_time_as_text(story.time),
                         story.num_comments,
                     ),
-                    ColorStyle::from(STORY_DESC_COLOR),
+                    ColorStyle::from(DESC_COLOR),
                 );
                 s.add_child(text_view::TextView::new(story_text));
             })
