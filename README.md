@@ -1,12 +1,13 @@
 # hackernews-TUI
-`hackernew_tui` is a Terminal UI to browse Hacker News written in Rust.
+`hackernews_tui` is a Terminal UI to browse Hacker News written in Rust.
 
 The application mainly consists of two views:
 - `Story View` displaying a list of top stories.
 - `Comment View` displaying a list of comments in a story.
 
 ## Installation
-TBA...
+### Using cargo
+Run `cargo install hackernews_tui` to install the application as a binary.
 
 ## Examples
 
