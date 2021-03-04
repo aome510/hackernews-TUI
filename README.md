@@ -30,6 +30,7 @@ Comment View:
 - `k`, `j` to move the focus up and down between comments.
 - `l` to move the focus to the next comment with smaller or equal level as the currently focused comment.
 - `h` to move the focus to the previous comment with smaller or equal level as the currently focused comment.
+- `t` to move the the top of the view, `b` to move the bottom of the view.
 - `{link_id} f` to open the the `{link_id}`th link in the focused comment.
 For example, press `0` followed by `f` will open the first link in the currently focused comment.
 
