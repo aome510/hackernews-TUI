@@ -11,3 +11,7 @@ Cargo.lock
 
 # Log files
 log.*
+
+# Temp files
+*.tmp
+*.temp
