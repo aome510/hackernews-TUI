@@ -11,10 +11,10 @@ TBA...
 ## Examples
 
 Story View:
-![Example of a Story View](./examples/assets/story_view.png)
+![Example of a Story View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/story_view.png)
 
 Comment View:
-![Example of a Comment View](./examples/assets/comment_view.png)
+![Example of a Comment View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/comment_view.png)
 
 ## Documentation
 ### Keyboard shortcuts
