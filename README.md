@@ -8,6 +8,8 @@ The application mainly consists of two views:
 ## Installation
 ### Using cargo
 Run `cargo install hackernews_tui` to install the application as a binary.
+### Using archlinux AUR
+Run `yay -S hackernews_tui` to install the application as an AUR package.
 
 ## Examples
 
