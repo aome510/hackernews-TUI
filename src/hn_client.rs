@@ -73,7 +73,15 @@ pub struct HNClient {
 
 /// Retrieves all comments from a story with a given id
 pub fn get_comments_from_story_id(id: i32, client: &HNClient) -> Result<Vec<Box<Comment>>> {
+    let time = SystemTime::now();
     let story = client.get_item_from_id::<Story>(id)?;
+    if let Ok(elapsed) = time.elapsed() {
+        debug!(
+            "get comments from story {} took {}ms",
+            id,
+            elapsed.as_millis()
+        );
+    }
     Ok(story.children)
 }
 
@@ -98,16 +106,20 @@ impl HNClient {
 
     /// Retrieve a list of stories on HN frontpage
     pub fn get_top_stories(&self) -> Result<Vec<Story>> {
-        // get top 50 stories. However, angolia normally returns the top 32 stories at most
+        // get top 50 stories. However, angolia front-page API normally returns at most top 33 stories
         let request_url = format!(
             "{}/search?tags=front_page&hitsPerPage=50",
             HN_ALGOLIA_PREFIX
         );
+        let time = SystemTime::now();
         let response = self
             .client
             .get(&request_url)
             .send()?
             .json::<StoriesResponse>()?;
+        if let Ok(elapsed) = time.elapsed() {
+            debug!("get top stories took {}ms", elapsed.as_millis());
+        }
         Ok(response.hits)
     }
 }

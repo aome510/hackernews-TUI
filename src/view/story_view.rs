@@ -70,7 +70,7 @@ pub fn get_story_view(stories: Vec<hn_client::Story>, client: &hn_client::HNClie
                 match webbrowser::open(&url) {
                     Ok(_) => Some(EventResult::Consumed(None)),
                     Err(err) => {
-                        error!("failed to open link {}: {}", url, err);
+                        warn!("failed to open link {}: {}", url, err);
                         None
                     }
                 }

@@ -225,7 +225,7 @@ pub fn get_comment_view(
                     match webbrowser::open(&links[num]) {
                         Ok(_) => Some(EventResult::Consumed(None)),
                         Err(err) => {
-                            error!("failed to open link {}: {}", links[num], err);
+                            warn!("failed to open link {}: {}", links[num], err);
                             None
                         }
                     }
@@ -241,7 +241,7 @@ pub fn get_comment_view(
                 match webbrowser::open(&url) {
                     Ok(_) => Some(EventResult::Consumed(None)),
                     Err(err) => {
-                        error!("failed to open link {}: {}", url, err);
+                        warn!("failed to open link {}: {}", url, err);
                         None
                     }
                 }
