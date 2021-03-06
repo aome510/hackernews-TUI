@@ -112,19 +112,31 @@ impl ViewWrapper for CommentView {
 
 impl CommentView {
     /// Return a new CommentView based on the list of comments received from HN Client
-    pub fn new(story_url: Option<String>, comments: &Vec<Box<hn_client::Comment>>) -> Self {
+    pub fn new(
+        story_text: StyledString,
+        story_url: Option<String>,
+        comments: &Vec<Box<hn_client::Comment>>,
+    ) -> Self {
         let comments = parse_comment_text_list(&comments, 0);
-        let view = LinearLayout::vertical().with(|v| {
-            comments.iter().for_each(|comment| {
-                v.add_child(PaddedView::lrtb(
-                    comment.1 * 2,
-                    0,
-                    0,
-                    1,
-                    text_view::TextView::new(comment.0.clone()),
-                ));
-            })
-        });
+        let view = LinearLayout::vertical()
+            .child(PaddedView::lrtb(
+                0,
+                0,
+                0,
+                2,
+                text_view::TextView::new(story_text),
+            ))
+            .with(|v| {
+                comments.iter().for_each(|comment| {
+                    v.add_child(PaddedView::lrtb(
+                        comment.1 * 2,
+                        0,
+                        0,
+                        1,
+                        text_view::TextView::new(comment.0.clone()),
+                    ));
+                })
+            });
         CommentView {
             story_url,
             raw_command: "".to_string(),
@@ -156,13 +168,14 @@ impl CommentView {
 /// Return a cursive's View representing a CommentView with
 /// registered event handlers and scrollable trait.
 pub fn get_comment_view(
+    story_text: StyledString,
     story_url: Option<String>,
     client: &hn_client::HNClient,
     comments: &Vec<Box<hn_client::Comment>>,
 ) -> impl View {
     let client = client.clone();
 
-    event_view::construct_event_view(CommentView::new(story_url, comments))
+    event_view::construct_event_view(CommentView::new(story_text, story_url, comments))
         .on_event('q', move |s| {
             s.pop_layer();
             let async_view = async_view::get_story_view_async(s, &client);
@@ -172,13 +185,17 @@ pub fn get_comment_view(
             let heights = s.get_heights();
             let s = s.get_inner_mut();
             let id = s.get_focus_index();
+            if id == 0 {
+                return None;
+            }
+            let id = id - 1;
             let (_, right) = heights.split_at(id + 1);
             let offset = right.iter().position(|&h| h <= heights[id]);
             let next_id = match offset {
                 None => id,
                 Some(offset) => id + offset + 1,
             };
-            match s.set_focus_index(next_id) {
+            match s.set_focus_index(next_id + 1) {
                 Ok(_) => Some(EventResult::Consumed(None)),
                 Err(_) => None,
             }
@@ -187,9 +204,13 @@ pub fn get_comment_view(
             let heights = s.get_heights();
             let s = s.get_inner_mut();
             let id = s.get_focus_index();
+            if id == 0 {
+                return None;
+            }
+            let id = id - 1;
             let (left, _) = heights.split_at(id);
             let next_id = left.iter().rposition(|&h| h <= heights[id]).unwrap_or(id);
-            match s.set_focus_index(next_id) {
+            match s.set_focus_index(next_id + 1) {
                 Ok(_) => Some(EventResult::Consumed(None)),
                 Err(_) => None,
             }
@@ -220,7 +241,10 @@ pub fn get_comment_view(
             Ok(num) => {
                 s.clear_raw_command();
                 let id = s.get_inner().get_focus_index();
-                let links = s.comments[id].2.clone();
+                if id == 0 {
+                    return None;
+                }
+                let links = s.comments[id - 1].2.clone();
                 if num < links.len() {
                     match webbrowser::open(&links[num]) {
                         Ok(_) => Some(EventResult::Consumed(None)),

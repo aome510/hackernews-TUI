@@ -17,9 +17,11 @@ pub fn get_comment_view_async(
         },
         {
             let client = client.clone();
+            let story_text = story_view::get_story_text(story);
             move |result| {
                 ErrorViewWrapper::new(match result {
                     Ok(comments) => ErrorViewEnum::Ok(comment_view::get_comment_view(
+                        story_text.clone(),
                         url.clone(),
                         &client,
                         &comments,

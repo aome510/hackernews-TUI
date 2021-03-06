@@ -11,31 +11,36 @@ pub struct StoryView {
     stories: Vec<hn_client::Story>,
 }
 
+pub fn get_story_text(story: &hn_client::Story) -> StyledString {
+    let mut story_text = StyledString::plain(format!(
+        "{}",
+        story.title.clone().unwrap_or("[deleted]".to_string())
+    ));
+    if story.url.is_some() {
+        story_text.append_styled(
+            format!("\n({})", shorten_url(story.url.clone().unwrap())),
+            ColorStyle::from(LINK_COLOR),
+        );
+    }
+    story_text.append_styled(
+        format!(
+            "\n{} points | by {} | {} ago | {} comments",
+            story.points,
+            story.author.clone().unwrap_or("[deleted]".to_string()),
+            get_elapsed_time_as_text(story.time),
+            story.num_comments,
+        ),
+        ColorStyle::from(DESC_COLOR),
+    );
+    story_text
+}
+
 impl StoryView {
     pub fn new(stories: Vec<hn_client::Story>) -> Self {
         let view = LinearLayout::vertical().with(|s| {
             stories.iter().enumerate().for_each(|(i, story)| {
-                let mut story_text = StyledString::plain(format!(
-                    "{}. {}",
-                    i + 1,
-                    story.title.clone().unwrap_or("[deleted]".to_string()),
-                ));
-                if story.url.is_some() {
-                    story_text.append_styled(
-                        format!("\n({})", shorten_url(story.url.clone().unwrap())),
-                        ColorStyle::from(LINK_COLOR),
-                    );
-                }
-                story_text.append_styled(
-                    format!(
-                        "\n{} points | by {} | {} ago | {} comments",
-                        story.points,
-                        story.author.clone().unwrap_or("[deleted]".to_string()),
-                        get_elapsed_time_as_text(story.time),
-                        story.num_comments,
-                    ),
-                    ColorStyle::from(DESC_COLOR),
-                );
+                let mut story_text = StyledString::plain(format!("{}. ", i + 1));
+                story_text.append(get_story_text(story));
                 s.add_child(text_view::TextView::new(story_text));
             })
         });
