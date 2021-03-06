@@ -27,6 +27,7 @@ Comment View:
 - `O` to open the link associated with the focused story in the default browser.
 - `q` to exit the application.
 - `{story_id} g` to move the focus to the `{story_id}`-th story. Note that `{story_id}` is 1-based index.
+- `t` to move the focus to the top of the view, `b` to move the focus to the bottom of the view.
 #### Comment View
 - `O` to open the link associated with the discussed story in the default browser.
 - `q` to move back to the `Story View`.

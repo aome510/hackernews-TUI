@@ -9,6 +9,8 @@ pub fn construct_event_view<T: ListEventView>(view: T) -> OnEventView<T> {
     OnEventView::new(view)
         .on_pre_event_inner('k', |s, _| s.focus_up())
         .on_pre_event_inner('j', |s, _| s.focus_down())
+        .on_pre_event_inner('t', |s, _| s.focus_top())
+        .on_pre_event_inner('b', |s, _| s.focus_bottom())
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| match *e {
             Event::Char(c) => s.handle_digit(c),
             _ => None,
@@ -18,6 +20,12 @@ pub fn construct_event_view<T: ListEventView>(view: T) -> OnEventView<T> {
 /// ListEventView is a trait that implements method interfaces
 /// to interact with a List View
 pub trait ListEventView {
+    fn focus_top(&mut self) -> Option<EventResult> {
+        None
+    }
+    fn focus_bottom(&mut self) -> Option<EventResult> {
+        None
+    }
     fn focus_up(&mut self) -> Option<EventResult> {
         None
     }
@@ -30,6 +38,26 @@ pub trait ListEventView {
 }
 
 impl ListEventView for LinearLayout {
+    fn focus_top(&mut self) -> Option<EventResult> {
+        if self.len() > 0 {
+            match self.set_focus_index(0) {
+                Ok(_) => Some(EventResult::Consumed(None)),
+                Err(_) => None,
+            }
+        } else {
+            Some(EventResult::Consumed(None))
+        }
+    }
+    fn focus_bottom(&mut self) -> Option<EventResult> {
+        if self.len() > 0 {
+            match self.set_focus_index(self.len() - 1) {
+                Ok(_) => Some(EventResult::Consumed(None)),
+                Err(_) => None,
+            }
+        } else {
+            Some(EventResult::Consumed(None))
+        }
+    }
     fn focus_up(&mut self) -> Option<EventResult> {
         let id = self.get_focus_index();
         if id > 0 {
@@ -80,6 +108,12 @@ macro_rules! list_event_view_wrapper {
         }
         fn focus_down(&mut self) -> Option<EventResult> {
             self.get_inner_mut().focus_down()
+        }
+        fn focus_top(&mut self) -> Option<EventResult> {
+            self.get_inner_mut().focus_top()
+        }
+        fn focus_bottom(&mut self) -> Option<EventResult> {
+            self.get_inner_mut().focus_bottom()
         }
     };
 }

@@ -205,28 +205,6 @@ pub fn get_comment_view(
                 Err(_) => None,
             }
         })
-        .on_pre_event_inner('t', |s, _| {
-            let s = s.get_inner_mut();
-            if s.len() > 0 {
-                match s.set_focus_index(0) {
-                    Ok(_) => Some(EventResult::Consumed(None)),
-                    Err(_) => None,
-                }
-            } else {
-                Some(EventResult::Consumed(None))
-            }
-        })
-        .on_pre_event_inner('b', |s, _| {
-            let s = s.get_inner_mut();
-            if s.len() > 0 {
-                match s.set_focus_index(s.len() - 1) {
-                    Ok(_) => Some(EventResult::Consumed(None)),
-                    Err(_) => None,
-                }
-            } else {
-                Some(EventResult::Consumed(None))
-            }
-        })
         .on_pre_event_inner('f', |s, _| match s.get_raw_command_as_number() {
             Ok(num) => {
                 s.clear_raw_command();
