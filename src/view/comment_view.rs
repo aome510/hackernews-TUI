@@ -150,17 +150,7 @@ impl CommentView {
         self.comments.iter().map(|comment| comment.1).collect()
     }
 
-    pub fn add_raw_command_char(&mut self, c: char) {
-        self.raw_command.push(c);
-    }
-
-    pub fn clear_raw_command(&mut self) {
-        self.raw_command.clear();
-    }
-
-    pub fn get_raw_command_as_number(&self) -> Result<usize> {
-        Ok(self.raw_command.parse::<usize>()?)
-    }
+    crate::raw_command!();
 
     inner_getters!(self.view: LinearLayout);
 }

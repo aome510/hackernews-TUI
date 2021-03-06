@@ -7,6 +7,7 @@ use crate::prelude::*;
 /// StoryView is a View displaying a list stories corresponding
 /// to a particular category (top stories, newest stories, most popular stories, etc).
 pub struct StoryView {
+    raw_command: String,
     view: LinearLayout,
     stories: Vec<hn_client::Story>,
 }
@@ -44,8 +45,14 @@ impl StoryView {
                 s.add_child(text_view::TextView::new(story_text));
             })
         });
-        StoryView { view, stories }
+        StoryView {
+            raw_command: String::new(),
+            view,
+            stories,
+        }
     }
+
+    crate::raw_command!();
 
     inner_getters!(self.view: LinearLayout);
 }
@@ -82,6 +89,23 @@ pub fn get_story_view(stories: Vec<hn_client::Story>, client: &hn_client::HNClie
             } else {
                 Some(EventResult::Consumed(None))
             }
+        })
+        .on_pre_event_inner('g', move |s, _| match s.get_raw_command_as_number() {
+            Ok(number) => {
+                s.clear_raw_command();
+                let s = s.get_inner_mut();
+                if number == 0 {
+                    return None;
+                }
+                let number = number - 1;
+                if number < s.len() {
+                    s.set_focus_index(number).unwrap();
+                    Some(EventResult::Consumed(None))
+                } else {
+                    None
+                }
+            }
+            Err(_) => None,
         })
         .on_event('q', |s| s.quit())
         .scrollable()
