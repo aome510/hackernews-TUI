@@ -20,7 +20,7 @@ where
     Ok(opt.unwrap_or_default())
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 /// Story represents a story post in Hacker News.
 pub struct Story {
     #[serde(default)]
