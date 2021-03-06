@@ -24,10 +24,11 @@ pub fn get_comment_view_async(
                         &client,
                         &comments,
                     )),
-                    Err(err) => ErrorViewEnum::Err(error_view::get_error_view(format!(
-                        "failed to get comments from story {}: {:#?}",
-                        id, err
-                    ))),
+                    Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
+                        format!("failed to get comments from story {}", id),
+                        err,
+                        &client,
+                    )),
                 })
             }
         },
@@ -47,10 +48,11 @@ pub fn get_story_view_async(siv: &mut Cursive, client: &hn_client::HNClient) -> 
             move |result| {
                 ErrorViewWrapper::new(match result {
                     Ok(stories) => ErrorViewEnum::Ok(story_view::get_story_view(stories, &client)),
-                    Err(err) => ErrorViewEnum::Err(error_view::get_error_view(format!(
-                        "failed to get top stories: {:#?}",
-                        err
-                    ))),
+                    Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
+                        format!("failed to get top stories"),
+                        err,
+                        &client,
+                    )),
                 })
             }
         },

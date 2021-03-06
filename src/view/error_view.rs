@@ -1,8 +1,32 @@
 use crate::prelude::*;
 
 /// Return a Cursive's View displaying an error
-pub fn get_error_view(error_string: String) -> impl View {
-    TextView::new(error_string)
+pub fn get_error_view(err_desc: String, err: Error, client: &hn_client::HNClient) -> impl View {
+    OnEventView::new(
+        Dialog::around(
+            LinearLayout::vertical()
+                .child(TextView::new(err_desc))
+                .child(TextView::new(format!("{:#?}", err))),
+        )
+        .button("home", {
+            let client = client.clone();
+            move |s| {
+                let async_view = async_view::get_story_view_async(s, &client);
+                s.pop_layer();
+                s.add_layer(async_view);
+            }
+        })
+        .button("quit", |s| s.quit()),
+    )
+    .on_event('q', |s| s.quit())
+    .on_event('h', {
+        let client = client.clone();
+        move |s| {
+            let async_view = async_view::get_story_view_async(s, &client);
+            s.pop_layer();
+            s.add_layer(async_view);
+        }
+    })
 }
 
 /// An enum representing a normal View or an error View
