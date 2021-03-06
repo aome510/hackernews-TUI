@@ -1,10 +1,17 @@
 use crate::prelude::*;
 
+/// Return a Cursive's View displaying an error
+pub fn get_error_view(error_string: String) -> impl View {
+    TextView::new(error_string)
+}
+
+/// An enum representing a normal View or an error View
 pub enum ErrorViewEnum<V: View, E: View> {
     Ok(V),
     Err(E),
 }
 
+/// ErrorViewWrapper wraps the ErrorViewEnum and implements View traits for it
 pub struct ErrorViewWrapper<V: View, E: View> {
     view: ErrorViewEnum<V, E>,
 }

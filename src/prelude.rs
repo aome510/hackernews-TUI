@@ -1,6 +1,6 @@
 pub use crate::hn_client;
 pub use crate::view::{async_view, comment_view, story_view};
-pub use anyhow::Result;
+pub use anyhow::{Error, Result};
 pub use cursive::{
     direction::*, event::*, theme::*, traits::*, utils::markup::*, utils::*, view::*, views::*, *,
 };
