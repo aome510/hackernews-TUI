@@ -157,20 +157,16 @@ impl CommentView {
 /// registered event handlers and scrollable trait.
 pub fn get_comment_view(
     story_url: Option<String>,
-    hn_client: &hn_client::HNClient,
+    client: &hn_client::HNClient,
     comments: &Vec<Box<hn_client::Comment>>,
-) -> impl IntoBoxedView {
-    let hn_client = hn_client.clone();
+) -> impl View {
+    let client = client.clone();
 
     event_view::construct_event_view(CommentView::new(story_url, comments))
-        .on_event('q', move |s| match hn_client.get_top_stories() {
-            Ok(stories) => {
-                s.pop_layer();
-                s.add_layer(story_view::get_story_view(stories, &hn_client))
-            }
-            Err(err) => {
-                error!("failed to get top stories: {:#?}", err);
-            }
+        .on_event('q', move |s| {
+            s.pop_layer();
+            let async_view = async_view::get_story_view_async(s, &client);
+            s.add_layer(async_view);
         })
         .on_pre_event_inner('l', move |s, _| {
             let heights = s.get_heights();
@@ -229,7 +225,7 @@ pub fn get_comment_view(
                     match webbrowser::open(&links[num]) {
                         Ok(_) => Some(EventResult::Consumed(None)),
                         Err(err) => {
-                            error!("failed to open link {}: {}", links[num], err);
+                            warn!("failed to open link {}: {}", links[num], err);
                             None
                         }
                     }
@@ -245,7 +241,7 @@ pub fn get_comment_view(
                 match webbrowser::open(&url) {
                     Ok(_) => Some(EventResult::Consumed(None)),
                     Err(err) => {
-                        error!("failed to open link {}: {}", url, err);
+                        warn!("failed to open link {}: {}", url, err);
                         None
                     }
                 }
