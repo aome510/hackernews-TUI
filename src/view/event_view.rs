@@ -25,14 +25,7 @@ pub fn construct_event_view<T: ListEventView>(view: T) -> OnEventView<T> {
             | Event::Key(Key::PageDown) => Some(EventResult::Ignored),
             _ => None,
         })
-        .on_event('?', |s| {
-            s.add_layer(HelpView::new().keys(vec![
-                ("j", "Focus the next element"),
-                ("k", "Focus the previous element"),
-                ("q", "Quit the current view"),
-                ("ESC", "Close this help dialog"),
-            ]));
-        })
+        .on_pre_event_inner('?', |s, _| s.add_help_dialog())
 }
 
 /// ListEventView is a trait that implements method interfaces
@@ -51,6 +44,9 @@ pub trait ListEventView {
         None
     }
     fn handle_digit(&mut self, _: char) -> Option<EventResult> {
+        None
+    }
+    fn add_help_dialog(&self) -> Option<EventResult> {
         None
     }
 }
@@ -152,10 +148,61 @@ macro_rules! list_event_view_wrapper {
     };
 }
 
-impl ListEventView for CommentView {
-    crate::list_event_view_wrapper!('f');
-}
-
 impl ListEventView for StoryView {
     crate::list_event_view_wrapper!('g');
+
+    fn add_help_dialog(&self) -> Option<EventResult> {
+        Some(EventResult::Consumed(Some(Callback::from_fn(|s| {
+            s.add_layer(HelpView::new().keys(vec![
+                ("j", "Focus the next story"),
+                ("k", "Focus the previous story"),
+                ("t", "Focus the story at the top"),
+                ("b", "Focus the story at the bottom"),
+                ("{story_id} g", "Focus the {story_id}-th story"),
+                (
+                    "RETURN",
+                    "Go the comment view associated with the focused story",
+                ),
+                (
+                    "O",
+                    "Open the link associated with the focused story using the default browser",
+                ),
+                ("q", "Quit the story view"),
+                ("ESC", "Close this help dialog"),
+            ]));
+        }))))
+    }
+}
+
+impl ListEventView for CommentView {
+    crate::list_event_view_wrapper!('f');
+
+    fn add_help_dialog(&self) -> Option<EventResult> {
+        Some(EventResult::Consumed(Some(Callback::from_fn(|s| {
+            s.add_layer(HelpView::new().keys(vec![
+                ("j", "Focus the next comment"),
+                ("k", "Focus the previous comment"),
+                ("t", "Focus the comment at the top"),
+                ("b", "Focus the comment at the bottom"),
+                (
+                    "l",
+                    "Move the focus to the next comment with smaller or equal level",
+                ),
+                (
+                    "h",
+                    "Move the focus to the previous comment with smaller or equal level",
+                ),
+                (
+                    "O",
+                    "Open the link associated with the discussed story using the default browser",
+                ),
+                (
+                    "{link_id} f",
+                    "Open the {link_id}-th link in the focused comment using the default browser",
+                ),
+                ("q", "Quit the comment view"),
+                ("ESC", "Close this help dialog"),
+            ]));
+        }))))
+    }
 }

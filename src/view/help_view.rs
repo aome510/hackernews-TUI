@@ -17,14 +17,16 @@ impl HelpView {
         }
     }
 
-    fn get_key_string(key: (String, String), gap: usize) -> StyledString {
-        let mut key_string = StyledString::new();
-        key_string.append_styled(key.0, ColorStyle::new(PaletteColor::Primary, CODE_COLOR));
-        key_string.append_styled(
-            format!("{}{}", " ".repeat(gap), key.1),
-            ColorStyle::primary(),
-        );
-        key_string
+    fn construct_key_view(key: (String, String), max_key_width: usize) -> impl View {
+        let key_string =
+            StyledString::styled(key.0, ColorStyle::new(PaletteColor::Primary, CODE_COLOR));
+        let desc_string = StyledString::plain(key.1);
+        LinearLayout::horizontal()
+            .child(ResizedView::with_fixed_width(
+                max_key_width,
+                text_view::TextView::new(key_string).unfocusable(),
+            ))
+            .child(text_view::TextView::new(desc_string).unfocusable())
     }
 
     fn construct_help_dialog_event_view(view: Dialog) -> OnEventView<Dialog> {
@@ -42,14 +44,8 @@ impl HelpView {
         ResizedView::with_fixed_width(
             64,
             LinearLayout::vertical().with(|s| {
-                keys.iter().for_each(|key| {
-                    s.add_child(
-                        text_view::TextView::new(HelpView::get_key_string(
-                            key.clone(),
-                            max_key_len - key.0.len() + 1,
-                        ))
-                        .unfocusable(),
-                    );
+                keys.into_iter().for_each(|key| {
+                    s.add_child(HelpView::construct_key_view(key, max_key_len + 1));
                 });
             }),
         )
