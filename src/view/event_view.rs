@@ -11,8 +11,17 @@ pub fn construct_event_view<T: ListEventView>(view: T) -> OnEventView<T> {
         .on_pre_event_inner('j', |s, _| s.focus_down())
         .on_pre_event_inner('t', |s, _| s.focus_top())
         .on_pre_event_inner('b', |s, _| s.focus_bottom())
+        // event handlers for parsing numbers
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| match *e {
             Event::Char(c) => s.handle_digit(c),
+            _ => None,
+        })
+        // ignore up,down,pageUp,pageDown keys. Rely on main scrollView to handle those keys
+        .on_pre_event_inner(EventTrigger::from_fn(|_| true), |_, e| match *e {
+            Event::Key(Key::Up)
+            | Event::Key(Key::Down)
+            | Event::Key(Key::PageUp)
+            | Event::Key(Key::PageDown) => Some(EventResult::Ignored),
             _ => None,
         })
 }
