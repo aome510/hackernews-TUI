@@ -102,7 +102,7 @@ macro_rules! raw_command {
 
 #[macro_export]
 macro_rules! list_event_view_wrapper {
-    () => {
+    ($($x:expr),*) => {
         fn focus_up(&mut self) -> Option<EventResult> {
             self.get_inner_mut().focus_up()
         }
@@ -115,35 +115,29 @@ macro_rules! list_event_view_wrapper {
         fn focus_bottom(&mut self) -> Option<EventResult> {
             self.get_inner_mut().focus_bottom()
         }
+        fn handle_digit(&mut self, c: char) -> Option<EventResult> {
+            if '0' <= c && c <= '9' {
+                self.add_raw_command_char(c);
+                Some(EventResult::Consumed(None))
+            } else {
+                match c {
+                    $(
+                        $x => {},
+                    )*
+                    _ => {
+                        self.clear_raw_command();
+                    }
+                };
+                None
+            }
+        }
     };
 }
 
 impl ListEventView for CommentView {
-    crate::list_event_view_wrapper!();
-    fn handle_digit(&mut self, c: char) -> Option<EventResult> {
-        if '0' <= c && c <= '9' {
-            self.add_raw_command_char(c);
-            Some(EventResult::Consumed(None))
-        } else {
-            if c != 'f' {
-                self.clear_raw_command();
-            }
-            None
-        }
-    }
+    crate::list_event_view_wrapper!('f');
 }
 
 impl ListEventView for StoryView {
-    crate::list_event_view_wrapper!();
-    fn handle_digit(&mut self, c: char) -> Option<EventResult> {
-        if '0' <= c && c <= '9' {
-            self.add_raw_command_char(c);
-            Some(EventResult::Consumed(None))
-        } else {
-            if c != 'g' {
-                self.clear_raw_command();
-            }
-            None
-        }
-    }
+    crate::list_event_view_wrapper!('g');
 }
