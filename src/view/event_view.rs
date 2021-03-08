@@ -1,4 +1,5 @@
 use super::comment_view::CommentView;
+use super::help_view::HelpView;
 use super::story_view::StoryView;
 use crate::prelude::*;
 
@@ -23,6 +24,14 @@ pub fn construct_event_view<T: ListEventView>(view: T) -> OnEventView<T> {
             | Event::Key(Key::PageUp)
             | Event::Key(Key::PageDown) => Some(EventResult::Ignored),
             _ => None,
+        })
+        .on_event('?', |s| {
+            s.add_layer(HelpView::new().keys(vec![
+                ("j", "Focus the next element"),
+                ("k", "Focus the previous element"),
+                ("q", "Quit the current view"),
+                ("ESC", "Close this help dialog"),
+            ]));
         })
 }
 
