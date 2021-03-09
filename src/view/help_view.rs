@@ -22,10 +22,11 @@ impl HelpView {
             StyledString::styled(key.0, ColorStyle::new(PaletteColor::Primary, CODE_COLOR));
         let desc_string = StyledString::plain(key.1);
         LinearLayout::horizontal()
-            .child(ResizedView::with_fixed_width(
-                max_key_width,
-                text_view::TextView::new(key_string).unfocusable(),
-            ))
+            .child(
+                text_view::TextView::new(key_string)
+                    .unfocusable()
+                    .fixed_width(max_key_width),
+            )
             .child(text_view::TextView::new(desc_string).unfocusable())
     }
 
@@ -41,14 +42,13 @@ impl HelpView {
             Some(key) => key.0.len(),
         };
 
-        ResizedView::with_fixed_width(
-            64,
-            LinearLayout::vertical().with(|s| {
+        LinearLayout::vertical()
+            .with(|s| {
                 keys.into_iter().for_each(|key| {
                     s.add_child(HelpView::construct_key_view(key, max_key_len + 1));
                 });
-            }),
-        )
+            })
+            .fixed_width(64)
     }
 
     pub fn keys(mut self, keys: Vec<(&str, &str)>) -> Self {

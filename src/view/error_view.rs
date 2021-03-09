@@ -13,7 +13,7 @@ pub fn get_error_view(err_desc: String, err: Error, client: &hn_client::HNClient
             move |s| {
                 let async_view = async_view::get_story_view_async(s, &client);
                 s.pop_layer();
-                s.add_layer(async_view);
+                s.screen_mut().add_transparent_layer(Layer::new(async_view));
             }
         })
         .button("quit", |s| s.quit()),
