@@ -112,31 +112,19 @@ impl ViewWrapper for CommentView {
 
 impl CommentView {
     /// Return a new CommentView based on the list of comments received from HN Client
-    pub fn new(
-        story_text: StyledString,
-        story_url: Option<String>,
-        comments: &Vec<Box<hn_client::Comment>>,
-    ) -> Self {
+    pub fn new(story_url: Option<String>, comments: &Vec<Box<hn_client::Comment>>) -> Self {
         let comments = parse_comment_text_list(&comments, 0);
-        let view = LinearLayout::vertical()
-            .child(PaddedView::lrtb(
-                0,
-                0,
-                0,
-                2,
-                text_view::TextView::new(story_text),
-            ))
-            .with(|v| {
-                comments.iter().for_each(|comment| {
-                    v.add_child(PaddedView::lrtb(
-                        comment.1 * 2,
-                        0,
-                        0,
-                        1,
-                        text_view::TextView::new(comment.0.clone()),
-                    ));
-                })
-            });
+        let view = LinearLayout::vertical().with(|v| {
+            comments.iter().for_each(|comment| {
+                v.add_child(PaddedView::lrtb(
+                    comment.1 * 2,
+                    0,
+                    0,
+                    1,
+                    text_view::TextView::new(comment.0.clone()),
+                ));
+            })
+        });
         CommentView {
             story_url,
             raw_command: "".to_string(),
@@ -155,37 +143,30 @@ impl CommentView {
     inner_getters!(self.view: LinearLayout);
 }
 
-/// Return a cursive's View representing a CommentView with
-/// registered event handlers and scrollable trait.
-pub fn get_comment_view(
-    story_text: StyledString,
+fn get_comment_main_view(
     story_url: Option<String>,
     client: &hn_client::HNClient,
     comments: &Vec<Box<hn_client::Comment>>,
 ) -> impl View {
     let client = client.clone();
 
-    event_view::construct_event_view(CommentView::new(story_text, story_url, comments))
+    event_view::construct_event_view(CommentView::new(story_url, comments))
         .on_event('q', move |s| {
-            s.pop_layer();
             let async_view = async_view::get_story_view_async(s, &client);
-            s.add_layer(async_view);
+            s.pop_layer();
+            s.screen_mut().add_transparent_layer(Layer::new(async_view));
         })
         .on_pre_event_inner('l', move |s, _| {
             let heights = s.get_heights();
             let s = s.get_inner_mut();
             let id = s.get_focus_index();
-            if id == 0 {
-                return None;
-            }
-            let id = id - 1;
             let (_, right) = heights.split_at(id + 1);
             let offset = right.iter().position(|&h| h <= heights[id]);
             let next_id = match offset {
                 None => id,
                 Some(offset) => id + offset + 1,
             };
-            match s.set_focus_index(next_id + 1) {
+            match s.set_focus_index(next_id) {
                 Ok(_) => Some(EventResult::Consumed(None)),
                 Err(_) => None,
             }
@@ -194,13 +175,9 @@ pub fn get_comment_view(
             let heights = s.get_heights();
             let s = s.get_inner_mut();
             let id = s.get_focus_index();
-            if id == 0 {
-                return None;
-            }
-            let id = id - 1;
             let (left, _) = heights.split_at(id);
             let next_id = left.iter().rposition(|&h| h <= heights[id]).unwrap_or(id);
-            match s.set_focus_index(next_id + 1) {
+            match s.set_focus_index(next_id) {
                 Ok(_) => Some(EventResult::Consumed(None)),
                 Err(_) => None,
             }
@@ -209,10 +186,7 @@ pub fn get_comment_view(
             Ok(num) => {
                 s.clear_raw_command();
                 let id = s.get_inner().get_focus_index();
-                if id == 0 {
-                    return None;
-                }
-                let links = s.comments[id - 1].2.clone();
+                let links = s.comments[id].2.clone();
                 if num < links.len() {
                     match webbrowser::open(&links[num]) {
                         Ok(_) => Some(EventResult::Consumed(None)),
@@ -242,4 +216,33 @@ pub fn get_comment_view(
             }
         })
         .scrollable()
+}
+
+pub fn get_comment_status_bar(story_title: Option<String>) -> impl View {
+    Layer::with_color(
+        TextView::new(StyledString::styled(
+            format!("Comment View - {}", story_title.unwrap()),
+            ColorStyle::new(Color::Dark(BaseColor::Black), STATUS_BAR_COLOR),
+        ))
+        .align(align::Align::center()),
+        ColorStyle::back(STATUS_BAR_COLOR),
+    )
+}
+
+/// Return a cursive's View representing a CommentView with
+/// registered event handlers and scrollable trait.
+pub fn get_comment_view(
+    story_title: Option<String>,
+    story_url: Option<String>,
+    client: &hn_client::HNClient,
+    comments: &Vec<Box<hn_client::Comment>>,
+) -> impl View {
+    let main_view = get_comment_main_view(story_url, client, comments);
+    let status_bar = get_comment_status_bar(story_title);
+    let mut view = LinearLayout::vertical()
+        .child(status_bar)
+        .child(main_view)
+        .child(construct_footer_view());
+    view.set_focus_index(1).unwrap();
+    view
 }

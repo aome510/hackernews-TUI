@@ -29,3 +29,28 @@ pub fn shorten_url(url: String) -> String {
         url
     }
 }
+
+/// Construct a simple footer view
+pub fn construct_footer_view() -> impl View {
+    let style = ColorStyle::new(
+        Color::Dark(BaseColor::Black),
+        Color::Light(BaseColor::White),
+    );
+    Layer::with_color(
+        LinearLayout::horizontal()
+            .child(
+                TextView::new(StyledString::styled(
+                    " Hacker News Terminal UI - made by AOME ©",
+                    style,
+                ))
+                .align(align::Align::bot_left())
+                .full_width(),
+            )
+            .child(
+                TextView::new(StyledString::styled(" [?: help] ", style))
+                    .align(align::Align::bot_right())
+                    .full_width(),
+            ),
+        style,
+    )
+}

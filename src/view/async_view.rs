@@ -1,4 +1,5 @@
 use super::error_view::{self, ErrorViewEnum, ErrorViewWrapper};
+use super::{comment_view, story_view};
 use crate::prelude::*;
 
 /// Wrap comment_view::get_comment_view into an async_view with a loading screen
@@ -9,6 +10,7 @@ pub fn get_comment_view_async(
 ) -> impl View {
     let id = story.id;
     let url = story.url.clone();
+    let title = story.title.clone();
     AsyncView::new_with_bg_creator(
         siv,
         {
@@ -17,11 +19,10 @@ pub fn get_comment_view_async(
         },
         {
             let client = client.clone();
-            let story_text = story_view::get_story_text(story);
             move |result| {
                 ErrorViewWrapper::new(match result {
                     Ok(comments) => ErrorViewEnum::Ok(comment_view::get_comment_view(
-                        story_text.clone(),
+                        title.clone(),
                         url.clone(),
                         &client,
                         &comments,

@@ -61,18 +61,21 @@ impl ViewWrapper for StoryView {
     wrap_impl!(self.view: LinearLayout);
 }
 
-/// Return a cursive's View representing a StoryView of HN stories
-pub fn get_story_view(stories: Vec<hn_client::Story>, client: &hn_client::HNClient) -> impl View {
+fn get_story_main_view(stories: Vec<hn_client::Story>, client: &hn_client::HNClient) -> impl View {
     let client = client.clone();
+    let stories = stories
+        .into_iter()
+        .filter(|story| story.title.is_some())
+        .collect();
     event_view::construct_event_view(StoryView::new(stories))
         .on_pre_event_inner(Key::Enter, move |s, _| {
             let client = client.clone();
             let id = s.get_inner().get_focus_index();
             let story = s.stories[id].clone();
             Some(EventResult::with_cb(move |s| {
-                s.pop_layer();
                 let async_view = async_view::get_comment_view_async(s, &client, &story);
-                s.add_layer(async_view);
+                s.pop_layer();
+                s.screen_mut().add_transparent_layer(Layer::new(async_view))
             }))
         })
         .on_pre_event_inner('O', move |s, _| {
@@ -109,4 +112,27 @@ pub fn get_story_view(stories: Vec<hn_client::Story>, client: &hn_client::HNClie
         })
         .on_event('q', |s| s.quit())
         .scrollable()
+}
+
+fn get_story_status_bar() -> impl View {
+    Layer::with_color(
+        TextView::new(StyledString::styled(
+            "Story View - Front Page",
+            ColorStyle::new(Color::Dark(BaseColor::Black), STATUS_BAR_COLOR),
+        ))
+        .align(align::Align::center()),
+        ColorStyle::back(STATUS_BAR_COLOR),
+    )
+}
+
+/// Return a cursive's View representing a StoryView of HN stories
+pub fn get_story_view(stories: Vec<hn_client::Story>, client: &hn_client::HNClient) -> impl View {
+    let main_view = get_story_main_view(stories, client);
+    let status_bar = get_story_status_bar();
+    let mut view = LinearLayout::vertical()
+        .child(status_bar)
+        .child(main_view)
+        .child(construct_footer_view());
+    view.set_focus_index(1).unwrap();
+    view
 }
