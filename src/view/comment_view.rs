@@ -239,7 +239,10 @@ pub fn get_comment_view(
 ) -> impl View {
     let main_view = get_comment_main_view(story_url, client, comments);
     let status_bar = get_comment_status_bar(story_title);
-    let mut view = LinearLayout::vertical().child(status_bar).child(main_view);
+    let mut view = LinearLayout::vertical()
+        .child(status_bar)
+        .child(main_view)
+        .child(construct_footer_view());
     view.set_focus_index(1).unwrap();
     view
 }

@@ -15,7 +15,7 @@ fn main() {
 
     let client = hn_client::HNClient::new().unwrap();
     let async_view = async_view::get_story_view_async(&mut siv, &client);
-    // we need to a view without shadow at the center of the screen
+    // we need a view without shadow at the center of the screen
     siv.screen_mut()
         .add_transparent_layer(Layer::new(async_view));
     siv.run();

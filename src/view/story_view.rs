@@ -129,7 +129,10 @@ fn get_story_status_bar() -> impl View {
 pub fn get_story_view(stories: Vec<hn_client::Story>, client: &hn_client::HNClient) -> impl View {
     let main_view = get_story_main_view(stories, client);
     let status_bar = get_story_status_bar();
-    let mut view = LinearLayout::vertical().child(status_bar).child(main_view);
+    let mut view = LinearLayout::vertical()
+        .child(status_bar)
+        .child(main_view)
+        .child(construct_footer_view());
     view.set_focus_index(1).unwrap();
     view
 }
