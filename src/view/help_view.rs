@@ -1,4 +1,3 @@
-use super::text_view;
 use super::theme::*;
 use crate::prelude::*;
 
@@ -22,12 +21,8 @@ impl HelpView {
             StyledString::styled(key.0, ColorStyle::new(PaletteColor::Primary, CODE_COLOR));
         let desc_string = StyledString::plain(key.1);
         LinearLayout::horizontal()
-            .child(
-                text_view::TextView::new(key_string)
-                    .unfocusable()
-                    .fixed_width(max_key_width),
-            )
-            .child(text_view::TextView::new(desc_string).unfocusable())
+            .child(TextView::new(key_string).fixed_width(max_key_width))
+            .child(TextView::new(desc_string))
     }
 
     fn construct_help_dialog_event_view(view: Dialog) -> OnEventView<Dialog> {

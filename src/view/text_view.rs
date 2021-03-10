@@ -1,13 +1,11 @@
 use crate::prelude::*;
 
-/// TextView wraps a text string based on the view port
-/// and the text alignment
+/// TextView wraps a text string into a focusable view
 pub struct TextView {
     content: utils::markup::StyledString,
     rows: Vec<lines::spans::Row>,
     width: usize,
     size_cache: Option<XY<SizeCache>>,
-    focusable: bool,
 }
 
 impl TextView {
@@ -21,13 +19,9 @@ impl TextView {
             rows: Vec::new(),
             width: 0,
             size_cache: None,
-            focusable: true,
         }
     }
-    pub fn unfocusable(mut self) -> Self {
-        self.focusable = false;
-        self
-    }
+
     fn is_size_cache_valid(&self, size: Vec2) -> bool {
         match self.size_cache {
             None => false,
@@ -48,7 +42,7 @@ impl TextView {
 
 impl View for TextView {
     fn draw(&self, printer: &Printer) {
-        printer.with_selection(printer.focused && self.focusable, |printer| {
+        printer.with_selection(printer.focused, |printer| {
             self.rows.iter().enumerate().for_each(|(y, row)| {
                 let mut x: usize = 0;
                 row.resolve(&self.content).iter().for_each(|span| {
@@ -81,7 +75,7 @@ impl View for TextView {
     }
 
     fn take_focus(&mut self, _: direction::Direction) -> bool {
-        return self.focusable;
+        true
     }
 
     fn required_size(&mut self, size: Vec2) -> Vec2 {
