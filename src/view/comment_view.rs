@@ -152,6 +152,9 @@ fn get_comment_main_view(
 
     event_view::construct_event_view(CommentView::new(story_url, comments))
         .on_event('q', move |s| {
+            s.quit();
+        })
+        .on_event('H', move |s| {
             let async_view = async_view::get_story_view_async(s, &client);
             s.pop_layer();
             s.screen_mut().add_transparent_layer(Layer::new(async_view));

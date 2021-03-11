@@ -40,16 +40,15 @@ pub fn construct_footer_view() -> impl View {
         LinearLayout::horizontal()
             .child(
                 TextView::new(StyledString::styled(
-                    " Hacker News Terminal UI - made by AOME ©",
+                    "Hacker News Terminal UI - made by AOME ©",
                     style,
                 ))
-                .align(align::Align::bot_left())
+                .align(align::Align::bot_center())
                 .full_width(),
             )
             .child(
-                TextView::new(StyledString::styled(" [?: help] ", style))
-                    .align(align::Align::bot_right())
-                    .full_width(),
+                TextView::new(StyledString::styled("[?: help] ", style))
+                    .align(align::Align::bot_right()),
             ),
         style,
     )

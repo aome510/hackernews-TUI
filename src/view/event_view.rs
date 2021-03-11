@@ -3,8 +3,8 @@ use super::help_view::HelpView;
 use super::story_view::StoryView;
 use crate::prelude::*;
 
-/// Construct a new Event view from a LinearLayout by adding
-/// event handlers for a key pressed
+/// Construct a new Event view from a view with ListEventView trait
+/// by adding simple key-pressed event handlers
 pub fn construct_event_view<T: ListEventView>(view: T) -> OnEventView<T> {
     // add "j" and "k" for moving down and up the story list
     OnEventView::new(view)
@@ -28,7 +28,7 @@ pub fn construct_event_view<T: ListEventView>(view: T) -> OnEventView<T> {
         .on_pre_event_inner('?', |s, _| s.add_help_dialog())
 }
 
-/// ListEventView is a trait that implements method interfaces
+/// ListEventView is a trait that implements basic method interfaces
 /// to interact with a List View (normally CommentView or StoryView)
 pub trait ListEventView {
     fn focus_top(&mut self) -> Option<EventResult> {
@@ -164,7 +164,7 @@ impl StoryView {
                 "O",
                 "Open the link associated with the focused story using the default browser",
             ),
-            ("q", "Quit the story view"),
+            ("q", "Quit the application"),
             ("ESC", "Close this help dialog"),
         ])
     }
@@ -203,7 +203,8 @@ impl CommentView {
                 "{link_id} f",
                 "Open the {link_id}-th link in the focused comment using the default browser",
             ),
-            ("q", "Quit the comment view"),
+            ("H", "Return to home page"),
+            ("q", "Quit the application"),
             ("ESC", "Close this help dialog"),
         ])
     }
