@@ -49,12 +49,34 @@ impl SearchView {
     }
 
     fn get_query_text_view(query: &str) -> impl View {
+        let style = ColorStyle::back(Color::Light(BaseColor::White));
         Layer::with_color(
-            TextView::new(query.to_string())
+            TextView::new(StyledString::styled(query.to_string(), style))
                 .full_width()
                 .fixed_height(1),
-            ColorStyle::back(Color::Light(BaseColor::White)),
+            style,
         )
+    }
+
+    fn update_query_text_view(&mut self) {
+        // because we cannot modify content of a wrapped view struct,
+        // update the query_text_view by removing the old one and adding the new one.
+        // Need a swap to keep the relative order between sub views
+        self.view.remove_child(0).unwrap();
+        self.view
+            .add_child(SearchView::get_query_text_view(&self.query));
+        self.view.swap_children(0, 1);
+        self.view.set_focus_index(1).unwrap();
+    }
+
+    pub fn add_char(&mut self, c: char) {
+        self.query.push(c);
+        self.update_query_text_view();
+    }
+
+    pub fn del_char(&mut self) {
+        self.query.pop();
+        self.update_query_text_view();
     }
 
     pub fn new(client: &hn_client::HNClient) -> Self {
@@ -69,9 +91,21 @@ impl SearchView {
 
 pub fn get_search_view(client: &hn_client::HNClient) -> impl View {
     let client = client.clone();
-    OnEventView::new(SearchView::new(&client)).on_event(Event::AltChar('f'), move |s| {
-        s.pop_layer();
-        let async_view = async_view::get_story_view_async(s, &client);
-        s.screen_mut().add_transparent_layer(Layer::new(async_view));
-    })
+    OnEventView::new(SearchView::new(&client))
+        .on_event(Event::AltChar('f'), move |s| {
+            s.pop_layer();
+            let async_view = async_view::get_story_view_async(s, &client);
+            s.screen_mut().add_transparent_layer(Layer::new(async_view));
+        })
+        .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| match *e {
+            Event::Char(c) => {
+                s.add_char(c);
+                Some(EventResult::Consumed(None))
+            }
+            Event::Key(Key::Backspace) => {
+                s.del_char();
+                Some(EventResult::Consumed(None))
+            }
+            _ => None,
+        })
 }
