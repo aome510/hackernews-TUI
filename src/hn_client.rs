@@ -68,7 +68,7 @@ struct StoriesResponse {
 /// HNClient is a http client to communicate with Hacker News APIs.
 #[derive(Clone)]
 pub struct HNClient {
-    client: reqwest::blocking::Client,
+    client: ureq::Agent,
 }
 
 /// Retrieves all comments from a story with a given id
@@ -89,9 +89,7 @@ impl HNClient {
     /// Create new Hacker News Client
     pub fn new() -> Result<HNClient> {
         Ok(HNClient {
-            client: reqwest::blocking::Client::builder()
-                .timeout(CLIENT_TIMEOUT)
-                .build()?,
+            client: ureq::AgentBuilder::new().timeout(CLIENT_TIMEOUT).build(),
         })
     }
 
@@ -101,7 +99,7 @@ impl HNClient {
         T: DeserializeOwned,
     {
         let request_url = format!("{}/items/{}", HN_ALGOLIA_PREFIX, id);
-        Ok(self.client.get(&request_url).send()?.json::<T>()?)
+        Ok(self.client.get(&request_url).call()?.into_json::<T>()?)
     }
 
     /// Retrieve a list of stories on HN frontpage
@@ -115,8 +113,8 @@ impl HNClient {
         let response = self
             .client
             .get(&request_url)
-            .send()?
-            .json::<StoriesResponse>()?;
+            .call()?
+            .into_json::<StoriesResponse>()?;
         if let Ok(elapsed) = time.elapsed() {
             debug!("get top stories took {}ms", elapsed.as_millis());
         }
