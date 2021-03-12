@@ -61,3 +61,6 @@ pub fn get_story_view_async(siv: &mut Cursive, client: &hn_client::HNClient) -> 
         },
     )
 }
+
+// pub fn get_matched_stories_view_async(siv: &mut Cursive, client: &hn_client::HNClient) -> impl View {
+// }

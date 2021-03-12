@@ -21,6 +21,21 @@ where
 }
 
 #[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all(deserialize = "camelCase"))]
+pub struct MatchResult {
+    value: Option<String>,
+    #[serde(default)]
+    matched_words: Vec<String>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct HighlightResult {
+    title: Option<MatchResult>,
+    url: Option<MatchResult>,
+    author: Option<MatchResult>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
 /// Story represents a story post in Hacker News.
 pub struct Story {
     #[serde(default)]
@@ -41,6 +56,10 @@ pub struct Story {
     #[serde(default)]
     #[serde(deserialize_with = "parse_null_default")]
     pub num_comments: i32,
+
+    // search result
+    #[serde(rename(deserialize = "_highlightResult"))]
+    pub highlight_result: Option<HighlightResult>,
 }
 
 #[derive(Clone, Debug, Deserialize)]

@@ -1,5 +1,6 @@
 use crate::prelude::*;
 
+/// SearchView is a view used to search for stories
 pub struct SearchView {
     view: LinearLayout,
 }
