@@ -1,6 +1,7 @@
 use super::error_view::{self, ErrorViewEnum, ErrorViewWrapper};
 use super::event_view::ListEventView;
 use crate::prelude::*;
+use std::thread;
 
 use super::story_view;
 
@@ -8,6 +9,7 @@ use super::story_view;
 pub struct SearchView {
     query: String,
     view: LinearLayout,
+    client: hn_client::HNClient,
 }
 
 impl ViewWrapper for SearchView {
@@ -17,7 +19,7 @@ impl ViewWrapper for SearchView {
 impl SearchView {
     fn get_matched_stories_view(query: &str, client: &hn_client::HNClient) -> impl View {
         let client = client.clone();
-        ErrorViewWrapper::new(match client.get_matched_stories("") {
+        ErrorViewWrapper::new(match client.get_matched_stories(query) {
             Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
                 format!("failed to get matched stories with query {}", query),
                 err,
@@ -48,42 +50,37 @@ impl SearchView {
         })
     }
 
-    fn get_query_text_view(query: &str) -> impl View {
-        let style = ColorStyle::back(Color::Light(BaseColor::White));
-        Layer::with_color(
-            TextView::new(StyledString::styled(query.to_string(), style))
-                .full_width()
-                .fixed_height(1),
-            style,
-        )
+    fn get_query_text_view() -> impl View {
+        TextArea::new().full_width().fixed_height(1)
     }
 
-    fn update_query_text_view(&mut self) {
-        // because we cannot modify content of a wrapped view struct,
-        // update the query_text_view by removing the old one and adding the new one.
-        // Need a swap to keep the relative order between sub views
-        self.view.remove_child(0).unwrap();
-        self.view
-            .add_child(SearchView::get_query_text_view(&self.query));
-        self.view.swap_children(0, 1);
-        self.view.set_focus_index(1).unwrap();
+    fn update_matched_stories_view(&mut self) {
+        self.view.remove_child(1).unwrap();
+        debug!("query: {}", self.query);
+        thread::spawn(|| {
+            self.view.add_child(SearchView::get_matched_stories_view(
+                &self.query,
+                &self.client,
+            ));
+        });
     }
 
     pub fn add_char(&mut self, c: char) {
         self.query.push(c);
-        self.update_query_text_view();
+        self.update_matched_stories_view();
     }
 
     pub fn del_char(&mut self) {
         self.query.pop();
-        self.update_query_text_view();
+        self.update_matched_stories_view();
     }
 
     pub fn new(client: &hn_client::HNClient) -> Self {
         SearchView {
+            client: client.clone(),
             query: "".to_string(),
             view: LinearLayout::vertical()
-                .child(SearchView::get_query_text_view(""))
+                .child(SearchView::get_query_text_view())
                 .child(SearchView::get_matched_stories_view("", &client)),
         }
     }
@@ -100,11 +97,11 @@ pub fn get_search_view(client: &hn_client::HNClient) -> impl View {
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| match *e {
             Event::Char(c) => {
                 s.add_char(c);
-                Some(EventResult::Consumed(None))
+                None
             }
             Event::Key(Key::Backspace) => {
                 s.del_char();
-                Some(EventResult::Consumed(None))
+                None
             }
             _ => None,
         })
