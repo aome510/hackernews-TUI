@@ -4,8 +4,8 @@ use crate::prelude::*;
 /// HelpView displays a dialog with a list of key shortcut/description
 pub struct HelpView {
     view: OnEventView<Dialog>,
-    // ("key", "description") pair
-    keys: Vec<(String, String)>,
+    // "section description" followed by a vector of ("key", "key description") pairs
+    keys: Vec<(&'static str, Vec<(&'static str, &'static str)>)>,
 }
 
 impl HelpView {
@@ -31,32 +31,47 @@ impl HelpView {
         })
     }
 
-    fn construct_keys_view(keys: Vec<(String, String)>) -> impl View {
-        let max_key_len = match keys.iter().max_by_key(|key| key.0.len()) {
-            None => 0,
-            Some(key) => key.0.len(),
-        };
+    fn construct_keys_view(&self) -> impl View {
+        LinearLayout::vertical().with(|s| {
+            self.keys.iter().for_each(|(desc, keys)| {
+                s.add_child(TextView::new(StyledString::styled(
+                    desc.to_string(),
+                    ColorStyle::from(BaseColor::Black),
+                )));
+                s.add_child({
+                    let max_key_len = match keys.iter().max_by_key(|key| key.0.len()) {
+                        None => 0,
+                        Some(key) => key.0.len(),
+                    };
 
-        LinearLayout::vertical()
-            .with(|s| {
-                keys.into_iter().for_each(|key| {
-                    s.add_child(HelpView::construct_key_view(key, max_key_len + 1));
+                    PaddedView::lrtb(
+                        0,
+                        0,
+                        0,
+                        1,
+                        LinearLayout::vertical()
+                            .with(|s| {
+                                keys.iter().for_each(|key| {
+                                    s.add_child(HelpView::construct_key_view(
+                                        (key.0.to_string(), key.1.to_string()),
+                                        max_key_len + 1,
+                                    ));
+                                });
+                            })
+                            .fixed_width(64),
+                    )
                 });
-            })
-            .fixed_width(64)
+            });
+        })
     }
 
-    pub fn keys(mut self, keys: Vec<(&str, &str)>) -> Self {
-        self.keys.append(
-            &mut keys
-                .into_iter()
-                .map(|key| (key.0.to_string(), key.1.to_string()))
-                .collect(),
-        );
-        let keys = self.keys.clone();
-        self.view
-            .get_inner_mut()
-            .set_content(HelpView::construct_keys_view(keys));
+    pub fn keys(
+        mut self,
+        mut keys: Vec<(&'static str, Vec<(&'static str, &'static str)>)>,
+    ) -> Self {
+        self.keys.append(&mut keys);
+        let key_view = self.construct_keys_view();
+        self.view.get_inner_mut().set_content(key_view);
         self
     }
 }

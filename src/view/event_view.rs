@@ -151,21 +151,34 @@ macro_rules! list_event_view_wrapper {
 impl StoryView {
     pub fn construct_help_view() -> impl View {
         HelpView::new().keys(vec![
-            ("j", "Focus the next story"),
-            ("k", "Focus the previous story"),
-            ("t", "Focus the story at the top"),
-            ("b", "Focus the story at the bottom"),
-            ("{story_id} g", "Focus the {story_id}-th story"),
             (
-                "RETURN",
-                "Go the comment view associated with the focused story",
+                "Navigation",
+                vec![
+                    ("j", "Focus the next story"),
+                    ("k", "Focus the previous story"),
+                    ("t", "Focus the story at the top"),
+                    ("b", "Focus the story at the bottom"),
+                    ("{story_id} g", "Focus the {story_id}-th story"),
+                ],
             ),
             (
-                "O",
-                "Open the link associated with the focused story using the default browser",
+                "Open external links",
+                vec![(
+                    "O",
+                    "Open the link associated with the focused story using the default browser",
+                )],
             ),
-            ("q", "Quit the application"),
-            ("ESC", "Close this help dialog"),
+            (
+                "Others",
+                vec![
+                    (
+                        "RETURN",
+                        "Go the comment view associated with the focused story",
+                    ),
+                    ("q", "Quit the application"),
+                    ("ESC", "Close this help dialog"),
+                ],
+            ),
         ])
     }
 }
@@ -183,18 +196,23 @@ impl ListEventView for StoryView {
 impl CommentView {
     pub fn construct_help_view() -> impl View {
         HelpView::new().keys(vec![
-            ("j", "Focus the next comment"),
-            ("k", "Focus the previous comment"),
-            ("t", "Focus the comment at the top"),
-            ("b", "Focus the comment at the bottom"),
             (
-                "l",
-                "Move the focus to the next comment with smaller or equal level",
+                "Navigation",
+                vec![
+                    ("j", "Focus the next comment"),
+                    ("k", "Focus the previous comment"),
+                    ("t", "Focus the comment at the top"),
+                    ("b", "Focus the comment at the bottom"),
+                    ("l", "Focus the next comment with smaller or equal level"),
+                    (
+                        "h",
+                        "Focus the previous comment with smaller or equal level",
+                    ),
+                ],
             ),
             (
-                "h",
-                "Move the focus to the previous comment with smaller or equal level",
-            ),
+                "Open external links",
+                vec![
             (
                 "O",
                 "Open the link associated with the discussed story using the default browser",
@@ -202,10 +220,16 @@ impl CommentView {
             (
                 "{link_id} f",
                 "Open the {link_id}-th link in the focused comment using the default browser",
+            ),],
             ),
-            ("H", "Return to home page"),
-            ("q", "Quit the application"),
-            ("ESC", "Close this help dialog"),
+            (
+                "Others",
+                vec![
+                    ("H", "Return to home page"),
+                    ("q", "Quit the application"),
+                    ("ESC", "Close this help dialog"),
+                ],
+            ),
         ])
     }
 }
