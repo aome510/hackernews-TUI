@@ -1,4 +1,5 @@
 use super::event_view;
+use super::search_view;
 use super::text_view;
 use super::theme::*;
 use super::utils::*;
@@ -68,15 +69,27 @@ fn get_story_main_view(stories: Vec<hn_client::Story>, client: &hn_client::HNCli
         .filter(|story| story.title.is_some())
         .collect();
     event_view::construct_event_view(StoryView::new(stories))
-        .on_pre_event_inner(Key::Enter, move |s, _| {
+        .on_event(Event::AltChar('s'), {
             let client = client.clone();
-            let id = s.get_inner().get_focus_index();
-            let story = s.stories[id].clone();
-            Some(EventResult::with_cb(move |s| {
-                let async_view = async_view::get_comment_view_async(s, &client, &story);
+            move |s| {
                 s.pop_layer();
-                s.screen_mut().add_transparent_layer(Layer::new(async_view))
-            }))
+                s.screen_mut()
+                    .add_transparent_layer(Layer::new(search_view::get_search_view(&client)))
+            }
+        })
+        .on_pre_event_inner(Key::Enter, {
+            move |s, _| {
+                let id = s.get_inner().get_focus_index();
+                let story = s.stories[id].clone();
+                Some(EventResult::with_cb({
+                    let client = client.clone();
+                    move |s| {
+                        let async_view = async_view::get_comment_view_async(s, &client, &story);
+                        s.pop_layer();
+                        s.screen_mut().add_transparent_layer(Layer::new(async_view))
+                    }
+                }))
+            }
         })
         .on_pre_event_inner('O', move |s, _| {
             let id = s.get_inner().get_focus_index();
@@ -110,7 +123,7 @@ fn get_story_main_view(stories: Vec<hn_client::Story>, client: &hn_client::HNCli
             }
             Err(_) => None,
         })
-        .on_event('q', |s| s.quit())
+        .on_event(Event::AltChar('q'), |s| s.quit())
         .scrollable()
 }
 

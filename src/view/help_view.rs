@@ -109,7 +109,7 @@ impl StoryView {
                         "RETURN",
                         "Go the comment view associated with the focused story",
                     ),
-                    ("q", "Quit the application"),
+                    ("Alt q", "Quit the application"),
                     ("ESC", "Close this help dialog"),
                 ],
             ),
@@ -150,9 +150,9 @@ impl CommentView {
             (
                 "Others",
                 vec![
-                    ("H", "Return to home page"),
-                    ("q", "Quit the application"),
-                    ("ESC", "Close this help dialog"),
+                    ("Alt f", "Return to home page"),
+                    ("ALt q", "Quit the application"),
+                    ("Esc", "Close this help dialog"),
                 ],
             ),
         ])
