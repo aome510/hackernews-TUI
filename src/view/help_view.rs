@@ -99,7 +99,7 @@ impl StoryView {
                 "Open external links",
                 vec![(
                     "O",
-                    "Open the link associated with the focused story using the default browser",
+                    "Open in browser the link associated with the focused story",
                 )],
             ),
             (
@@ -126,6 +126,7 @@ impl CommentView {
                     ("j", "Focus the next comment"),
                     ("k", "Focus the previous comment"),
                     ("t", "Focus the comment at the top"),
+                    ("b", "Focus the comment at the bottom"),
                     ("l", "Focus the next comment with smaller or equal level"),
                     (
                         "h",
@@ -136,14 +137,15 @@ impl CommentView {
             (
                 "Open external links",
                 vec![
-            (
-                "O",
-                "Open the link associated with the discussed story using the default browser",
-            ),
-            (
-                "{link_id} f",
-                "Open the {link_id}-th link in the focused comment using the default browser",
-            ),],
+                    (
+                        "O",
+                        "Open in browser the link associated with the discussed story",
+                    ),
+                    (
+                        "{link_id} f",
+                        "Open in browser the {link_id}-th link in the focused comment",
+                    ),
+                ],
             ),
             (
                 "Others",
