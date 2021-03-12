@@ -1,3 +1,5 @@
+use super::comment_view::CommentView;
+use super::story_view::StoryView;
 use super::theme::*;
 use crate::prelude::*;
 
@@ -78,4 +80,79 @@ impl HelpView {
 
 impl ViewWrapper for HelpView {
     wrap_impl!(self.view: OnEventView<Dialog>);
+}
+
+impl StoryView {
+    pub fn construct_help_view() -> impl View {
+        HelpView::new().keys(vec![
+            (
+                "Navigation",
+                vec![
+                    ("j", "Focus the next story"),
+                    ("k", "Focus the previous story"),
+                    ("t", "Focus the story at the top"),
+                    ("b", "Focus the story at the bottom"),
+                    ("{story_id} g", "Focus the {story_id}-th story"),
+                ],
+            ),
+            (
+                "Open external links",
+                vec![(
+                    "O",
+                    "Open the link associated with the focused story using the default browser",
+                )],
+            ),
+            (
+                "Others",
+                vec![
+                    (
+                        "RETURN",
+                        "Go the comment view associated with the focused story",
+                    ),
+                    ("q", "Quit the application"),
+                    ("ESC", "Close this help dialog"),
+                ],
+            ),
+        ])
+    }
+}
+
+impl CommentView {
+    pub fn construct_help_view() -> impl View {
+        HelpView::new().keys(vec![
+            (
+                "Navigation",
+                vec![
+                    ("j", "Focus the next comment"),
+                    ("k", "Focus the previous comment"),
+                    ("t", "Focus the comment at the top"),
+                    ("l", "Focus the next comment with smaller or equal level"),
+                    (
+                        "h",
+                        "Focus the previous comment with smaller or equal level",
+                    ),
+                ],
+            ),
+            (
+                "Open external links",
+                vec![
+            (
+                "O",
+                "Open the link associated with the discussed story using the default browser",
+            ),
+            (
+                "{link_id} f",
+                "Open the {link_id}-th link in the focused comment using the default browser",
+            ),],
+            ),
+            (
+                "Others",
+                vec![
+                    ("H", "Return to home page"),
+                    ("q", "Quit the application"),
+                    ("ESC", "Close this help dialog"),
+                ],
+            ),
+        ])
+    }
 }
