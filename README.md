@@ -21,22 +21,7 @@ Comment View:
 
 ## Documentation
 ### Keyboard shortcuts
-#### Story View
-- `k`, `j` move the focus up and down between stories.
-- `return` to enter the `Comment View` of the focused story.
-- `O` to open the link associated with the focused story in the default browser.
-- `q` to exit the application.
-- `{story_id} g` to move the focus to the `{story_id}`-th story. Note that `{story_id}` is 1-based index.
-- `t` to move the focus to the top of the view, `b` to move the focus to the bottom of the view.
-#### Comment View
-- `O` to open the link associated with the discussed story in the default browser.
-- `q` to move back to the `Story View`.
-- `k`, `j` to move the focus up and down between comments.
-- `l` to move the focus to the next comment with smaller or equal level as the currently focused comment.
-- `h` to move the focus to the previous comment with smaller or equal level as the currently focused comment.
-- `t` to move the focus to the top of the view, `b` to move the focus to the bottom of the view.
-- `{link_id} f` to open the the `{link_id}`-th link in the focused comment.
-For example, press `0` followed by `f` will open the first link in the currently focused comment.
+In `Story View` and `Comment View`, press `?` to see a list of supported keyboard shortcuts and their functionalities.
 
 ## Roadmap/TODO List
 TBA...
