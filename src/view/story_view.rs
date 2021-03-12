@@ -10,7 +10,7 @@ use crate::prelude::*;
 pub struct StoryView {
     raw_command: String,
     view: LinearLayout,
-    stories: Vec<hn_client::Story>,
+    pub stories: Vec<hn_client::Story>,
 }
 
 pub fn get_story_text(story: &hn_client::Story) -> StyledString {
@@ -68,7 +68,7 @@ fn get_story_main_view(stories: Vec<hn_client::Story>, client: &hn_client::HNCli
         .into_iter()
         .filter(|story| story.title.is_some())
         .collect();
-    event_view::construct_event_view(StoryView::new(stories))
+    event_view::construct_list_event_view(StoryView::new(stories))
         .on_event(Event::AltChar('s'), {
             let client = client.clone();
             move |s| {
@@ -123,7 +123,6 @@ fn get_story_main_view(stories: Vec<hn_client::Story>, client: &hn_client::HNCli
             }
             Err(_) => None,
         })
-        .on_event(Event::AltChar('q'), |s| s.quit())
         .scrollable()
 }
 

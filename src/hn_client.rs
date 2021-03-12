@@ -121,6 +121,29 @@ impl HNClient {
         Ok(self.client.get(&request_url).call()?.into_json::<T>()?)
     }
 
+    /// Return a list of stories whose titles match a query
+    pub fn get_matched_stories(&self, query: &str) -> Result<Vec<Story>> {
+        let request_url = format!(
+            "{}/search?tags=story&restrictSearchableAttributes=title&typoTolerance=false",
+            HN_ALGOLIA_PREFIX
+        );
+        let time = SystemTime::now();
+        let response = self
+            .client
+            .get(&request_url)
+            .query("query", query)
+            .call()?
+            .into_json::<StoriesResponse>()?;
+        if let Ok(elapsed) = time.elapsed() {
+            debug!(
+                "get matched stories with query {} took {}ms",
+                query,
+                elapsed.as_millis()
+            );
+        }
+        Ok(response.hits)
+    }
+
     /// Retrieve a list of stories on HN frontpage
     pub fn get_top_stories(&self) -> Result<Vec<Story>> {
         // get top 50 stories. However, angolia front-page API normally returns at most top 33 stories

@@ -150,10 +150,7 @@ fn get_comment_main_view(
 ) -> impl View {
     let client = client.clone();
 
-    event_view::construct_event_view(CommentView::new(story_url, comments))
-        .on_event(Event::AltChar('q'), move |s| {
-            s.quit();
-        })
+    event_view::construct_list_event_view(CommentView::new(story_url, comments))
         .on_event(Event::AltChar('f'), move |s| {
             let async_view = async_view::get_story_view_async(s, &client);
             s.pop_layer();

@@ -4,7 +4,7 @@ use crate::prelude::*;
 
 /// Construct a new Event view from a view with ListEventView trait
 /// by adding simple key-pressed event handlers
-pub fn construct_event_view<T: ListEventView>(view: T) -> OnEventView<T> {
+pub fn construct_list_event_view<T: ListEventView>(view: T) -> OnEventView<T> {
     // add "j" and "k" for moving down and up the story list
     OnEventView::new(view)
         .on_pre_event_inner('k', |s, _| s.focus_up())

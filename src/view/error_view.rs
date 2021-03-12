@@ -18,7 +18,6 @@ pub fn get_error_view(err_desc: String, err: Error, client: &hn_client::HNClient
         })
         .button("quit", |s| s.quit()),
     )
-    .on_event('q', |s| s.quit())
     .on_event('h', {
         let client = client.clone();
         move |s| {
