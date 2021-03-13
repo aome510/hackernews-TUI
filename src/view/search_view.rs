@@ -1,4 +1,5 @@
 use super::story_view;
+use super::utils::*;
 use crate::prelude::*;
 use std::{
     sync::{Arc, RwLock},
@@ -6,7 +7,6 @@ use std::{
 };
 
 /// SearchView is a view used to search for stories
-
 pub struct SearchView {
     // ("query_text", "need_update_view") pair
     query: Arc<RwLock<(String, bool)>>,
@@ -136,15 +136,8 @@ impl ViewWrapper for SearchView {
     }
 }
 
-/// Return a view represeting a SearchView with registered key-pressed event handlers
-pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl View {
-    let client = client.clone();
+fn get_main_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl View {
     OnEventView::new(SearchView::new(&client, cb_sink))
-        .on_event(Event::AltChar('f'), move |s| {
-            s.pop_layer();
-            let async_view = async_view::get_story_view_async(s, &client);
-            s.screen_mut().add_transparent_layer(Layer::new(async_view));
-        })
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
             if s.mode {
                 None
@@ -180,4 +173,21 @@ pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl Vi
                 None
             }
         })
+}
+
+/// Return a view represeting a SearchView with registered key-pressed event handlers
+pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl View {
+    let client = client.clone();
+    let main_view = get_main_search_view(&client, cb_sink);
+    let mut view = LinearLayout::vertical()
+        .child(get_status_bar_with_desc("Story Search View"))
+        .child(main_view)
+        .child(construct_footer_view());
+    view.set_focus_index(1).unwrap_or_else(|_| {});
+
+    OnEventView::new(view).on_event(Event::AltChar('f'), move |s| {
+        s.pop_layer();
+        let async_view = async_view::get_story_view_async(s, &client);
+        s.screen_mut().add_transparent_layer(Layer::new(async_view));
+    })
 }

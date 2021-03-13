@@ -125,23 +125,11 @@ pub fn get_story_main_view(
         .scrollable()
 }
 
-fn get_story_status_bar() -> impl View {
-    Layer::with_color(
-        TextView::new(StyledString::styled(
-            "Story View - Front Page",
-            ColorStyle::new(Color::Dark(BaseColor::Black), STATUS_BAR_COLOR),
-        ))
-        .align(align::Align::center()),
-        ColorStyle::back(STATUS_BAR_COLOR),
-    )
-}
-
 /// Return a cursive's View representing a StoryView of HN stories
 pub fn get_story_view(stories: Vec<hn_client::Story>, client: &hn_client::HNClient) -> impl View {
     let main_view = get_story_main_view(stories, client);
-    let status_bar = get_story_status_bar();
     let mut view = LinearLayout::vertical()
-        .child(status_bar)
+        .child(get_status_bar_with_desc("Story View - Front Page"))
         .child(main_view)
         .child(construct_footer_view());
     view.set_focus_index(1).unwrap_or_else(|_| {});

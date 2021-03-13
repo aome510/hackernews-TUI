@@ -145,11 +145,8 @@ impl CommentView {
 
 fn get_comment_main_view(
     story_url: Option<String>,
-    client: &hn_client::HNClient,
     comments: &Vec<Box<hn_client::Comment>>,
 ) -> impl View {
-    let client = client.clone();
-
     event_view::construct_list_event_view(CommentView::new(story_url, comments))
         .on_pre_event_inner('l', move |s, _| {
             let heights = s.get_heights();
@@ -234,7 +231,7 @@ pub fn get_comment_view(
     comments: &Vec<Box<hn_client::Comment>>,
 ) -> impl View {
     let client = client.clone();
-    let main_view = get_comment_main_view(story_url, &client, comments);
+    let main_view = get_comment_main_view(story_url, comments);
     let status_bar = get_comment_status_bar(story_title);
     let mut view = LinearLayout::vertical()
         .child(status_bar)
