@@ -44,7 +44,6 @@ impl SearchView {
     }
 
     fn update_view(&mut self) {
-        debug!("update view");
         if self.query.read().unwrap().1 {
             self.view = Self::get_search_view(
                 &self.query.read().unwrap().0.clone(),
@@ -113,7 +112,6 @@ impl ViewWrapper for SearchView {
     wrap_impl!(self.view: LinearLayout);
 
     fn wrap_required_size(&mut self, req: Vec2) -> Vec2 {
-        debug!("require_size...");
         self.update_view();
         self.view.required_size(req)
     }
@@ -134,7 +132,6 @@ impl ViewWrapper for SearchView {
     }
 
     fn wrap_draw(&self, printer: &Printer) {
-        debug!("draw...");
         self.view.draw(printer);
     }
 }
@@ -142,13 +139,11 @@ impl ViewWrapper for SearchView {
 fn get_main_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl View {
     OnEventView::new(SearchView::new(&client, cb_sink))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
-            debug!("on pre event");
             if s.mode {
                 None
             } else {
                 match *e {
                     Event::Char(c) => {
-                        debug!("got char {}", c);
                         s.add_char(c);
                         None
                     }
@@ -156,6 +151,11 @@ fn get_main_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl V
                         s.del_char();
                         None
                     }
+                    Event::Key(Key::Up)
+                    | Event::Key(Key::Down)
+                    | Event::Key(Key::PageUp)
+                    | Event::Key(Key::PageDown)
+                    | Event::Key(Key::Tab) => Some(EventResult::Ignored),
                     _ => None,
                 }
             }
@@ -163,6 +163,7 @@ fn get_main_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl V
         .on_pre_event_inner(Event::Key(Key::Esc), |s, _| {
             if !s.mode {
                 s.mode = true;
+                s.view.set_focus_index(1).unwrap_or_else(|_| {});
                 Some(EventResult::Consumed(None))
             } else {
                 None
