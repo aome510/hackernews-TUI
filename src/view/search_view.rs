@@ -30,10 +30,7 @@ impl SearchView {
     }
 
     fn get_query_text_view(query: String) -> impl View {
-        let len = query.len();
-        let mut text_area = TextArea::new().content(query);
-        text_area.set_cursor(len);
-        text_area.full_width().fixed_height(1)
+        TextView::new(format!("Query string: {}", query))
     }
 
     fn get_search_view(
@@ -47,6 +44,7 @@ impl SearchView {
     }
 
     fn update_view(&mut self) {
+        debug!("update view");
         if self.query.read().unwrap().1 {
             self.view = Self::get_search_view(
                 &self.query.read().unwrap().0.clone(),
@@ -86,13 +84,13 @@ impl SearchView {
 
     pub fn add_char(&mut self, c: char) {
         self.query.write().unwrap().0.push(c);
-        self.query.write().unwrap().1 = false;
+        self.query.write().unwrap().1 = true;
         self.update_matched_stories();
     }
 
     pub fn del_char(&mut self) {
         self.query.write().unwrap().0.pop();
-        self.query.write().unwrap().1 = false;
+        self.query.write().unwrap().1 = true;
         self.update_matched_stories();
     }
 
@@ -115,25 +113,42 @@ impl ViewWrapper for SearchView {
     wrap_impl!(self.view: LinearLayout);
 
     fn wrap_required_size(&mut self, req: Vec2) -> Vec2 {
+        debug!("require_size...");
         self.update_view();
         self.view.required_size(req)
     }
 
+    fn wrap_layout(&mut self, size: Vec2) {
+        self.update_view();
+        self.view.layout(size);
+    }
+
     fn wrap_focus_view(&mut self, selector: &Selector<'_>) -> Result<(), ViewNotFound> {
         self.update_view();
-        self.with_view_mut(|v| v.focus_view(selector))
-            .unwrap_or(Err(ViewNotFound))
+        self.view.focus_view(selector)
+    }
+
+    fn wrap_take_focus(&mut self, _: Direction) -> bool {
+        self.update_view();
+        true
+    }
+
+    fn wrap_draw(&self, printer: &Printer) {
+        debug!("draw...");
+        self.view.draw(printer);
     }
 }
 
 fn get_main_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl View {
     OnEventView::new(SearchView::new(&client, cb_sink))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
+            debug!("on pre event");
             if s.mode {
                 None
             } else {
                 match *e {
                     Event::Char(c) => {
+                        debug!("got char {}", c);
                         s.add_char(c);
                         None
                     }
@@ -147,7 +162,6 @@ fn get_main_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl V
         })
         .on_pre_event_inner(Event::Key(Key::Esc), |s, _| {
             if !s.mode {
-                s.view.set_focus_index(1).unwrap();
                 s.mode = true;
                 Some(EventResult::Consumed(None))
             } else {
@@ -156,7 +170,6 @@ fn get_main_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl V
         })
         .on_pre_event_inner('i', |s, _| {
             if s.mode {
-                s.view.set_focus_index(0).unwrap();
                 s.mode = false;
                 Some(EventResult::Consumed(None))
             } else {
