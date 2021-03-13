@@ -93,9 +93,9 @@ impl StoryView {
                     ("k", "Focus the previous story"),
                     ("t", "Focus the story at the top"),
                     ("b", "Focus the story at the bottom"),
-                    ("{story_id} g", "Focus the {story_id}-th story"),
+                    ("`{story_id} g`", "Focus the {story_id}-th story"),
                     (
-                        "RETURN",
+                        "<enter>",
                         "Go the comment view associated with the focused story",
                     ),
                 ],
@@ -110,9 +110,9 @@ impl StoryView {
             (
                 "Others",
                 vec![
-                    ("Alt s", "Go to the story search page"),
-                    ("Alt q", "Quit the application"),
-                    ("Esc", "Close this help dialog"),
+                    ("<alt-s>", "Go to the story search page"),
+                    ("<alt-q>", "Quit the application"),
+                    ("<esc>", "Close this help dialog"),
                 ],
             ),
         ])
@@ -152,10 +152,10 @@ impl CommentView {
             (
                 "Others",
                 vec![
-                    ("Alt f", "Go to the front page"),
-                    ("Alt s", "Go to the story search page"),
-                    ("ALt q", "Quit the application"),
-                    ("Esc", "Close this help dialog"),
+                    ("<alt-f>", "Go to the front page"),
+                    ("<alt-s>", "Go to the story search page"),
+                    ("<alt-q>", "Quit the application"),
+                    ("<esc>", "Close this help dialog"),
                 ],
             ),
         ])
@@ -167,7 +167,7 @@ impl SearchView {
         HelpView::new().keys(vec![
             (
                 "Search Mode - Keys",
-                vec![("Esc", "Switch to navigation mode")],
+                vec![("<esc>", "Switch to navigation mode")],
             ),
             (
                 "Navigation Mode - Keys",
@@ -177,9 +177,9 @@ impl SearchView {
                     ("k", "Focus the previous story"),
                     ("t", "Focus the story at the top"),
                     ("b", "Focus the story at the bottom"),
-                    ("{story_id} g", "Focus the {story_id}-th story"),
+                    ("`{story_id} g`", "Focus the {story_id}-th story"),
                     (
-                        "RETURN",
+                        "<enter>",
                         "Go the comment view associated with the focused story",
                     ),
                     (
@@ -191,9 +191,9 @@ impl SearchView {
             (
                 "Others",
                 vec![
-                    ("Alt f", "Go to the front page"),
-                    ("Alt q", "Quit the application"),
-                    ("Esc", "Close this help dialog"),
+                    ("<alt-f>", "Go to the front page"),
+                    ("<alt-q>", "Quit the application"),
+                    ("<esc>", "Close this help dialog"),
                 ],
             ),
         ])

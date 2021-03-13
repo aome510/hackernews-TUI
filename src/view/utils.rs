@@ -48,7 +48,7 @@ pub fn construct_footer_view() -> impl View {
                 .full_width(),
             )
             .child(
-                TextView::new(StyledString::styled("[?: help] ", style))
+                TextView::new(StyledString::styled("[<alt-h>: help] ", style))
                     .align(align::Align::bot_right()),
             ),
         style,

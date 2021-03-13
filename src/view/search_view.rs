@@ -113,7 +113,7 @@ impl SearchView {
         let query = Arc::new(RwLock::new(("".to_string(), false)));
         SearchView {
             client: client.clone(),
-            mode: true,
+            mode: false,
             query,
             view,
             stories,
@@ -211,7 +211,7 @@ pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl Vi
             let async_view = async_view::get_story_view_async(s, &client);
             s.screen_mut().add_transparent_layer(Layer::new(async_view));
         })
-        .on_event('?', |s| {
+        .on_event(Event::AltChar('h'), |s| {
             s.add_layer(SearchView::construct_help_view());
         })
 }

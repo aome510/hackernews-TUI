@@ -245,7 +245,7 @@ pub fn get_comment_view(
             s.pop_layer();
             s.screen_mut().add_transparent_layer(Layer::new(async_view));
         })
-        .on_event('?', |s| {
+        .on_event(Event::AltChar('h'), |s| {
             s.add_layer(CommentView::construct_help_view());
         })
 }

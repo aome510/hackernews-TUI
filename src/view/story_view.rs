@@ -146,5 +146,7 @@ pub fn get_story_view(stories: Vec<hn_client::Story>, client: &hn_client::HNClie
                     )))
             }
         })
-        .on_event('?', |s| s.add_layer(StoryView::construct_help_view()))
+        .on_event(Event::AltChar('h'), |s| {
+            s.add_layer(StoryView::construct_help_view())
+        })
 }

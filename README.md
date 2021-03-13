@@ -21,7 +21,7 @@ Comment View:
 
 ## Documentation
 ### Keyboard shortcuts
-In `Story View` and `Comment View`, press `?` to see a list of supported keyboard shortcuts and their functionalities.
+In `Story View` and `Comment View`, press `<alt-h>` to see a list of supported keyboard shortcuts and their functionalities.
 
 ## Roadmap/TODO List
 TBA...
