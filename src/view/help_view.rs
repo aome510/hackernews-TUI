@@ -144,7 +144,7 @@ impl CommentView {
                         "Open in browser the link associated with the discussed story",
                     ),
                     (
-                        "{link_id} f",
+                        "`{link_id} f`",
                         "Open in browser the {link_id}-th link in the focused comment",
                     ),
                 ],

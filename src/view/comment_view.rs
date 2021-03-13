@@ -1,4 +1,5 @@
 use super::event_view;
+use super::search_view;
 use super::text_view;
 use super::theme::*;
 use super::utils::*;
@@ -240,6 +241,17 @@ pub fn get_comment_view(
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
     OnEventView::new(view)
+        .on_event(Event::AltChar('s'), {
+            let client = client.clone();
+            move |s| {
+                let cb_sink = s.cb_sink().clone();
+                s.pop_layer();
+                s.screen_mut()
+                    .add_transparent_layer(Layer::new(search_view::get_search_view(
+                        &client, cb_sink,
+                    )))
+            }
+        })
         .on_event(Event::AltChar('f'), move |s| {
             let async_view = async_view::get_story_view_async(s, &client);
             s.pop_layer();
