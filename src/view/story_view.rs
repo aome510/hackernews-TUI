@@ -134,13 +134,17 @@ pub fn get_story_view(stories: Vec<hn_client::Story>, client: &hn_client::HNClie
         .child(construct_footer_view());
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
-    OnEventView::new(view).on_event(Event::AltChar('s'), {
-        let client = client.clone();
-        move |s| {
-            let cb_sink = s.cb_sink().clone();
-            s.pop_layer();
-            s.screen_mut()
-                .add_transparent_layer(Layer::new(search_view::get_search_view(&client, cb_sink)))
-        }
-    })
+    OnEventView::new(view)
+        .on_event(Event::AltChar('s'), {
+            let client = client.clone();
+            move |s| {
+                let cb_sink = s.cb_sink().clone();
+                s.pop_layer();
+                s.screen_mut()
+                    .add_transparent_layer(Layer::new(search_view::get_search_view(
+                        &client, cb_sink,
+                    )))
+            }
+        })
+        .on_event('?', |s| s.add_layer(StoryView::construct_help_view()))
 }

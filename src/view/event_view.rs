@@ -24,7 +24,6 @@ pub fn construct_list_event_view<T: ListEventView>(view: T) -> OnEventView<T> {
             | Event::Key(Key::PageDown) => Some(EventResult::Ignored),
             _ => None,
         })
-        .on_pre_event_inner('?', |s, _| s.add_help_dialog())
 }
 
 /// ListEventView is a trait that implements basic method interfaces
@@ -149,20 +148,8 @@ macro_rules! list_event_view_wrapper {
 
 impl ListEventView for StoryView {
     crate::list_event_view_wrapper!('g');
-
-    fn add_help_dialog(&self) -> Option<EventResult> {
-        Some(EventResult::Consumed(Some(Callback::from_fn(|s| {
-            s.add_layer(StoryView::construct_help_view());
-        }))))
-    }
 }
 
 impl ListEventView for CommentView {
     crate::list_event_view_wrapper!('f');
-
-    fn add_help_dialog(&self) -> Option<EventResult> {
-        Some(EventResult::Consumed(Some(Callback::from_fn(|s| {
-            s.add_layer(CommentView::construct_help_view());
-        }))))
-    }
 }

@@ -239,9 +239,13 @@ pub fn get_comment_view(
         .child(construct_footer_view());
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
-    OnEventView::new(view).on_event(Event::AltChar('f'), move |s| {
-        let async_view = async_view::get_story_view_async(s, &client);
-        s.pop_layer();
-        s.screen_mut().add_transparent_layer(Layer::new(async_view));
-    })
+    OnEventView::new(view)
+        .on_event(Event::AltChar('f'), move |s| {
+            let async_view = async_view::get_story_view_async(s, &client);
+            s.pop_layer();
+            s.screen_mut().add_transparent_layer(Layer::new(async_view));
+        })
+        .on_event('?', |s| {
+            s.add_layer(CommentView::construct_help_view());
+        })
 }

@@ -9,7 +9,7 @@ pub fn get_error_view(err_desc: String, err: Error, client: &hn_client::HNClient
                 .child(TextView::new(err_desc))
                 .child(TextView::new(format!("{:#?}", err))),
         )
-        .button("home", {
+        .button("front page", {
             let client = client.clone();
             move |s| {
                 let async_view = async_view::get_story_view_async(s, &client);
@@ -19,7 +19,7 @@ pub fn get_error_view(err_desc: String, err: Error, client: &hn_client::HNClient
         })
         .button("quit", |s| s.quit()),
     )
-    .on_event('h', {
+    .on_event(Event::AltChar('f'), {
         let client = client.clone();
         move |s| {
             let async_view = async_view::get_story_view_async(s, &client);

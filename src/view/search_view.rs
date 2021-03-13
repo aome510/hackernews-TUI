@@ -113,7 +113,7 @@ impl SearchView {
         let query = Arc::new(RwLock::new(("".to_string(), false)));
         SearchView {
             client: client.clone(),
-            mode: false,
+            mode: true,
             query,
             view,
             stories,

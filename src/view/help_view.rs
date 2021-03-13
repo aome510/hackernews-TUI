@@ -93,6 +93,10 @@ impl StoryView {
                     ("t", "Focus the story at the top"),
                     ("b", "Focus the story at the bottom"),
                     ("{story_id} g", "Focus the {story_id}-th story"),
+                    (
+                        "RETURN",
+                        "Go the comment view associated with the focused story",
+                    ),
                 ],
             ),
             (
@@ -105,10 +109,6 @@ impl StoryView {
             (
                 "Others",
                 vec![
-                    (
-                        "RETURN",
-                        "Go the comment view associated with the focused story",
-                    ),
                     ("Alt q", "Quit the application"),
                     ("ESC", "Close this help dialog"),
                 ],
