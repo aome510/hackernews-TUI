@@ -1,4 +1,5 @@
 use super::comment_view::CommentView;
+use super::search_view::SearchView;
 use super::story_view::StoryView;
 use super::theme::*;
 use crate::prelude::*;
@@ -109,8 +110,9 @@ impl StoryView {
             (
                 "Others",
                 vec![
+                    ("Alt s", "Go to the story search page"),
                     ("Alt q", "Quit the application"),
-                    ("ESC", "Close this help dialog"),
+                    ("Esc", "Close this help dialog"),
                 ],
             ),
         ])
@@ -150,8 +152,47 @@ impl CommentView {
             (
                 "Others",
                 vec![
-                    ("Alt f", "Return to home page"),
+                    ("Alt f", "Go to the front page"),
+                    ("Alt s", "Go to the story search page"),
                     ("ALt q", "Quit the application"),
+                    ("Esc", "Close this help dialog"),
+                ],
+            ),
+        ])
+    }
+}
+
+impl SearchView {
+    pub fn construct_help_view() -> impl View {
+        HelpView::new().keys(vec![
+            (
+                "Search Mode - Keys",
+                vec![("Esc", "Switch to navigation mode")],
+            ),
+            (
+                "Navigation Mode - Keys",
+                vec![
+                    ("i", "Switch to search mode"),
+                    ("j", "Focus the next story"),
+                    ("k", "Focus the previous story"),
+                    ("t", "Focus the story at the top"),
+                    ("b", "Focus the story at the bottom"),
+                    ("{story_id} g", "Focus the {story_id}-th story"),
+                    (
+                        "RETURN",
+                        "Go the comment view associated with the focused story",
+                    ),
+                    (
+                        "O",
+                        "Open in browser the link associated with the focused story",
+                    ),
+                ],
+            ),
+            (
+                "Others",
+                vec![
+                    ("Alt f", "Go to the front page"),
+                    ("Alt q", "Quit the application"),
                     ("Esc", "Close this help dialog"),
                 ],
             ),

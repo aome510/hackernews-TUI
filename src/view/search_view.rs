@@ -205,9 +205,13 @@ pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl Vi
         .child(construct_footer_view());
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
-    OnEventView::new(view).on_event(Event::AltChar('f'), move |s| {
-        s.pop_layer();
-        let async_view = async_view::get_story_view_async(s, &client);
-        s.screen_mut().add_transparent_layer(Layer::new(async_view));
-    })
+    OnEventView::new(view)
+        .on_event(Event::AltChar('f'), move |s| {
+            s.pop_layer();
+            let async_view = async_view::get_story_view_async(s, &client);
+            s.screen_mut().add_transparent_layer(Layer::new(async_view));
+        })
+        .on_event('?', |s| {
+            s.add_layer(SearchView::construct_help_view());
+        })
 }
