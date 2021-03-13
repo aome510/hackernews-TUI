@@ -97,18 +97,8 @@ impl SearchView {
     }
 
     pub fn new(client: &hn_client::HNClient, cb_sink: CbSink) -> Self {
-        let stories = match client.get_matched_stories("") {
-            Err(err) => {
-                warn!(
-                    "failed to get stories matching the query '{}': {:#?}",
-                    "", err
-                );
-                vec![]
-            }
-            Ok(stories) => stories,
-        };
-        let view = Self::get_search_view("", stories.clone(), client);
-        let stories = Arc::new(RwLock::new(stories));
+        let view = Self::get_search_view("", vec![], client);
+        let stories = Arc::new(RwLock::new(vec![]));
         let query = Arc::new(RwLock::new(("".to_string(), false)));
         SearchView {
             client: client.clone(),
