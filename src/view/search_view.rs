@@ -8,14 +8,19 @@ use std::{
     thread,
 };
 
+pub enum SearchViewMode {
+    Navigation,
+    Search,
+}
+
 /// SearchView is a view used to search for stories
+/// matching certain conditions
 pub struct SearchView {
     // ("query_text", "need_update_view") pair
     query: Arc<RwLock<(String, bool)>>,
     stories: Arc<RwLock<Vec<hn_client::Story>>>,
 
-    // 0: for insert/search mode, 1: for command mode
-    mode: bool,
+    mode: SearchViewMode,
 
     view: LinearLayout,
     client: hn_client::HNClient,
@@ -37,12 +42,9 @@ impl SearchView {
             ColorStyle::new(BOLD_TEXT_COLOR, HIGHLIGHT_COLOR),
         );
         style_string.append_plain(format!(" {}", query));
-        Layer::with_color(
-            text_view::TextView::new(style_string)
-                .fixed_height(1)
-                .full_width(),
-            ColorStyle::back(Color::Light(BaseColor::White)),
-        )
+        text_view::TextView::new(style_string)
+            .fixed_height(1)
+            .full_width()
     }
 
     fn get_search_view(
@@ -62,8 +64,8 @@ impl SearchView {
                 self.stories.read().unwrap().clone(),
                 &self.client,
             );
-            // everytime, we update view, reset to insert/search mode
-            self.mode = false;
+            // every time we update view, reset to insert/search mode
+            self.mode = SearchViewMode::Search;
             self.query.write().unwrap().1 = false;
         }
     }
@@ -84,6 +86,8 @@ impl SearchView {
                 );
             }
             Ok(stories) => {
+                // if the query used to search for "stories"
+                // matches the current query, update view and force redrawing
                 if *self_query.read().unwrap().0 == query {
                     let mut self_stories = self_stories.write().unwrap();
 
@@ -113,7 +117,7 @@ impl SearchView {
         let query = Arc::new(RwLock::new(("".to_string(), false)));
         SearchView {
             client: client.clone(),
-            mode: false,
+            mode: SearchViewMode::Search,
             query,
             view,
             stories,
@@ -153,49 +157,48 @@ impl ViewWrapper for SearchView {
 fn get_main_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl View {
     OnEventView::new(SearchView::new(&client, cb_sink))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
-            if s.mode {
-                None
-            } else {
-                match *e {
-                    Event::Char(c) => {
-                        s.add_char(c);
-                        None
+            match s.mode {
+                SearchViewMode::Navigation => None,
+                SearchViewMode::Search => {
+                    match *e {
+                        Event::Char(c) => {
+                            s.add_char(c);
+                            None
+                        }
+                        Event::Key(Key::Backspace) => {
+                            s.del_char();
+                            None
+                        }
+                        // ignore all keys that move the focus out of the text_view
+                        Event::Key(Key::Up)
+                        | Event::Key(Key::Down)
+                        | Event::Key(Key::PageUp)
+                        | Event::Key(Key::PageDown)
+                        | Event::Key(Key::Tab) => Some(EventResult::Ignored),
+                        _ => None,
                     }
-                    Event::Key(Key::Backspace) => {
-                        s.del_char();
-                        None
-                    }
-                    // ignore all keys that move the focus out of the text_view
-                    Event::Key(Key::Up)
-                    | Event::Key(Key::Down)
-                    | Event::Key(Key::PageUp)
-                    | Event::Key(Key::PageDown)
-                    | Event::Key(Key::Tab) => Some(EventResult::Ignored),
-                    _ => None,
                 }
             }
         })
-        .on_pre_event_inner(Event::Key(Key::Esc), |s, _| {
-            if !s.mode {
-                s.mode = true;
+        .on_pre_event_inner(Event::Key(Key::Esc), |s, _| match s.mode {
+            SearchViewMode::Navigation => None,
+            SearchViewMode::Search => {
+                s.mode = SearchViewMode::Navigation;
                 s.view.set_focus_index(1).unwrap_or_else(|_| {});
                 Some(EventResult::Consumed(None))
-            } else {
-                None
             }
         })
-        .on_pre_event_inner('i', |s, _| {
-            if s.mode {
-                s.mode = false;
+        .on_pre_event_inner('i', |s, _| match s.mode {
+            SearchViewMode::Search => None,
+            SearchViewMode::Navigation => {
+                s.mode = SearchViewMode::Search;
                 s.view.set_focus_index(0).unwrap_or_else(|_| {});
                 Some(EventResult::Consumed(None))
-            } else {
-                None
             }
         })
 }
 
-/// Return a view represeting a SearchView with registered key-pressed event handlers
+/// Return a view representing a SearchView that searches stories with queries
 pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl View {
     let client = client.clone();
     let main_view = get_main_search_view(&client, cb_sink);

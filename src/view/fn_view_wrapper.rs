@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
-/// FnViewWrapper wraps a struct into view by requiring it to
-/// to implement methods that returns a view
+/// FnViewWrapper is a trait required to implement a wrapped View object
+/// by providing methods that returns a pointer to a View object
 pub trait FnViewWrapper {
     fn get_view(&self) -> &dyn View {
         panic!("not implemented");
