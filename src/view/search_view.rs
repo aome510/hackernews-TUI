@@ -1,4 +1,6 @@
 use super::story_view;
+use super::text_view;
+use super::theme::*;
 use super::utils::*;
 use crate::prelude::*;
 use std::{
@@ -30,7 +32,17 @@ impl SearchView {
     }
 
     fn get_query_text_view(query: String) -> impl View {
-        TextView::new(format!("Query string: {}", query))
+        let mut style_string = StyledString::styled(
+            format!("Query String:"),
+            ColorStyle::new(BOLD_TEXT_COLOR, HIGHLIGHT_COLOR),
+        );
+        style_string.append_plain(format!(" {}", query));
+        Layer::with_color(
+            text_view::TextView::new(style_string)
+                .fixed_height(1)
+                .full_width(),
+            ColorStyle::back(Color::Light(BaseColor::White)),
+        )
     }
 
     fn get_search_view(
@@ -50,6 +62,8 @@ impl SearchView {
                 self.stories.read().unwrap().clone(),
                 &self.client,
             );
+            // everytime, we update view, reset to insert/search mode
+            self.mode = false;
             self.query.write().unwrap().1 = false;
         }
     }
@@ -151,6 +165,7 @@ fn get_main_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl V
                         s.del_char();
                         None
                     }
+                    // ignore all keys that move the focus out of the text_view
                     Event::Key(Key::Up)
                     | Event::Key(Key::Down)
                     | Event::Key(Key::PageUp)
@@ -172,6 +187,7 @@ fn get_main_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl V
         .on_pre_event_inner('i', |s, _| {
             if s.mode {
                 s.mode = false;
+                s.view.set_focus_index(0).unwrap_or_else(|_| {});
                 Some(EventResult::Consumed(None))
             } else {
                 None
