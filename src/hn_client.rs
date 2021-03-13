@@ -1,7 +1,8 @@
 use crate::prelude::*;
 
 const HN_ALGOLIA_PREFIX: &'static str = "https://hn.algolia.com/api/v1";
-const CLIENT_TIMEOUT: Duration = Duration::from_secs(60);
+const HN_SEARCH_QUERY_STRING: &'static str = "tags=story&restrictSearchableAttributes=title&typoTolerance=false&hitsPerPage=16&minProximity=8&queryType=prefixLast";
+const CLIENT_TIMEOUT: Duration = Duration::from_secs(16);
 
 fn parse_id<'de, D>(d: D) -> std::result::Result<i32, D::Error>
 where
@@ -18,6 +19,21 @@ where
 {
     let opt = Option::deserialize(deserializer)?;
     Ok(opt.unwrap_or_default())
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all(deserialize = "camelCase"))]
+pub struct MatchResult {
+    value: Option<String>,
+    #[serde(default)]
+    matched_words: Vec<String>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct HighlightResult {
+    title: Option<MatchResult>,
+    url: Option<MatchResult>,
+    author: Option<MatchResult>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -41,6 +57,10 @@ pub struct Story {
     #[serde(default)]
     #[serde(deserialize_with = "parse_null_default")]
     pub num_comments: i32,
+
+    // search result
+    #[serde(rename(deserialize = "_highlightResult"))]
+    pub highlight_result: Option<HighlightResult>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -68,7 +88,7 @@ struct StoriesResponse {
 /// HNClient is a http client to communicate with Hacker News APIs.
 #[derive(Clone)]
 pub struct HNClient {
-    client: reqwest::blocking::Client,
+    client: ureq::Agent,
 }
 
 /// Retrieves all comments from a story with a given id
@@ -89,9 +109,7 @@ impl HNClient {
     /// Create new Hacker News Client
     pub fn new() -> Result<HNClient> {
         Ok(HNClient {
-            client: reqwest::blocking::Client::builder()
-                .timeout(CLIENT_TIMEOUT)
-                .build()?,
+            client: ureq::AgentBuilder::new().timeout(CLIENT_TIMEOUT).build(),
         })
     }
 
@@ -101,7 +119,27 @@ impl HNClient {
         T: DeserializeOwned,
     {
         let request_url = format!("{}/items/{}", HN_ALGOLIA_PREFIX, id);
-        Ok(self.client.get(&request_url).send()?.json::<T>()?)
+        Ok(self.client.get(&request_url).call()?.into_json::<T>()?)
+    }
+
+    /// Return a list of stories whose titles match a query
+    pub fn get_matched_stories(&self, query: &str) -> Result<Vec<Story>> {
+        let request_url = format!("{}/search?{}", HN_ALGOLIA_PREFIX, HN_SEARCH_QUERY_STRING);
+        let time = SystemTime::now();
+        let response = self
+            .client
+            .get(&request_url)
+            .query("query", query)
+            .call()?
+            .into_json::<StoriesResponse>()?;
+        if let Ok(elapsed) = time.elapsed() {
+            debug!(
+                "get matched stories with query {} took {}ms",
+                query,
+                elapsed.as_millis()
+            );
+        }
+        Ok(response.hits)
     }
 
     /// Retrieve a list of stories on HN frontpage
@@ -115,8 +153,8 @@ impl HNClient {
         let response = self
             .client
             .get(&request_url)
-            .send()?
-            .json::<StoriesResponse>()?;
+            .call()?
+            .into_json::<StoriesResponse>()?;
         if let Ok(elapsed) = time.elapsed() {
             debug!("get top stories took {}ms", elapsed.as_millis());
         }

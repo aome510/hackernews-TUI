@@ -1,3 +1,4 @@
+use super::theme::*;
 use crate::prelude::*;
 
 const MAX_URL_LEN: usize = 64;
@@ -47,9 +48,21 @@ pub fn construct_footer_view() -> impl View {
                 .full_width(),
             )
             .child(
-                TextView::new(StyledString::styled("[?: help] ", style))
+                TextView::new(StyledString::styled("[<alt-h>: help] ", style))
                     .align(align::Align::bot_right()),
             ),
         style,
+    )
+}
+
+/// Construct a status bar with a description text
+pub fn get_status_bar_with_desc(desc: &str) -> impl View {
+    Layer::with_color(
+        TextView::new(StyledString::styled(
+            desc,
+            ColorStyle::new(Color::Dark(BaseColor::Black), STATUS_BAR_COLOR),
+        ))
+        .align(align::Align::center()),
+        ColorStyle::back(STATUS_BAR_COLOR),
     )
 }

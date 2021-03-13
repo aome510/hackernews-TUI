@@ -1,4 +1,5 @@
 use super::event_view;
+use super::search_view;
 use super::text_view;
 use super::theme::*;
 use super::utils::*;
@@ -145,20 +146,9 @@ impl CommentView {
 
 fn get_comment_main_view(
     story_url: Option<String>,
-    client: &hn_client::HNClient,
     comments: &Vec<Box<hn_client::Comment>>,
 ) -> impl View {
-    let client = client.clone();
-
-    event_view::construct_event_view(CommentView::new(story_url, comments))
-        .on_event('q', move |s| {
-            s.quit();
-        })
-        .on_event('H', move |s| {
-            let async_view = async_view::get_story_view_async(s, &client);
-            s.pop_layer();
-            s.screen_mut().add_transparent_layer(Layer::new(async_view));
-        })
+    event_view::construct_list_event_view(CommentView::new(story_url, comments))
         .on_pre_event_inner('l', move |s, _| {
             let heights = s.get_heights();
             let s = s.get_inner_mut();
@@ -218,6 +208,7 @@ fn get_comment_main_view(
                 Some(EventResult::Consumed(None))
             }
         })
+        .full_height()
         .scrollable()
 }
 
@@ -240,12 +231,33 @@ pub fn get_comment_view(
     client: &hn_client::HNClient,
     comments: &Vec<Box<hn_client::Comment>>,
 ) -> impl View {
-    let main_view = get_comment_main_view(story_url, client, comments);
+    let client = client.clone();
+    let main_view = get_comment_main_view(story_url, comments);
     let status_bar = get_comment_status_bar(story_title);
     let mut view = LinearLayout::vertical()
         .child(status_bar)
         .child(main_view)
         .child(construct_footer_view());
-    view.set_focus_index(1).unwrap();
-    view
+    view.set_focus_index(1).unwrap_or_else(|_| {});
+
+    OnEventView::new(view)
+        .on_event(Event::AltChar('s'), {
+            let client = client.clone();
+            move |s| {
+                let cb_sink = s.cb_sink().clone();
+                s.pop_layer();
+                s.screen_mut()
+                    .add_transparent_layer(Layer::new(search_view::get_search_view(
+                        &client, cb_sink,
+                    )))
+            }
+        })
+        .on_event(Event::AltChar('f'), move |s| {
+            let async_view = async_view::get_story_view_async(s, &client);
+            s.pop_layer();
+            s.screen_mut().add_transparent_layer(Layer::new(async_view));
+        })
+        .on_event(Event::AltChar('h'), |s| {
+            s.add_layer(CommentView::construct_help_view());
+        })
 }

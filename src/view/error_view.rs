@@ -1,4 +1,5 @@
-use crate::prelude::*;
+use super::fn_view_wrapper::*;
+use crate::{impl_view_for_fn_wrapper, prelude::*};
 
 /// Return a Cursive's View displaying an error
 pub fn get_error_view(err_desc: String, err: Error, client: &hn_client::HNClient) -> impl View {
@@ -8,7 +9,7 @@ pub fn get_error_view(err_desc: String, err: Error, client: &hn_client::HNClient
                 .child(TextView::new(err_desc))
                 .child(TextView::new(format!("{:#?}", err))),
         )
-        .button("home", {
+        .button("front page", {
             let client = client.clone();
             move |s| {
                 let async_view = async_view::get_story_view_async(s, &client);
@@ -18,8 +19,7 @@ pub fn get_error_view(err_desc: String, err: Error, client: &hn_client::HNClient
         })
         .button("quit", |s| s.quit()),
     )
-    .on_event('q', |s| s.quit())
-    .on_event('h', {
+    .on_event(Event::AltChar('f'), {
         let client = client.clone();
         move |s| {
             let async_view = async_view::get_story_view_async(s, &client);
@@ -44,7 +44,9 @@ impl<V: View, E: View> ErrorViewWrapper<V, E> {
     pub fn new(view: ErrorViewEnum<V, E>) -> Self {
         ErrorViewWrapper { view }
     }
+}
 
+impl<V: View, E: View> FnViewWrapper for ErrorViewWrapper<V, E> {
     fn get_view(&self) -> &dyn View {
         match self.view {
             ErrorViewEnum::Ok(ref v) => v,
@@ -61,39 +63,5 @@ impl<V: View, E: View> ErrorViewWrapper<V, E> {
 }
 
 impl<V: View, E: View> View for ErrorViewWrapper<V, E> {
-    fn draw(&self, printer: &Printer) {
-        self.get_view().draw(printer);
-    }
-
-    fn required_size(&mut self, req: Vec2) -> Vec2 {
-        self.get_view_mut().required_size(req)
-    }
-
-    fn on_event(&mut self, ch: Event) -> EventResult {
-        self.get_view_mut().on_event(ch)
-    }
-
-    fn layout(&mut self, size: Vec2) {
-        self.get_view_mut().layout(size);
-    }
-
-    fn take_focus(&mut self, source: Direction) -> bool {
-        self.get_view_mut().take_focus(source)
-    }
-
-    fn call_on_any<'a>(&mut self, selector: &Selector<'_>, callback: AnyCb<'a>) {
-        self.get_view_mut().call_on_any(selector, callback)
-    }
-
-    fn needs_relayout(&self) -> bool {
-        self.get_view().needs_relayout()
-    }
-
-    fn focus_view(&mut self, selector: &Selector<'_>) -> Result<(), ViewNotFound> {
-        self.get_view_mut().focus_view(selector)
-    }
-
-    fn important_area(&self, size: Vec2) -> Rect {
-        self.get_view().important_area(size)
-    }
+    impl_view_for_fn_wrapper!();
 }
