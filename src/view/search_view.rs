@@ -1,4 +1,3 @@
-use super::event_view::ListEventView;
 use super::story_view;
 use crate::prelude::*;
 use std::{
@@ -7,9 +6,14 @@ use std::{
 };
 
 /// SearchView is a view used to search for stories
+
 pub struct SearchView {
+    // ("query_text", "need_update_view") pair
     query: Arc<RwLock<(String, bool)>>,
     stories: Arc<RwLock<Vec<hn_client::Story>>>,
+
+    // 0: for insert/search mode, 1: for command mode
+    mode: bool,
 
     view: LinearLayout,
     client: hn_client::HNClient,
@@ -22,25 +26,7 @@ impl SearchView {
         client: &hn_client::HNClient,
     ) -> impl View {
         let client = client.clone();
-        OnEventView::new(story_view::StoryView::new(stories.clone()))
-            .on_pre_event_inner(Key::Enter, {
-                move |s, _| {
-                    let id = s.get_inner().get_focus_index();
-                    let story = s.stories[id].clone();
-                    Some(EventResult::with_cb({
-                        let client = client.clone();
-                        move |s| {
-                            let async_view = async_view::get_comment_view_async(s, &client, &story);
-                            s.pop_layer();
-                            s.screen_mut().add_transparent_layer(Layer::new(async_view))
-                        }
-                    }))
-                }
-            })
-            .on_pre_event_inner(Event::CtrlChar('k'), |s, _| s.focus_up())
-            .on_pre_event_inner(Event::CtrlChar('j'), |s, _| s.focus_down())
-            .full_height()
-            .scrollable()
+        story_view::get_story_main_view(stories, &client)
     }
 
     fn get_query_text_view(query: String) -> impl View {
@@ -67,6 +53,7 @@ impl SearchView {
                 self.stories.read().unwrap().clone(),
                 &self.client,
             );
+            self.query.write().unwrap().1 = false;
         }
     }
 
@@ -125,6 +112,7 @@ impl SearchView {
         let query = Arc::new(RwLock::new(("".to_string(), false)));
         SearchView {
             client: client.clone(),
+            mode: false,
             query,
             view,
             stories,
@@ -140,6 +128,12 @@ impl ViewWrapper for SearchView {
         self.update_view();
         self.view.required_size(req)
     }
+
+    fn wrap_focus_view(&mut self, selector: &Selector<'_>) -> Result<(), ViewNotFound> {
+        self.update_view();
+        self.with_view_mut(|v| v.focus_view(selector))
+            .unwrap_or(Err(ViewNotFound))
+    }
 }
 
 /// Return a view represeting a SearchView with registered key-pressed event handlers
@@ -151,15 +145,39 @@ pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl Vi
             let async_view = async_view::get_story_view_async(s, &client);
             s.screen_mut().add_transparent_layer(Layer::new(async_view));
         })
-        .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| match *e {
-            Event::Char(c) => {
-                s.add_char(c);
+        .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
+            if s.mode {
+                None
+            } else {
+                match *e {
+                    Event::Char(c) => {
+                        s.add_char(c);
+                        None
+                    }
+                    Event::Key(Key::Backspace) => {
+                        s.del_char();
+                        None
+                    }
+                    _ => None,
+                }
+            }
+        })
+        .on_pre_event_inner(Event::Key(Key::Esc), |s, _| {
+            if !s.mode {
+                s.view.set_focus_index(1).unwrap();
+                s.mode = true;
+                Some(EventResult::Consumed(None))
+            } else {
                 None
             }
-            Event::Key(Key::Backspace) => {
-                s.del_char();
+        })
+        .on_pre_event_inner('i', |s, _| {
+            if s.mode {
+                s.view.set_focus_index(0).unwrap();
+                s.mode = false;
+                Some(EventResult::Consumed(None))
+            } else {
                 None
             }
-            _ => None,
         })
 }

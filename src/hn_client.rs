@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 const HN_ALGOLIA_PREFIX: &'static str = "https://hn.algolia.com/api/v1";
 const HN_SEARCH_QUERY_STRING: &'static str = "tags=story&restrictSearchableAttributes=title&typoTolerance=false&hitsPerPage=16&minProximity=8&queryType=prefixLast";
-const CLIENT_TIMEOUT: Duration = Duration::from_secs(5);
+const CLIENT_TIMEOUT: Duration = Duration::from_secs(16);
 
 fn parse_id<'de, D>(d: D) -> std::result::Result<i32, D::Error>
 where

@@ -65,24 +65,16 @@ impl ViewWrapper for StoryView {
     wrap_impl!(self.view: LinearLayout);
 }
 
-fn get_story_main_view(stories: Vec<hn_client::Story>, client: &hn_client::HNClient) -> impl View {
+pub fn get_story_main_view(
+    stories: Vec<hn_client::Story>,
+    client: &hn_client::HNClient,
+) -> impl View {
     let client = client.clone();
     let stories = stories
         .into_iter()
         .filter(|story| story.title.is_some())
         .collect();
     event_view::construct_list_event_view(StoryView::new(stories))
-        .on_event(Event::AltChar('s'), {
-            let client = client.clone();
-            move |s| {
-                let cb_sink = s.cb_sink().clone();
-                s.pop_layer();
-                s.screen_mut()
-                    .add_transparent_layer(Layer::new(search_view::get_search_view(
-                        &client, cb_sink,
-                    )))
-            }
-        })
         .on_pre_event_inner(Key::Enter, {
             move |s, _| {
                 let id = s.get_inner().get_focus_index();
@@ -129,6 +121,7 @@ fn get_story_main_view(stories: Vec<hn_client::Story>, client: &hn_client::HNCli
             }
             Err(_) => None,
         })
+        .full_height()
         .scrollable()
 }
 
@@ -151,6 +144,15 @@ pub fn get_story_view(stories: Vec<hn_client::Story>, client: &hn_client::HNClie
         .child(status_bar)
         .child(main_view)
         .child(construct_footer_view());
-    view.set_focus_index(1).unwrap();
-    view
+    view.set_focus_index(1).unwrap_or_else(|_| {});
+
+    OnEventView::new(view).on_event(Event::AltChar('s'), {
+        let client = client.clone();
+        move |s| {
+            let cb_sink = s.cb_sink().clone();
+            s.pop_layer();
+            s.screen_mut()
+                .add_transparent_layer(Layer::new(search_view::get_search_view(&client, cb_sink)))
+        }
+    })
 }
