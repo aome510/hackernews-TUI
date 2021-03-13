@@ -8,10 +8,11 @@ use std::{
 
 /// SearchView is a view used to search for stories
 pub struct SearchView {
-    query: String,
+    query: Arc<RwLock<String>>,
     stories: Arc<RwLock<Vec<hn_client::Story>>>,
     view: LinearLayout,
     client: hn_client::HNClient,
+    cb_sink: CbSink,
 }
 
 impl SearchView {
@@ -42,7 +43,10 @@ impl SearchView {
     }
 
     fn get_query_text_view(query: String) -> impl View {
-        TextArea::new().content(query).full_width().fixed_height(1)
+        let len = query.len();
+        let mut text_area = TextArea::new().content(query);
+        text_area.set_cursor(len);
+        text_area.full_width().fixed_height(1)
     }
 
     fn get_search_view(
@@ -56,19 +60,23 @@ impl SearchView {
     }
 
     fn update_view(&mut self) {
+        debug!("update view");
         self.view = Self::get_search_view(
-            &self.query,
+            &self.query.read().unwrap().clone(),
             self.stories.read().unwrap().clone(),
             &self.client,
         );
     }
 
     fn update_matched_stories(&mut self) {
-        debug!("query: {}", self.query);
-
         let self_stories = Arc::clone(&self.stories);
+        let self_query = Arc::clone(&self.query);
+
         let client = self.client.clone();
-        let query = self.query.to_string();
+        let query = self.query.read().unwrap().clone();
+        let cb_sink = self.cb_sink.clone();
+
+        debug!("query: {}", query);
         thread::spawn(move || match client.get_matched_stories(&query) {
             Err(err) => {
                 debug!(
@@ -77,23 +85,27 @@ impl SearchView {
                 );
             }
             Ok(stories) => {
-                let mut self_stories = self_stories.write().unwrap();
-                *self_stories = stories;
+                if *self_query.read().unwrap() == query {
+                    let mut self_stories = self_stories.write().unwrap();
+
+                    *self_stories = stories;
+                    cb_sink.send(Box::new(|_| {})).unwrap();
+                }
             }
         });
     }
 
     pub fn add_char(&mut self, c: char) {
-        self.query.push(c);
+        self.query.write().unwrap().push(c);
         self.update_matched_stories();
     }
 
     pub fn del_char(&mut self) {
-        self.query.pop();
+        self.query.write().unwrap().pop();
         self.update_matched_stories();
     }
 
-    pub fn new(client: &hn_client::HNClient) -> Self {
+    pub fn new(client: &hn_client::HNClient, cb_sink: CbSink) -> Self {
         let stories = match client.get_matched_stories("") {
             Err(err) => {
                 warn!(
@@ -106,11 +118,13 @@ impl SearchView {
         };
         let view = Self::get_search_view("", stories.clone(), client);
         let stories = Arc::new(RwLock::new(stories));
+        let query = Arc::new(RwLock::new("".to_string()));
         SearchView {
             client: client.clone(),
-            query: "".to_string(),
+            query,
             view,
             stories,
+            cb_sink,
         }
     }
 }
@@ -118,19 +132,16 @@ impl SearchView {
 impl ViewWrapper for SearchView {
     wrap_impl!(self.view: LinearLayout);
 
-    fn wrap_needs_relayout(&self) -> bool {
-        true
-    }
-
-    fn wrap_layout(&mut self, size: Vec2) {
+    fn wrap_required_size(&mut self, req: Vec2) -> Vec2 {
+        debug!("require size");
         self.update_view();
-        self.view.layout(size)
+        self.view.required_size(req)
     }
 }
 
-pub fn get_search_view(client: &hn_client::HNClient) -> impl View {
+pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl View {
     let client = client.clone();
-    OnEventView::new(SearchView::new(&client))
+    OnEventView::new(SearchView::new(&client, cb_sink))
         .on_event(Event::AltChar('f'), move |s| {
             s.pop_layer();
             let async_view = async_view::get_story_view_async(s, &client);

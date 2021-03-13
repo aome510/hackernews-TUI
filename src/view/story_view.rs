@@ -19,10 +19,13 @@ pub fn get_story_text(story: &hn_client::Story) -> StyledString {
         story.title.clone().unwrap_or("[deleted]".to_string())
     ));
     if story.url.is_some() {
-        story_text.append_styled(
-            format!("\n({})", shorten_url(story.url.clone().unwrap())),
-            ColorStyle::from(LINK_COLOR),
-        );
+        let story_url = story.url.clone().unwrap();
+        if story_url.len() > 0 {
+            story_text.append_styled(
+                format!("\n({})", shorten_url(story_url)),
+                ColorStyle::from(LINK_COLOR),
+            );
+        }
     }
     story_text.append_styled(
         format!(
@@ -72,9 +75,12 @@ fn get_story_main_view(stories: Vec<hn_client::Story>, client: &hn_client::HNCli
         .on_event(Event::AltChar('s'), {
             let client = client.clone();
             move |s| {
+                let cb_sink = s.cb_sink().clone();
                 s.pop_layer();
                 s.screen_mut()
-                    .add_transparent_layer(Layer::new(search_view::get_search_view(&client)))
+                    .add_transparent_layer(Layer::new(search_view::get_search_view(
+                        &client, cb_sink,
+                    )))
             }
         })
         .on_pre_event_inner(Key::Enter, {
