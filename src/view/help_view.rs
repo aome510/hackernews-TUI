@@ -1,4 +1,5 @@
 use super::comment_view::CommentView;
+use super::error_view::ErrorViewWrapper;
 use super::search_view::SearchView;
 use super::story_view::StoryView;
 use super::theme::*;

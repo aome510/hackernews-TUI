@@ -1,9 +1,11 @@
 use super::fn_view_wrapper::*;
+use super::help_view::HelpView;
+use super::utils::*;
 use crate::{impl_view_for_fn_wrapper, prelude::*};
 
-/// Return a Cursive's View displaying an error
+/// Return an ErrorView given an error
 pub fn get_error_view(err_desc: &str, err: Error, client: &hn_client::HNClient) -> impl View {
-    OnEventView::new(
+    let main_view = OnEventView::new(
         Dialog::around(
             LinearLayout::vertical()
                 .child(TextView::new(err_desc))
@@ -27,6 +29,24 @@ pub fn get_error_view(err_desc: &str, err: Error, client: &hn_client::HNClient) 
             s.add_layer(async_view);
         }
     })
+    .on_event(Event::AltChar('h'), |s| {
+        s.add_layer(HelpView::new().keys(vec![(
+            "Others",
+            vec![
+                ("<alt-f>", "Go to the front page"),
+                ("<alt-q>", "Quit the application"),
+                ("<esc>", "Close this help dialog"),
+            ],
+        )]))
+    });
+
+    let mut view = LinearLayout::vertical()
+        .child(get_status_bar_with_desc("Error View"))
+        .child(main_view)
+        .child(construct_footer_view());
+    view.set_focus_index(1).unwrap_or_else(|_| {});
+
+    view
 }
 
 /// An enum representing a normal View or an error View
