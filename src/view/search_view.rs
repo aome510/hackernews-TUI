@@ -211,7 +211,7 @@ pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl Vi
     OnEventView::new(view)
         .on_event(Event::AltChar('f'), move |s| {
             s.pop_layer();
-            let async_view = async_view::get_story_view_async(s, &client);
+            let async_view = async_view::get_front_page_story_view_async(s, &client);
             s.screen_mut().add_transparent_layer(Layer::new(async_view));
         })
         .on_event(Event::AltChar('h'), |s| {

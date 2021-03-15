@@ -8,9 +8,10 @@ use crate::prelude::*;
 /// StoryView is a View displaying a list stories corresponding
 /// to a particular category (top stories, newest stories, most popular stories, etc).
 pub struct StoryView {
-    raw_command: String,
     view: LinearLayout,
     pub stories: Vec<hn_client::Story>,
+
+    raw_command: String,
 }
 
 /// Get the description text summarizing basic information about a story
@@ -42,9 +43,9 @@ impl StoryView {
             })
         });
         StoryView {
-            raw_command: String::new(),
             view,
             stories,
+            raw_command: String::new(),
         }
     }
 

@@ -39,7 +39,7 @@ pub fn get_comment_view_async(
 
 /// Return an async view wraps StoryView (front page)
 /// with a loading screen when loading data
-pub fn get_front_page_story_view(siv: &mut Cursive, client: &hn_client::HNClient) -> impl View {
+pub fn get_front_page_story_view_async(siv: &mut Cursive, client: &hn_client::HNClient) -> impl View {
     AsyncView::new_with_bg_creator(
         siv,
         {

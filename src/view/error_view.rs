@@ -12,7 +12,7 @@ pub fn get_error_view(err_desc: &str, err: Error, client: &hn_client::HNClient) 
         .button("front page", {
             let client = client.clone();
             move |s| {
-                let async_view = async_view::get_front_page_story_view(s, &client);
+                let async_view = async_view::get_front_page_story_view_async(s, &client);
                 s.pop_layer();
                 s.screen_mut().add_transparent_layer(Layer::new(async_view));
             }
@@ -22,7 +22,7 @@ pub fn get_error_view(err_desc: &str, err: Error, client: &hn_client::HNClient) 
     .on_event(Event::AltChar('f'), {
         let client = client.clone();
         move |s| {
-            let async_view = async_view::get_front_page_story_view(s, &client);
+            let async_view = async_view::get_front_page_story_view_async(s, &client);
             s.pop_layer();
             s.add_layer(async_view);
         }
