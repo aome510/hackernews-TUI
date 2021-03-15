@@ -210,9 +210,11 @@ impl HNClient {
             );
         }
 
-        let story: Story = response.into();
-
-        Ok(story.children)
+        Ok(response
+            .children
+            .into_iter()
+            .map(|comment| comment.into())
+            .collect())
     }
 
     /// Get a list of stories matching certain conditions
