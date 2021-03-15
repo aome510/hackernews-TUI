@@ -71,7 +71,7 @@ fn parse_raw_comment(
 
 /// Parse comments recursively into readable texts with styles and colors
 fn parse_comment_text_list(
-    comments: &Vec<Box<hn_client::Comment>>,
+    comments: &Vec<hn_client::Comment>,
     height: usize,
 ) -> Vec<(StyledString, usize, Vec<String>)> {
     let paragraph_re = Regex::new(r"<p>(?s)(?P<paragraph>.*?)</p>").unwrap();
@@ -82,7 +82,6 @@ fn parse_comment_text_list(
     comments
         .par_iter()
         .flat_map(|comment| {
-            let comment = &comment.as_ref();
             let mut subcomments = parse_comment_text_list(&comment.children, height + 1);
             let mut comment_string = StyledString::styled(
                 format!(
@@ -114,7 +113,7 @@ impl ViewWrapper for CommentView {
 
 impl CommentView {
     /// Return a new CommentView given a comment list and discussed story url
-    pub fn new(story_url: &str, comments: &Vec<Box<hn_client::Comment>>) -> Self {
+    pub fn new(story_url: &str, comments: &Vec<hn_client::Comment>) -> Self {
         let comments = parse_comment_text_list(comments, 0);
         let view = LinearLayout::vertical().with(|v| {
             comments.iter().for_each(|comment| {
@@ -147,7 +146,7 @@ impl CommentView {
 
 /// Return a main view of a CommentView displaying the comment list.
 /// The main view of a CommentView is a View without status bar or footer.
-fn get_comment_main_view(story_url: &str, comments: &Vec<Box<hn_client::Comment>>) -> impl View {
+fn get_comment_main_view(story_url: &str, comments: &Vec<hn_client::Comment>) -> impl View {
     event_view::construct_list_event_view(CommentView::new(story_url, comments))
         .on_pre_event_inner('l', move |s, _| {
             let heights = s.get_heights();
@@ -228,7 +227,7 @@ pub fn get_comment_view(
     story_title: &str,
     story_url: &str,
     client: &hn_client::HNClient,
-    comments: &Vec<Box<hn_client::Comment>>,
+    comments: &Vec<hn_client::Comment>,
 ) -> impl View {
     let client = client.clone();
     let main_view = get_comment_main_view(story_url, comments);

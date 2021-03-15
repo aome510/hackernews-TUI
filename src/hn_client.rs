@@ -50,7 +50,7 @@ struct StoryResponse {
     id: u32,
 
     #[serde(default)]
-    children: Vec<Box<CommentResponse>>,
+    children: Vec<CommentResponse>,
 
     title: Option<String>,
     author: Option<String>,
@@ -78,7 +78,7 @@ struct CommentResponse {
     story_id: u32,
 
     #[serde(default)]
-    children: Vec<Box<CommentResponse>>,
+    children: Vec<CommentResponse>,
 
     text: Option<String>,
     author: Option<String>,
@@ -105,7 +105,7 @@ pub struct Story {
     pub points: u32,
     pub num_comments: u32,
     pub time: u64,
-    pub children: Vec<Box<Comment>>,
+    pub children: Vec<Comment>,
 }
 
 /// Comment represents a Hacker News comment
@@ -117,7 +117,7 @@ pub struct Comment {
     pub text: String,
     pub author: String,
     pub time: u64,
-    pub children: Vec<Box<Comment>>,
+    pub children: Vec<Comment>,
 }
 
 impl From<CommentResponse> for Comment {
@@ -125,7 +125,7 @@ impl From<CommentResponse> for Comment {
         let children = c
             .children
             .into_iter()
-            .map(|comment| Box::new((*comment.as_ref()).into()))
+            .map(|comment| comment.into())
             .collect();
         Comment {
             id: c.id,
@@ -143,19 +143,20 @@ impl From<StoryResponse> for Story {
     fn from(s: StoryResponse) -> Self {
         // need to make sure that highlight_result is not none,
         // and its title field is not none,
-        let title = s.highlight_result.unwrap().title.unwrap().value;
-        let url = match s.highlight_result.unwrap().url {
+        let highlight_result = s.highlight_result.unwrap();
+        let title = highlight_result.title.unwrap().value;
+        let url = match highlight_result.url {
             None => String::new(),
             Some(url) => url.value,
         };
-        let author = match s.highlight_result.unwrap().author {
+        let author = match highlight_result.author {
             None => String::new(),
             Some(author) => author.value,
         };
         let children = s
             .children
             .into_iter()
-            .map(|comment| Box::new((*comment.as_ref()).into()))
+            .map(|comment| comment.into())
             .collect();
         Story {
             id: s.id,
@@ -198,7 +199,7 @@ impl HNClient {
     }
 
     /// Get all comments from a story with a given id
-    pub fn get_comments_from_story_id(&self, id: u32) -> Result<Vec<Box<Comment>>> {
+    pub fn get_comments_from_story_id(&self, id: u32) -> Result<Vec<Comment>> {
         let time = SystemTime::now();
         let response = self.get_item_from_id::<StoryResponse>(id)?;
         if let Ok(elapsed) = time.elapsed() {
