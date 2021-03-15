@@ -15,8 +15,10 @@ fn main() {
 
     let client = hn_client::HNClient::new().unwrap();
     let async_view = async_view::get_story_view_async(&mut siv, &client);
-    siv.add_global_callback(Event::AltChar('q'), |s| s.quit());
     siv.screen_mut()
         .add_transparent_layer(Layer::new(async_view));
+
+    siv.add_global_callback(Event::AltChar('q'), |s| s.quit());
+
     siv.run();
 }

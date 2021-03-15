@@ -1,15 +1,18 @@
 use crate::prelude::*;
 
 const HN_ALGOLIA_PREFIX: &'static str = "https://hn.algolia.com/api/v1";
-const HN_SEARCH_QUERY_STRING: &'static str = "tags=story&restrictSearchableAttributes=title&typoTolerance=false&hitsPerPage=16&minProximity=8&queryType=prefixLast";
+const HN_SEARCH_QUERY_STRING: &'static str
+    = "tags=story&restrictSearchableAttributes=title&typoTolerance=false&hitsPerPage=16&minProximity=8&queryType=prefixLast";
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(16);
 
-fn parse_id<'de, D>(d: D) -> std::result::Result<i32, D::Error>
+// serde helper functions
+
+fn parse_id<'de, D>(d: D) -> std::result::Result<u32, D::Error>
 where
     D: Deserializer<'de>,
 {
     let s = String::deserialize(d)?;
-    s.parse::<i32>().map_err(de::Error::custom)
+    s.parse::<u32>().map_err(de::Error::custom)
 }
 
 fn parse_null_default<'de, D, T>(deserializer: D) -> Result<T, D::Error>
@@ -21,95 +24,159 @@ where
     Ok(opt.unwrap_or_default())
 }
 
-#[derive(Clone, Debug, Deserialize)]
+// API response structs
+
+#[derive(Debug, Deserialize)]
 #[serde(rename_all(deserialize = "camelCase"))]
-pub struct MatchResult {
+struct MatchResult {
     value: String,
     #[serde(default)]
     matched_words: Vec<String>,
 }
 
-#[derive(Clone, Debug, Deserialize)]
-pub struct HighlightResult {
+#[derive(Debug, Deserialize)]
+struct HighlightResult {
     title: Option<MatchResult>,
     url: Option<MatchResult>,
     author: Option<MatchResult>,
 }
 
-#[derive(Clone, Debug, Deserialize)]
-/// Story represents a story post in Hacker News.
-pub struct Story {
+#[derive(Debug, Deserialize)]
+/// StoryResponse represents the story data received from HN_ALGOLIA APIs
+struct StoryResponse {
     #[serde(default)]
     #[serde(rename(deserialize = "objectID"))]
     #[serde(deserialize_with = "parse_id")]
-    pub id: i32,
+    id: u32,
 
     #[serde(default)]
-    pub children: Vec<Box<Comment>>,
+    children: Vec<Box<CommentResponse>>,
+
+    title: Option<String>,
+    author: Option<String>,
+    url: Option<String>,
 
     #[serde(deserialize_with = "parse_null_default")]
-    pub title: String,
-    #[serde(deserialize_with = "parse_null_default")]
-    pub author: String,
-    #[serde(deserialize_with = "parse_null_default")]
-    pub url: String,
-
-    #[serde(deserialize_with = "parse_null_default")]
-    pub points: i32,
+    points: u32,
     #[serde(default)]
     #[serde(deserialize_with = "parse_null_default")]
-    pub num_comments: i32,
+    num_comments: u32,
 
     #[serde(rename(deserialize = "created_at_i"))]
-    pub time: u64,
+    time: u64,
 
     // search result
     #[serde(rename(deserialize = "_highlightResult"))]
-    pub highlight_result: Option<HighlightResult>,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-/// Comment represents a comment in Hacker News.
-pub struct Comment {
-    pub id: i32,
-    #[serde(deserialize_with = "parse_null_default")]
-    pub parent_id: i32,
-    #[serde(deserialize_with = "parse_null_default")]
-    pub story_id: i32,
-    #[serde(default)]
-    pub children: Vec<Box<Comment>>,
-
-    #[serde(deserialize_with = "parse_null_default")]
-    pub text: String,
-    #[serde(deserialize_with = "parse_null_default")]
-    pub author: String,
-    #[serde(rename(deserialize = "created_at_i"))]
-    pub time: u64,
+    highlight_result: Option<HighlightResult>,
 }
 
 #[derive(Debug, Deserialize)]
-struct StoriesResponse {
-    pub hits: Vec<Story>,
+/// CommentResponse represents the story data received from HN_ALGOLIA APIs
+struct CommentResponse {
+    id: u32,
+    parent_id: u32,
+    story_id: u32,
+
+    #[serde(default)]
+    children: Vec<Box<CommentResponse>>,
+
+    text: Option<String>,
+    author: Option<String>,
+
+    #[serde(rename(deserialize = "created_at_i"))]
+    time: u64,
 }
+
+#[derive(Debug, Deserialize)]
+/// StoriesResponse represents the stories data received from HN_ALGOLIA APIs
+struct StoriesResponse {
+    pub hits: Vec<StoryResponse>,
+}
+
+// parsed structs
+
+/// Story represents a Hacker News story
+#[derive(Debug, Clone)]
+pub struct Story {
+    pub id: u32,
+    pub title: String,
+    pub url: String,
+    pub author: String,
+    pub points: u32,
+    pub num_comments: u32,
+    pub time: u64,
+    pub children: Vec<Box<Comment>>,
+}
+
+/// Comment represents a Hacker News comment
+#[derive(Debug, Clone)]
+pub struct Comment {
+    pub id: u32,
+    pub story_id: u32,
+    pub parent_id: u32,
+    pub text: String,
+    pub author: String,
+    pub time: u64,
+    pub children: Vec<Box<Comment>>,
+}
+
+impl From<CommentResponse> for Comment {
+    fn from(c: CommentResponse) -> Self {
+        let children = c
+            .children
+            .into_iter()
+            .map(|comment| Box::new((*comment.as_ref()).into()))
+            .collect();
+        Comment {
+            id: c.id,
+            story_id: c.story_id,
+            parent_id: c.parent_id,
+            text: c.text.unwrap_or("[deleted]".to_string()),
+            author: c.author.unwrap_or("[deleted]".to_string()),
+            time: c.time,
+            children,
+        }
+    }
+}
+
+impl From<StoryResponse> for Story {
+    fn from(s: StoryResponse) -> Self {
+        // need to make sure that highlight_result is not none,
+        // and its title field is not none,
+        let title = s.highlight_result.unwrap().title.unwrap().value;
+        let url = match s.highlight_result.unwrap().url {
+            None => "".to_string(),
+            Some(url) => url.value,
+        };
+        let author = match s.highlight_result.unwrap().author {
+            None => "".to_string(),
+            Some(author) => author.value,
+        };
+        let children = s
+            .children
+            .into_iter()
+            .map(|comment| Box::new((*comment.as_ref()).into()))
+            .collect();
+        Story {
+            id: s.id,
+            points: s.points,
+            num_comments: s.num_comments,
+            time: s.time,
+            title,
+            url,
+            author,
+            children,
+        }
+    }
+}
+
+// HN client get Story,Comment data by calling HN_ALGOLIA APIs
+// and parsing the result into a corresponding struct
 
 /// HNClient is a http client to communicate with Hacker News APIs.
 #[derive(Clone)]
 pub struct HNClient {
     client: ureq::Agent,
-}
-
-/// Retrieves all comments from a story with a given id
-pub fn get_comments_from_story_id(id: i32, client: &HNClient) -> Result<Vec<Box<Comment>>> {
-    let time = SystemTime::now();
-    let story = client.get_item_from_id::<Story>(id)?;
-    if let Ok(elapsed) = time.elapsed() {
-        debug!(
-            "get comments from story {} took {}ms",
-            id,
-            elapsed.as_millis()
-        );
-    }
-    Ok(story.children)
 }
 
 impl HNClient {
@@ -120,8 +187,9 @@ impl HNClient {
         })
     }
 
-    /// Retrieve data from an item id and parse it to the corresponding struct
-    pub fn get_item_from_id<T>(&self, id: i32) -> Result<T>
+    /// Get data from an item's id and parse it to the corresponding struct
+    /// representing that item
+    pub fn get_item_from_id<T>(&self, id: u32) -> Result<T>
     where
         T: DeserializeOwned,
     {
@@ -129,7 +197,24 @@ impl HNClient {
         Ok(self.client.get(&request_url).call()?.into_json::<T>()?)
     }
 
-    /// Return a list of stories whose titles match a query
+    /// Get all comments from a story with a given id
+    pub fn get_comments_from_story_id(&self, id: u32) -> Result<Vec<Box<Comment>>> {
+        let time = SystemTime::now();
+        let response = self.get_item_from_id::<StoryResponse>(id)?;
+        if let Ok(elapsed) = time.elapsed() {
+            debug!(
+                "get comments from story {} took {}ms",
+                id,
+                elapsed.as_millis()
+            );
+        }
+
+        let story: Story = response.into();
+
+        Ok(story.children)
+    }
+
+    /// Get a list of stories matching certain conditions
     pub fn get_matched_stories(&self, query: &str) -> Result<Vec<Story>> {
         let request_url = format!("{}/search?{}", HN_ALGOLIA_PREFIX, HN_SEARCH_QUERY_STRING);
         let time = SystemTime::now();
@@ -146,16 +231,18 @@ impl HNClient {
                 elapsed.as_millis()
             );
         }
-        Ok(response.hits)
+
+        Ok(response
+            .hits
+            .into_iter()
+            .filter(|story| story.highlight_result.is_some() && story.title.is_some())
+            .map(|story| story.into())
+            .collect())
     }
 
-    /// Retrieve a list of stories on HN frontpage
+    /// Get a list of stories on HN front page
     pub fn get_top_stories(&self) -> Result<Vec<Story>> {
-        // get top 50 stories. However, angolia front-page API normally returns at most top 33 stories
-        let request_url = format!(
-            "{}/search?tags=front_page&hitsPerPage=50",
-            HN_ALGOLIA_PREFIX
-        );
+        let request_url = format!("{}/search?tags=front_page", HN_ALGOLIA_PREFIX);
         let time = SystemTime::now();
         let response = self
             .client
@@ -165,6 +252,12 @@ impl HNClient {
         if let Ok(elapsed) = time.elapsed() {
             debug!("get top stories took {}ms", elapsed.as_millis());
         }
-        Ok(response.hits)
+
+        Ok(response
+            .hits
+            .into_iter()
+            .filter(|story| story.highlight_result.is_some() && story.title.is_some())
+            .map(|story| story.into())
+            .collect())
     }
 }
