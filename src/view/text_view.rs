@@ -1,6 +1,7 @@
 use crate::prelude::*;
 
-/// TextView wraps a text string into a focusable view
+/// TextView is a simple subset of cursive::views::TextView
+/// but with focus enabled by default
 pub struct TextView {
     content: utils::markup::StyledString,
     rows: Vec<lines::spans::Row>,

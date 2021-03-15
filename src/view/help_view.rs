@@ -1,11 +1,10 @@
 use super::comment_view::CommentView;
-use super::error_view::ErrorViewWrapper;
 use super::search_view::SearchView;
 use super::story_view::StoryView;
 use super::theme::*;
 use crate::prelude::*;
 
-/// HelpView displays a dialog with a list of key shortcut/description
+/// HelpView is a View displaying a help dialog with a list of key shortcuts and descriptions
 pub struct HelpView {
     view: OnEventView<Dialog>,
     // "section description" followed by a vector of ("key", "key description") pairs

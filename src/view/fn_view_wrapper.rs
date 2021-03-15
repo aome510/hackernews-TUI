@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-/// FnViewWrapper is a trait required to implement a wrapped View object
+/// FnViewWrapper is a required trait to implement a wrapped View object
 /// by providing methods that returns a pointer to a View object
 pub trait FnViewWrapper {
     fn get_view(&self) -> &dyn View {
