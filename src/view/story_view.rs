@@ -14,11 +14,48 @@ pub struct StoryView {
     raw_command: String,
 }
 
+/// Return a StyledString representing a matched text in which
+/// matches are highlighted
+fn get_matched_text(mut s: String, default_style: ColorStyle) -> StyledString {
+    let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
+    let mut styled_s = StyledString::new();
+    loop {
+        match match_re.captures(&s.clone()) {
+            None => break,
+            Some(c) => {
+                let m = c.get(0).unwrap();
+                let match_text = c.name("match").unwrap().as_str();
+
+                let range = m.range();
+                let mut prefix: String = s
+                    .drain(std::ops::Range {
+                        start: 0,
+                        end: m.end(),
+                    })
+                    .collect();
+                prefix.drain(range);
+
+                if prefix.len() > 0 {
+                    styled_s.append_styled(&prefix, default_style);
+                }
+
+                styled_s.append_styled(match_text, ColorStyle::back(HIGHLIGHT_COLOR));
+                continue;
+            }
+        };
+    }
+    if s.len() > 0 {
+        styled_s.append_styled(s, default_style);
+    }
+    styled_s
+}
+
 /// Get the description text summarizing basic information about a story
 pub fn get_story_text(story: &hn_client::Story) -> StyledString {
-    let mut story_text = StyledString::plain(format!("{}", story.title));
+    let mut story_text = get_matched_text(story.title.clone(), ColorStyle::default());
     if story.url.len() > 0 {
-        story_text.append_styled(format!("\n({})", story.url), ColorStyle::from(LINK_COLOR));
+        let url = format!("\n{}", story.url);
+        story_text.append(get_matched_text(url, ColorStyle::front(LINK_COLOR)));
     }
     story_text.append_styled(
         format!(
