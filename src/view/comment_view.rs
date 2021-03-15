@@ -7,7 +7,7 @@ use crate::prelude::*;
 
 /// CommentView is a View displaying a comment thread of a HN story
 pub struct CommentView {
-    story_url: Option<String>,
+    story_url: String,
     raw_command: String,
     view: LinearLayout,
     comments: Vec<(StyledString, usize, Vec<String>)>,
@@ -50,7 +50,7 @@ fn parse_raw_comment(
                 }
 
                 styled_s.append_styled(
-                    format!("\"{}\"", shorten_url(link.to_string())),
+                    format!("\"{}\"", shorten_url(link)),
                     Style::from(LINK_COLOR),
                 );
                 styled_s.append_styled(
@@ -86,14 +86,22 @@ fn parse_comment_text_list(
             let mut comment_string = StyledString::styled(
                 format!(
                     "{} {} ago\n",
-                    comment.author.clone().unwrap_or("[deleted]".to_string()),
+                    if comment.author.len() > 0 {
+                        &comment.author
+                    } else {
+                        "[deleted]"
+                    },
                     get_elapsed_time_as_text(comment.time),
                 ),
                 DESC_COLOR,
             );
 
             let (comment_content, links) = parse_raw_comment(
-                comment.text.clone().unwrap_or("[deleted]".to_string()),
+                if comment.text.len() > 0 {
+                    comment.text.clone()
+                } else {
+                    "[deleted]".to_string()
+                },
                 &paragraph_re,
                 &italic_re,
                 &code_re,
@@ -113,7 +121,7 @@ impl ViewWrapper for CommentView {
 
 impl CommentView {
     /// Return a new CommentView based on the list of comments received from HN Client
-    pub fn new(story_url: Option<String>, comments: &Vec<Box<hn_client::Comment>>) -> Self {
+    pub fn new(story_url: &str, comments: &Vec<Box<hn_client::Comment>>) -> Self {
         let comments = parse_comment_text_list(&comments, 0);
         let view = LinearLayout::vertical().with(|v| {
             comments.iter().for_each(|comment| {
@@ -127,7 +135,7 @@ impl CommentView {
             })
         });
         CommentView {
-            story_url,
+            story_url: story_url.to_string(),
             raw_command: "".to_string(),
             view,
             comments,
@@ -144,10 +152,7 @@ impl CommentView {
     inner_getters!(self.view: LinearLayout);
 }
 
-fn get_comment_main_view(
-    story_url: Option<String>,
-    comments: &Vec<Box<hn_client::Comment>>,
-) -> impl View {
+fn get_comment_main_view(story_url: &str, comments: &Vec<Box<hn_client::Comment>>) -> impl View {
     event_view::construct_list_event_view(CommentView::new(story_url, comments))
         .on_pre_event_inner('l', move |s, _| {
             let heights = s.get_heights();
@@ -195,12 +200,11 @@ fn get_comment_main_view(
             Err(_) => None,
         })
         .on_pre_event_inner('O', move |s, _| {
-            if s.story_url.is_some() {
-                let url = s.story_url.clone().unwrap();
-                match webbrowser::open(&url) {
+            if s.story_url.len() > 0 {
+                match webbrowser::open(&s.story_url) {
                     Ok(_) => Some(EventResult::Consumed(None)),
                     Err(err) => {
-                        warn!("failed to open link {}: {}", url, err);
+                        warn!("failed to open link {}: {}", s.story_url, err);
                         None
                     }
                 }
@@ -212,10 +216,10 @@ fn get_comment_main_view(
         .scrollable()
 }
 
-pub fn get_comment_status_bar(story_title: Option<String>) -> impl View {
+pub fn get_comment_status_bar(story_title: &str) -> impl View {
     Layer::with_color(
         TextView::new(StyledString::styled(
-            format!("Comment View - {}", story_title.unwrap()),
+            format!("Comment View - {}", story_title),
             ColorStyle::new(Color::Dark(BaseColor::Black), STATUS_BAR_COLOR),
         ))
         .align(align::Align::center()),
@@ -226,8 +230,8 @@ pub fn get_comment_status_bar(story_title: Option<String>) -> impl View {
 /// Return a cursive's View representing a CommentView with
 /// registered event handlers and scrollable trait.
 pub fn get_comment_view(
-    story_title: Option<String>,
-    story_url: Option<String>,
+    story_title: &str,
+    story_url: &str,
     client: &hn_client::HNClient,
     comments: &Vec<Box<hn_client::Comment>>,
 ) -> impl View {

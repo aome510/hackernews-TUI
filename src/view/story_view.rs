@@ -14,24 +14,22 @@ pub struct StoryView {
 }
 
 pub fn get_story_text(story: &hn_client::Story) -> StyledString {
-    let mut story_text = StyledString::plain(format!(
-        "{}",
-        story.title.clone().unwrap_or("[deleted]".to_string())
-    ));
-    if story.url.is_some() {
-        let story_url = story.url.clone().unwrap();
-        if story_url.len() > 0 {
-            story_text.append_styled(
-                format!("\n({})", shorten_url(story_url)),
-                ColorStyle::from(LINK_COLOR),
-            );
-        }
+    let mut story_text = StyledString::plain(format!("{}", story.title));
+    if story.url.len() > 0 {
+        story_text.append_styled(
+            format!("\n({})", shorten_url(&story.url)),
+            ColorStyle::from(LINK_COLOR),
+        );
     }
     story_text.append_styled(
         format!(
             "\n{} points | by {} | {} ago | {} comments",
             story.points,
-            story.author.clone().unwrap_or("[deleted]".to_string()),
+            if story.author.len() > 0 {
+                &story.author
+            } else {
+                "[deleted]"
+            },
             get_elapsed_time_as_text(story.time),
             story.num_comments,
         ),
@@ -72,7 +70,7 @@ pub fn get_story_main_view(
     let client = client.clone();
     let stories = stories
         .into_iter()
-        .filter(|story| story.title.is_some())
+        .filter(|story| story.title.len() > 0)
         .collect();
     event_view::construct_list_event_view(StoryView::new(stories))
         .on_pre_event_inner(Key::Enter, {
@@ -91,8 +89,8 @@ pub fn get_story_main_view(
         })
         .on_pre_event_inner('O', move |s, _| {
             let id = s.get_inner().get_focus_index();
-            if s.stories[id].url.is_some() {
-                let url = s.stories[id].url.clone().unwrap();
+            let url = &s.stories[id].url;
+            if url.len() > 0 {
                 match webbrowser::open(&url) {
                     Ok(_) => Some(EventResult::Consumed(None)),
                     Err(err) => {

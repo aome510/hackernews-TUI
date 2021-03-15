@@ -24,7 +24,7 @@ where
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all(deserialize = "camelCase"))]
 pub struct MatchResult {
-    value: Option<String>,
+    value: String,
     #[serde(default)]
     matched_words: Vec<String>,
 }
@@ -47,16 +47,21 @@ pub struct Story {
     #[serde(default)]
     pub children: Vec<Box<Comment>>,
 
-    pub title: Option<String>,
-    pub author: Option<String>,
-    pub url: Option<String>,
-    #[serde(rename(deserialize = "created_at_i"))]
-    pub time: u64,
+    #[serde(deserialize_with = "parse_null_default")]
+    pub title: String,
+    #[serde(deserialize_with = "parse_null_default")]
+    pub author: String,
+    #[serde(deserialize_with = "parse_null_default")]
+    pub url: String,
+
     #[serde(deserialize_with = "parse_null_default")]
     pub points: i32,
     #[serde(default)]
     #[serde(deserialize_with = "parse_null_default")]
     pub num_comments: i32,
+
+    #[serde(rename(deserialize = "created_at_i"))]
+    pub time: u64,
 
     // search result
     #[serde(rename(deserialize = "_highlightResult"))]
@@ -74,8 +79,10 @@ pub struct Comment {
     #[serde(default)]
     pub children: Vec<Box<Comment>>,
 
-    pub text: Option<String>,
-    pub author: Option<String>,
+    #[serde(deserialize_with = "parse_null_default")]
+    pub text: String,
+    #[serde(deserialize_with = "parse_null_default")]
+    pub author: String,
     #[serde(rename(deserialize = "created_at_i"))]
     pub time: u64,
 }

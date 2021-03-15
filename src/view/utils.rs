@@ -22,12 +22,12 @@ pub fn get_elapsed_time_as_text(time: u64) -> String {
 
 /// A simple URL shorten function that reduce the
 /// URL length if exceeds a threshold
-pub fn shorten_url(url: String) -> String {
+pub fn shorten_url(url: &str) -> String {
     let len = url.chars().count();
     if len > MAX_URL_LEN {
         url.substring(0, 50).to_string() + "..." + url.substring(len - 14, len)
     } else {
-        url
+        url.to_string()
     }
 }
 

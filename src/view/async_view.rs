@@ -11,6 +11,7 @@ pub fn get_comment_view_async(
     let id = story.id;
     let url = story.url.clone();
     let title = story.title.clone();
+
     AsyncView::new_with_bg_creator(
         siv,
         {
@@ -22,10 +23,7 @@ pub fn get_comment_view_async(
             move |result| {
                 ErrorViewWrapper::new(match result {
                     Ok(comments) => ErrorViewEnum::Ok(comment_view::get_comment_view(
-                        title.clone(),
-                        url.clone(),
-                        &client,
-                        &comments,
+                        &title, &url, &client, &comments,
                     )),
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
                         format!("failed to get comments from story {}", id),
