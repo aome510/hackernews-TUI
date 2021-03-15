@@ -145,11 +145,11 @@ impl From<StoryResponse> for Story {
         // and its title field is not none,
         let title = s.highlight_result.unwrap().title.unwrap().value;
         let url = match s.highlight_result.unwrap().url {
-            None => "".to_string(),
+            None => String::new(),
             Some(url) => url.value,
         };
         let author = match s.highlight_result.unwrap().author {
-            None => "".to_string(),
+            None => String::new(),
             Some(author) => author.value,
         };
         let children = s
@@ -241,7 +241,7 @@ impl HNClient {
     }
 
     /// Get a list of stories on HN front page
-    pub fn get_top_stories(&self) -> Result<Vec<Story>> {
+    pub fn get_front_page_stories(&self) -> Result<Vec<Story>> {
         let request_url = format!("{}/search?tags=front_page", HN_ALGOLIA_PREFIX);
         let time = SystemTime::now();
         let response = self
