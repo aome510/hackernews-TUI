@@ -212,6 +212,8 @@ fn get_comment_main_view(story_url: &str, comments: &Vec<hn_client::Comment>) ->
 
 /// Return a View representing the status bar of a CommentView
 fn get_comment_status_bar(story_title: &str) -> impl View {
+    let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
+    let story_title = match_re.replace_all(story_title.clone(), "${match}");
     Layer::with_color(
         TextView::new(StyledString::styled(
             format!("Comment View - {}", story_title),
