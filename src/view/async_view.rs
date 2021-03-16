@@ -17,7 +17,16 @@ pub fn get_comment_view_async(
         siv,
         {
             let client = client.clone();
-            move || Ok(client.get_comments_from_story_id(id))
+            move || match client.get_comments_from_story_id(id) {
+                Ok(comments) => Ok(Ok(comments)),
+                Err(err) => {
+                    warn!(
+                        "failed to get comments from story (id={}): {:#?}\nRetrying...",
+                        id, err
+                    );
+                    Ok(client.get_comments_from_story_id(id))
+                }
+            }
         },
         {
             let client = client.clone();
@@ -27,7 +36,7 @@ pub fn get_comment_view_async(
                         &title, &url, &client, &comments,
                     )),
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
-                        &format!("failed to get comments from story {}", id),
+                        &format!("failed to get comments from story (id={})", id),
                         err,
                         &client,
                     )),
@@ -47,7 +56,13 @@ pub fn get_front_page_story_view_async(
         siv,
         {
             let client = client.clone();
-            move || Ok(client.get_front_page_stories())
+            move || match client.get_front_page_stories() {
+                Ok(stories) => Ok(Ok(stories)),
+                Err(err) => {
+                    warn!("failed to get front page stories: {:#?}\nRetrying...", err);
+                    Ok(client.get_front_page_stories())
+                }
+            }
         },
         {
             let client = client.clone();
