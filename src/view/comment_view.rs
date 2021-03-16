@@ -4,6 +4,7 @@ use super::text_view;
 use super::theme::*;
 use super::utils::*;
 use crate::prelude::*;
+use std::thread;
 
 /// CommentView is a View displaying a list of comments in a HN story
 pub struct CommentView {
@@ -180,13 +181,13 @@ fn get_comment_main_view(story_url: &str, comments: &Vec<hn_client::Comment>) ->
                 let id = s.get_inner().get_focus_index();
                 let links = s.comments[id].2.clone();
                 if num < links.len() {
-                    match webbrowser::open(&links[num]) {
-                        Ok(_) => Some(EventResult::Consumed(None)),
-                        Err(err) => {
-                            warn!("failed to open link {}: {}", links[num], err);
-                            None
+                    let url = links[num].clone();
+                    thread::spawn(move || {
+                        if let Err(err) = webbrowser::open(&url) {
+                            warn!("failed to open link {}: {}", url, err);
                         }
-                    }
+                    });
+                    Some(EventResult::Consumed(None))
                 } else {
                     Some(EventResult::Consumed(None))
                 }
@@ -195,13 +196,13 @@ fn get_comment_main_view(story_url: &str, comments: &Vec<hn_client::Comment>) ->
         })
         .on_pre_event_inner('O', move |s, _| {
             if s.story_url.len() > 0 {
-                match webbrowser::open(&s.story_url) {
-                    Ok(_) => Some(EventResult::Consumed(None)),
-                    Err(err) => {
-                        warn!("failed to open link {}: {}", s.story_url, err);
-                        None
+                let url = s.story_url.clone();
+                thread::spawn(move || {
+                    if let Err(err) = webbrowser::open(&url) {
+                        warn!("failed to open link {}: {}", url, err);
                     }
-                }
+                });
+                Some(EventResult::Consumed(None))
             } else {
                 Some(EventResult::Consumed(None))
             }

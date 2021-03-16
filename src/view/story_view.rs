@@ -1,3 +1,5 @@
+use std::thread;
+
 use super::event_view;
 use super::search_view;
 use super::text_view;
@@ -121,15 +123,14 @@ pub fn get_story_main_view(
         })
         .on_pre_event_inner('O', move |s, _| {
             let id = s.get_inner().get_focus_index();
-            let url = &s.stories[id].url;
+            let url = s.stories[id].url.clone();
             if url.len() > 0 {
-                match webbrowser::open(url) {
-                    Ok(_) => Some(EventResult::Consumed(None)),
-                    Err(err) => {
+                thread::spawn(move || {
+                    if let Err(err) = webbrowser::open(&url) {
                         warn!("failed to open link {}: {}", url, err);
-                        None
                     }
-                }
+                });
+                Some(EventResult::Consumed(None))
             } else {
                 Some(EventResult::Consumed(None))
             }
