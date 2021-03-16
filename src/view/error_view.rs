@@ -9,7 +9,8 @@ pub fn get_error_view(err_desc: &str, err: Error, client: &hn_client::HNClient) 
         Dialog::around(
             LinearLayout::vertical()
                 .child(TextView::new(err_desc))
-                .child(TextView::new(format!("{:#?}", err))),
+                .child(TextView::new(format!("{:#?}", err)))
+                .scrollable(),
         )
         .button("front page", {
             let client = client.clone();
@@ -19,7 +20,8 @@ pub fn get_error_view(err_desc: &str, err: Error, client: &hn_client::HNClient) 
                 s.screen_mut().add_transparent_layer(Layer::new(async_view));
             }
         })
-        .button("quit", |s| s.quit()),
+        .button("quit", |s| s.quit())
+        .full_height(),
     )
     .on_event(Event::AltChar('f'), {
         let client = client.clone();
