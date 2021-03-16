@@ -116,7 +116,7 @@ impl SearchView {
     pub fn new(client: &hn_client::HNClient, cb_sink: CbSink) -> Self {
         let view = Self::get_search_view("", vec![], client);
         let stories = Arc::new(RwLock::new(vec![]));
-        let query = Arc::new(RwLock::new(("".to_string(), false)));
+        let query = Arc::new(RwLock::new((String::new(), false)));
         SearchView {
             client: client.clone(),
             mode: SearchViewMode::Search,

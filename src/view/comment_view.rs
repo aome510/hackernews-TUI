@@ -112,7 +112,7 @@ impl ViewWrapper for CommentView {
 }
 
 impl CommentView {
-    /// Return a new CommentView given a comment list and discussed story url
+    /// Return a new CommentView given a comment list and the discussed story url
     pub fn new(story_url: &str, comments: &Vec<hn_client::Comment>) -> Self {
         let comments = parse_comment_text_list(comments, 0);
         let view = LinearLayout::vertical().with(|v| {
@@ -130,7 +130,7 @@ impl CommentView {
             story_url: story_url.to_string(),
             view,
             comments,
-            raw_command: "".to_string(),
+            raw_command: String::new(),
         }
     }
 
