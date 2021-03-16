@@ -1,8 +1,8 @@
 use crate::prelude::*;
 
 const HN_ALGOLIA_PREFIX: &'static str = "https://hn.algolia.com/api/v1";
-const HN_SEARCH_QUERY_STRING: &'static str
-    = "tags=story&restrictSearchableAttributes=title&typoTolerance=false&hitsPerPage=16&minProximity=8&queryType=prefixLast";
+const HN_SEARCH_QUERY_STRING: &'static str =
+    "tags=story&restrictSearchableAttributes=title&typoTolerance=false&hitsPerPage=16";
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(16);
 
 // serde helper functions
@@ -124,7 +124,7 @@ impl From<CommentResponse> for Comment {
     fn from(c: CommentResponse) -> Self {
         let children = c
             .children
-            .into_iter()
+            .into_par_iter()
             .map(|comment| comment.into())
             .collect();
         Comment {
@@ -155,7 +155,7 @@ impl From<StoryResponse> for Story {
         };
         let children = s
             .children
-            .into_iter()
+            .into_par_iter()
             .map(|comment| comment.into())
             .collect();
         Story {
@@ -212,7 +212,7 @@ impl HNClient {
 
         Ok(response
             .children
-            .into_iter()
+            .into_par_iter()
             .map(|comment| comment.into())
             .collect())
     }
@@ -237,7 +237,7 @@ impl HNClient {
 
         Ok(response
             .hits
-            .into_iter()
+            .into_par_iter()
             .filter(|story| story.highlight_result.is_some() && story.title.is_some())
             .map(|story| story.into())
             .collect())
@@ -258,7 +258,7 @@ impl HNClient {
 
         Ok(response
             .hits
-            .into_iter()
+            .into_par_iter()
             .filter(|story| story.highlight_result.is_some() && story.title.is_some())
             .map(|story| story.into())
             .collect())
