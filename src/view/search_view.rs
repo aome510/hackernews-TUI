@@ -13,8 +13,8 @@ pub enum SearchViewMode {
     Search,
 }
 
-/// SearchView is a view used to search for stories
-/// matching certain conditions
+/// SearchView is a view displaying a search bar and
+/// a matched story list matching a query string
 pub struct SearchView {
     // ("query_text", "need_update_view") pair
     query: Arc<RwLock<(String, bool)>>,
@@ -64,7 +64,7 @@ impl SearchView {
                 self.stories.read().unwrap().clone(),
                 &self.client,
             );
-            // every time we update view, reset to insert/search mode
+            // every time view is updated, reset SearchViewMode to insert/search mode
             self.mode = SearchViewMode::Search;
             self.query.write().unwrap().1 = false;
         }
@@ -93,6 +93,8 @@ impl SearchView {
 
                     *self_stories = stories;
                     self_query.write().unwrap().1 = true;
+
+                    // send an empty callback to force redrawing
                     cb_sink.send(Box::new(|_| {})).unwrap();
                 }
             }
@@ -114,7 +116,7 @@ impl SearchView {
     pub fn new(client: &hn_client::HNClient, cb_sink: CbSink) -> Self {
         let view = Self::get_search_view("", vec![], client);
         let stories = Arc::new(RwLock::new(vec![]));
-        let query = Arc::new(RwLock::new(("".to_string(), false)));
+        let query = Arc::new(RwLock::new((String::new(), false)));
         SearchView {
             client: client.clone(),
             mode: SearchViewMode::Search,
@@ -154,7 +156,9 @@ impl ViewWrapper for SearchView {
     }
 }
 
-fn get_main_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl View {
+/// Return a main view of a SearchView displaying the matched story list with a search bar.
+/// The main view of a SearchView is a View without status bar or footer.
+fn get_search_main_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl View {
     OnEventView::new(SearchView::new(&client, cb_sink))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
             match s.mode {
@@ -169,7 +173,7 @@ fn get_main_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl V
                             s.del_char();
                             None
                         }
-                        // ignore all keys that move the focus out of the text_view
+                        // ignore all keys that move the focus out of the search bar
                         Event::Key(Key::Up)
                         | Event::Key(Key::Down)
                         | Event::Key(Key::PageUp)
@@ -180,6 +184,7 @@ fn get_main_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl V
                 }
             }
         })
+        // vim-like switch mode key shortcuts
         .on_pre_event_inner(Event::Key(Key::Esc), |s, _| match s.mode {
             SearchViewMode::Navigation => None,
             SearchViewMode::Search => {
@@ -201,7 +206,7 @@ fn get_main_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl V
 /// Return a view representing a SearchView that searches stories with queries
 pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl View {
     let client = client.clone();
-    let main_view = get_main_search_view(&client, cb_sink);
+    let main_view = get_search_main_view(&client, cb_sink);
     let mut view = LinearLayout::vertical()
         .child(get_status_bar_with_desc("Story Search View"))
         .child(main_view)
@@ -211,7 +216,7 @@ pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl Vi
     OnEventView::new(view)
         .on_event(Event::AltChar('f'), move |s| {
             s.pop_layer();
-            let async_view = async_view::get_story_view_async(s, &client);
+            let async_view = async_view::get_front_page_story_view_async(s, &client);
             s.screen_mut().add_transparent_layer(Layer::new(async_view));
         })
         .on_event(Event::AltChar('h'), |s| {

@@ -8,30 +8,60 @@ use crate::prelude::*;
 /// StoryView is a View displaying a list stories corresponding
 /// to a particular category (top stories, newest stories, most popular stories, etc).
 pub struct StoryView {
-    raw_command: String,
     view: LinearLayout,
     pub stories: Vec<hn_client::Story>,
+
+    raw_command: String,
 }
 
+/// Return a StyledString representing a matched text in which
+/// matches are highlighted
+fn get_matched_text(mut s: String, default_style: ColorStyle) -> StyledString {
+    let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
+    let mut styled_s = StyledString::new();
+    loop {
+        match match_re.captures(&s.clone()) {
+            None => break,
+            Some(c) => {
+                let m = c.get(0).unwrap();
+                let match_text = c.name("match").unwrap().as_str();
+
+                let range = m.range();
+                let mut prefix: String = s
+                    .drain(std::ops::Range {
+                        start: 0,
+                        end: m.end(),
+                    })
+                    .collect();
+                prefix.drain(range);
+
+                if prefix.len() > 0 {
+                    styled_s.append_styled(&prefix, default_style);
+                }
+
+                styled_s.append_styled(match_text, ColorStyle::back(HIGHLIGHT_COLOR));
+                continue;
+            }
+        };
+    }
+    if s.len() > 0 {
+        styled_s.append_styled(s, default_style);
+    }
+    styled_s
+}
+
+/// Get the description text summarizing basic information about a story
 pub fn get_story_text(story: &hn_client::Story) -> StyledString {
-    let mut story_text = StyledString::plain(format!(
-        "{}",
-        story.title.clone().unwrap_or("[deleted]".to_string())
-    ));
-    if story.url.is_some() {
-        let story_url = story.url.clone().unwrap();
-        if story_url.len() > 0 {
-            story_text.append_styled(
-                format!("\n({})", shorten_url(story_url)),
-                ColorStyle::from(LINK_COLOR),
-            );
-        }
+    let mut story_text = get_matched_text(story.title.clone(), ColorStyle::default());
+    if story.url.len() > 0 {
+        let url = format!("\n{}", story.url);
+        story_text.append(get_matched_text(url, ColorStyle::front(LINK_COLOR)));
     }
     story_text.append_styled(
         format!(
             "\n{} points | by {} | {} ago | {} comments",
             story.points,
-            story.author.clone().unwrap_or("[deleted]".to_string()),
+            story.author,
             get_elapsed_time_as_text(story.time),
             story.num_comments,
         ),
@@ -50,9 +80,9 @@ impl StoryView {
             })
         });
         StoryView {
-            raw_command: String::new(),
             view,
             stories,
+            raw_command: String::new(),
         }
     }
 
@@ -65,19 +95,19 @@ impl ViewWrapper for StoryView {
     wrap_impl!(self.view: LinearLayout);
 }
 
+/// Return a main view of a StoryView displaying the story list.
+/// The main view of a StoryView is a View without status bar or footer.
 pub fn get_story_main_view(
     stories: Vec<hn_client::Story>,
     client: &hn_client::HNClient,
 ) -> impl View {
-    let client = client.clone();
-    let stories = stories
-        .into_iter()
-        .filter(|story| story.title.is_some())
-        .collect();
     event_view::construct_list_event_view(StoryView::new(stories))
         .on_pre_event_inner(Key::Enter, {
+            let client = client.clone();
             move |s, _| {
                 let id = s.get_inner().get_focus_index();
+                // the story struct hasn't had any comments inside yet,
+                // so it can be cloned without greatly affecting performance
                 let story = s.stories[id].clone();
                 Some(EventResult::with_cb({
                     let client = client.clone();
@@ -91,9 +121,9 @@ pub fn get_story_main_view(
         })
         .on_pre_event_inner('O', move |s, _| {
             let id = s.get_inner().get_focus_index();
-            if s.stories[id].url.is_some() {
-                let url = s.stories[id].url.clone().unwrap();
-                match webbrowser::open(&url) {
+            let url = &s.stories[id].url;
+            if url.len() > 0 {
+                match webbrowser::open(url) {
                     Ok(_) => Some(EventResult::Consumed(None)),
                     Err(err) => {
                         warn!("failed to open link {}: {}", url, err);
@@ -125,11 +155,15 @@ pub fn get_story_main_view(
         .scrollable()
 }
 
-/// Return a cursive's View representing a StoryView of HN stories
-pub fn get_story_view(stories: Vec<hn_client::Story>, client: &hn_client::HNClient) -> impl View {
+/// Return a StoryView given a story list and the view description
+pub fn get_story_view(
+    desc: &str,
+    stories: Vec<hn_client::Story>,
+    client: &hn_client::HNClient,
+) -> impl View {
     let main_view = get_story_main_view(stories, client);
     let mut view = LinearLayout::vertical()
-        .child(get_status_bar_with_desc("Story View - Front Page"))
+        .child(get_status_bar_with_desc(desc))
         .child(main_view)
         .child(construct_footer_view());
     view.set_focus_index(1).unwrap_or_else(|_| {});

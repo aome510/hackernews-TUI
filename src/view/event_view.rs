@@ -2,7 +2,7 @@ use super::comment_view::CommentView;
 use super::story_view::StoryView;
 use crate::prelude::*;
 
-/// Construct a new Event view from a view with ListEventView trait
+/// Construct a new OnEventView from a View with ListEventView trait
 /// by adding simple key-pressed event handlers
 pub fn construct_list_event_view<T: ListEventView>(view: T) -> OnEventView<T> {
     // add "j" and "k" for moving down and up the story list
@@ -27,7 +27,7 @@ pub fn construct_list_event_view<T: ListEventView>(view: T) -> OnEventView<T> {
 }
 
 /// ListEventView is a trait that implements basic method interfaces
-/// to interact with a List View (normally CommentView or StoryView)
+/// to interact with a ListView (normally CommentView or StoryView)
 pub trait ListEventView {
     fn focus_top(&mut self) -> Option<EventResult> {
         None
@@ -42,9 +42,6 @@ pub trait ListEventView {
         None
     }
     fn handle_digit(&mut self, _: char) -> Option<EventResult> {
-        None
-    }
-    fn add_help_dialog(&self) -> Option<EventResult> {
         None
     }
 }

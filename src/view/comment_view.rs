@@ -5,12 +5,13 @@ use super::theme::*;
 use super::utils::*;
 use crate::prelude::*;
 
-/// CommentView is a View displaying a comment thread of a HN story
+/// CommentView is a View displaying a list of comments in a HN story
 pub struct CommentView {
-    story_url: Option<String>,
-    raw_command: String,
+    story_url: String,
     view: LinearLayout,
     comments: Vec<(StyledString, usize, Vec<String>)>,
+
+    raw_command: String,
 }
 
 /// Parse a raw comment in HTML text to markdown text (with colors)
@@ -50,7 +51,7 @@ fn parse_raw_comment(
                 }
 
                 styled_s.append_styled(
-                    format!("\"{}\"", shorten_url(link.to_string())),
+                    format!("\"{}\"", shorten_url(link)),
                     Style::from(LINK_COLOR),
                 );
                 styled_s.append_styled(
@@ -68,9 +69,9 @@ fn parse_raw_comment(
     (styled_s, links)
 }
 
-/// Retrieve all comments recursively and parse them into readable texts with styles and colors
+/// Parse comments recursively into readable texts with styles and colors
 fn parse_comment_text_list(
-    comments: &Vec<Box<hn_client::Comment>>,
+    comments: &Vec<hn_client::Comment>,
     height: usize,
 ) -> Vec<(StyledString, usize, Vec<String>)> {
     let paragraph_re = Regex::new(r"<p>(?s)(?P<paragraph>.*?)</p>").unwrap();
@@ -81,19 +82,18 @@ fn parse_comment_text_list(
     comments
         .par_iter()
         .flat_map(|comment| {
-            let comment = &comment.as_ref();
             let mut subcomments = parse_comment_text_list(&comment.children, height + 1);
             let mut comment_string = StyledString::styled(
                 format!(
                     "{} {} ago\n",
-                    comment.author.clone().unwrap_or("[deleted]".to_string()),
+                    comment.author,
                     get_elapsed_time_as_text(comment.time),
                 ),
                 DESC_COLOR,
             );
 
             let (comment_content, links) = parse_raw_comment(
-                comment.text.clone().unwrap_or("[deleted]".to_string()),
+                comment.text.clone(),
                 &paragraph_re,
                 &italic_re,
                 &code_re,
@@ -112,9 +112,9 @@ impl ViewWrapper for CommentView {
 }
 
 impl CommentView {
-    /// Return a new CommentView based on the list of comments received from HN Client
-    pub fn new(story_url: Option<String>, comments: &Vec<Box<hn_client::Comment>>) -> Self {
-        let comments = parse_comment_text_list(&comments, 0);
+    /// Return a new CommentView given a comment list and the discussed story url
+    pub fn new(story_url: &str, comments: &Vec<hn_client::Comment>) -> Self {
+        let comments = parse_comment_text_list(comments, 0);
         let view = LinearLayout::vertical().with(|v| {
             comments.iter().for_each(|comment| {
                 v.add_child(PaddedView::lrtb(
@@ -127,10 +127,10 @@ impl CommentView {
             })
         });
         CommentView {
-            story_url,
-            raw_command: "".to_string(),
+            story_url: story_url.to_string(),
             view,
             comments,
+            raw_command: String::new(),
         }
     }
 
@@ -144,10 +144,9 @@ impl CommentView {
     inner_getters!(self.view: LinearLayout);
 }
 
-fn get_comment_main_view(
-    story_url: Option<String>,
-    comments: &Vec<Box<hn_client::Comment>>,
-) -> impl View {
+/// Return a main view of a CommentView displaying the comment list.
+/// The main view of a CommentView is a View without status bar or footer.
+fn get_comment_main_view(story_url: &str, comments: &Vec<hn_client::Comment>) -> impl View {
     event_view::construct_list_event_view(CommentView::new(story_url, comments))
         .on_pre_event_inner('l', move |s, _| {
             let heights = s.get_heights();
@@ -195,12 +194,11 @@ fn get_comment_main_view(
             Err(_) => None,
         })
         .on_pre_event_inner('O', move |s, _| {
-            if s.story_url.is_some() {
-                let url = s.story_url.clone().unwrap();
-                match webbrowser::open(&url) {
+            if s.story_url.len() > 0 {
+                match webbrowser::open(&s.story_url) {
                     Ok(_) => Some(EventResult::Consumed(None)),
                     Err(err) => {
-                        warn!("failed to open link {}: {}", url, err);
+                        warn!("failed to open link {}: {}", s.story_url, err);
                         None
                     }
                 }
@@ -212,10 +210,13 @@ fn get_comment_main_view(
         .scrollable()
 }
 
-pub fn get_comment_status_bar(story_title: Option<String>) -> impl View {
+/// Return a View representing the status bar of a CommentView
+fn get_comment_status_bar(story_title: &str) -> impl View {
+    let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
+    let story_title = match_re.replace_all(story_title.clone(), "${match}");
     Layer::with_color(
         TextView::new(StyledString::styled(
-            format!("Comment View - {}", story_title.unwrap()),
+            format!("Comment View - {}", story_title),
             ColorStyle::new(Color::Dark(BaseColor::Black), STATUS_BAR_COLOR),
         ))
         .align(align::Align::center()),
@@ -223,13 +224,12 @@ pub fn get_comment_status_bar(story_title: Option<String>) -> impl View {
     )
 }
 
-/// Return a cursive's View representing a CommentView with
-/// registered event handlers and scrollable trait.
+/// Return a CommentView given a comment list and the discussed story's url/title
 pub fn get_comment_view(
-    story_title: Option<String>,
-    story_url: Option<String>,
+    story_title: &str,
+    story_url: &str,
     client: &hn_client::HNClient,
-    comments: &Vec<Box<hn_client::Comment>>,
+    comments: &Vec<hn_client::Comment>,
 ) -> impl View {
     let client = client.clone();
     let main_view = get_comment_main_view(story_url, comments);
@@ -253,7 +253,7 @@ pub fn get_comment_view(
             }
         })
         .on_event(Event::AltChar('f'), move |s| {
-            let async_view = async_view::get_story_view_async(s, &client);
+            let async_view = async_view::get_front_page_story_view_async(s, &client);
             s.pop_layer();
             s.screen_mut().add_transparent_layer(Layer::new(async_view));
         })
