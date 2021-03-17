@@ -27,5 +27,45 @@ Story Search View
 ### Keyboard shortcuts
 In each `View`, press `<alt-h>` to see a list of supported keyboard shortcuts and their functionalities.
 
+Universal key shortcuts:
+- `<alt-h>`: Open the help dialog
+- `<alt-s>`: Go to the story search
+- `<alt-f>`: Go to the front page
+- `<alt-q>`: Quit the application
+
+Key shortcuts for each `View`:
+#### StoryView
+- `j`: Focus the next story
+- `k`: Focus the previous story
+- `t`: Focus the story at the top
+- `b`: Focus the story at the bottom
+- `{story_id} g`: Focus the {story_id}-th story
+- `<enter>`: Go the comment view associated with the focused story
+- `O`: Open in browser the link associated with the focused story
+
+#### CommentView
+- `j`: Focus the next comment
+- `k`: Focus the previous comment
+- `t`: Focus the comment at the top
+- `b`: Focus the comment at the bottom
+- `l`: Focus the next comment with smaller or equal level
+- `h`: Focus the previous comment with smaller or equal level
+- `O`: Open in browser the link associated with the discussed story
+- `{link_id} f`: Open in browser the {link_id}-th link in the focused comment
+
+#### SearchView
+In `SearchView`, there are two modes: `Navigation` and `Search`. The default mode is `Search`.
+
+`Search` mode is similar to Vim's Insert mode, in which users can input the query string.
+
+`Navigation` mode allows the `SearchView` to behave like a `StoryView` with all `StoryView` shortcuts enabled.
+
+Switch mode key shortcuts:
+- `i`: Enter `Search` mode from `Navigation` mode
+- `<esc>`: Enter `Navigation` mode from `Search` mode
+
+`Navigation` mode supports all `StoryView`'s key shortcuts.
+
+
 ## Roadmap/TODO List
 TBA...
