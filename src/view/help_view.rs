@@ -87,7 +87,7 @@ impl ViewWrapper for HelpView {
 }
 
 #[macro_export]
-macro_rules! universal_key_shortcuts {
+macro_rules! global_key_shortcuts {
     () => {
         (
             "Others",
@@ -103,7 +103,7 @@ macro_rules! universal_key_shortcuts {
 
 pub trait HasHelpView {
     fn construct_help_view() -> HelpView {
-        HelpView::new().keys(vec![universal_key_shortcuts!()])
+        HelpView::new().keys(vec![global_key_shortcuts!()])
     }
 }
 
@@ -136,7 +136,7 @@ impl HasHelpView for StoryView {
                     "Open in browser the link associated with the focused story",
                 )],
             ),
-            universal_key_shortcuts!(),
+            global_key_shortcuts!(),
         ])
     }
 }
@@ -171,7 +171,7 @@ impl HasHelpView for CommentView {
                     ),
                 ],
             ),
-            universal_key_shortcuts!(),
+            global_key_shortcuts!(),
         ])
     }
 }
@@ -202,7 +202,7 @@ impl HasHelpView for SearchView {
                     ),
                 ],
             ),
-            universal_key_shortcuts!(),
+            global_key_shortcuts!(),
         ])
     }
 }

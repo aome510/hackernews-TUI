@@ -16,7 +16,7 @@ fn main() {
     let client = hn_client::HNClient::new().unwrap();
     story_view::add_story_view_layer(&mut s, &client);
 
-    // universal shortcuts
+    // global shortcuts
     s.add_global_callback(Event::CtrlChar('f'), {
         let client = client.clone();
         move |s| {
