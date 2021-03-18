@@ -1,4 +1,3 @@
-use super::story_view;
 use super::text_view;
 use super::theme::*;
 use super::utils::*;
@@ -203,6 +202,14 @@ fn get_search_main_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl V
         })
 }
 
+/// Add SearchView as a new layer to the main Cursive View
+pub fn add_search_view_layer(s: &mut Cursive, client: &hn_client::HNClient) {
+    let cb_sink = s.cb_sink().clone();
+    s.pop_layer();
+    s.screen_mut()
+        .add_transparent_layer(Layer::new(get_search_view(&client, cb_sink)));
+}
+
 /// Return a view representing a SearchView that searches stories with queries
 pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl View {
     let client = client.clone();
@@ -213,13 +220,7 @@ pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl Vi
         .child(construct_footer_view());
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
-    OnEventView::new(view)
-        .on_event(Event::AltChar('f'), move |s| {
-            s.pop_layer();
-            let async_view = async_view::get_front_page_story_view_async(s, &client);
-            s.screen_mut().add_transparent_layer(Layer::new(async_view));
-        })
-        .on_event(Event::AltChar('h'), |s| {
-            s.add_layer(SearchView::construct_help_view());
-        })
+    OnEventView::new(view).on_event(Event::AltChar('h'), |s| {
+        s.add_layer(SearchView::construct_help_view());
+    })
 }

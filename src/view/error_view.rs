@@ -1,5 +1,6 @@
 use super::fn_view_wrapper::*;
 use super::help_view::HelpView;
+use super::story_view;
 use super::utils::*;
 use crate::{impl_view_for_fn_wrapper, prelude::*};
 
@@ -15,22 +16,12 @@ pub fn get_error_view(err_desc: &str, err: Error, client: &hn_client::HNClient) 
         .button("front page", {
             let client = client.clone();
             move |s| {
-                let async_view = async_view::get_front_page_story_view_async(s, &client);
-                s.pop_layer();
-                s.screen_mut().add_transparent_layer(Layer::new(async_view));
+                story_view::add_story_view_layer(s, &client);
             }
         })
         .button("quit", |s| s.quit())
         .full_height(),
     )
-    .on_event(Event::AltChar('f'), {
-        let client = client.clone();
-        move |s| {
-            let async_view = async_view::get_front_page_story_view_async(s, &client);
-            s.pop_layer();
-            s.add_layer(async_view);
-        }
-    })
     .on_event(Event::AltChar('h'), |s| {
         s.add_layer(HelpView::new().keys(vec![(
             "Others",

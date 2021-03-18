@@ -32,9 +32,9 @@ pub fn get_comment_view_async(
             let client = client.clone();
             move |result| {
                 ErrorViewWrapper::new(match result {
-                    Ok(comments) => ErrorViewEnum::Ok(comment_view::get_comment_view(
-                        &title, &url, &client, &comments,
-                    )),
+                    Ok(comments) => {
+                        ErrorViewEnum::Ok(comment_view::get_comment_view(&title, &url, &comments))
+                    }
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
                         &format!("failed to get comments from story (id={})", id),
                         err,

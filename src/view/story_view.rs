@@ -1,7 +1,7 @@
 use std::thread;
 
+use super::async_view;
 use super::event_view;
-use super::search_view;
 use super::text_view;
 use super::theme::*;
 use super::utils::*;
@@ -156,6 +156,13 @@ pub fn get_story_main_view(
         .scrollable()
 }
 
+/// Add StoryView as a new layer to the main Cursive View
+pub fn add_story_view_layer(s: &mut Cursive, client: &hn_client::HNClient) {
+    let async_view = async_view::get_front_page_story_view_async(s, client);
+    s.pop_layer();
+    s.screen_mut().add_transparent_layer(Layer::new(async_view));
+}
+
 /// Return a StoryView given a story list and the view description
 pub fn get_story_view(
     desc: &str,
@@ -169,19 +176,7 @@ pub fn get_story_view(
         .child(construct_footer_view());
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
-    OnEventView::new(view)
-        .on_event(Event::AltChar('s'), {
-            let client = client.clone();
-            move |s| {
-                let cb_sink = s.cb_sink().clone();
-                s.pop_layer();
-                s.screen_mut()
-                    .add_transparent_layer(Layer::new(search_view::get_search_view(
-                        &client, cb_sink,
-                    )))
-            }
-        })
-        .on_event(Event::AltChar('h'), |s| {
-            s.add_layer(StoryView::construct_help_view())
-        })
+    OnEventView::new(view).on_event(Event::AltChar('h'), |s| {
+        s.add_layer(StoryView::construct_help_view())
+    })
 }

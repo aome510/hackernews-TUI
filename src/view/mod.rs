@@ -1,11 +1,11 @@
-pub mod async_view;
+mod async_view;
 mod comment_view;
 mod error_view;
 mod event_view;
 mod fn_view_wrapper;
 mod help_view;
-mod search_view;
-mod story_view;
+pub mod search_view;
+pub mod story_view;
 mod text_view;
 mod theme;
 mod utils;
