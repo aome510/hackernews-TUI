@@ -221,7 +221,11 @@ pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl Vi
         .child(construct_footer_view::<SearchView>(&client));
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
-    OnEventView::new(view).on_event(Event::CtrlChar('h'), |s| {
-        s.add_layer(SearchView::construct_help_view());
-    })
+    OnEventView::new(view)
+        .on_event(Event::CtrlChar('h'), |s| {
+            s.add_layer(SearchView::construct_help_view());
+        })
+        .on_event(Event::AltChar('h'), |s| {
+            s.add_layer(SearchView::construct_help_view());
+        })
 }
