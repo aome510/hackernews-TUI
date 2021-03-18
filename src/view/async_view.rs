@@ -29,7 +29,6 @@ pub fn get_comment_view_async(
             }
         },
         {
-            let client = client.clone();
             move |result| {
                 ErrorViewWrapper::new(match result {
                     Ok(comments) => {
@@ -38,7 +37,6 @@ pub fn get_comment_view_async(
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
                         &format!("failed to get comments from story (id={})", id),
                         err,
-                        &client,
                     )),
                 })
             }
@@ -76,7 +74,6 @@ pub fn get_front_page_story_view_async(
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
                         "failed to get front page stories",
                         err,
-                        &client,
                     )),
                 })
             }

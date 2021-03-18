@@ -1,11 +1,10 @@
 use super::fn_view_wrapper::*;
 use super::help_view::HelpView;
-use super::story_view;
 use super::utils::*;
 use crate::{impl_view_for_fn_wrapper, prelude::*};
 
 /// Return an ErrorView given an error
-pub fn get_error_view(err_desc: &str, err: Error, client: &hn_client::HNClient) -> impl View {
+pub fn get_error_view(err_desc: &str, err: Error) -> impl View {
     let main_view = OnEventView::new(
         Dialog::around(
             LinearLayout::vertical()
@@ -13,13 +12,6 @@ pub fn get_error_view(err_desc: &str, err: Error, client: &hn_client::HNClient) 
                 .child(TextView::new(format!("{:#?}", err)))
                 .scrollable(),
         )
-        .button("front page", {
-            let client = client.clone();
-            move |s| {
-                story_view::add_story_view_layer(s, &client);
-            }
-        })
-        .button("quit", |s| s.quit())
         .full_height(),
     )
     .on_event(Event::AltChar('h'), |s| {
