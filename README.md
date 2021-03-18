@@ -25,15 +25,18 @@ Story Search View
 
 ## Documentation
 ### Keyboard shortcuts
-In each `View`, press `<alt-h>` to see a list of supported keyboard shortcuts and their functionalities.
+In each `View`, press `<ctrl-h>` to see a list of supported keyboard shortcuts and their functionalities.
 
-Universal key shortcuts:
-- `<alt-h>`: Open the help dialog
-- `<alt-s>`: Go to the story search
-- `<alt-f>`: Go to the front page
-- `<alt-q>`: Quit the application
+**Global key shortcuts:**
+- `<ctrl-h>`: Open the help dialog
+- `<ctrl-s>`: Go to the story search
+- `<ctrl-f>`: Go to the front page
+- `<ctrl-q>`: Quit the application
 
-Key shortcuts for each `View`:
+In case the above shortcuts don't work, you can always use the corresponding buttons at the bottom of the `View`:
+![Footer buttons](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/footer_buttons.png)
+
+**Key shortcuts for each `View`:**
 #### StoryView
 - `j`: Focus the next story
 - `k`: Focus the previous story

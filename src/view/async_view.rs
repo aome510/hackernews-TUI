@@ -1,5 +1,4 @@
 use super::error_view::{self, ErrorViewEnum, ErrorViewWrapper};
-use super::{comment_view, story_view};
 use crate::prelude::*;
 
 /// Return an async view wraps CommentView of a HN story
@@ -33,7 +32,7 @@ pub fn get_comment_view_async(
             move |result| {
                 ErrorViewWrapper::new(match result {
                     Ok(comments) => ErrorViewEnum::Ok(comment_view::get_comment_view(
-                        &title, &url, &client, &comments,
+                        &title, &url, &comments, &client,
                     )),
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
                         &format!("failed to get comments from story (id={})", id),

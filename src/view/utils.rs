@@ -34,27 +34,31 @@ pub fn shorten_url(url: &str) -> String {
 }
 
 /// Construct a simple footer view
-pub fn construct_footer_view() -> impl View {
-    let style = ColorStyle::new(
-        Color::Dark(BaseColor::Black),
-        Color::Light(BaseColor::White),
-    );
-    Layer::with_color(
-        LinearLayout::horizontal()
-            .child(
-                TextView::new(StyledString::styled(
-                    "Hacker News Terminal UI - made by AOME ©",
-                    style,
-                ))
-                .align(align::Align::bot_center())
-                .full_width(),
-            )
-            .child(
-                TextView::new(StyledString::styled("[<alt-h>: help] ", style))
-                    .align(align::Align::bot_right()),
-            ),
-        style,
-    )
+pub fn construct_footer_view<T: HasHelpView>(client: &hn_client::HNClient) -> impl View {
+    LinearLayout::horizontal()
+        .child(
+            TextView::new(StyledString::styled(
+                "Hacker News Terminal UI - made by AOME ©",
+                ColorStyle::front(Color::Dark(BaseColor::Black)),
+            ))
+            .align(align::Align::bot_center())
+            .full_width(),
+        )
+        .child(
+            LinearLayout::horizontal()
+                .child(Button::new_raw("[front page] ", {
+                    let client = client.clone();
+                    move |s| story_view::add_story_view_layer(s, &client)
+                }))
+                .child(Button::new_raw("[search] ", {
+                    let client = client.clone();
+                    move |s| search_view::add_search_view_layer(s, &client)
+                }))
+                .child(Button::new_raw("[help] ", |s| {
+                    s.add_layer(T::construct_help_view())
+                }))
+                .child(Button::new_raw("[quit] ", |s| s.quit())),
+        )
 }
 
 /// Construct a status bar given a description text
@@ -64,7 +68,8 @@ pub fn get_status_bar_with_desc(desc: &str) -> impl View {
             desc,
             ColorStyle::new(Color::Dark(BaseColor::Black), STATUS_BAR_COLOR),
         ))
-        .align(align::Align::center()),
+        .h_align(align::HAlign::Center)
+        .full_width(),
         ColorStyle::back(STATUS_BAR_COLOR),
     )
 }

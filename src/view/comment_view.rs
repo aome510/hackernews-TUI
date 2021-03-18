@@ -1,5 +1,5 @@
 use super::event_view;
-use super::search_view;
+use super::help_view::*;
 use super::text_view;
 use super::theme::*;
 use super::utils::*;
@@ -211,54 +211,26 @@ fn get_comment_main_view(story_url: &str, comments: &Vec<hn_client::Comment>) ->
         .scrollable()
 }
 
-/// Return a View representing the status bar of a CommentView
-fn get_comment_status_bar(story_title: &str) -> impl View {
-    let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
-    let story_title = match_re.replace_all(story_title.clone(), "${match}");
-    Layer::with_color(
-        TextView::new(StyledString::styled(
-            format!("Comment View - {}", story_title),
-            ColorStyle::new(Color::Dark(BaseColor::Black), STATUS_BAR_COLOR),
-        ))
-        .align(align::Align::center()),
-        ColorStyle::back(STATUS_BAR_COLOR),
-    )
-}
-
 /// Return a CommentView given a comment list and the discussed story's url/title
 pub fn get_comment_view(
     story_title: &str,
     story_url: &str,
-    client: &hn_client::HNClient,
     comments: &Vec<hn_client::Comment>,
+    client: &hn_client::HNClient,
 ) -> impl View {
-    let client = client.clone();
     let main_view = get_comment_main_view(story_url, comments);
-    let status_bar = get_comment_status_bar(story_title);
+
+    let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
+    let story_title = match_re.replace_all(story_title.clone(), "${match}");
+    let status_bar = get_status_bar_with_desc(&format!("Comment View - {}", story_title));
+
     let mut view = LinearLayout::vertical()
         .child(status_bar)
         .child(main_view)
-        .child(construct_footer_view());
+        .child(construct_footer_view::<CommentView>(client));
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
-    OnEventView::new(view)
-        .on_event(Event::AltChar('s'), {
-            let client = client.clone();
-            move |s| {
-                let cb_sink = s.cb_sink().clone();
-                s.pop_layer();
-                s.screen_mut()
-                    .add_transparent_layer(Layer::new(search_view::get_search_view(
-                        &client, cb_sink,
-                    )))
-            }
-        })
-        .on_event(Event::AltChar('f'), move |s| {
-            let async_view = async_view::get_front_page_story_view_async(s, &client);
-            s.pop_layer();
-            s.screen_mut().add_transparent_layer(Layer::new(async_view));
-        })
-        .on_event(Event::AltChar('h'), |s| {
-            s.add_layer(CommentView::construct_help_view());
-        })
+    OnEventView::new(view).on_event(Event::CtrlChar('h'), |s| {
+        s.add_layer(CommentView::construct_help_view());
+    })
 }

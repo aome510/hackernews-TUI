@@ -29,9 +29,12 @@ impl HelpView {
     }
 
     fn construct_help_dialog_event_view(view: Dialog) -> OnEventView<Dialog> {
-        OnEventView::new(view).on_event(Key::Esc, |s| {
-            s.pop_layer();
-        })
+        OnEventView::new(view)
+            .on_event(Key::Esc, |s| {
+                s.pop_layer();
+            })
+            .on_event(Event::CtrlChar('q'), |s| s.quit())
+            .on_event(EventTrigger::from_fn(|_| true), |_| {})
     }
 
     fn construct_keys_view(&self) -> impl View {
@@ -83,8 +86,34 @@ impl ViewWrapper for HelpView {
     wrap_impl!(self.view: OnEventView<Dialog>);
 }
 
-impl StoryView {
-    pub fn construct_help_view() -> impl View {
+#[macro_export]
+macro_rules! global_key_shortcuts {
+    () => {
+        (
+            "Others",
+            vec![
+                ("<ctrl-f>", "Go to the front page"),
+                ("<ctrl-s>", "Go to the story search page"),
+                ("<ctrl-q>", "Quit the application"),
+                ("<esc>", "Close this help dialog"),
+            ],
+        )
+    };
+}
+
+pub trait HasHelpView {
+    fn construct_help_view() -> HelpView {
+        HelpView::new().keys(vec![global_key_shortcuts!()])
+    }
+}
+
+/// An empty struct used to construct the default HelpView
+pub struct DefaultHelpView {}
+
+impl HasHelpView for DefaultHelpView {}
+
+impl HasHelpView for StoryView {
+    fn construct_help_view() -> HelpView {
         HelpView::new().keys(vec![
             (
                 "Navigation",
@@ -107,20 +136,13 @@ impl StoryView {
                     "Open in browser the link associated with the focused story",
                 )],
             ),
-            (
-                "Others",
-                vec![
-                    ("<alt-s>", "Go to the story search page"),
-                    ("<alt-q>", "Quit the application"),
-                    ("<esc>", "Close this help dialog"),
-                ],
-            ),
+            global_key_shortcuts!(),
         ])
     }
 }
 
-impl CommentView {
-    pub fn construct_help_view() -> impl View {
+impl HasHelpView for CommentView {
+    fn construct_help_view() -> HelpView {
         HelpView::new().keys(vec![
             (
                 "Navigation",
@@ -149,21 +171,13 @@ impl CommentView {
                     ),
                 ],
             ),
-            (
-                "Others",
-                vec![
-                    ("<alt-f>", "Go to the front page"),
-                    ("<alt-s>", "Go to the story search page"),
-                    ("<alt-q>", "Quit the application"),
-                    ("<esc>", "Close this help dialog"),
-                ],
-            ),
+            global_key_shortcuts!(),
         ])
     }
 }
 
-impl SearchView {
-    pub fn construct_help_view() -> impl View {
+impl HasHelpView for SearchView {
+    fn construct_help_view() -> HelpView {
         HelpView::new().keys(vec![
             (
                 "Search Mode - Keys",
@@ -188,14 +202,7 @@ impl SearchView {
                     ),
                 ],
             ),
-            (
-                "Others",
-                vec![
-                    ("<alt-f>", "Go to the front page"),
-                    ("<alt-q>", "Quit the application"),
-                    ("<esc>", "Close this help dialog"),
-                ],
-            ),
+            global_key_shortcuts!(),
         ])
     }
 }
