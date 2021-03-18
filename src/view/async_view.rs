@@ -1,5 +1,4 @@
 use super::error_view::{self, ErrorViewEnum, ErrorViewWrapper};
-use super::{comment_view, story_view};
 use crate::prelude::*;
 
 /// Return an async view wraps CommentView of a HN story
