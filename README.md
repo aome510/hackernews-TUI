@@ -25,13 +25,13 @@ Story Search View
 
 ## Documentation
 ### Keyboard shortcuts
-In each `View`, press `<alt-h>` to see a list of supported keyboard shortcuts and their functionalities.
+In each `View`, press `<ctrl-h>` to see a list of supported keyboard shortcuts and their functionalities.
 
 Universal key shortcuts:
-- `<alt-h>`: Open the help dialog
-- `<alt-s>`: Go to the story search
-- `<alt-f>`: Go to the front page
-- `<alt-q>`: Quit the application
+- `<ctrl-h>`: Open the help dialog
+- `<ctrl-s>`: Go to the story search
+- `<ctrl-f>`: Go to the front page
+- `<ctrl-q>`: Quit the application
 
 Key shortcuts for each `View`:
 #### StoryView

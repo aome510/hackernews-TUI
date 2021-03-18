@@ -17,22 +17,22 @@ fn main() {
     story_view::add_story_view_layer(&mut s, &client);
 
     // universal shortcuts
-    s.add_global_callback(Event::AltChar('f'), {
+    s.add_global_callback(Event::CtrlChar('f'), {
         let client = client.clone();
         move |s| {
             story_view::add_story_view_layer(s, &client);
         }
     });
-    s.add_global_callback(Event::AltChar('s'), {
+    s.add_global_callback(Event::CtrlChar('s'), {
         let client = client.clone();
         move |s| {
             search_view::add_search_view_layer(s, &client);
         }
     });
-    s.add_global_callback(Event::AltChar('h'), |s| {
+    s.add_global_callback(Event::CtrlChar('h'), |s| {
         s.add_layer(DefaultHelpView::construct_help_view())
     });
-    s.add_global_callback(Event::AltChar('q'), |s| s.quit());
+    s.add_global_callback(Event::CtrlChar('q'), |s| s.quit());
 
     s.run();
 }

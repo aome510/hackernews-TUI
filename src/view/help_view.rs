@@ -33,7 +33,7 @@ impl HelpView {
             .on_event(Key::Esc, |s| {
                 s.pop_layer();
             })
-            .on_event(Event::AltChar('q'), |s| s.quit())
+            .on_event(Event::CtrlChar('q'), |s| s.quit())
             .on_event(EventTrigger::from_fn(|_| true), |_| {})
     }
 
@@ -92,9 +92,9 @@ macro_rules! universal_key_shortcuts {
         (
             "Others",
             vec![
-                ("<alt-f>", "Go to the front page"),
-                ("<alt-s>", "Go to the story search page"),
-                ("<alt-q>", "Quit the application"),
+                ("<ctrl-f>", "Go to the front page"),
+                ("<ctrl-s>", "Go to the story search page"),
+                ("<ctrl-q>", "Quit the application"),
                 ("<esc>", "Close this help dialog"),
             ],
         )

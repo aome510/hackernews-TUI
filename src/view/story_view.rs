@@ -177,7 +177,7 @@ pub fn get_story_view(
         .child(construct_footer_view());
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
-    OnEventView::new(view).on_event(Event::AltChar('h'), |s| {
+    OnEventView::new(view).on_event(Event::CtrlChar('h'), |s| {
         s.add_layer(StoryView::construct_help_view())
     })
 }
