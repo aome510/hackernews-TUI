@@ -34,7 +34,7 @@ pub fn shorten_url(url: &str) -> String {
 }
 
 /// Construct a simple footer view
-pub fn construct_footer_view() -> impl View {
+pub fn construct_footer_view<T: HasHelpView>(client: &hn_client::HNClient) -> impl View {
     LinearLayout::horizontal()
         .child(
             TextView::new(StyledString::styled(
@@ -46,10 +46,18 @@ pub fn construct_footer_view() -> impl View {
         )
         .child(
             LinearLayout::horizontal()
-                .child(Button::new_raw("[front page] ", |_| {}))
-                .child(Button::new_raw("[search] ", |_| {}))
-                .child(Button::new_raw("[help] ", |_| {}))
-                .child(Button::new_raw("[quit] ", |_| {})),
+                .child(Button::new_raw("[front page] ", {
+                    let client = client.clone();
+                    move |s| story_view::add_story_view_layer(s, &client)
+                }))
+                .child(Button::new_raw("[search] ", {
+                    let client = client.clone();
+                    move |s| search_view::add_search_view_layer(s, &client)
+                }))
+                .child(Button::new_raw("[help] ", |s| {
+                    s.add_layer(T::construct_help_view())
+                }))
+                .child(Button::new_raw("[quit] ", |s| s.quit())),
         )
 }
 

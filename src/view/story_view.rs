@@ -174,7 +174,7 @@ pub fn get_story_view(
     let mut view = LinearLayout::vertical()
         .child(get_status_bar_with_desc(desc))
         .child(main_view)
-        .child(construct_footer_view());
+        .child(construct_footer_view::<StoryView>(client));
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
     OnEventView::new(view).on_event(Event::CtrlChar('h'), |s| {

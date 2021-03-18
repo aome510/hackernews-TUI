@@ -216,6 +216,7 @@ pub fn get_comment_view(
     story_title: &str,
     story_url: &str,
     comments: &Vec<hn_client::Comment>,
+    client: &hn_client::HNClient,
 ) -> impl View {
     let main_view = get_comment_main_view(story_url, comments);
 
@@ -226,7 +227,7 @@ pub fn get_comment_view(
     let mut view = LinearLayout::vertical()
         .child(status_bar)
         .child(main_view)
-        .child(construct_footer_view());
+        .child(construct_footer_view::<CommentView>(client));
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
     OnEventView::new(view).on_event(Event::CtrlChar('h'), |s| {
