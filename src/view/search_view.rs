@@ -1,3 +1,4 @@
+use super::help_view::*;
 use super::text_view;
 use super::theme::*;
 use super::utils::*;

@@ -17,7 +17,6 @@ fn main() {
     story_view::add_story_view_layer(&mut s, &client);
 
     // universal shortcuts
-    s.add_global_callback(Event::AltChar('q'), |s| s.quit());
     s.add_global_callback(Event::AltChar('f'), {
         let client = client.clone();
         move |s| {
@@ -30,6 +29,10 @@ fn main() {
             search_view::add_search_view_layer(s, &client);
         }
     });
+    s.add_global_callback(Event::AltChar('h'), |s| {
+        s.add_layer(DefaultHelpView::construct_help_view())
+    });
+    s.add_global_callback(Event::AltChar('q'), |s| s.quit());
 
     s.run();
 }
