@@ -211,20 +211,6 @@ fn get_comment_main_view(story_url: &str, comments: &Vec<hn_client::Comment>) ->
         .scrollable()
 }
 
-/// Return a View representing the status bar of a CommentView
-fn get_comment_status_bar(story_title: &str) -> impl View {
-    let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
-    let story_title = match_re.replace_all(story_title.clone(), "${match}");
-    Layer::with_color(
-        TextView::new(StyledString::styled(
-            format!("Comment View - {}", story_title),
-            ColorStyle::new(Color::Dark(BaseColor::Black), STATUS_BAR_COLOR),
-        ))
-        .align(align::Align::center()),
-        ColorStyle::back(STATUS_BAR_COLOR),
-    )
-}
-
 /// Return a CommentView given a comment list and the discussed story's url/title
 pub fn get_comment_view(
     story_title: &str,
@@ -234,7 +220,11 @@ pub fn get_comment_view(
 ) -> impl View {
     let client = client.clone();
     let main_view = get_comment_main_view(story_url, comments);
-    let status_bar = get_comment_status_bar(story_title);
+
+    let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
+    let story_title = match_re.replace_all(story_title.clone(), "${match}");
+    let status_bar = get_status_bar_with_desc(&format!("Comment View - {}", story_title));
+
     let mut view = LinearLayout::vertical()
         .child(status_bar)
         .child(main_view)
