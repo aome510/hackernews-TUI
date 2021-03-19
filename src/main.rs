@@ -6,41 +6,47 @@ pub mod view;
 use prelude::*;
 
 fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
-    // global shortcuts (ctrl)
-    s.add_global_callback(Event::CtrlChar('f'), {
-        let client = client.clone();
-        move |s| {
-            story_view::add_story_view_layer(s, &client);
-        }
-    });
-    s.add_global_callback(Event::CtrlChar('s'), {
-        let client = client.clone();
-        move |s| {
-            search_view::add_search_view_layer(s, &client);
-        }
-    });
-    s.add_global_callback(Event::CtrlChar('h'), |s| {
-        s.add_layer(DefaultHelpView::construct_help_view())
-    });
-    s.add_global_callback(Event::CtrlChar('q'), |s| s.quit());
+    s.set_on_post_event(
+        EventTrigger::from_fn(|e| match e {
+            Event::CtrlChar('f') | Event::AltChar('f') => true,
+            _ => false,
+        }),
+        {
+            let client = client.clone();
+            move |s| {
+                story_view::add_story_view_layer(s, &client);
+            }
+        },
+    );
 
-    // global shortcuts (alt)
-    s.add_global_callback(Event::AltChar('f'), {
-        let client = client.clone();
-        move |s| {
-            story_view::add_story_view_layer(s, &client);
-        }
-    });
-    s.add_global_callback(Event::AltChar('s'), {
-        let client = client.clone();
-        move |s| {
-            search_view::add_search_view_layer(s, &client);
-        }
-    });
-    s.add_global_callback(Event::AltChar('h'), |s| {
-        s.add_layer(DefaultHelpView::construct_help_view())
-    });
-    s.add_global_callback(Event::AltChar('q'), |s| s.quit());
+    s.set_on_post_event(
+        EventTrigger::from_fn(|e| match e {
+            Event::CtrlChar('s') | Event::AltChar('s') => true,
+            _ => false,
+        }),
+        {
+            let client = client.clone();
+            move |s| {
+                search_view::add_search_view_layer(s, &client);
+            }
+        },
+    );
+
+    s.set_on_post_event(
+        EventTrigger::from_fn(|e| match e {
+            Event::CtrlChar('h') | Event::AltChar('h') => true,
+            _ => false,
+        }),
+        |s| s.add_layer(DefaultHelpView::construct_help_view()),
+    );
+
+    s.set_on_post_event(
+        EventTrigger::from_fn(|e| match e {
+            Event::CtrlChar('q') | Event::AltChar('q') => true,
+            _ => false,
+        }),
+        |s| s.quit(),
+    );
 }
 
 fn main() {

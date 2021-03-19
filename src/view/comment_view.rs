@@ -230,11 +230,13 @@ pub fn get_comment_view(
         .child(construct_footer_view::<CommentView>(client));
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
-    OnEventView::new(view)
-        .on_event(Event::CtrlChar('h'), |s| {
+    OnEventView::new(view).on_event(
+        EventTrigger::from_fn(|e| match e {
+            Event::CtrlChar('h') | Event::AltChar('h') => true,
+            _ => false,
+        }),
+        |s| {
             s.add_layer(CommentView::construct_help_view());
-        })
-        .on_event(Event::AltChar('h'), |s| {
-            s.add_layer(CommentView::construct_help_view());
-        })
+        },
+    )
 }
