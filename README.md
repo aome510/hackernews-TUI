@@ -9,8 +9,21 @@ The application mainly consists of the following views:
 ## Installation
 ### Using cargo
 Run `cargo install hackernews_tui` to install the application as a binary.
-### Using archlinux AUR
+### Arch Linux
+
 Run `yay -S hackernews_tui` to install the application as an AUR package.
+
+### NetBSD
+#### Using the package manager
+```
+# pkgin install hackernews-tui
+```
+
+#### Building from source
+```
+$ cd /usr/pkgsrc/www/hackernews-tui
+# make install
+```
 
 ## Examples
 
