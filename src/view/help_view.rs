@@ -132,10 +132,13 @@ impl HasHelpView for StoryView {
             ),
             (
                 "Open external links",
-                vec![(
-                    "O",
-                    "Open in browser the link associated with the focused story",
-                )],
+                vec![
+                    (
+                        "O",
+                        "Open in browser the link associated with the focused story",
+                    ),
+                    ("S", "Open in browser the focused story"),
+                ],
             ),
             global_key_shortcuts!(),
         ])
@@ -166,6 +169,8 @@ impl HasHelpView for CommentView {
                         "O",
                         "Open in browser the link associated with the discussed story",
                     ),
+                    ("S", "Open in browser the discussed story"),
+                    ("C", "Open in browser the focused comment"),
                     (
                         "`{link_id} f`",
                         "Open in browser the {link_id}-th link in the focused comment",
@@ -201,6 +206,7 @@ impl HasHelpView for SearchView {
                         "O",
                         "Open in browser the link associated with the focused story",
                     ),
+                    ("S", "Open in browser the focused story"),
                 ],
             ),
             global_key_shortcuts!(),

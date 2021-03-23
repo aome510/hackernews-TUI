@@ -58,6 +58,7 @@ In case the above shortcuts don't work, you can always use the corresponding but
 - `{story_id} g`: Focus the {story_id}-th story
 - `<enter>`: Go the comment view associated with the focused story
 - `O`: Open in browser the link associated with the focused story
+- `S`: Open in browser the focused story
 
 #### CommentView
 - `j`: Focus the next comment
@@ -67,6 +68,8 @@ In case the above shortcuts don't work, you can always use the corresponding but
 - `l`: Focus the next comment with smaller or equal level
 - `h`: Focus the previous comment with smaller or equal level
 - `O`: Open in browser the link associated with the discussed story
+- `S`: Open in browser the discussed story
+- `C`: Open in browser the focused comment
 - `{link_id} f`: Open in browser the {link_id}-th link in the focused comment
 
 #### SearchView
