@@ -136,6 +136,16 @@ pub fn get_story_main_view(
                 Some(EventResult::Consumed(None))
             }
         })
+        .on_pre_event_inner('S', move |s, _| {
+            let id = s.stories[s.get_inner().get_focus_index()].id;
+            thread::spawn(move || {
+                let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
+                if let Err(err) = webbrowser::open(&url) {
+                    warn!("failed to open link {}: {}", url, err);
+                }
+            });
+            Some(EventResult::Consumed(None))
+        })
         .on_pre_event_inner('g', move |s, _| match s.get_raw_command_as_number() {
             Ok(number) => {
                 s.clear_raw_command();

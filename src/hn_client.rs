@@ -4,6 +4,7 @@ const HN_ALGOLIA_PREFIX: &'static str = "https://hn.algolia.com/api/v1";
 const HN_SEARCH_QUERY_STRING: &'static str =
     "tags=story&restrictSearchableAttributes=title&typoTolerance=false&hitsPerPage=16";
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(16);
+pub const HN_HOST_URL: &'static str = "https://news.ycombinator.com";
 
 // serde helper functions
 

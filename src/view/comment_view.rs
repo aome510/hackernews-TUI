@@ -6,11 +6,47 @@ use super::utils::*;
 use crate::prelude::*;
 use std::thread;
 
+#[derive(Debug, Clone)]
+pub struct Story {
+    pub id: u32,
+    pub title: String,
+    pub url: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct Comment {
+    id: u32,
+    text: StyledString,
+    height: usize,
+    links: Vec<String>,
+}
+
+impl Story {
+    pub fn new(story: &hn_client::Story) -> Self {
+        Story {
+            id: story.id,
+            title: story.title.clone(),
+            url: story.url.clone(),
+        }
+    }
+}
+
+impl Comment {
+    pub fn new(id: u32, text: StyledString, height: usize, links: Vec<String>) -> Self {
+        Comment {
+            id,
+            text,
+            height,
+            links,
+        }
+    }
+}
+
 /// CommentView is a View displaying a list of comments in a HN story
 pub struct CommentView {
-    story_url: String,
+    story_metadata: Story,
     view: LinearLayout,
-    comments: Vec<(StyledString, usize, Vec<String>)>,
+    comments: Vec<Comment>,
 
     raw_command: String,
 }
@@ -71,10 +107,7 @@ fn parse_raw_comment(
 }
 
 /// Parse comments recursively into readable texts with styles and colors
-fn parse_comment_text_list(
-    comments: &Vec<hn_client::Comment>,
-    height: usize,
-) -> Vec<(StyledString, usize, Vec<String>)> {
+fn parse_comment_text_list(comments: &Vec<hn_client::Comment>, height: usize) -> Vec<Comment> {
     let paragraph_re = Regex::new(r"<p>(?s)(?P<paragraph>.*?)</p>").unwrap();
     let italic_re = Regex::new(r"<i>(?s)(?P<text>.+?)</i>").unwrap();
     let code_re = Regex::new(r"<pre><code>(?s)(?P<code>.+?)[\n]*</code></pre>").unwrap();
@@ -102,7 +135,7 @@ fn parse_comment_text_list(
             );
             comment_string.append(comment_content);
 
-            subcomments.insert(0, (comment_string, height, links));
+            subcomments.insert(0, Comment::new(comment.id, comment_string, height, links));
             subcomments
         })
         .collect()
@@ -114,21 +147,21 @@ impl ViewWrapper for CommentView {
 
 impl CommentView {
     /// Return a new CommentView given a comment list and the discussed story url
-    pub fn new(story_url: &str, comments: &Vec<hn_client::Comment>) -> Self {
+    pub fn new(story_metadata: Story, comments: &Vec<hn_client::Comment>) -> Self {
         let comments = parse_comment_text_list(comments, 0);
         let view = LinearLayout::vertical().with(|v| {
             comments.iter().for_each(|comment| {
                 v.add_child(PaddedView::lrtb(
-                    comment.1 * 2,
+                    comment.height * 2,
                     0,
                     0,
                     1,
-                    text_view::TextView::new(comment.0.clone()),
+                    text_view::TextView::new(comment.text.clone()),
                 ));
             })
         });
         CommentView {
-            story_url: story_url.to_string(),
+            story_metadata,
             view,
             comments,
             raw_command: String::new(),
@@ -137,7 +170,7 @@ impl CommentView {
 
     /// Get the height of each comment in the comment tree
     pub fn get_heights(&self) -> Vec<usize> {
-        self.comments.iter().map(|comment| comment.1).collect()
+        self.comments.iter().map(|comment| comment.height).collect()
     }
 
     crate::raw_command!();
@@ -147,8 +180,8 @@ impl CommentView {
 
 /// Return a main view of a CommentView displaying the comment list.
 /// The main view of a CommentView is a View without status bar or footer.
-fn get_comment_main_view(story_url: &str, comments: &Vec<hn_client::Comment>) -> impl View {
-    event_view::construct_list_event_view(CommentView::new(story_url, comments))
+fn get_comment_main_view(story_metadata: Story, comments: &Vec<hn_client::Comment>) -> impl View {
+    event_view::construct_list_event_view(CommentView::new(story_metadata, comments))
         .on_pre_event_inner('l', move |s, _| {
             let heights = s.get_heights();
             let s = s.get_inner_mut();
@@ -179,9 +212,8 @@ fn get_comment_main_view(story_url: &str, comments: &Vec<hn_client::Comment>) ->
             Ok(num) => {
                 s.clear_raw_command();
                 let id = s.get_inner().get_focus_index();
-                let links = s.comments[id].2.clone();
-                if num < links.len() {
-                    let url = links[num].clone();
+                if num < s.comments[id].links.len() {
+                    let url = s.comments[id].links[num].clone();
                     thread::spawn(move || {
                         if let Err(err) = webbrowser::open(&url) {
                             warn!("failed to open link {}: {}", url, err);
@@ -195,8 +227,8 @@ fn get_comment_main_view(story_url: &str, comments: &Vec<hn_client::Comment>) ->
             Err(_) => None,
         })
         .on_pre_event_inner('O', move |s, _| {
-            if s.story_url.len() > 0 {
-                let url = s.story_url.clone();
+            if s.story_metadata.url.len() > 0 {
+                let url = s.story_metadata.url.clone();
                 thread::spawn(move || {
                     if let Err(err) = webbrowser::open(&url) {
                         warn!("failed to open link {}: {}", url, err);
@@ -207,22 +239,41 @@ fn get_comment_main_view(story_url: &str, comments: &Vec<hn_client::Comment>) ->
                 Some(EventResult::Consumed(None))
             }
         })
+        .on_pre_event_inner('S', move |s, _| {
+            let id = s.story_metadata.id;
+            thread::spawn(move || {
+                let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
+                if let Err(err) = webbrowser::open(&url) {
+                    warn!("failed to open link {}: {}", url, err);
+                }
+            });
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner('C', move |s, _| {
+            let id = s.comments[s.get_inner().get_focus_index()].id;
+            thread::spawn(move || {
+                let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
+                if let Err(err) = webbrowser::open(&url) {
+                    warn!("failed to open link {}: {}", url, err);
+                }
+            });
+            Some(EventResult::Consumed(None))
+        })
         .full_height()
         .scrollable()
 }
 
 /// Return a CommentView given a comment list and the discussed story's url/title
 pub fn get_comment_view(
-    story_title: &str,
-    story_url: &str,
+    story_metadata: Story,
     comments: &Vec<hn_client::Comment>,
     client: &hn_client::HNClient,
 ) -> impl View {
-    let main_view = get_comment_main_view(story_url, comments);
-
     let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
-    let story_title = match_re.replace_all(story_title.clone(), "${match}");
+    let story_title = match_re.replace_all(&story_metadata.title, "${match}");
     let status_bar = get_status_bar_with_desc(&format!("Comment View - {}", story_title));
+
+    let main_view = get_comment_main_view(story_metadata, comments);
 
     let mut view = LinearLayout::vertical()
         .child(status_bar)
