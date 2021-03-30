@@ -89,7 +89,7 @@ impl StoryView {
         }
     }
 
-    crate::raw_command!();
+    crate::raw_command_handlers!();
 
     inner_getters!(self.view: LinearLayout);
 }

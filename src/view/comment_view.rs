@@ -173,7 +173,7 @@ impl CommentView {
         self.comments.iter().map(|comment| comment.height).collect()
     }
 
-    crate::raw_command!();
+    crate::raw_command_handlers!();
 
     inner_getters!(self.view: LinearLayout);
 }

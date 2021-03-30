@@ -93,7 +93,7 @@ impl ListEventView for LinearLayout {
 }
 
 #[macro_export]
-macro_rules! raw_command {
+macro_rules! raw_command_handlers {
     () => {
         pub fn add_raw_command_char(&mut self, c: char) {
             self.raw_command.push(c);
@@ -110,20 +110,24 @@ macro_rules! raw_command {
 }
 
 #[macro_export]
-macro_rules! list_event_view_wrapper {
+macro_rules! impl_list_event_view_methods {
     ($($x:expr),*) => {
         fn focus_up(&mut self) -> Option<EventResult> {
             self.get_inner_mut().focus_up()
         }
+
         fn focus_down(&mut self) -> Option<EventResult> {
             self.get_inner_mut().focus_down()
         }
+
         fn focus_top(&mut self) -> Option<EventResult> {
             self.get_inner_mut().focus_top()
         }
+
         fn focus_bottom(&mut self) -> Option<EventResult> {
             self.get_inner_mut().focus_bottom()
         }
+
         fn handle_digit(&mut self, c: char) -> Option<EventResult> {
             if '0' <= c && c <= '9' {
                 self.add_raw_command_char(c);
@@ -144,9 +148,9 @@ macro_rules! list_event_view_wrapper {
 }
 
 impl ListEventView for StoryView {
-    crate::list_event_view_wrapper!('g');
+    crate::impl_list_event_view_methods!('g');
 }
 
 impl ListEventView for CommentView {
-    crate::list_event_view_wrapper!('f');
+    crate::impl_list_event_view_methods!('f');
 }
