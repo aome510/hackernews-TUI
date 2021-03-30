@@ -127,7 +127,12 @@ pub fn get_story_main_view(
                 Some(EventResult::with_cb({
                     let client = client.clone();
                     move |s| {
-                        let async_view = async_view::get_comment_view_async(s, &client, &story);
+                        let async_view = async_view::get_comment_view_async(
+                            s,
+                            &client,
+                            comment_view::Story::new(&story),
+                            0,
+                        );
                         s.pop_layer();
                         s.screen_mut().add_transparent_layer(Layer::new(async_view))
                     }

@@ -1,3 +1,6 @@
+use cursive::view::scroll::layout;
+
+use super::async_view;
 use super::help_view::*;
 use super::list_view::*;
 use super::text_view;
@@ -53,29 +56,35 @@ pub struct CommentView {
 
 impl ViewWrapper for CommentView {
     wrap_impl!(self.view: ScrollListView);
+
+    fn wrap_layout(&mut self, size: Vec2) {
+        self.with_view_mut(|v| v.layout(size));
+        self.get_inner_mut().scroll_to_important_area();
+    }
 }
 
 impl CommentView {
     /// Return a new CommentView given a comment list and the discussed story url
-    pub fn new(story_metadata: Story, comments: &Vec<hn_client::Comment>) -> Self {
+    pub fn new(story_metadata: Story, comments: &Vec<hn_client::Comment>, focus_id: u32) -> Self {
         let comments = Self::parse_comments(comments, 0);
-        let view = LinearLayout::vertical()
-            .with(|v| {
-                comments.iter().for_each(|comment| {
-                    v.add_child(PaddedView::lrtb(
-                        comment.height * 2,
-                        0,
-                        0,
-                        1,
-                        text_view::TextView::new(comment.text.clone()),
-                    ));
-                })
+        let mut view = LinearLayout::vertical().with(|v| {
+            comments.iter().for_each(|comment| {
+                v.add_child(PaddedView::lrtb(
+                    comment.height * 2,
+                    0,
+                    0,
+                    1,
+                    text_view::TextView::new(comment.text.clone()),
+                ));
             })
-            .scrollable();
+        });
+        if let Some(focus_id) = comments.iter().position(|comment| comment.id == focus_id) {
+            view.set_focus_index(focus_id).unwrap();
+        }
         CommentView {
             story_metadata,
-            view,
             comments,
+            view: view.scrollable(),
             raw_command: String::new(),
         }
     }
@@ -182,8 +191,15 @@ impl CommentView {
 
 /// Return a main view of a CommentView displaying the comment list.
 /// The main view of a CommentView is a View without status bar or footer.
-fn get_comment_main_view(story_metadata: Story, comments: &Vec<hn_client::Comment>) -> impl View {
-    construct_scroll_list_event_view(CommentView::new(story_metadata, comments))
+fn get_comment_main_view(
+    story_metadata: Story,
+    comments: &Vec<hn_client::Comment>,
+    client: &hn_client::HNClient,
+    focus_id: u32,
+) -> impl View {
+    let client = client.clone();
+
+    construct_scroll_list_event_view(CommentView::new(story_metadata, comments, focus_id))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
             match *e {
                 Event::Char(c) if '0' <= c && c <= '9' => {
@@ -232,6 +248,23 @@ fn get_comment_main_view(story_metadata: Story, comments: &Vec<hn_client::Commen
             }
             Err(_) => None,
         })
+        .on_pre_event_inner('r', move |s, _| {
+            let focus_id = s.comments[s.get_focus_index()].id;
+            Some(EventResult::with_cb({
+                let story_metadata = s.story_metadata.clone();
+                let client = client.clone();
+                move |s| {
+                    let async_view = async_view::get_comment_view_async(
+                        s,
+                        &client,
+                        story_metadata.clone(),
+                        focus_id,
+                    );
+                    s.pop_layer();
+                    s.screen_mut().add_transparent_layer(Layer::new(async_view))
+                }
+            }))
+        })
         .on_pre_event_inner('O', move |s, _| {
             if s.story_metadata.url.len() > 0 {
                 let url = s.story_metadata.url.clone();
@@ -273,12 +306,13 @@ pub fn get_comment_view(
     story_metadata: Story,
     comments: &Vec<hn_client::Comment>,
     client: &hn_client::HNClient,
+    focus_id: u32,
 ) -> impl View {
     let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
     let story_title = match_re.replace_all(&story_metadata.title, "${match}");
     let status_bar = get_status_bar_with_desc(&format!("Comment View - {}", story_title));
 
-    let main_view = get_comment_main_view(story_metadata, comments);
+    let main_view = get_comment_main_view(story_metadata, comments, &client, focus_id);
 
     let mut view = LinearLayout::vertical()
         .child(status_bar)
