@@ -1,7 +1,6 @@
 use std::thread;
 
 use super::async_view;
-use super::event_view;
 use super::help_view::*;
 use super::list_view::*;
 use super::text_view;
@@ -106,7 +105,7 @@ pub fn get_story_main_view(
     stories: Vec<hn_client::Story>,
     client: &hn_client::HNClient,
 ) -> impl View {
-    event_view::construct_list_event_view(StoryView::new(stories))
+    construct_scroll_list_event_view(StoryView::new(stories))
         .on_pre_event_inner(Key::Enter, {
             let client = client.clone();
             move |s, _| {

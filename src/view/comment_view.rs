@@ -1,4 +1,3 @@
-use super::event_view;
 use super::help_view::*;
 use super::list_view::*;
 use super::text_view;
@@ -185,7 +184,7 @@ impl CommentView {
 /// Return a main view of a CommentView displaying the comment list.
 /// The main view of a CommentView is a View without status bar or footer.
 fn get_comment_main_view(story_metadata: Story, comments: &Vec<hn_client::Comment>) -> impl View {
-    event_view::construct_list_event_view(CommentView::new(story_metadata, comments))
+    construct_scroll_list_event_view(CommentView::new(story_metadata, comments))
         .on_pre_event_inner('l', move |s, _| {
             let heights = s.get_heights();
             let s = s.get_inner_mut();

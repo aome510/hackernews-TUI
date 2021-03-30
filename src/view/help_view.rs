@@ -1,6 +1,3 @@
-use super::comment_view::CommentView;
-use super::search_view::SearchView;
-use super::story_view::StoryView;
 use super::theme::*;
 use crate::prelude::*;
 
