@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use scroll::*;
 
 pub type ScrollListView = ScrollView<LinearLayout>;
 
@@ -26,19 +27,22 @@ pub fn construct_scroll_list_event_view<T: ScrollableList>(view: T) -> OnEventVi
                 s.set_focus_index(len - 1)
             }
         })
-    // event handlers for parsing numbers
-    // .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| match *e {
-    //     Event::Char(c) => s.handle_digit(c),
-    //     _ => None,
-    // })
-    // ignore up,down,pageUp,pageDown keys. Rely on main scrollView to handle those keys
-    // .on_pre_event_inner(EventTrigger::from_fn(|_| true), |_, e| match *e {
-    //     Event::Key(Key::Up)
-    //     | Event::Key(Key::Down)
-    //     | Event::Key(Key::PageUp)
-    //     | Event::Key(Key::PageDown) => Some(EventResult::Ignored),
-    //     _ => None,
-    // })
+        .on_pre_event_inner(Key::Up, |s, _| {
+            s.get_scoller_mut().scroll_up(1);
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(Key::Down, |s, _| {
+            s.get_scoller_mut().scroll_down(1);
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(Key::PageUp, |s, _| {
+            s.get_scoller_mut().scroll_up(5);
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(Key::PageDown, |s, _| {
+            s.get_scoller_mut().scroll_down(5);
+            Some(EventResult::Consumed(None))
+        })
 }
 
 /// ScrollableList is a trait that implements basic methods
@@ -47,6 +51,7 @@ pub trait ScrollableList {
     fn len(&self) -> usize;
     fn get_focus_index(&self) -> usize;
     fn set_focus_index(&mut self, id: usize) -> Option<EventResult>;
+    fn get_scoller_mut(&mut self) -> &mut scroll::Core;
 }
 
 #[macro_export]
@@ -70,6 +75,10 @@ macro_rules! impl_scrollable_list {
                 }
                 Err(_) => None,
             }
+        }
+
+        fn get_scoller_mut(&mut self) -> &mut scroll::Core {
+            self.get_inner_mut().get_scroller_mut()
         }
     };
 }
