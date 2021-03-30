@@ -177,8 +177,7 @@ impl CommentView {
         self.comments.iter().map(|comment| comment.height).collect()
     }
 
-    crate::list_view_inner_getters!();
-    crate::raw_command_handlers!();
+    inner_getters!(self.view: ScrollListView);
 }
 
 /// Return a main view of a CommentView displaying the comment list.
@@ -187,7 +186,6 @@ fn get_comment_main_view(story_metadata: Story, comments: &Vec<hn_client::Commen
     construct_scroll_list_event_view(CommentView::new(story_metadata, comments))
         .on_pre_event_inner('l', move |s, _| {
             let heights = s.get_heights();
-            let s = s.get_inner_mut();
             let id = s.get_focus_index();
             let (_, right) = heights.split_at(id + 1);
             let offset = right.iter().position(|&h| h <= heights[id]);
@@ -195,40 +193,33 @@ fn get_comment_main_view(story_metadata: Story, comments: &Vec<hn_client::Commen
                 None => id,
                 Some(offset) => id + offset + 1,
             };
-            match s.set_focus_index(next_id) {
-                Ok(_) => Some(EventResult::Consumed(None)),
-                Err(_) => None,
-            }
+            s.set_focus_index(next_id)
         })
         .on_pre_event_inner('h', move |s, _| {
             let heights = s.get_heights();
-            let s = s.get_inner_mut();
             let id = s.get_focus_index();
             let (left, _) = heights.split_at(id);
             let next_id = left.iter().rposition(|&h| h <= heights[id]).unwrap_or(id);
-            match s.set_focus_index(next_id) {
-                Ok(_) => Some(EventResult::Consumed(None)),
-                Err(_) => None,
-            }
+            s.set_focus_index(next_id)
         })
-        .on_pre_event_inner('f', |s, _| match s.get_raw_command_as_number() {
-            Ok(num) => {
-                s.clear_raw_command();
-                let id = s.get_inner().get_focus_index();
-                if num < s.comments[id].links.len() {
-                    let url = s.comments[id].links[num].clone();
-                    thread::spawn(move || {
-                        if let Err(err) = webbrowser::open(&url) {
-                            warn!("failed to open link {}: {}", url, err);
-                        }
-                    });
-                    Some(EventResult::Consumed(None))
-                } else {
-                    Some(EventResult::Consumed(None))
-                }
-            }
-            Err(_) => None,
-        })
+        // .on_pre_event_inner('f', |s, _| match s.get_raw_command_as_number() {
+        //     Ok(num) => {
+        //         s.clear_raw_command();
+        //         let id = s.get_inner().get_focus_index();
+        //         if num < s.comments[id].links.len() {
+        //             let url = s.comments[id].links[num].clone();
+        //             thread::spawn(move || {
+        //                 if let Err(err) = webbrowser::open(&url) {
+        //                     warn!("failed to open link {}: {}", url, err);
+        //                 }
+        //             });
+        //             Some(EventResult::Consumed(None))
+        //         } else {
+        //             Some(EventResult::Consumed(None))
+        //         }
+        //     }
+        //     Err(_) => None,
+        // })
         .on_pre_event_inner('O', move |s, _| {
             if s.story_metadata.url.len() > 0 {
                 let url = s.story_metadata.url.clone();
@@ -253,7 +244,7 @@ fn get_comment_main_view(story_metadata: Story, comments: &Vec<hn_client::Commen
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner('C', move |s, _| {
-            let id = s.comments[s.get_inner().get_focus_index()].id;
+            let id = s.comments[s.get_focus_index()].id;
             thread::spawn(move || {
                 let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
                 if let Err(err) = webbrowser::open(&url) {

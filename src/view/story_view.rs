@@ -95,8 +95,7 @@ impl StoryView {
         story_text
     }
 
-    crate::raw_command_handlers!();
-    crate::list_view_inner_getters!();
+    inner_getters!(self.view: ScrollListView);
 }
 
 /// Return a main view of a StoryView displaying the story list.
@@ -109,7 +108,7 @@ pub fn get_story_main_view(
         .on_pre_event_inner(Key::Enter, {
             let client = client.clone();
             move |s, _| {
-                let id = s.get_inner().get_focus_index();
+                let id = s.get_focus_index();
                 // the story struct hasn't had any comments inside yet,
                 // so it can be cloned without greatly affecting performance
                 let story = s.stories[id].clone();
@@ -124,7 +123,7 @@ pub fn get_story_main_view(
             }
         })
         .on_pre_event_inner('O', move |s, _| {
-            let id = s.get_inner().get_focus_index();
+            let id = s.get_focus_index();
             let url = s.stories[id].url.clone();
             if url.len() > 0 {
                 thread::spawn(move || {
@@ -138,7 +137,7 @@ pub fn get_story_main_view(
             }
         })
         .on_pre_event_inner('S', move |s, _| {
-            let id = s.stories[s.get_inner().get_focus_index()].id;
+            let id = s.stories[s.get_focus_index()].id;
             thread::spawn(move || {
                 let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
                 if let Err(err) = webbrowser::open(&url) {
@@ -147,23 +146,23 @@ pub fn get_story_main_view(
             });
             Some(EventResult::Consumed(None))
         })
-        .on_pre_event_inner('g', move |s, _| match s.get_raw_command_as_number() {
-            Ok(number) => {
-                s.clear_raw_command();
-                let s = s.get_inner_mut();
-                if number == 0 {
-                    return None;
-                }
-                let number = number - 1;
-                if number < s.len() {
-                    s.set_focus_index(number).unwrap();
-                    Some(EventResult::Consumed(None))
-                } else {
-                    None
-                }
-            }
-            Err(_) => None,
-        })
+        // .on_pre_event_inner('g', move |s, _| match s.get_raw_command_as_number() {
+        //     Ok(number) => {
+        //         s.clear_raw_command();
+        //         let s = s.get_inner_mut();
+        //         if number == 0 {
+        //             return None;
+        //         }
+        //         let number = number - 1;
+        //         if number < s.len() {
+        //             s.set_focus_index(number).unwrap();
+        //             Some(EventResult::Consumed(None))
+        //         } else {
+        //             None
+        //         }
+        //     }
+        //     Err(_) => None,
+        // })
         .full_height()
 }
 
