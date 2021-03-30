@@ -105,6 +105,18 @@ pub fn get_story_main_view(
     client: &hn_client::HNClient,
 ) -> impl View {
     construct_scroll_list_event_view(StoryView::new(stories))
+        .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
+            match *e {
+                Event::Char(c) if '0' <= c && c <= '9' => {
+                    s.raw_command.push(c);
+                }
+                Event::Char('g') => {}
+                _ => {
+                    s.raw_command.clear();
+                }
+            };
+            None
+        })
         .on_pre_event_inner(Key::Enter, {
             let client = client.clone();
             move |s, _| {
@@ -146,23 +158,22 @@ pub fn get_story_main_view(
             });
             Some(EventResult::Consumed(None))
         })
-        // .on_pre_event_inner('g', move |s, _| match s.get_raw_command_as_number() {
-        //     Ok(number) => {
-        //         s.clear_raw_command();
-        //         let s = s.get_inner_mut();
-        //         if number == 0 {
-        //             return None;
-        //         }
-        //         let number = number - 1;
-        //         if number < s.len() {
-        //             s.set_focus_index(number).unwrap();
-        //             Some(EventResult::Consumed(None))
-        //         } else {
-        //             None
-        //         }
-        //     }
-        //     Err(_) => None,
-        // })
+        .on_pre_event_inner('g', move |s, _| match s.raw_command.parse::<usize>() {
+            Ok(number) => {
+                s.raw_command.clear();
+                if number == 0 {
+                    return None;
+                }
+                let number = number - 1;
+                if number < s.len() {
+                    s.set_focus_index(number).unwrap();
+                    Some(EventResult::Consumed(None))
+                } else {
+                    None
+                }
+            }
+            Err(_) => None,
+        })
         .full_height()
 }
 

@@ -184,6 +184,18 @@ impl CommentView {
 /// The main view of a CommentView is a View without status bar or footer.
 fn get_comment_main_view(story_metadata: Story, comments: &Vec<hn_client::Comment>) -> impl View {
     construct_scroll_list_event_view(CommentView::new(story_metadata, comments))
+        .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
+            match *e {
+                Event::Char(c) if '0' <= c && c <= '9' => {
+                    s.raw_command.push(c);
+                }
+                Event::Char('f') => {}
+                _ => {
+                    s.raw_command.clear();
+                }
+            };
+            None
+        })
         .on_pre_event_inner('l', move |s, _| {
             let heights = s.get_heights();
             let id = s.get_focus_index();
@@ -202,24 +214,24 @@ fn get_comment_main_view(story_metadata: Story, comments: &Vec<hn_client::Commen
             let next_id = left.iter().rposition(|&h| h <= heights[id]).unwrap_or(id);
             s.set_focus_index(next_id)
         })
-        // .on_pre_event_inner('f', |s, _| match s.get_raw_command_as_number() {
-        //     Ok(num) => {
-        //         s.clear_raw_command();
-        //         let id = s.get_inner().get_focus_index();
-        //         if num < s.comments[id].links.len() {
-        //             let url = s.comments[id].links[num].clone();
-        //             thread::spawn(move || {
-        //                 if let Err(err) = webbrowser::open(&url) {
-        //                     warn!("failed to open link {}: {}", url, err);
-        //                 }
-        //             });
-        //             Some(EventResult::Consumed(None))
-        //         } else {
-        //             Some(EventResult::Consumed(None))
-        //         }
-        //     }
-        //     Err(_) => None,
-        // })
+        .on_pre_event_inner('f', |s, _| match s.raw_command.parse::<usize>() {
+            Ok(num) => {
+                s.raw_command.clear();
+                let id = s.get_focus_index();
+                if num < s.comments[id].links.len() {
+                    let url = s.comments[id].links[num].clone();
+                    thread::spawn(move || {
+                        if let Err(err) = webbrowser::open(&url) {
+                            warn!("failed to open link {}: {}", url, err);
+                        }
+                    });
+                    Some(EventResult::Consumed(None))
+                } else {
+                    Some(EventResult::Consumed(None))
+                }
+            }
+            Err(_) => None,
+        })
         .on_pre_event_inner('O', move |s, _| {
             if s.story_metadata.url.len() > 0 {
                 let url = s.story_metadata.url.clone();
