@@ -1,5 +1,3 @@
-use cursive::view::scroll::layout;
-
 use super::async_view;
 use super::help_view::*;
 use super::list_view::*;

@@ -86,10 +86,13 @@ impl ViewWrapper for HelpView {
 
 #[macro_export]
 macro_rules! global_key_shortcuts {
-    () => {
+    ($(($k:expr,$d:expr)),*) => {
         (
             "Others",
             vec![
+                $(
+                    ($k, $d),
+                )*
                 ("<ctrl-f>/<alt-f>", "Go to the front page"),
                 ("<ctrl-s>/<alt-s>", "Go to the story search page"),
                 ("<ctrl-q>/<alt-q>", "Quit the application"),
@@ -174,7 +177,7 @@ impl HasHelpView for CommentView {
                     ),
                 ],
             ),
-            global_key_shortcuts!(),
+            global_key_shortcuts!(("r", "Reload the comment view")),
         ])
     }
 }

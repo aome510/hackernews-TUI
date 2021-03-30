@@ -67,6 +67,7 @@ In case the above shortcuts don't work, you can always use the corresponding but
 - `b`: Focus the comment at the bottom
 - `l`: Focus the next comment with smaller or equal level
 - `h`: Focus the previous comment with smaller or equal level
+- `r`: Reload the comment view.
 - `O`: Open in browser the link associated with the discussed story
 - `S`: Open in browser the discussed story
 - `C`: Open in browser the focused comment
