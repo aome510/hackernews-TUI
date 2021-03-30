@@ -85,7 +85,7 @@ impl ViewWrapper for HelpView {
 }
 
 #[macro_export]
-macro_rules! global_key_shortcuts {
+macro_rules! other_key_shortcuts {
     ($(($k:expr,$d:expr)),*) => {
         (
             "Others",
@@ -104,7 +104,7 @@ macro_rules! global_key_shortcuts {
 
 pub trait HasHelpView {
     fn construct_help_view() -> HelpView {
-        HelpView::new().keys(vec![global_key_shortcuts!()])
+        HelpView::new().keys(vec![other_key_shortcuts!()])
     }
 }
 
@@ -140,7 +140,7 @@ impl HasHelpView for StoryView {
                     ("S", "Open in browser the focused story"),
                 ],
             ),
-            global_key_shortcuts!(),
+            other_key_shortcuts!(),
         ])
     }
 }
@@ -177,7 +177,7 @@ impl HasHelpView for CommentView {
                     ),
                 ],
             ),
-            global_key_shortcuts!(("r", "Reload the comment view")),
+            other_key_shortcuts!(("r", "Reload the comment view")),
         ])
     }
 }
@@ -209,7 +209,7 @@ impl HasHelpView for SearchView {
                     ("S", "Open in browser the focused story"),
                 ],
             ),
-            global_key_shortcuts!(),
+            other_key_shortcuts!(),
         ])
     }
 }
