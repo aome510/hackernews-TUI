@@ -26,8 +26,8 @@ pub fn construct_list_event_view<T: ListEventView>(view: T) -> OnEventView<T> {
         })
 }
 
-/// ListEventView is a trait that implements basic method interfaces
-/// to interact with a ListView (normally CommentView or StoryView)
+/// ListEventView is a trait that implements basic methods
+/// to interact with a list-like View (CommentView, StoryView)
 pub trait ListEventView {
     fn focus_top(&mut self) -> Option<EventResult> {
         None

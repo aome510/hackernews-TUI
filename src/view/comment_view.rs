@@ -1,5 +1,6 @@
 use super::event_view;
 use super::help_view::*;
+use super::list_view::*;
 use super::text_view;
 use super::theme::*;
 use super::utils::*;
@@ -45,121 +46,33 @@ impl Comment {
 /// CommentView is a View displaying a list of comments in a HN story
 pub struct CommentView {
     story_metadata: Story,
-    view: LinearLayout,
+    view: ScrollListView,
     comments: Vec<Comment>,
 
     raw_command: String,
 }
 
-/// Parse a raw comment in HTML text to markdown text (with colors)
-fn parse_raw_comment(
-    s: String,
-    paragraph_re: &Regex,
-    italic_re: &Regex,
-    code_re: &Regex,
-    link_re: &Regex,
-) -> (StyledString, Vec<String>) {
-    let mut s = htmlescape::decode_html(&s).unwrap_or(s);
-    s = paragraph_re.replace_all(&s, "${paragraph}\n").to_string();
-    s = italic_re.replace_all(&s, "*${text}*").to_string();
-    s = code_re.replace_all(&s, "```\n${code}\n```").to_string();
-    let mut links: Vec<String> = vec![];
-    let mut styled_s = StyledString::new();
-    // replace the <a href="${link}">...</a> pattern one-by-one with "${link}".
-    // cannot use replace_all as above because we want to color links and link ids
-    loop {
-        match link_re.captures(&s.clone()) {
-            None => break,
-            Some(c) => {
-                let m = c.get(0).unwrap();
-                let link = c.name("link").unwrap().as_str();
-
-                let range = m.range();
-                let mut prefix: String = s
-                    .drain(std::ops::Range {
-                        start: 0,
-                        end: m.end(),
-                    })
-                    .collect();
-                prefix.drain(range);
-
-                if prefix.len() > 0 {
-                    styled_s.append_plain(&prefix);
-                }
-
-                styled_s.append_styled(
-                    format!("\"{}\"", shorten_url(link)),
-                    Style::from(LINK_COLOR),
-                );
-                styled_s.append_styled(
-                    links.len().to_string(),
-                    ColorStyle::new(LINK_ID_FRONT, LINK_ID_BACK),
-                );
-                links.push(link.to_string());
-                continue;
-            }
-        }
-    }
-    if s.len() > 0 {
-        styled_s.append_plain(&s)
-    }
-    (styled_s, links)
-}
-
-/// Parse comments recursively into readable texts with styles and colors
-fn parse_comment_text_list(comments: &Vec<hn_client::Comment>, height: usize) -> Vec<Comment> {
-    let paragraph_re = Regex::new(r"<p>(?s)(?P<paragraph>.*?)</p>").unwrap();
-    let italic_re = Regex::new(r"<i>(?s)(?P<text>.+?)</i>").unwrap();
-    let code_re = Regex::new(r"<pre><code>(?s)(?P<code>.+?)[\n]*</code></pre>").unwrap();
-    let link_re = Regex::new(r#"<a\s+?href="(?P<link>.+?)".+?</a>"#).unwrap();
-
-    comments
-        .par_iter()
-        .flat_map(|comment| {
-            let mut subcomments = parse_comment_text_list(&comment.children, height + 1);
-            let mut comment_string = StyledString::styled(
-                format!(
-                    "{} {} ago\n",
-                    comment.author,
-                    get_elapsed_time_as_text(comment.time),
-                ),
-                DESC_COLOR,
-            );
-
-            let (comment_content, links) = parse_raw_comment(
-                comment.text.clone(),
-                &paragraph_re,
-                &italic_re,
-                &code_re,
-                &link_re,
-            );
-            comment_string.append(comment_content);
-
-            subcomments.insert(0, Comment::new(comment.id, comment_string, height, links));
-            subcomments
-        })
-        .collect()
-}
-
 impl ViewWrapper for CommentView {
-    wrap_impl!(self.view: LinearLayout);
+    wrap_impl!(self.view: ScrollListView);
 }
 
 impl CommentView {
     /// Return a new CommentView given a comment list and the discussed story url
     pub fn new(story_metadata: Story, comments: &Vec<hn_client::Comment>) -> Self {
-        let comments = parse_comment_text_list(comments, 0);
-        let view = LinearLayout::vertical().with(|v| {
-            comments.iter().for_each(|comment| {
-                v.add_child(PaddedView::lrtb(
-                    comment.height * 2,
-                    0,
-                    0,
-                    1,
-                    text_view::TextView::new(comment.text.clone()),
-                ));
+        let comments = Self::parse_comments(comments, 0);
+        let view = LinearLayout::vertical()
+            .with(|v| {
+                comments.iter().for_each(|comment| {
+                    v.add_child(PaddedView::lrtb(
+                        comment.height * 2,
+                        0,
+                        0,
+                        1,
+                        text_view::TextView::new(comment.text.clone()),
+                    ));
+                })
             })
-        });
+            .scrollable();
         CommentView {
             story_metadata,
             view,
@@ -168,14 +81,105 @@ impl CommentView {
         }
     }
 
+    /// Parse a comment in HTML text style to markdown text style (with colors)
+    fn parse_single_comment(
+        s: String,
+        paragraph_re: &Regex,
+        italic_re: &Regex,
+        code_re: &Regex,
+        link_re: &Regex,
+    ) -> (StyledString, Vec<String>) {
+        let mut s = htmlescape::decode_html(&s).unwrap_or(s);
+        s = paragraph_re.replace_all(&s, "${paragraph}\n").to_string();
+        s = italic_re.replace_all(&s, "*${text}*").to_string();
+        s = code_re.replace_all(&s, "```\n${code}\n```").to_string();
+
+        let mut links: Vec<String> = vec![];
+        let mut styled_s = StyledString::new();
+        // replace the <a href="${link}">...</a> pattern one-by-one with "${link}".
+        // cannot use replace_all as above because we want to replace the matched pattern
+        // by a StyledString with specific colors.
+        loop {
+            match link_re.captures(&s.clone()) {
+                None => break,
+                Some(c) => {
+                    let m = c.get(0).unwrap();
+                    let link = c.name("link").unwrap().as_str();
+
+                    let range = m.range();
+                    let mut prefix: String = s
+                        .drain(std::ops::Range {
+                            start: 0,
+                            end: m.end(),
+                        })
+                        .collect();
+                    prefix.drain(range);
+
+                    if prefix.len() > 0 {
+                        styled_s.append_plain(&prefix);
+                    }
+
+                    styled_s.append_styled(
+                        format!("\"{}\"", shorten_url(link)),
+                        Style::from(LINK_COLOR),
+                    );
+                    styled_s.append_styled(
+                        links.len().to_string(),
+                        ColorStyle::new(LINK_ID_FRONT, LINK_ID_BACK),
+                    );
+                    links.push(link.to_string());
+                    continue;
+                }
+            }
+        }
+        if s.len() > 0 {
+            styled_s.append_plain(&s)
+        }
+        (styled_s, links)
+    }
+
+    /// Parse comments recursively into readable texts with styles and colors
+    fn parse_comments(comments: &Vec<hn_client::Comment>, height: usize) -> Vec<Comment> {
+        let paragraph_re = Regex::new(r"<p>(?s)(?P<paragraph>.*?)</p>").unwrap();
+        let italic_re = Regex::new(r"<i>(?s)(?P<text>.+?)</i>").unwrap();
+        let code_re = Regex::new(r"<pre><code>(?s)(?P<code>.+?)[\n]*</code></pre>").unwrap();
+        let link_re = Regex::new(r#"<a\s+?href="(?P<link>.+?)".+?</a>"#).unwrap();
+
+        comments
+            .par_iter()
+            .flat_map(|comment| {
+                let mut subcomments = Self::parse_comments(&comment.children, height + 1);
+                let mut comment_string = StyledString::styled(
+                    format!(
+                        "{} {} ago\n",
+                        comment.author,
+                        get_elapsed_time_as_text(comment.time),
+                    ),
+                    DESC_COLOR,
+                );
+
+                let (comment_content, links) = Self::parse_single_comment(
+                    comment.text.clone(),
+                    &paragraph_re,
+                    &italic_re,
+                    &code_re,
+                    &link_re,
+                );
+                comment_string.append(comment_content);
+
+                subcomments.insert(0, Comment::new(comment.id, comment_string, height, links));
+                subcomments
+            })
+            .collect()
+    }
+
     /// Get the height of each comment in the comment tree
     pub fn get_heights(&self) -> Vec<usize> {
         self.comments.iter().map(|comment| comment.height).collect()
     }
 
+    crate::list_view_inner_getters!();
     crate::raw_command_handlers!();
-
-    inner_getters!(self.view: LinearLayout);
 }
 
 /// Return a main view of a CommentView displaying the comment list.
@@ -260,7 +264,6 @@ fn get_comment_main_view(story_metadata: Story, comments: &Vec<hn_client::Commen
             Some(EventResult::Consumed(None))
         })
         .full_height()
-        .scrollable()
 }
 
 /// Return a CommentView given a comment list and the discussed story's url/title
