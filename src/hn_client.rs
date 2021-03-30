@@ -1,3 +1,5 @@
+use std::{collections::HashMap, sync::Arc, sync::RwLock};
+
 use crate::prelude::*;
 
 const HN_ALGOLIA_PREFIX: &'static str = "https://hn.algolia.com/api/v1";
@@ -61,7 +63,7 @@ struct StoryResponse {
     points: u32,
     #[serde(default)]
     #[serde(deserialize_with = "parse_null_default")]
-    num_comments: u32,
+    num_comments: usize,
 
     #[serde(rename(deserialize = "created_at_i"))]
     time: u64,
@@ -72,7 +74,7 @@ struct StoryResponse {
 }
 
 #[derive(Debug, Deserialize)]
-/// CommentResponse represents the story data received from HN_ALGOLIA APIs
+/// CommentResponse represents the comment data received from HN_ALGOLIA APIs
 struct CommentResponse {
     id: u32,
     #[serde(deserialize_with = "parse_null_default")]
@@ -96,6 +98,16 @@ struct StoriesResponse {
     pub hits: Vec<StoryResponse>,
 }
 
+impl StoriesResponse {
+    pub fn parse_into_stories(self) -> Vec<Story> {
+        self.hits
+            .into_par_iter()
+            .filter(|story| story.highlight_result.is_some() && story.title.is_some())
+            .map(|story| story.into())
+            .collect()
+    }
+}
+
 // parsed structs
 
 /// Story represents a Hacker News story
@@ -106,9 +118,8 @@ pub struct Story {
     pub url: String,
     pub author: String,
     pub points: u32,
-    pub num_comments: u32,
+    pub num_comments: usize,
     pub time: u64,
-    pub children: Vec<Comment>,
 }
 
 /// Comment represents a Hacker News comment
@@ -128,14 +139,15 @@ impl From<CommentResponse> for Comment {
         let children = c
             .children
             .into_par_iter()
+            .filter(|comment| comment.author.is_some() && comment.text.is_some())
             .map(|comment| comment.into())
             .collect();
         Comment {
             id: c.id,
             story_id: c.story_id,
             parent_id: c.parent_id,
-            text: c.text.unwrap_or("[deleted]".to_string()),
-            author: c.author.unwrap_or("[deleted]".to_string()),
+            text: c.text.unwrap(),
+            author: c.author.unwrap(),
             time: c.time,
             children,
         }
@@ -156,11 +168,6 @@ impl From<StoryResponse> for Story {
             None => String::new(),
             Some(author) => author.value,
         };
-        let children = s
-            .children
-            .into_par_iter()
-            .map(|comment| comment.into())
-            .collect();
         Story {
             id: s.id,
             points: s.points,
@@ -169,7 +176,6 @@ impl From<StoryResponse> for Story {
             title,
             url,
             author,
-            children,
         }
     }
 }
@@ -177,22 +183,48 @@ impl From<StoryResponse> for Story {
 // HN client get Story,Comment data by calling HN_ALGOLIA APIs
 // and parsing the result into a corresponding struct
 
-/// HNClient is a http client to communicate with Hacker News APIs.
+/// StoryCache is a cache storing all comments of a HN story.
+/// A story cache will be updated if the number of commments changes.
+#[derive(Clone)]
+pub struct StoryCache {
+    // num_comments is an approximated number of comments received from HN APIs,
+    // it can be different from number of comments in the [comments] field below
+    pub num_comments: usize,
+    pub comments: Vec<Comment>,
+}
+
+impl StoryCache {
+    pub fn new(comments: Vec<Comment>, num_comments: usize) -> Self {
+        StoryCache {
+            num_comments,
+            comments,
+        }
+    }
+}
+
+/// HNClient is a HTTP client to communicate with Hacker News APIs.
 #[derive(Clone)]
 pub struct HNClient {
     client: ureq::Agent,
+    story_caches: Arc<RwLock<HashMap<u32, StoryCache>>>,
 }
 
 impl HNClient {
-    /// Create new Hacker News Client
+    /// Create a new Hacker News Client
     pub fn new() -> Result<HNClient> {
         Ok(HNClient {
             client: ureq::AgentBuilder::new().timeout(CLIENT_TIMEOUT).build(),
+            story_caches: Arc::new(RwLock::new(HashMap::new())),
         })
     }
 
-    /// Get data from an item's id and parse it to the corresponding struct
-    /// representing that item
+    /// Return the story caches stored in the client
+    pub fn get_story_caches(&self) -> &Arc<RwLock<HashMap<u32, StoryCache>>> {
+        &self.story_caches
+    }
+
+    /// Get data of a HN item based on its id then parse the data
+    /// to a corresponding struct representing that item
     pub fn get_item_from_id<T>(&self, id: u32) -> Result<T>
     where
         T: DeserializeOwned,
@@ -201,13 +233,49 @@ impl HNClient {
         Ok(self.client.get(&request_url).call()?.into_json::<T>()?)
     }
 
+    /// Get all comments from a story.
+    /// A cached result is returned if the number of comments doesn't change.
+    /// [reload] is a parameter used when we want to re-determine the number of comments in a story.
+    pub fn get_comments_from_story(&self, story: &Story, reload: bool) -> Result<Vec<Comment>> {
+        let id = story.id;
+        let story = if reload {
+            self.get_story_from_story_id(id)?
+        } else {
+            story.clone()
+        };
+
+        let num_comments = story.num_comments;
+        let comments = match self.story_caches.read().unwrap().get(&id) {
+            Some(story_cache) if story_cache.num_comments == num_comments => {
+                Some(story_cache.comments.clone())
+            }
+            _ => None,
+        };
+
+        match comments {
+            None => match self.get_comments_from_story_id(id) {
+                Ok(comments) => {
+                    self.story_caches
+                        .write()
+                        .unwrap()
+                        .insert(id, StoryCache::new(comments.clone(), num_comments));
+                    debug!("insert comments of the story (id={}, num_comments={}) into client's story_caches",
+                           id, num_comments);
+                    Ok(comments)
+                }
+                Err(err) => Err(err),
+            },
+            Some(comments) => Ok(comments),
+        }
+    }
+
     /// Get all comments from a story with a given id
     pub fn get_comments_from_story_id(&self, id: u32) -> Result<Vec<Comment>> {
         let time = SystemTime::now();
         let response = self.get_item_from_id::<StoryResponse>(id)?;
         if let Ok(elapsed) = time.elapsed() {
             debug!(
-                "get comments from story {} took {}ms",
+                "get comments from story (id={}) took {}ms",
                 id,
                 elapsed.as_millis()
             );
@@ -216,8 +284,26 @@ impl HNClient {
         Ok(response
             .children
             .into_par_iter()
+            .filter(|comment| comment.text.is_some() && comment.author.is_some())
             .map(|comment| comment.into())
             .collect())
+    }
+
+    /// Get a story based on its id
+    pub fn get_story_from_story_id(&self, id: u32) -> Result<Story> {
+        let request_url = format!("{}/search?tags=story,story_{}", HN_ALGOLIA_PREFIX, id);
+        let time = SystemTime::now();
+        let response = self
+            .client
+            .get(&request_url)
+            .call()?
+            .into_json::<StoriesResponse>()?;
+        if let Ok(elapsed) = time.elapsed() {
+            debug!("get story (id={}) took {}ms", id, elapsed.as_millis());
+        }
+
+        let stories = response.parse_into_stories();
+        Ok(stories.first().unwrap().clone())
     }
 
     /// Get a list of stories matching certain conditions
@@ -238,12 +324,7 @@ impl HNClient {
             );
         }
 
-        Ok(response
-            .hits
-            .into_par_iter()
-            .filter(|story| story.highlight_result.is_some() && story.title.is_some())
-            .map(|story| story.into())
-            .collect())
+        Ok(response.parse_into_stories())
     }
 
     /// Get a list of stories on HN front page
@@ -259,11 +340,6 @@ impl HNClient {
             debug!("get top stories took {}ms", elapsed.as_millis());
         }
 
-        Ok(response
-            .hits
-            .into_par_iter()
-            .filter(|story| story.highlight_result.is_some() && story.title.is_some())
-            .map(|story| story.into())
-            .collect())
+        Ok(response.parse_into_stories())
     }
 }

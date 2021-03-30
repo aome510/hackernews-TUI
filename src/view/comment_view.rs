@@ -8,28 +8,11 @@ use crate::prelude::*;
 use std::thread;
 
 #[derive(Debug, Clone)]
-pub struct Story {
-    pub id: u32,
-    pub title: String,
-    pub url: String,
-}
-
-#[derive(Debug, Clone)]
 pub struct Comment {
     id: u32,
     text: StyledString,
     height: usize,
     links: Vec<String>,
-}
-
-impl Story {
-    pub fn new(story: &hn_client::Story) -> Self {
-        Story {
-            id: story.id,
-            title: story.title.clone(),
-            url: story.url.clone(),
-        }
-    }
 }
 
 impl Comment {
@@ -45,7 +28,7 @@ impl Comment {
 
 /// CommentView is a View displaying a list of comments in a HN story
 pub struct CommentView {
-    story_metadata: Story,
+    story: hn_client::Story,
     view: ScrollListView,
     comments: Vec<Comment>,
 
@@ -63,7 +46,7 @@ impl ViewWrapper for CommentView {
 
 impl CommentView {
     /// Return a new CommentView given a comment list and the discussed story url
-    pub fn new(story_metadata: Story, comments: &Vec<hn_client::Comment>, focus_id: u32) -> Self {
+    pub fn new(story: hn_client::Story, comments: &Vec<hn_client::Comment>, focus_id: u32) -> Self {
         let comments = Self::parse_comments(comments, 0);
         let mut view = LinearLayout::vertical().with(|v| {
             comments.iter().for_each(|comment| {
@@ -80,7 +63,7 @@ impl CommentView {
             view.set_focus_index(focus_id).unwrap();
         }
         CommentView {
-            story_metadata,
+            story,
             comments,
             view: view.scrollable(),
             raw_command: String::new(),
@@ -190,14 +173,14 @@ impl CommentView {
 /// Return a main view of a CommentView displaying the comment list.
 /// The main view of a CommentView is a View without status bar or footer.
 fn get_comment_main_view(
-    story_metadata: Story,
+    story: &hn_client::Story,
     comments: &Vec<hn_client::Comment>,
     client: &hn_client::HNClient,
     focus_id: u32,
 ) -> impl View {
     let client = client.clone();
 
-    construct_scroll_list_event_view(CommentView::new(story_metadata, comments, focus_id))
+    construct_scroll_list_event_view(CommentView::new(story.clone(), comments, focus_id))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
             match *e {
                 Event::Char(c) if '0' <= c && c <= '9' => {
@@ -249,23 +232,19 @@ fn get_comment_main_view(
         .on_pre_event_inner('r', move |s, _| {
             let focus_id = s.comments[s.get_focus_index()].id;
             Some(EventResult::with_cb({
-                let story_metadata = s.story_metadata.clone();
                 let client = client.clone();
+                let story = s.story.clone();
                 move |s| {
-                    let async_view = async_view::get_comment_view_async(
-                        s,
-                        &client,
-                        story_metadata.clone(),
-                        focus_id,
-                    );
+                    let async_view =
+                        async_view::get_comment_view_async(s, &client, &story, focus_id);
                     s.pop_layer();
                     s.screen_mut().add_transparent_layer(Layer::new(async_view))
                 }
             }))
         })
         .on_pre_event_inner('O', move |s, _| {
-            if s.story_metadata.url.len() > 0 {
-                let url = s.story_metadata.url.clone();
+            if s.story.url.len() > 0 {
+                let url = s.story.url.clone();
                 thread::spawn(move || {
                     if let Err(err) = webbrowser::open(&url) {
                         warn!("failed to open link {}: {}", url, err);
@@ -277,7 +256,7 @@ fn get_comment_main_view(
             }
         })
         .on_pre_event_inner('S', move |s, _| {
-            let id = s.story_metadata.id;
+            let id = s.story.id;
             thread::spawn(move || {
                 let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
                 if let Err(err) = webbrowser::open(&url) {
@@ -301,16 +280,16 @@ fn get_comment_main_view(
 
 /// Return a CommentView given a comment list and the discussed story's url/title
 pub fn get_comment_view(
-    story_metadata: Story,
+    story: &hn_client::Story,
     comments: &Vec<hn_client::Comment>,
     client: &hn_client::HNClient,
     focus_id: u32,
 ) -> impl View {
     let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
-    let story_title = match_re.replace_all(&story_metadata.title, "${match}");
+    let story_title = match_re.replace_all(&story.title, "${match}");
     let status_bar = get_status_bar_with_desc(&format!("Comment View - {}", story_title));
 
-    let main_view = get_comment_main_view(story_metadata, comments, &client, focus_id);
+    let main_view = get_comment_main_view(story, comments, &client, focus_id);
 
     let mut view = LinearLayout::vertical()
         .child(status_bar)
