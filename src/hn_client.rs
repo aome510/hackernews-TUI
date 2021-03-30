@@ -74,7 +74,7 @@ struct StoryResponse {
 }
 
 #[derive(Debug, Deserialize)]
-/// CommentResponse represents the story data received from HN_ALGOLIA APIs
+/// CommentResponse represents the comment data received from HN_ALGOLIA APIs
 struct CommentResponse {
     id: u32,
     #[serde(deserialize_with = "parse_null_default")]
@@ -183,14 +183,12 @@ impl From<StoryResponse> for Story {
 // HN client get Story,Comment data by calling HN_ALGOLIA APIs
 // and parsing the result into a corresponding struct
 
-/// StoryCache is a cache storing all comments of a story.
-/// A story cache will be updated if the number of commments
-/// approximated by HN changes.
+/// StoryCache is a cache storing all comments of a HN story.
+/// A story cache will be updated if the number of commments changes.
 #[derive(Clone)]
 pub struct StoryCache {
-    // num_comments is approximated number of comments,
-    // it can be different from number of comments
-    // in the [comments] field below
+    // num_comments is an approximated number of comments received from HN APIs,
+    // it can be different from number of comments in the [comments] field below
     pub num_comments: usize,
     pub comments: Vec<Comment>,
 }
@@ -204,7 +202,7 @@ impl StoryCache {
     }
 }
 
-/// HNClient is a http client to communicate with Hacker News APIs.
+/// HNClient is a HTTP client to communicate with Hacker News APIs.
 #[derive(Clone)]
 pub struct HNClient {
     client: ureq::Agent,
@@ -212,7 +210,7 @@ pub struct HNClient {
 }
 
 impl HNClient {
-    /// Create new Hacker News Client
+    /// Create a new Hacker News Client
     pub fn new() -> Result<HNClient> {
         Ok(HNClient {
             client: ureq::AgentBuilder::new().timeout(CLIENT_TIMEOUT).build(),
@@ -225,8 +223,8 @@ impl HNClient {
         &self.story_caches
     }
 
-    /// Get data from an item's id and parse it to the corresponding struct
-    /// representing that item
+    /// Get data of a HN item based on its id then parse the data
+    /// to a corresponding struct representing that item
     pub fn get_item_from_id<T>(&self, id: u32) -> Result<T>
     where
         T: DeserializeOwned,
@@ -235,8 +233,9 @@ impl HNClient {
         Ok(self.client.get(&request_url).call()?.into_json::<T>()?)
     }
 
-    /// Get all comments from a story with a given story.
-    /// A cached result is returned if the number of approximated comments doesn't change.
+    /// Get all comments from a story.
+    /// A cached result is returned if the number of comments doesn't change.
+    /// [reload] is a parameter used when we want to re-determine the number of comments in a story.
     pub fn get_comments_from_story(&self, story: &Story, reload: bool) -> Result<Vec<Comment>> {
         let id = story.id;
         let story = if reload {
@@ -276,7 +275,7 @@ impl HNClient {
         let response = self.get_item_from_id::<StoryResponse>(id)?;
         if let Ok(elapsed) = time.elapsed() {
             debug!(
-                "get comments from story {} took {}ms",
+                "get comments from story (id={}) took {}ms",
                 id,
                 elapsed.as_millis()
             );
@@ -290,7 +289,7 @@ impl HNClient {
             .collect())
     }
 
-    /// Return a story from a given story id
+    /// Get a story based on its id
     pub fn get_story_from_story_id(&self, id: u32) -> Result<Story> {
         let request_url = format!("{}/search?tags=story,story_{}", HN_ALGOLIA_PREFIX, id);
         let time = SystemTime::now();
