@@ -183,12 +183,28 @@ pub fn get_story_view(
     stories: Vec<hn_client::Story>,
     client: &hn_client::HNClient,
 ) -> impl View {
-    let main_view = get_story_main_view(stories, client);
+    let main_view = get_story_main_view(stories.clone(), client);
     let mut view = LinearLayout::vertical()
         .child(get_status_bar_with_desc(desc))
         .child(main_view)
         .child(construct_footer_view::<StoryView>(client));
     view.set_focus_index(1).unwrap_or_else(|_| {});
+
+    // pooling stories in background
+    let client = client.clone();
+    thread::spawn(move || {
+        stories.iter().for_each(|story| {
+            match client.get_comments_from_story(story, false) {
+                Err(err) => {
+                    warn!(
+                        "failed to get comments from story (id={}): {:#?}",
+                        story.id, err
+                    );
+                }
+                _ => {}
+            };
+        });
+    });
 
     OnEventView::new(view).on_pre_event(
         EventTrigger::from_fn(|e| match e {
