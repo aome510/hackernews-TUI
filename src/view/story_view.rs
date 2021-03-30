@@ -1,8 +1,8 @@
 use std::thread;
 
 use super::async_view;
-use super::event_view;
 use super::help_view::*;
+use super::list_view::*;
 use super::text_view;
 use super::theme::*;
 use super::utils::*;
@@ -11,77 +11,27 @@ use crate::prelude::*;
 /// StoryView is a View displaying a list stories corresponding
 /// to a particular category (top stories, newest stories, most popular stories, etc).
 pub struct StoryView {
-    view: LinearLayout,
+    view: ScrollListView,
     pub stories: Vec<hn_client::Story>,
 
     raw_command: String,
 }
 
-/// Return a StyledString representing a matched text in which
-/// matches are highlighted
-fn get_matched_text(mut s: String, default_style: ColorStyle) -> StyledString {
-    let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
-    let mut styled_s = StyledString::new();
-    loop {
-        match match_re.captures(&s.clone()) {
-            None => break,
-            Some(c) => {
-                let m = c.get(0).unwrap();
-                let match_text = c.name("match").unwrap().as_str();
-
-                let range = m.range();
-                let mut prefix: String = s
-                    .drain(std::ops::Range {
-                        start: 0,
-                        end: m.end(),
-                    })
-                    .collect();
-                prefix.drain(range);
-
-                if prefix.len() > 0 {
-                    styled_s.append_styled(&prefix, default_style);
-                }
-
-                styled_s.append_styled(match_text, ColorStyle::back(HIGHLIGHT_COLOR));
-                continue;
-            }
-        };
-    }
-    if s.len() > 0 {
-        styled_s.append_styled(s, default_style);
-    }
-    styled_s
-}
-
-/// Get the description text summarizing basic information about a story
-pub fn get_story_text(story: &hn_client::Story) -> StyledString {
-    let mut story_text = get_matched_text(story.title.clone(), ColorStyle::default());
-    if story.url.len() > 0 {
-        let url = format!("\n{}", story.url);
-        story_text.append(get_matched_text(url, ColorStyle::front(LINK_COLOR)));
-    }
-    story_text.append_styled(
-        format!(
-            "\n{} points | by {} | {} ago | {} comments",
-            story.points,
-            story.author,
-            get_elapsed_time_as_text(story.time),
-            story.num_comments,
-        ),
-        ColorStyle::from(DESC_COLOR),
-    );
-    story_text
+impl ViewWrapper for StoryView {
+    wrap_impl!(self.view: ScrollListView);
 }
 
 impl StoryView {
     pub fn new(stories: Vec<hn_client::Story>) -> Self {
-        let view = LinearLayout::vertical().with(|s| {
-            stories.iter().enumerate().for_each(|(i, story)| {
-                let mut story_text = StyledString::plain(format!("{}. ", i + 1));
-                story_text.append(get_story_text(story));
-                s.add_child(text_view::TextView::new(story_text));
+        let view = LinearLayout::vertical()
+            .with(|s| {
+                stories.iter().enumerate().for_each(|(i, story)| {
+                    let mut story_text = StyledString::plain(format!("{}. ", i + 1));
+                    story_text.append(Self::get_story_text(story));
+                    s.add_child(text_view::TextView::new(story_text));
+                })
             })
-        });
+            .scrollable();
         StoryView {
             view,
             stories,
@@ -89,13 +39,63 @@ impl StoryView {
         }
     }
 
-    crate::raw_command!();
+    /// Return a StyledString representing a matched text in which
+    /// matches are highlighted
+    fn get_matched_text(mut s: String, default_style: ColorStyle) -> StyledString {
+        let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
+        let mut styled_s = StyledString::new();
+        loop {
+            match match_re.captures(&s.clone()) {
+                None => break,
+                Some(c) => {
+                    let m = c.get(0).unwrap();
+                    let match_text = c.name("match").unwrap().as_str();
 
-    inner_getters!(self.view: LinearLayout);
-}
+                    let range = m.range();
+                    let mut prefix: String = s
+                        .drain(std::ops::Range {
+                            start: 0,
+                            end: m.end(),
+                        })
+                        .collect();
+                    prefix.drain(range);
 
-impl ViewWrapper for StoryView {
-    wrap_impl!(self.view: LinearLayout);
+                    if prefix.len() > 0 {
+                        styled_s.append_styled(&prefix, default_style);
+                    }
+
+                    styled_s.append_styled(match_text, ColorStyle::back(HIGHLIGHT_COLOR));
+                    continue;
+                }
+            };
+        }
+        if s.len() > 0 {
+            styled_s.append_styled(s, default_style);
+        }
+        styled_s
+    }
+
+    /// Get the description text summarizing basic information about a story
+    fn get_story_text(story: &hn_client::Story) -> StyledString {
+        let mut story_text = Self::get_matched_text(story.title.clone(), ColorStyle::default());
+        if story.url.len() > 0 {
+            let url = format!("\n{}", story.url);
+            story_text.append(Self::get_matched_text(url, ColorStyle::front(LINK_COLOR)));
+        }
+        story_text.append_styled(
+            format!(
+                "\n{} points | by {} | {} ago | {} comments",
+                story.points,
+                story.author,
+                get_elapsed_time_as_text(story.time),
+                story.num_comments,
+            ),
+            ColorStyle::from(DESC_COLOR),
+        );
+        story_text
+    }
+
+    inner_getters!(self.view: ScrollListView);
 }
 
 /// Return a main view of a StoryView displaying the story list.
@@ -104,11 +104,23 @@ pub fn get_story_main_view(
     stories: Vec<hn_client::Story>,
     client: &hn_client::HNClient,
 ) -> impl View {
-    event_view::construct_list_event_view(StoryView::new(stories))
+    construct_scroll_list_event_view(StoryView::new(stories))
+        .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
+            match *e {
+                Event::Char(c) if '0' <= c && c <= '9' => {
+                    s.raw_command.push(c);
+                }
+                Event::Char('g') => {}
+                _ => {
+                    s.raw_command.clear();
+                }
+            };
+            None
+        })
         .on_pre_event_inner(Key::Enter, {
             let client = client.clone();
             move |s, _| {
-                let id = s.get_inner().get_focus_index();
+                let id = s.get_focus_index();
                 // the story struct hasn't had any comments inside yet,
                 // so it can be cloned without greatly affecting performance
                 let story = s.stories[id].clone();
@@ -123,7 +135,7 @@ pub fn get_story_main_view(
             }
         })
         .on_pre_event_inner('O', move |s, _| {
-            let id = s.get_inner().get_focus_index();
+            let id = s.get_focus_index();
             let url = s.stories[id].url.clone();
             if url.len() > 0 {
                 thread::spawn(move || {
@@ -137,7 +149,7 @@ pub fn get_story_main_view(
             }
         })
         .on_pre_event_inner('S', move |s, _| {
-            let id = s.stories[s.get_inner().get_focus_index()].id;
+            let id = s.stories[s.get_focus_index()].id;
             thread::spawn(move || {
                 let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
                 if let Err(err) = webbrowser::open(&url) {
@@ -146,10 +158,9 @@ pub fn get_story_main_view(
             });
             Some(EventResult::Consumed(None))
         })
-        .on_pre_event_inner('g', move |s, _| match s.get_raw_command_as_number() {
+        .on_pre_event_inner('g', move |s, _| match s.raw_command.parse::<usize>() {
             Ok(number) => {
-                s.clear_raw_command();
-                let s = s.get_inner_mut();
+                s.raw_command.clear();
                 if number == 0 {
                     return None;
                 }
@@ -164,14 +175,6 @@ pub fn get_story_main_view(
             Err(_) => None,
         })
         .full_height()
-        .scrollable()
-}
-
-/// Add StoryView as a new layer to the main Cursive View
-pub fn add_story_view_layer(s: &mut Cursive, client: &hn_client::HNClient) {
-    let async_view = async_view::get_front_page_story_view_async(s, client);
-    s.pop_layer();
-    s.screen_mut().add_transparent_layer(Layer::new(async_view));
 }
 
 /// Return a StoryView given a story list and the view description
@@ -194,4 +197,11 @@ pub fn get_story_view(
         }),
         |s| s.add_layer(StoryView::construct_help_view()),
     )
+}
+
+/// Add StoryView as a new layer to the main Cursive View
+pub fn add_story_view_layer(s: &mut Cursive, client: &hn_client::HNClient) {
+    let async_view = async_view::get_front_page_story_view_async(s, client);
+    s.pop_layer();
+    s.screen_mut().add_transparent_layer(Layer::new(async_view));
 }

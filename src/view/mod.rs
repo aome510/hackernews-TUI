@@ -1,7 +1,7 @@
 mod async_view;
 mod error_view;
-mod event_view;
 mod fn_view_wrapper;
+mod list_view;
 mod text_view;
 mod theme;
 mod utils;
