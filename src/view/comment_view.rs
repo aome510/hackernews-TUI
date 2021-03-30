@@ -232,8 +232,8 @@ fn get_comment_main_view(
         .on_pre_event_inner('r', move |s, _| {
             let focus_id = s.comments[s.get_focus_index()].id;
             Some(EventResult::with_cb({
-                let story = s.story.clone();
                 let client = client.clone();
+                let story = s.story.clone();
                 move |s| {
                     let async_view =
                         async_view::get_comment_view_async(s, &client, &story, focus_id);

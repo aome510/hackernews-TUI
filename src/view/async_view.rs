@@ -16,14 +16,14 @@ pub fn get_comment_view_async(
         {
             let client = client.clone();
             let story = story.clone();
-            move || match client.get_comments_from_story(&story) {
+            move || match client.get_comments_from_story(&story, focus_id > 0) {
                 Ok(stories) => Ok(Ok(stories)),
                 Err(err) => {
                     warn!(
                         "failed to get comments from story (id={}): {:#?}\nRetrying...",
                         id, err
                     );
-                    Ok(client.get_comments_from_story(&story))
+                    Ok(client.get_comments_from_story(&story, focus_id > 0))
                 }
             }
         },

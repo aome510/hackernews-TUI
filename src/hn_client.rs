@@ -98,6 +98,16 @@ struct StoriesResponse {
     pub hits: Vec<StoryResponse>,
 }
 
+impl StoriesResponse {
+    pub fn parse_into_stories(self) -> Vec<Story> {
+        self.hits
+            .into_par_iter()
+            .filter(|story| story.highlight_result.is_some() && story.title.is_some())
+            .map(|story| story.into())
+            .collect()
+    }
+}
+
 // parsed structs
 
 /// Story represents a Hacker News story
@@ -227,8 +237,14 @@ impl HNClient {
 
     /// Get all comments from a story with a given story.
     /// A cached result is returned if the number of approximated comments doesn't change.
-    pub fn get_comments_from_story(&self, story: &Story) -> Result<Vec<Comment>> {
+    pub fn get_comments_from_story(&self, story: &Story, reload: bool) -> Result<Vec<Comment>> {
         let id = story.id;
+        let story = if reload {
+            self.get_story_from_story_id(id)?
+        } else {
+            story.clone()
+        };
+
         let num_comments = story.num_comments;
         let comments = match self.story_caches.read().unwrap().get(&id) {
             Some(story_cache) if story_cache.num_comments == num_comments => {
@@ -274,6 +290,23 @@ impl HNClient {
             .collect())
     }
 
+    /// Return a story from a given story id
+    pub fn get_story_from_story_id(&self, id: u32) -> Result<Story> {
+        let request_url = format!("{}/search?tags=story,story_{}", HN_ALGOLIA_PREFIX, id);
+        let time = SystemTime::now();
+        let response = self
+            .client
+            .get(&request_url)
+            .call()?
+            .into_json::<StoriesResponse>()?;
+        if let Ok(elapsed) = time.elapsed() {
+            debug!("get story (id={}) took {}ms", id, elapsed.as_millis());
+        }
+
+        let stories = response.parse_into_stories();
+        Ok(stories.first().unwrap().clone())
+    }
+
     /// Get a list of stories matching certain conditions
     pub fn get_matched_stories(&self, query: &str) -> Result<Vec<Story>> {
         let request_url = format!("{}/search?{}", HN_ALGOLIA_PREFIX, HN_SEARCH_QUERY_STRING);
@@ -292,12 +325,7 @@ impl HNClient {
             );
         }
 
-        Ok(response
-            .hits
-            .into_par_iter()
-            .filter(|story| story.highlight_result.is_some() && story.title.is_some())
-            .map(|story| story.into())
-            .collect())
+        Ok(response.parse_into_stories())
     }
 
     /// Get a list of stories on HN front page
@@ -313,11 +341,6 @@ impl HNClient {
             debug!("get top stories took {}ms", elapsed.as_millis());
         }
 
-        Ok(response
-            .hits
-            .into_par_iter()
-            .filter(|story| story.highlight_result.is_some() && story.title.is_some())
-            .map(|story| story.into())
-            .collect())
+        Ok(response.parse_into_stories())
     }
 }
