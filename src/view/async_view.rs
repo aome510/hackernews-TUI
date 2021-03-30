@@ -6,35 +6,34 @@ use crate::prelude::*;
 pub fn get_comment_view_async(
     siv: &mut Cursive,
     client: &hn_client::HNClient,
-    story_metadata: comment_view::Story,
+    story: &hn_client::Story,
     focus_id: u32,
 ) -> impl View {
-    let id = story_metadata.id;
+    let id = story.id;
 
     AsyncView::new_with_bg_creator(
         siv,
         {
             let client = client.clone();
-            move || match client.get_comments_from_story_id(id) {
-                Ok(comments) => Ok(Ok(comments)),
+            let story = story.clone();
+            move || match client.get_comments_from_story(&story) {
+                Ok(stories) => Ok(Ok(stories)),
                 Err(err) => {
                     warn!(
                         "failed to get comments from story (id={}): {:#?}\nRetrying...",
                         id, err
                     );
-                    Ok(client.get_comments_from_story_id(id))
+                    Ok(client.get_comments_from_story(&story))
                 }
             }
         },
         {
             let client = client.clone();
+            let story = story.clone();
             move |result| {
                 ErrorViewWrapper::new(match result {
                     Ok(comments) => ErrorViewEnum::Ok(comment_view::get_comment_view(
-                        story_metadata.clone(),
-                        &comments,
-                        &client,
-                        focus_id,
+                        &story, &comments, &client, focus_id,
                     )),
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
                         &format!("failed to get comments from story (id={})", id),

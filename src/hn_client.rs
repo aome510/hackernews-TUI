@@ -1,3 +1,5 @@
+use std::{collections::HashMap, sync::Arc, sync::RwLock};
+
 use crate::prelude::*;
 
 const HN_ALGOLIA_PREFIX: &'static str = "https://hn.algolia.com/api/v1";
@@ -61,7 +63,7 @@ struct StoryResponse {
     points: u32,
     #[serde(default)]
     #[serde(deserialize_with = "parse_null_default")]
-    num_comments: u32,
+    num_comments: usize,
 
     #[serde(rename(deserialize = "created_at_i"))]
     time: u64,
@@ -106,9 +108,8 @@ pub struct Story {
     pub url: String,
     pub author: String,
     pub points: u32,
-    pub num_comments: u32,
+    pub num_comments: usize,
     pub time: u64,
-    pub children: Vec<Comment>,
 }
 
 /// Comment represents a Hacker News comment
@@ -128,14 +129,15 @@ impl From<CommentResponse> for Comment {
         let children = c
             .children
             .into_par_iter()
+            .filter(|comment| comment.author.is_some() && comment.text.is_some())
             .map(|comment| comment.into())
             .collect();
         Comment {
             id: c.id,
             story_id: c.story_id,
             parent_id: c.parent_id,
-            text: c.text.unwrap_or("[deleted]".to_string()),
-            author: c.author.unwrap_or("[deleted]".to_string()),
+            text: c.text.unwrap(),
+            author: c.author.unwrap(),
             time: c.time,
             children,
         }
@@ -156,11 +158,6 @@ impl From<StoryResponse> for Story {
             None => String::new(),
             Some(author) => author.value,
         };
-        let children = s
-            .children
-            .into_par_iter()
-            .map(|comment| comment.into())
-            .collect();
         Story {
             id: s.id,
             points: s.points,
@@ -169,7 +166,6 @@ impl From<StoryResponse> for Story {
             title,
             url,
             author,
-            children,
         }
     }
 }
@@ -177,10 +173,32 @@ impl From<StoryResponse> for Story {
 // HN client get Story,Comment data by calling HN_ALGOLIA APIs
 // and parsing the result into a corresponding struct
 
+/// StoryCache is a cache storing all comments of a story.
+/// A story cache will be updated if the number of commments
+/// approximated by HN changes.
+#[derive(Clone)]
+pub struct StoryCache {
+    // num_comments is approximated number of comments,
+    // it can be different from number of comments
+    // in the [comments] field below
+    pub num_comments: usize,
+    pub comments: Vec<Comment>,
+}
+
+impl StoryCache {
+    pub fn new(comments: Vec<Comment>, num_comments: usize) -> Self {
+        StoryCache {
+            num_comments,
+            comments,
+        }
+    }
+}
+
 /// HNClient is a http client to communicate with Hacker News APIs.
 #[derive(Clone)]
 pub struct HNClient {
     client: ureq::Agent,
+    story_caches: Arc<RwLock<HashMap<u32, StoryCache>>>,
 }
 
 impl HNClient {
@@ -188,7 +206,13 @@ impl HNClient {
     pub fn new() -> Result<HNClient> {
         Ok(HNClient {
             client: ureq::AgentBuilder::new().timeout(CLIENT_TIMEOUT).build(),
+            story_caches: Arc::new(RwLock::new(HashMap::new())),
         })
+    }
+
+    /// Return the story caches stored in the client
+    pub fn get_story_caches(&self) -> &Arc<RwLock<HashMap<u32, StoryCache>>> {
+        &self.story_caches
     }
 
     /// Get data from an item's id and parse it to the corresponding struct
@@ -199,6 +223,35 @@ impl HNClient {
     {
         let request_url = format!("{}/items/{}", HN_ALGOLIA_PREFIX, id);
         Ok(self.client.get(&request_url).call()?.into_json::<T>()?)
+    }
+
+    /// Get all comments from a story with a given story.
+    /// A cached result is returned if the number of approximated comments doesn't change.
+    pub fn get_comments_from_story(&self, story: &Story) -> Result<Vec<Comment>> {
+        let id = story.id;
+        let num_comments = story.num_comments;
+        let comments = match self.story_caches.read().unwrap().get(&id) {
+            Some(story_cache) if story_cache.num_comments == num_comments => {
+                Some(story_cache.comments.clone())
+            }
+            _ => None,
+        };
+
+        match comments {
+            None => match self.get_comments_from_story_id(id) {
+                Ok(comments) => {
+                    self.story_caches
+                        .write()
+                        .unwrap()
+                        .insert(id, StoryCache::new(comments.clone(), num_comments));
+                    debug!("insert comments of the story (id={}, num_comments={}) into client's story_caches",
+                           id, num_comments);
+                    Ok(comments)
+                }
+                Err(err) => Err(err),
+            },
+            Some(comments) => Ok(comments),
+        }
     }
 
     /// Get all comments from a story with a given id
@@ -216,6 +269,7 @@ impl HNClient {
         Ok(response
             .children
             .into_par_iter()
+            .filter(|comment| comment.text.is_some() && comment.author.is_some())
             .map(|comment| comment.into())
             .collect())
     }
