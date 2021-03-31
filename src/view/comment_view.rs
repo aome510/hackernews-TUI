@@ -1,3 +1,5 @@
+use cursive::view::scroll::Scroller;
+
 use super::async_view;
 use super::help_view::*;
 use super::list_view::*;
@@ -39,8 +41,15 @@ impl ViewWrapper for CommentView {
     wrap_impl!(self.view: ScrollListView);
 
     fn wrap_layout(&mut self, size: Vec2) {
+        // to support focus the last focused comment on reloading,
+        // scroll the the focus element on view initialization
+        let is_init = self.get_inner().get_scroller().last_available_size() == Vec2::zero();
+
         self.with_view_mut(|v| v.layout(size));
-        self.get_inner_mut().scroll_to_important_area();
+
+        if is_init {
+            self.get_inner_mut().scroll_to_important_area();
+        }
     }
 }
 
