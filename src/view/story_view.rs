@@ -77,9 +77,10 @@ impl StoryView {
 
     /// Get the description text summarizing basic information about a story
     fn get_story_text(story: &hn_client::Story) -> StyledString {
-        let mut story_text = Self::get_matched_text(story.title.clone(), ColorStyle::default());
+        let mut story_text =
+            Self::get_matched_text(story.highlight_result.title.clone(), ColorStyle::default());
         if story.url.len() > 0 {
-            let url = format!("\n{}", story.url);
+            let url = format!("\n{}", story.highlight_result.url);
             story_text.append(Self::get_matched_text(url, ColorStyle::front(LINK_COLOR)));
         }
         story_text.append_styled(

@@ -38,7 +38,7 @@ struct MatchResult {
 }
 
 #[derive(Debug, Deserialize)]
-struct HighlightResult {
+struct HighlightResultResponse {
     title: Option<MatchResult>,
     url: Option<MatchResult>,
     author: Option<MatchResult>,
@@ -70,7 +70,7 @@ struct StoryResponse {
 
     // search result
     #[serde(rename(deserialize = "_highlightResult"))]
-    highlight_result: Option<HighlightResult>,
+    highlight_result: Option<HighlightResultResponse>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -110,6 +110,15 @@ impl StoriesResponse {
 
 // parsed structs
 
+/// HighlightResult represents matched results when
+/// searching stories matching certain conditions
+#[derive(Debug, Clone)]
+pub struct HighlightResult {
+    pub title: String,
+    pub url: String,
+    pub author: String,
+}
+
 /// Story represents a Hacker News story
 #[derive(Debug, Clone)]
 pub struct Story {
@@ -120,6 +129,7 @@ pub struct Story {
     pub points: u32,
     pub num_comments: usize,
     pub time: u64,
+    pub highlight_result: HighlightResult,
 }
 
 /// Comment represents a Hacker News comment
@@ -158,24 +168,27 @@ impl From<StoryResponse> for Story {
     fn from(s: StoryResponse) -> Self {
         // need to make sure that highlight_result is not none,
         // and its title field is not none,
-        let highlight_result = s.highlight_result.unwrap();
-        let title = highlight_result.title.unwrap().value;
-        let url = match highlight_result.url {
-            None => String::new(),
-            Some(url) => url.value,
-        };
-        let author = match highlight_result.author {
-            None => String::new(),
-            Some(author) => author.value,
+        let highlight_result_raw = s.highlight_result.unwrap();
+        let highlight_result = HighlightResult {
+            title: highlight_result_raw.title.unwrap().value,
+            url: match highlight_result_raw.url {
+                None => String::new(),
+                Some(url) => url.value,
+            },
+            author: match highlight_result_raw.author {
+                None => String::from("[deleted]"),
+                Some(author) => author.value,
+            },
         };
         Story {
+            title: s.title.unwrap(),
+            url: s.url.unwrap_or_default(),
+            author: s.author.unwrap_or(String::from("[deleted]")),
             id: s.id,
             points: s.points,
             num_comments: s.num_comments,
             time: s.time,
-            title,
-            url,
-            author,
+            highlight_result,
         }
     }
 }
