@@ -251,29 +251,6 @@ fn get_comment_main_view(
                 }
             }))
         })
-        .on_pre_event_inner('O', move |s, _| {
-            if s.story.url.len() > 0 {
-                let url = s.story.url.clone();
-                thread::spawn(move || {
-                    if let Err(err) = webbrowser::open(&url) {
-                        warn!("failed to open link {}: {}", url, err);
-                    }
-                });
-                Some(EventResult::Consumed(None))
-            } else {
-                Some(EventResult::Consumed(None))
-            }
-        })
-        .on_pre_event_inner('S', move |s, _| {
-            let id = s.story.id;
-            thread::spawn(move || {
-                let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
-                if let Err(err) = webbrowser::open(&url) {
-                    warn!("failed to open link {}: {}", url, err);
-                }
-            });
-            Some(EventResult::Consumed(None))
-        })
         .on_pre_event_inner('C', move |s, _| {
             let id = s.comments[s.get_focus_index()].id;
             thread::spawn(move || {
@@ -306,13 +283,35 @@ pub fn get_comment_view(
         .child(construct_footer_view::<CommentView>(client));
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
-    OnEventView::new(view).on_event(
-        EventTrigger::from_fn(|e| match e {
-            Event::CtrlChar('h') | Event::AltChar('h') => true,
-            _ => false,
-        }),
-        |s| {
-            s.add_layer(CommentView::construct_help_view());
-        },
-    )
+    let id = story.id;
+    let url = story.url.clone();
+
+    OnEventView::new(view)
+        .on_event(
+            EventTrigger::from_fn(|e| match e {
+                Event::CtrlChar('h') | Event::AltChar('h') => true,
+                _ => false,
+            }),
+            |s| {
+                s.add_layer(CommentView::construct_help_view());
+            },
+        )
+        .on_event('O', move |_| {
+            if url.len() > 0 {
+                let url = url.clone();
+                thread::spawn(move || {
+                    if let Err(err) = webbrowser::open(&url) {
+                        warn!("failed to open link {}: {}", url, err);
+                    }
+                });
+            }
+        })
+        .on_event('S', move |_| {
+            thread::spawn(move || {
+                let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
+                if let Err(err) = webbrowser::open(&url) {
+                    warn!("failed to open link {}: {}", url, err);
+                }
+            });
+        })
 }
