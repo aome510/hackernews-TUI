@@ -59,6 +59,7 @@ struct StoryResponse {
     author: Option<String>,
     url: Option<String>,
 
+    #[serde(default)]
     #[serde(deserialize_with = "parse_null_default")]
     points: u32,
     #[serde(default)]
@@ -77,8 +78,10 @@ struct StoryResponse {
 /// CommentResponse represents the comment data received from HN_ALGOLIA APIs
 struct CommentResponse {
     id: u32,
+    #[serde(default)]
     #[serde(deserialize_with = "parse_null_default")]
     parent_id: u32,
+    #[serde(default)]
     #[serde(deserialize_with = "parse_null_default")]
     story_id: u32,
 
