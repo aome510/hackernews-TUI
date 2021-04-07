@@ -48,7 +48,7 @@ impl ViewWrapper for CommentView {
         self.with_view_mut(|v| v.layout(size));
 
         if is_init {
-            self.get_inner_mut().scroll_to_important_area();
+            self.scroll(true)
         }
     }
 }

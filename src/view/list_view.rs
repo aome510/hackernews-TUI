@@ -53,6 +53,9 @@ pub trait ScrollableList {
     fn set_focus_index(&mut self, id: usize) -> Option<EventResult>;
     fn get_scroller(&self) -> &scroll::Core;
     fn get_scroller_mut(&mut self) -> &mut scroll::Core;
+    // Move the scroller to the focused area and adjust the scroller
+    // accordingly depending on the scrolling direction.
+    // (direction = true) stands for going down while false stands for going up
     fn scroll(&mut self, direction: bool);
 }
 
@@ -68,7 +71,6 @@ macro_rules! impl_scrollable_list {
         }
 
         fn scroll(&mut self, direction: bool) {
-            // (direction = true) stands for going down while false stands for going up
             let important_area = self
                 .get_inner()
                 .get_inner()
