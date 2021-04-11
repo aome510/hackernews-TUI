@@ -62,5 +62,12 @@ fn main() {
 
     set_up_global_callbacks(&mut s, &client);
 
-    s.run();
+    // use buffered_backend
+    let crossterm_backend = backends::crossterm::Backend::init().unwrap();
+    let buffered_backend = Box::new(cursive_buffered_backend::BufferedBackend::new(
+        crossterm_backend,
+    ));
+    let mut app = CursiveRunner::new(s, buffered_backend);
+
+    app.run();
 }
