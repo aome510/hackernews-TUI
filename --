@@ -1,0 +1,8 @@
+    Finished dev [unoptimized + debuginfo] target(s) in 0.08s
+     Running `target/debug/hackernews_tui log.txt -c /home/aome510/.config/hn-tui.toml`
+error: Found argument 'log.txt' which wasn't expected, or isn't valid in this context
+
+USAGE:
+    hackernews_tui [FLAGS]
+
+For more information try --help

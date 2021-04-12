@@ -1,9 +1,12 @@
 // modules
+mod config;
 pub mod hn_client;
 pub mod prelude;
 pub mod view;
 
 use prelude::*;
+
+use clap::*;
 
 fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
     s.set_on_post_event(
@@ -49,9 +52,26 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
     );
 }
 
-fn main() {
-    env_logger::init();
+fn load_config(config_file_path: Option<&str>) {
+    let config = if config_file_path.is_none() {
+        config::Config::default()
+    } else {
+        let config_file_path = config_file_path.unwrap();
+        match config::Config::from_config_file(config_file_path) {
+            Err(err) => {
+                warn!(
+                    "failed to load the application config from the file: {}: {:#?}",
+                    config_file_path, err
+                );
+                config::Config::default()
+            }
+            Ok(config) => config,
+        }
+    };
+    config::CONFIG.set(config).unwrap();
+}
 
+fn run() {
     let mut s = cursive::default();
 
     // load theme
@@ -70,4 +90,24 @@ fn main() {
     let mut app = CursiveRunner::new(s, buffered_backend);
 
     app.run();
+}
+
+fn main() {
+    env_logger::init();
+
+    // parse command line arguments
+    let matches = App::new("hackernews-tui")
+        .version("0.4.1")
+        .author("Thang Pham <phamducthang1234@gmail>")
+        .arg(
+            Arg::with_name("config")
+                .short("c")
+                .long("config")
+                .value_name("FILE")
+                .help("Path to the application's config file"),
+        )
+        .get_matches();
+
+    load_config(matches.value_of("config"));
+    run();
 }
