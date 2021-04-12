@@ -384,10 +384,12 @@ dependencies = [
  "env_logger",
  "htmlescape",
  "log",
+ "once_cell",
  "rayon",
  "regex",
  "serde",
  "substring",
+ "toml",
  "ureq",
  "webbrowser",
 ]
