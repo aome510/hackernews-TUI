@@ -52,13 +52,26 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
 }
 
 fn load_config(config_file_path: Option<&str>) {
+    // no config file is specified, use the default value
+    // at $HOME/.config/hn-tui.toml
+    let config_file_path = match config_file_path {
+        None => {
+            let home_dir = dirs::home_dir();
+            match home_dir {
+                None => None,
+                Some(path) => Some(format!("{}/.config/hn-tui.toml", path.to_str().unwrap())),
+            }
+        }
+        Some(path) => Some(path.to_string()),
+    };
+
     let config = if config_file_path.is_none() {
         config::Config::default()
     } else {
         let config_file_path = config_file_path.unwrap();
-        match config::Config::from_config_file(config_file_path) {
+        match config::Config::from_config_file(&config_file_path) {
             Err(err) => {
-                warn!(
+                error!(
                     "failed to load the application config from the file: {}: {:#?}",
                     config_file_path, err
                 );
@@ -103,7 +116,7 @@ fn main() {
                 .short("c")
                 .long("config")
                 .value_name("FILE")
-                .help("Path to the application's config file"),
+                .help("Path to the application's config file (default: ~/.config/hn-tui.toml)"),
         )
         .get_matches();
 
