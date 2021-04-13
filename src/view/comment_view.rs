@@ -5,7 +5,6 @@ use std::thread;
 use super::async_view;
 use super::list_view::*;
 use super::text_view;
-use super::theme::*;
 use super::utils::*;
 
 use crate::prelude::*;
@@ -120,11 +119,14 @@ impl CommentView {
 
                     styled_s.append_styled(
                         format!("\"{}\"", shorten_url(link)),
-                        Style::from(LINK_COLOR),
+                        Style::from(get_config_theme().link_text.color),
                     );
                     styled_s.append_styled(
                         links.len().to_string(),
-                        ColorStyle::new(LINK_ID_FRONT_COLOR, LINK_ID_BACK_COLOR),
+                        ColorStyle::new(
+                            PaletteColor::TitlePrimary,
+                            get_config_theme().link_id_bg.color,
+                        ),
                     );
                     links.push(link.to_string());
                     continue;
@@ -154,7 +156,7 @@ impl CommentView {
                         comment.author,
                         get_elapsed_time_as_text(comment.time),
                     ),
-                    TEXT_DESC_COLOR,
+                    PaletteColor::Secondary,
                 );
 
                 let (comment_content, links) = Self::parse_single_comment(

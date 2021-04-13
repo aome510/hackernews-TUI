@@ -3,7 +3,6 @@ mod error_view;
 mod fn_view_wrapper;
 mod list_view;
 mod text_view;
-mod theme;
 mod utils;
 
 pub mod comment_view;

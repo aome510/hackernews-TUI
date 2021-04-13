@@ -70,6 +70,10 @@ macro_rules! impl_scrollable_list {
         }
 
         fn scroll(&mut self, direction: bool) {
+            if !CONFIG.get().unwrap().page_scrolling {
+                self.get_inner_mut().scroll_to_important_area();
+            }
+
             let important_area = self
                 .get_inner()
                 .get_inner()
@@ -77,7 +81,8 @@ macro_rules! impl_scrollable_list {
             let scroller = self.get_scroller_mut();
 
             // the below implementation is based on scroll_to_rect function
-            // defined in Cursive::view::scroll::core.rs
+            // defined in Cursive::view::scroll::core.rs.
+            // The function is modified to add support for the page_scrolling feature.
             let top_left = (important_area.bottom_right() + (1, 1))
                 .saturating_sub(scroller.last_available_size());
             let bottom_right = important_area.top_left();

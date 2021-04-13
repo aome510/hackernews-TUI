@@ -90,18 +90,7 @@ fn run() {
     // update cursive's default theme
     let config_theme = CONFIG.get().unwrap().theme.clone();
     s.update_theme(|theme| {
-        theme
-            .palette
-            .set_color("background", config_theme.background.color);
-        theme
-            .palette
-            .set_color("view", config_theme.background.color);
-        theme
-            .palette
-            .set_color("primary", config_theme.primary.color);
-        theme
-            .palette
-            .set_color("highlight", config_theme.focus.color);
+        config_theme.update_theme(theme);
     });
 
     let client = hn_client::HNClient::new().unwrap();

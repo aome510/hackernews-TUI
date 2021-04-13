@@ -5,7 +5,6 @@ use super::async_view;
 use super::help_view::*;
 use super::list_view::*;
 use super::text_view;
-use super::theme::*;
 use super::utils::*;
 
 use crate::prelude::*;
@@ -66,7 +65,10 @@ impl StoryView {
                         styled_s.append_styled(&prefix, default_style);
                     }
 
-                    styled_s.append_styled(match_text, ColorStyle::back(HIGHLIGHT_COLOR));
+                    styled_s.append_styled(
+                        match_text,
+                        ColorStyle::back(get_config_theme().search_highlight_bg.color),
+                    );
                     continue;
                 }
             };
@@ -83,7 +85,10 @@ impl StoryView {
             Self::get_matched_text(story.highlight_result.title.clone(), ColorStyle::default());
         if story.url.len() > 0 {
             let url = format!("\n{}", story.highlight_result.url);
-            story_text.append(Self::get_matched_text(url, ColorStyle::front(LINK_COLOR)));
+            story_text.append(Self::get_matched_text(
+                url,
+                ColorStyle::front(get_config_theme().link_text.color),
+            ));
         }
         story_text.append_styled(
             format!(
@@ -93,7 +98,7 @@ impl StoryView {
                 get_elapsed_time_as_text(story.time),
                 story.num_comments,
             ),
-            ColorStyle::from(TEXT_DESC_COLOR),
+            ColorStyle::from(PaletteColor::Secondary),
         );
         story_text
     }
