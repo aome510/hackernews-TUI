@@ -1,3 +1,3 @@
 #!/bin/bash
 
-RUST_LOG=debug RUST_BACKTRACE=1 cargo run 2> log.txt
+RUST_LOG=debug RUST_BACKTRACE=1 cargo run -- -c examples/hn-tui.toml 2> log.txt
