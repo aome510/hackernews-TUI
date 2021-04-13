@@ -143,7 +143,7 @@ pub fn get_story_main_view(
             if url.len() > 0 {
                 thread::spawn(move || {
                     if let Err(err) = webbrowser::open(&url) {
-                        warn!("failed to open link {}: {}", url, err);
+                        error!("failed to open link {}: {}", url, err);
                     }
                 });
                 Some(EventResult::Consumed(None))
@@ -156,7 +156,7 @@ pub fn get_story_main_view(
             thread::spawn(move || {
                 let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
                 if let Err(err) = webbrowser::open(&url) {
-                    warn!("failed to open link {}: {}", url, err);
+                    error!("failed to open link {}: {}", url, err);
                 }
             });
             Some(EventResult::Consumed(None))
@@ -199,7 +199,7 @@ pub fn get_story_view(
         stories.iter().for_each(|story| {
             match client.get_comments_from_story(story, false) {
                 Err(err) => {
-                    warn!(
+                    error!(
                         "failed to get comments from story (id={}): {:#?}",
                         story.id, err
                     );

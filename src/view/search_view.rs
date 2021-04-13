@@ -82,7 +82,7 @@ impl SearchView {
 
         thread::spawn(move || match client.get_matched_stories(&query) {
             Err(err) => {
-                warn!(
+                error!(
                     "failed to get stories matching the query '{}': {:#?}",
                     query, err
                 );

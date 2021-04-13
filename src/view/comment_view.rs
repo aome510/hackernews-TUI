@@ -229,7 +229,7 @@ fn get_comment_main_view(
                     let url = s.comments[id].links[num].clone();
                     thread::spawn(move || {
                         if let Err(err) = webbrowser::open(&url) {
-                            warn!("failed to open link {}: {}", url, err);
+                            error!("failed to open link {}: {}", url, err);
                         }
                     });
                     Some(EventResult::Consumed(None))
@@ -257,7 +257,7 @@ fn get_comment_main_view(
             thread::spawn(move || {
                 let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
                 if let Err(err) = webbrowser::open(&url) {
-                    warn!("failed to open link {}: {}", url, err);
+                    error!("failed to open link {}: {}", url, err);
                 }
             });
             Some(EventResult::Consumed(None))
@@ -302,7 +302,7 @@ pub fn get_comment_view(
                 let url = url.clone();
                 thread::spawn(move || {
                     if let Err(err) = webbrowser::open(&url) {
-                        warn!("failed to open link {}: {}", url, err);
+                        error!("failed to open link {}: {}", url, err);
                     }
                 });
             }
@@ -311,7 +311,7 @@ pub fn get_comment_view(
             thread::spawn(move || {
                 let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
                 if let Err(err) = webbrowser::open(&url) {
-                    warn!("failed to open link {}: {}", url, err);
+                    error!("failed to open link {}: {}", url, err);
                 }
             });
         })
