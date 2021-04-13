@@ -52,7 +52,7 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
 }
 
 fn load_config(config_file_path: Option<&str>) {
-    // no config file is specified, use the default value
+    // if no config file is specified, use the default value
     // at $HOME/.config/hn-tui.toml
     let config_file_path = match config_file_path {
         None => {
