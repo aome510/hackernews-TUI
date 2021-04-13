@@ -5,7 +5,6 @@ use std::{
 
 use super::help_view::*;
 use super::text_view;
-use super::theme::*;
 use super::utils::*;
 
 use crate::prelude::*;
@@ -41,7 +40,10 @@ impl SearchView {
     fn get_query_text_view(query: String) -> impl View {
         let mut style_string = StyledString::styled(
             format!("Query String:"),
-            ColorStyle::new(TEXT_BOLD_COLOR, HIGHLIGHT_COLOR),
+            ColorStyle::new(
+                PaletteColor::TitlePrimary,
+                get_config_theme().search_highlight_bg.color,
+            ),
         );
         style_string.append_plain(format!(" {}", query));
         text_view::TextView::new(style_string)
