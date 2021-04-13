@@ -4,7 +4,9 @@ use serde::Deserialize;
 use std::fs;
 
 #[derive(Deserialize, Debug)]
-pub struct Config {}
+pub struct Config {
+    pub story_pooling: bool,
+}
 
 impl Config {
     pub fn from_config_file(file_path: &str) -> Result<Self> {
@@ -15,7 +17,9 @@ impl Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Config {}
+        Config {
+            story_pooling: true,
+        }
     }
 }
 

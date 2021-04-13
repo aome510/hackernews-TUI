@@ -1,3 +1,4 @@
+pub use crate::config::*;
 pub use crate::hn_client;
 pub use crate::view::{
     comment_view::{self, CommentView},

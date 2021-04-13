@@ -1,5 +1,5 @@
 // modules
-mod config;
+pub mod config;
 pub mod hn_client;
 pub mod prelude;
 pub mod view;

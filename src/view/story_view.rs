@@ -193,21 +193,25 @@ pub fn get_story_view(
         .child(construct_footer_view::<StoryView>(client));
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
+    let config = CONFIG.get().unwrap();
+
     // pooling stories in background
-    let client = client.clone();
-    thread::spawn(move || {
-        stories.iter().for_each(|story| {
-            match client.get_comments_from_story(story, false) {
-                Err(err) => {
-                    error!(
-                        "failed to get comments from story (id={}): {:#?}",
-                        story.id, err
-                    );
-                }
-                _ => {}
-            };
+    if config.story_pooling {
+        let client = client.clone();
+        thread::spawn(move || {
+            stories.iter().for_each(|story| {
+                match client.get_comments_from_story(story, false) {
+                    Err(err) => {
+                        error!(
+                            "failed to get comments from story (id={}): {:#?}",
+                            story.id, err
+                        );
+                    }
+                    _ => {}
+                };
+            });
         });
-    });
+    }
 
     OnEventView::new(view).on_pre_event(
         EventTrigger::from_fn(|e| match e {
