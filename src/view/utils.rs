@@ -1,4 +1,8 @@
+use std::time::{Duration, SystemTime};
+use substring::*;
+
 use super::theme::*;
+
 use crate::prelude::*;
 
 const MAX_URL_LEN: usize = 64;
@@ -39,7 +43,7 @@ pub fn construct_footer_view<T: HasHelpView>(client: &hn_client::HNClient) -> im
         .child(
             TextView::new(StyledString::styled(
                 "Hacker News Terminal UI - made by AOME ©",
-                ColorStyle::front(Color::Dark(BaseColor::Black)),
+                ColorStyle::front(TEXT_BOLD_COLOR),
             ))
             .align(align::Align::bot_center())
             .full_width(),
@@ -66,7 +70,7 @@ pub fn get_status_bar_with_desc(desc: &str) -> impl View {
     Layer::with_color(
         TextView::new(StyledString::styled(
             desc,
-            ColorStyle::new(Color::Dark(BaseColor::Black), STATUS_BAR_COLOR),
+            ColorStyle::new(TEXT_BOLD_COLOR, STATUS_BAR_COLOR),
         ))
         .h_align(align::HAlign::Center)
         .full_width(),

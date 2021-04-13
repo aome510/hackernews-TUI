@@ -10,16 +10,20 @@ keywords = ["hackernews", "tui"]
 readme = "README.md"
 
 [dependencies]
-cursive = { version = "0.16.3", default-features = false, features = ["crossterm-backend", "toml"] }
-ureq = { version = "2.1.0", features = ["json"] }
-serde = { version = "1.0.125", features = ["derive"] }
-anyhow = "1.0.40"
-rayon = "1.5.0"
-log = "0.4.14"
-env_logger = "0.8.3"
-htmlescape = "0.3.1"
-regex = "1.4.5"
-webbrowser = "0.5.5"
-substring = "1.4.5"
-cursive-async-view = "0.5.0"
-cursive_buffered_backend = "0.5.0"
+cursive = { version = "0.16", default-features = false, features = ["crossterm-backend"] }
+ureq = { version = "2.1", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+anyhow = "1.0"
+rayon = "1.5"
+log = "0.4"
+env_logger = "0.8"
+htmlescape = "0.3"
+regex = "1.4"
+webbrowser = "0.5"
+substring = "1.4"
+cursive-async-view = "0.5"
+cursive_buffered_backend = "0.5"
+once_cell = "1.7"
+toml = "0.5"
+clap = "2.33"
+dirs = "3.0"

@@ -1,4 +1,5 @@
 use super::theme::*;
+
 use crate::prelude::*;
 
 /// HelpView is a View displaying a help dialog with a list of key shortcuts and descriptions
@@ -17,8 +18,7 @@ impl HelpView {
     }
 
     fn construct_key_view(key: (String, String), max_key_width: usize) -> impl View {
-        let key_string =
-            StyledString::styled(key.0, ColorStyle::new(PaletteColor::Primary, CODE_COLOR));
+        let key_string = StyledString::styled(key.0, ColorStyle::back(CODE_COLOR));
         let desc_string = StyledString::plain(key.1);
         LinearLayout::horizontal()
             .child(TextView::new(key_string).fixed_width(max_key_width))
@@ -40,7 +40,7 @@ impl HelpView {
             self.keys.iter().for_each(|(desc, keys)| {
                 s.add_child(TextView::new(StyledString::styled(
                     desc.to_string(),
-                    ColorStyle::from(BaseColor::Black),
+                    ColorStyle::from(TEXT_BOLD_COLOR),
                 )));
                 s.add_child({
                     let max_key_len = match keys.iter().max_by_key(|key| key.0.len()) {

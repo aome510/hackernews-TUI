@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::thread;
 
 use super::async_view;
@@ -6,6 +7,7 @@ use super::list_view::*;
 use super::text_view;
 use super::theme::*;
 use super::utils::*;
+
 use crate::prelude::*;
 
 /// StoryView is a View displaying a list stories corresponding
@@ -91,7 +93,7 @@ impl StoryView {
                 get_elapsed_time_as_text(story.time),
                 story.num_comments,
             ),
-            ColorStyle::from(DESC_COLOR),
+            ColorStyle::from(TEXT_DESC_COLOR),
         );
         story_text
     }
@@ -141,7 +143,7 @@ pub fn get_story_main_view(
             if url.len() > 0 {
                 thread::spawn(move || {
                     if let Err(err) = webbrowser::open(&url) {
-                        warn!("failed to open link {}: {}", url, err);
+                        error!("failed to open link {}: {}", url, err);
                     }
                 });
                 Some(EventResult::Consumed(None))
@@ -154,7 +156,7 @@ pub fn get_story_main_view(
             thread::spawn(move || {
                 let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
                 if let Err(err) = webbrowser::open(&url) {
-                    warn!("failed to open link {}: {}", url, err);
+                    error!("failed to open link {}: {}", url, err);
                 }
             });
             Some(EventResult::Consumed(None))
@@ -191,21 +193,25 @@ pub fn get_story_view(
         .child(construct_footer_view::<StoryView>(client));
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
+    let config = CONFIG.get().unwrap();
+
     // pooling stories in background
-    let client = client.clone();
-    thread::spawn(move || {
-        stories.iter().for_each(|story| {
-            match client.get_comments_from_story(story, false) {
-                Err(err) => {
-                    warn!(
-                        "failed to get comments from story (id={}): {:#?}",
-                        story.id, err
-                    );
-                }
-                _ => {}
-            };
+    if config.story_pooling {
+        let client = client.clone();
+        thread::spawn(move || {
+            stories.iter().for_each(|story| {
+                match client.get_comments_from_story(story, false) {
+                    Err(err) => {
+                        error!(
+                            "failed to get comments from story (id={}): {:#?}",
+                            story.id, err
+                        );
+                    }
+                    _ => {}
+                };
+            });
         });
-    });
+    }
 
     OnEventView::new(view).on_pre_event(
         EventTrigger::from_fn(|e| match e {

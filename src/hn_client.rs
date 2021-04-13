@@ -1,3 +1,6 @@
+use rayon::prelude::*;
+use serde::{de, Deserialize, Deserializer};
+use std::time::{Duration, SystemTime};
 use std::{collections::HashMap, sync::Arc, sync::RwLock};
 
 use crate::prelude::*;
@@ -243,7 +246,7 @@ impl HNClient {
     /// to a corresponding struct representing that item
     pub fn get_item_from_id<T>(&self, id: u32) -> Result<T>
     where
-        T: DeserializeOwned,
+        T: de::DeserializeOwned,
     {
         let request_url = format!("{}/items/{}", HN_ALGOLIA_PREFIX, id);
         Ok(self.client.get(&request_url).call()?.into_json::<T>()?)
@@ -275,7 +278,7 @@ impl HNClient {
                         .write()
                         .unwrap()
                         .insert(id, StoryCache::new(comments.clone(), num_comments));
-                    debug!("insert comments of the story (id={}, num_comments={}) into client's story_caches",
+                    info!("insert comments of the story (id={}, num_comments={}) into client's story_caches",
                            id, num_comments);
                     Ok(comments)
                 }
@@ -290,7 +293,7 @@ impl HNClient {
         let time = SystemTime::now();
         let response = self.get_item_from_id::<StoryResponse>(id)?;
         if let Ok(elapsed) = time.elapsed() {
-            debug!(
+            info!(
                 "get comments from story (id={}) took {}ms",
                 id,
                 elapsed.as_millis()
@@ -315,7 +318,7 @@ impl HNClient {
             .call()?
             .into_json::<StoriesResponse>()?;
         if let Ok(elapsed) = time.elapsed() {
-            debug!("get story (id={}) took {}ms", id, elapsed.as_millis());
+            info!("get story (id={}) took {}ms", id, elapsed.as_millis());
         }
 
         let stories = response.parse_into_stories();
@@ -333,7 +336,7 @@ impl HNClient {
             .call()?
             .into_json::<StoriesResponse>()?;
         if let Ok(elapsed) = time.elapsed() {
-            debug!(
+            info!(
                 "get matched stories with query {} took {}ms",
                 query,
                 elapsed.as_millis()
@@ -353,7 +356,7 @@ impl HNClient {
             .call()?
             .into_json::<StoriesResponse>()?;
         if let Ok(elapsed) = time.elapsed() {
-            debug!("get top stories took {}ms", elapsed.as_millis());
+            info!("get top stories took {}ms", elapsed.as_millis());
         }
 
         Ok(response.parse_into_stories())

@@ -1,8 +1,10 @@
 // modules
+pub mod config;
 pub mod hn_client;
 pub mod prelude;
 pub mod view;
 
+use clap::*;
 use prelude::*;
 
 fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
@@ -49,13 +51,57 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
     );
 }
 
-fn main() {
-    env_logger::init();
+fn load_config(config_file_path: Option<&str>) {
+    // if no config file is specified, use the default value
+    // at $HOME/.config/hn-tui.toml
+    let config_file_path = match config_file_path {
+        None => {
+            let home_dir = dirs::home_dir();
+            match home_dir {
+                None => None,
+                Some(path) => Some(format!("{}/.config/hn-tui.toml", path.to_str().unwrap())),
+            }
+        }
+        Some(path) => Some(path.to_string()),
+    };
 
+    let config = if config_file_path.is_none() {
+        config::Config::default()
+    } else {
+        let config_file_path = config_file_path.unwrap();
+        match config::Config::from_config_file(&config_file_path) {
+            Err(err) => {
+                error!(
+                    "failed to load the application config from the file: {}: {:#?}",
+                    config_file_path, err
+                );
+                config::Config::default()
+            }
+            Ok(config) => config,
+        }
+    };
+    config::CONFIG.set(config).unwrap();
+}
+
+fn run() {
     let mut s = cursive::default();
 
-    // load theme
-    s.load_toml(include_str!("../theme.toml")).unwrap();
+    // update cursive's default theme
+    let config_theme = CONFIG.get().unwrap().theme.clone();
+    s.update_theme(|theme| {
+        theme
+            .palette
+            .set_color("background", config_theme.background.color);
+        theme
+            .palette
+            .set_color("view", config_theme.background.color);
+        theme
+            .palette
+            .set_color("primary", config_theme.primary.color);
+        theme
+            .palette
+            .set_color("highlight", config_theme.focus.color);
+    });
 
     let client = hn_client::HNClient::new().unwrap();
     story_view::add_story_view_layer(&mut s, &client);
@@ -70,4 +116,24 @@ fn main() {
     let mut app = CursiveRunner::new(s, buffered_backend);
 
     app.run();
+}
+
+fn main() {
+    env_logger::init();
+
+    // parse command line arguments
+    let matches = App::new("hackernews-tui")
+        .version("0.4.1")
+        .author("Thang Pham <phamducthang1234@gmail>")
+        .arg(
+            Arg::with_name("config")
+                .short("c")
+                .long("config")
+                .value_name("FILE")
+                .help("Path to the application's config file (default: ~/.config/hn-tui.toml)"),
+        )
+        .get_matches();
+
+    load_config(matches.value_of("config"));
+    run();
 }

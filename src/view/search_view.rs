@@ -1,12 +1,14 @@
-use super::help_view::*;
-use super::text_view;
-use super::theme::*;
-use super::utils::*;
-use crate::prelude::*;
 use std::{
     sync::{Arc, RwLock},
     thread,
 };
+
+use super::help_view::*;
+use super::text_view;
+use super::theme::*;
+use super::utils::*;
+
+use crate::prelude::*;
 
 pub enum SearchViewMode {
     Navigation,
@@ -39,7 +41,7 @@ impl SearchView {
     fn get_query_text_view(query: String) -> impl View {
         let mut style_string = StyledString::styled(
             format!("Query String:"),
-            ColorStyle::new(BOLD_TEXT_COLOR, HIGHLIGHT_COLOR),
+            ColorStyle::new(TEXT_BOLD_COLOR, HIGHLIGHT_COLOR),
         );
         style_string.append_plain(format!(" {}", query));
         text_view::TextView::new(style_string)
@@ -80,7 +82,7 @@ impl SearchView {
 
         thread::spawn(move || match client.get_matched_stories(&query) {
             Err(err) => {
-                warn!(
+                error!(
                     "failed to get stories matching the query '{}': {:#?}",
                     query, err
                 );

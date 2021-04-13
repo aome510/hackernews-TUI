@@ -1,13 +1,14 @@
-use cursive::view::scroll::Scroller;
+use rayon::prelude::*;
+use regex::Regex;
+use std::thread;
 
 use super::async_view;
-use super::help_view::*;
 use super::list_view::*;
 use super::text_view;
 use super::theme::*;
 use super::utils::*;
+
 use crate::prelude::*;
-use std::thread;
 
 #[derive(Debug, Clone)]
 pub struct Comment {
@@ -123,7 +124,7 @@ impl CommentView {
                     );
                     styled_s.append_styled(
                         links.len().to_string(),
-                        ColorStyle::new(LINK_ID_FRONT, LINK_ID_BACK),
+                        ColorStyle::new(LINK_ID_FRONT_COLOR, LINK_ID_BACK_COLOR),
                     );
                     links.push(link.to_string());
                     continue;
@@ -153,7 +154,7 @@ impl CommentView {
                         comment.author,
                         get_elapsed_time_as_text(comment.time),
                     ),
-                    DESC_COLOR,
+                    TEXT_DESC_COLOR,
                 );
 
                 let (comment_content, links) = Self::parse_single_comment(
@@ -228,7 +229,7 @@ fn get_comment_main_view(
                     let url = s.comments[id].links[num].clone();
                     thread::spawn(move || {
                         if let Err(err) = webbrowser::open(&url) {
-                            warn!("failed to open link {}: {}", url, err);
+                            error!("failed to open link {}: {}", url, err);
                         }
                     });
                     Some(EventResult::Consumed(None))
@@ -256,7 +257,7 @@ fn get_comment_main_view(
             thread::spawn(move || {
                 let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
                 if let Err(err) = webbrowser::open(&url) {
-                    warn!("failed to open link {}: {}", url, err);
+                    error!("failed to open link {}: {}", url, err);
                 }
             });
             Some(EventResult::Consumed(None))
@@ -301,7 +302,7 @@ pub fn get_comment_view(
                 let url = url.clone();
                 thread::spawn(move || {
                     if let Err(err) = webbrowser::open(&url) {
-                        warn!("failed to open link {}: {}", url, err);
+                        error!("failed to open link {}: {}", url, err);
                     }
                 });
             }
@@ -310,7 +311,7 @@ pub fn get_comment_view(
             thread::spawn(move || {
                 let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
                 if let Err(err) = webbrowser::open(&url) {
-                    warn!("failed to open link {}: {}", url, err);
+                    error!("failed to open link {}: {}", url, err);
                 }
             });
         })
