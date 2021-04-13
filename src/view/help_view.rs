@@ -18,8 +18,7 @@ impl HelpView {
     }
 
     fn construct_key_view(key: (String, String), max_key_width: usize) -> impl View {
-        let key_string =
-            StyledString::styled(key.0, ColorStyle::new(PaletteColor::Primary, CODE_COLOR));
+        let key_string = StyledString::styled(key.0, ColorStyle::back(CODE_COLOR));
         let desc_string = StyledString::plain(key.1);
         LinearLayout::horizontal()
             .child(TextView::new(key_string).fixed_width(max_key_width))
