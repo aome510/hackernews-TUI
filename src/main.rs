@@ -4,9 +4,8 @@ pub mod hn_client;
 pub mod prelude;
 pub mod view;
 
-use prelude::*;
-
 use clap::*;
+use prelude::*;
 
 fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
     s.set_on_post_event(

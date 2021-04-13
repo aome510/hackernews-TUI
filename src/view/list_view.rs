@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use scroll::*;
 
 pub type ScrollListView = ScrollView<LinearLayout>;
 

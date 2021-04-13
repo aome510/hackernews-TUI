@@ -1,3 +1,6 @@
+use rayon::prelude::*;
+use serde::{de, Deserialize, Deserializer};
+use std::time::{Duration, SystemTime};
 use std::{collections::HashMap, sync::Arc, sync::RwLock};
 
 use crate::prelude::*;
@@ -243,7 +246,7 @@ impl HNClient {
     /// to a corresponding struct representing that item
     pub fn get_item_from_id<T>(&self, id: u32) -> Result<T>
     where
-        T: DeserializeOwned,
+        T: de::DeserializeOwned,
     {
         let request_url = format!("{}/items/{}", HN_ALGOLIA_PREFIX, id);
         Ok(self.client.get(&request_url).call()?.into_json::<T>()?)

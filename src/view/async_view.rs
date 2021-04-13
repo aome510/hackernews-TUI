@@ -1,5 +1,7 @@
 use super::error_view::{self, ErrorViewEnum, ErrorViewWrapper};
+
 use crate::prelude::*;
+use cursive_async_view::AsyncView;
 
 /// Return an async view wraps CommentView of a HN story
 /// with a loading screen when loading data

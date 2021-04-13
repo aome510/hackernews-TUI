@@ -1,12 +1,14 @@
-use super::help_view::*;
-use super::text_view;
-use super::theme::*;
-use super::utils::*;
-use crate::prelude::*;
 use std::{
     sync::{Arc, RwLock},
     thread,
 };
+
+use super::help_view::*;
+use super::text_view;
+use super::theme::*;
+use super::utils::*;
+
+use crate::prelude::*;
 
 pub enum SearchViewMode {
     Navigation,

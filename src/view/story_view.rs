@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::thread;
 
 use super::async_view;
@@ -6,6 +7,7 @@ use super::list_view::*;
 use super::text_view;
 use super::theme::*;
 use super::utils::*;
+
 use crate::prelude::*;
 
 /// StoryView is a View displaying a list stories corresponding

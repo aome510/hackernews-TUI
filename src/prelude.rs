@@ -7,16 +7,14 @@ pub use crate::view::{
 };
 pub use anyhow::{Error, Result};
 pub use cursive::{
-    direction::*, event::*, theme::*, traits::*, utils::markup::*, utils::*, view::*, views::*, *,
+    direction::*,
+    event::*,
+    theme::*,
+    traits::*,
+    utils::markup::*,
+    utils::*,
+    view::{scroll::*, *},
+    views::*,
+    *,
 };
-pub use cursive_async_view::{AsyncState, AsyncView};
 pub use log::{debug, error, info, warn};
-pub use rayon::prelude::*;
-pub use regex::Regex;
-pub use serde::{
-    de::{self, DeserializeOwned},
-    Deserialize, Deserializer,
-};
-pub use std::time::{Duration, SystemTime};
-pub use substring::Substring;
-pub use webbrowser;

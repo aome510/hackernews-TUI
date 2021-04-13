@@ -1,4 +1,5 @@
 use super::theme::*;
+
 use crate::prelude::*;
 
 /// HelpView is a View displaying a help dialog with a list of key shortcuts and descriptions

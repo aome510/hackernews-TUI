@@ -1,13 +1,14 @@
-use cursive::view::scroll::Scroller;
+use rayon::prelude::*;
+use regex::Regex;
+use std::thread;
 
 use super::async_view;
-use super::help_view::*;
 use super::list_view::*;
 use super::text_view;
 use super::theme::*;
 use super::utils::*;
+
 use crate::prelude::*;
-use std::thread;
 
 #[derive(Debug, Clone)]
 pub struct Comment {
