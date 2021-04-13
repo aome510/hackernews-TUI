@@ -83,10 +83,11 @@ macro_rules! impl_scrollable_list {
             let bottom_right = important_area.top_left();
             let offset = scroller.content_viewport().top_left();
 
-            debug!(
-                "top_left: {:#?},\n bottom_right: {:#?},\n offset: {:#?}",
-                top_left, bottom_right, offset
-            );
+            // debug!(
+            //     "top_left: {:#?},\n bottom_right: {:#?},\n offset: {:#?}",
+            //     top_left, bottom_right, offset
+            // );
+
             // focused view has larger size than the what is provided to the scroller
             if (bottom_right.y < top_left.y) {
                 scroller.set_offset(bottom_right);

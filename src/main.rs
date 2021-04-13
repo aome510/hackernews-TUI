@@ -86,8 +86,22 @@ fn load_config(config_file_path: Option<&str>) {
 fn run() {
     let mut s = cursive::default();
 
-    // load theme
-    s.load_toml(include_str!("../theme.toml")).unwrap();
+    // update cursive's default theme
+    let config_theme = CONFIG.get().unwrap().theme.clone();
+    s.update_theme(|theme| {
+        theme
+            .palette
+            .set_color("background", config_theme.background.color);
+        theme
+            .palette
+            .set_color("view", config_theme.background.color);
+        theme
+            .palette
+            .set_color("primary", config_theme.primary.color);
+        theme
+            .palette
+            .set_color("highlight", config_theme.highlight.color);
+    });
 
     let client = hn_client::HNClient::new().unwrap();
     story_view::add_story_view_layer(&mut s, &client);

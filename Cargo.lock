@@ -311,7 +311,6 @@ dependencies = [
  "num",
  "owning_ref",
  "syn",
- "toml",
  "unicode-segmentation",
  "unicode-width",
  "wasmer_enumset",
