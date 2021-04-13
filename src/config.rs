@@ -41,7 +41,7 @@ impl<'de> de::Deserialize<'de> for Color {
 #[derive(Deserialize, Debug, Clone)]
 pub struct Theme {
     pub background: Color,
-    pub highlight: Color,
+    pub focus: Color,
     pub primary: Color,
 }
 
@@ -58,7 +58,7 @@ impl Default for Config {
             story_pooling: true,
             theme: Theme {
                 background: Color::parse("#f6f6ef").unwrap(),
-                highlight: Color::parse("#6c6c6c").unwrap(),
+                focus: Color::parse("#6c6c6c").unwrap(),
                 primary: Color::parse("#4a4a48").unwrap(),
             },
         }

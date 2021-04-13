@@ -124,7 +124,7 @@ impl CommentView {
                     );
                     styled_s.append_styled(
                         links.len().to_string(),
-                        ColorStyle::new(LINK_ID_FRONT, LINK_ID_BACK),
+                        ColorStyle::new(LINK_ID_FRONT_COLOR, LINK_ID_BACK_COLOR),
                     );
                     links.push(link.to_string());
                     continue;
@@ -154,7 +154,7 @@ impl CommentView {
                         comment.author,
                         get_elapsed_time_as_text(comment.time),
                     ),
-                    DESC_COLOR,
+                    TEXT_DESC_COLOR,
                 );
 
                 let (comment_content, links) = Self::parse_single_comment(

@@ -41,7 +41,7 @@ impl SearchView {
     fn get_query_text_view(query: String) -> impl View {
         let mut style_string = StyledString::styled(
             format!("Query String:"),
-            ColorStyle::new(BOLD_TEXT_COLOR, HIGHLIGHT_COLOR),
+            ColorStyle::new(TEXT_BOLD_COLOR, HIGHLIGHT_COLOR),
         );
         style_string.append_plain(format!(" {}", query));
         text_view::TextView::new(style_string)

@@ -41,7 +41,7 @@ impl HelpView {
             self.keys.iter().for_each(|(desc, keys)| {
                 s.add_child(TextView::new(StyledString::styled(
                     desc.to_string(),
-                    ColorStyle::from(BaseColor::Black),
+                    ColorStyle::from(TEXT_BOLD_COLOR),
                 )));
                 s.add_child({
                     let max_key_len = match keys.iter().max_by_key(|key| key.0.len()) {

@@ -93,7 +93,7 @@ impl StoryView {
                 get_elapsed_time_as_text(story.time),
                 story.num_comments,
             ),
-            ColorStyle::from(DESC_COLOR),
+            ColorStyle::from(TEXT_DESC_COLOR),
         );
         story_text
     }

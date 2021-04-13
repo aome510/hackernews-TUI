@@ -100,7 +100,7 @@ fn run() {
             .set_color("primary", config_theme.primary.color);
         theme
             .palette
-            .set_color("highlight", config_theme.highlight.color);
+            .set_color("highlight", config_theme.focus.color);
     });
 
     let client = hn_client::HNClient::new().unwrap();
