@@ -6,6 +6,7 @@ use std::fs;
 use cursive::theme;
 
 #[derive(Deserialize, Debug, Clone)]
+/// Config is a struct storing the application's configurations
 pub struct Config {
     pub story_pooling: bool,
     pub theme: Theme,
@@ -46,6 +47,7 @@ pub struct Theme {
 }
 
 impl Config {
+    // parse config struct from a file
     pub fn from_config_file(file_path: &str) -> Result<Self> {
         let config_str = fs::read_to_string(file_path)?;
         Ok(toml::from_str(&config_str)?)
