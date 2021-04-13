@@ -72,7 +72,8 @@ fn load_config(config_file_path: Option<&str>) {
         match config::Config::from_config_file(&config_file_path) {
             Err(err) => {
                 error!(
-                    "failed to load the application config from the file: {}: {:#?}",
+                    "failed to load the application config from the file: {}: {:#?} \
+                     \nUse the default configurations instead",
                     config_file_path, err
                 );
                 config::Config::default()
@@ -130,7 +131,8 @@ fn main() {
                 .short("c")
                 .long("config")
                 .value_name("FILE")
-                .help("Path to the application's config file (default: ~/.config/hn-tui.toml)"),
+                .help("Path to the application's config file (default: ~/.config/hn-tui.toml)")
+                .next_line_help(true),
         )
         .get_matches();
 

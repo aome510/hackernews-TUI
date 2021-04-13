@@ -1,4 +1,5 @@
 use anyhow::Result;
+use log::warn;
 use once_cell::sync::OnceCell;
 use serde::{de, Deserialize, Deserializer};
 use std::fs;
@@ -49,8 +50,17 @@ pub struct Theme {
 impl Config {
     // parse config struct from a file
     pub fn from_config_file(file_path: &str) -> Result<Self> {
-        let config_str = fs::read_to_string(file_path)?;
-        Ok(toml::from_str(&config_str)?)
+        match fs::read_to_string(file_path) {
+            // if cannot open the file, use the default configurations
+            Err(err) => {
+                warn!(
+                    "failed to open {}: {:#?}\nUse the default configurations instead",
+                    file_path, err
+                );
+                Ok(Self::default())
+            }
+            Ok(config_str) => Ok(toml::from_str(&config_str)?),
+        }
     }
 }
 
