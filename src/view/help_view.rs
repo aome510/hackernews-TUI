@@ -154,13 +154,12 @@ impl HasHelpView for CommentView {
                 vec![
                     ("j", "Focus the next comment"),
                     ("k", "Focus the previous comment"),
+                    ("n", "Focus the next top level comment"),
+                    ("p", "Focus the previous top level comment"),
+                    ("l", "Focus the next comment at smaller or equal level"),
+                    ("h", "Focus the previous comment at smaller or equal level"),
                     ("t", "Focus the comment at the top"),
                     ("b", "Focus the comment at the bottom"),
-                    ("l", "Focus the next comment with smaller or equal level"),
-                    (
-                        "h",
-                        "Focus the previous comment with smaller or equal level",
-                    ),
                 ],
             ),
             (

@@ -84,10 +84,12 @@ In case the above shortcuts don't work, you can always use the corresponding but
 
 - `j`: Focus the next comment
 - `k`: Focus the previous comment
-- `t`: Focus the comment at the top
-- `b`: Focus the comment at the bottom
+- `n`: Focus the next top level comment
+- `p`: Focus the previous top level comment
 - `l`: Focus the next comment with smaller or equal level
 - `h`: Focus the previous comment with smaller or equal level
+- `t`: Focus the comment at the top
+- `b`: Focus the comment at the bottom
 - `r`: Reload the comment view.
 - `O`: Open in browser the link associated with the discussed story
 - `S`: Open in browser the discussed story

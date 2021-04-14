@@ -223,6 +223,24 @@ fn get_comment_main_view(
             let next_id = left.iter().rposition(|&h| h <= heights[id]).unwrap_or(id);
             s.set_focus_index(next_id)
         })
+        .on_pre_event_inner('n', move |s, _| {
+            let heights = s.get_heights();
+            let id = s.get_focus_index();
+            let (_, right) = heights.split_at(id + 1);
+            let offset = right.iter().position(|&h| h == 0);
+            let next_id = match offset {
+                None => id,
+                Some(offset) => id + offset + 1,
+            };
+            s.set_focus_index(next_id)
+        })
+        .on_pre_event_inner('p', move |s, _| {
+            let heights = s.get_heights();
+            let id = s.get_focus_index();
+            let (left, _) = heights.split_at(id);
+            let next_id = left.iter().rposition(|&h| h == 0).unwrap_or(id);
+            s.set_focus_index(next_id)
+        })
         .on_pre_event_inner('f', |s, _| match s.raw_command.parse::<usize>() {
             Ok(num) => {
                 s.raw_command.clear();
