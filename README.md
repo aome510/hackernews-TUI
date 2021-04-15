@@ -106,7 +106,7 @@ In `SearchView`, there are two modes: `Navigation` and `Search`. The default mod
 
 `Navigation` mode allows the `SearchView` to behave like a `StoryView` with all `StoryView` shortcuts enabled.
 
-Switch mode key shortcuts:
+Key shortcuts:
 
 - `i`: Enter `Search` mode from `Navigation` mode
 - `<esc>`: Enter `Navigation` mode from `Search` mode
