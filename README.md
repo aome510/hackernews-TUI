@@ -1,6 +1,8 @@
 # hackernews-TUI
 
-`hackernews_tui` is a Terminal UI to browse Hacker News written in Rust.
+`hackernews_tui` is a Terminal UI to browse Hacker News.
+
+`hackernews_tui` is written in Rust with the help of [Cursive TUI library](https://github.com/gyscos/cursive/). It uses [HN Algolia search APIs](https://hn.algolia.com/api/) to get Hacker News data.
 
 The application mainly consists of the following views:
 
