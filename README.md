@@ -8,7 +8,7 @@ The application mainly consists of the following views:
 
 - `Story View - Front Page` displaying a list of stories in front page of Hacker News.
 - `Comment View` displaying a list of comments in a story.
-- `Story Search View` displaying a search bar and a list of stories matching the search query.
+- `Story View - Search` displaying a search bar and a list of stories matching the search query.
 
 ### Table of Contents
 
@@ -50,8 +50,8 @@ Story View - Front Page:
 Comment View:
 ![Example of a Comment View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/comment_view.png)
 
-Story Search View
-![Example of a Story Search View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/story_search_view.png)
+Story View - Search
+![Example of a Story View - Search](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/story_search_view.png)
 
 ## Documentation
 
