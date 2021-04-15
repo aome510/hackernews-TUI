@@ -7,8 +7,7 @@ use crate::prelude::*;
 
 const HN_ALGOLIA_PREFIX: &'static str = "https://hn.algolia.com/api/v1";
 const HN_SEARCH_QUERY_STRING: &'static str =
-    "tags=story&restrictSearchableAttributes=title&typoTolerance=false&hitsPerPage=16";
-const CLIENT_TIMEOUT: Duration = Duration::from_secs(16);
+    "tags=story&restrictSearchableAttributes=title&typoTolerance=false";
 pub const HN_HOST_URL: &'static str = "https://news.ycombinator.com";
 
 // serde helper functions
@@ -231,8 +230,11 @@ pub struct HNClient {
 impl HNClient {
     /// Create a new Hacker News Client
     pub fn new() -> Result<HNClient> {
+        let timeout = CONFIG.get().unwrap().client.client_timeout;
         Ok(HNClient {
-            client: ureq::AgentBuilder::new().timeout(CLIENT_TIMEOUT).build(),
+            client: ureq::AgentBuilder::new()
+                .timeout(Duration::from_secs(timeout))
+                .build(),
             story_caches: Arc::new(RwLock::new(HashMap::new())),
         })
     }
@@ -327,7 +329,11 @@ impl HNClient {
 
     /// Get a list of stories matching certain conditions
     pub fn get_matched_stories(&self, query: &str) -> Result<Vec<Story>> {
-        let request_url = format!("{}/search?{}", HN_ALGOLIA_PREFIX, HN_SEARCH_QUERY_STRING);
+        let search_story_limit = CONFIG.get().unwrap().client.story_limit.search;
+        let request_url = format!(
+            "{}/search?{}&hitsPerPage={}",
+            HN_ALGOLIA_PREFIX, HN_SEARCH_QUERY_STRING, search_story_limit
+        );
         let time = SystemTime::now();
         let response = self
             .client
@@ -348,7 +354,11 @@ impl HNClient {
 
     /// Get a list of stories on HN front page
     pub fn get_front_page_stories(&self) -> Result<Vec<Story>> {
-        let request_url = format!("{}/search?tags=front_page", HN_ALGOLIA_PREFIX);
+        let front_page_story_limit = CONFIG.get().unwrap().client.story_limit.front_page;
+        let request_url = format!(
+            "{}/search?tags=front_page&hitsPerPage={}",
+            HN_ALGOLIA_PREFIX, front_page_story_limit
+        );
         let time = SystemTime::now();
         let response = self
             .client

@@ -7,6 +7,15 @@ story_pooling = true
 # The application will automatically adjust the View based on the scrolling direction.
 page_scrolling = true
 
+[client]
+# "client_timeout" is the application Client timeout (in seconds) when making an API request
+client_timeout = 16
+
+[client.story_limit]
+# "story_limit" stores the number of maximum stories displayed in a page in each View
+search = 10
+front_page = 25
+
 [theme]
 # cursive's palette color
 # (more information can be found in https://docs.rs/cursive/0.16.3/cursive/theme/index.html)

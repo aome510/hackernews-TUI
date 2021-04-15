@@ -11,7 +11,20 @@ use cursive::theme;
 pub struct Config {
     pub story_pooling: bool,
     pub page_scrolling: bool,
+    pub client: Client,
     pub theme: Theme,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct StoryLimit {
+    pub front_page: usize,
+    pub search: usize,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct Client {
+    pub story_limit: StoryLimit,
+    pub client_timeout: u64,
 }
 
 #[derive(Debug, Clone)]
@@ -109,6 +122,13 @@ impl Default for Config {
         Config {
             story_pooling: true,
             page_scrolling: true,
+            client: Client {
+                story_limit: StoryLimit {
+                    front_page: 25,
+                    search: 10,
+                },
+                client_timeout: 16,
+            },
             theme: Theme {
                 background: Color::parse("#f6f6ef").unwrap(),
                 shadow: Color::parse("black").unwrap(),
