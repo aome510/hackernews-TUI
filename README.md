@@ -110,8 +110,9 @@ Switch mode key shortcuts:
 
 - `i`: Enter `Search` mode from `Navigation` mode
 - `<esc>`: Enter `Navigation` mode from `Search` mode
+- `<ctrl-d>/<alt-d>`: Toggle sort by date
 
-`Navigation` mode supports all `StoryView`'s key shortcuts.
+`Navigation` mode also supports all `StoryView`'s key shortcuts.
 
 ## Configuration
 

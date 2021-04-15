@@ -209,7 +209,7 @@ impl HasHelpView for SearchView {
                     ("S", "Open in browser the focused story"),
                 ],
             ),
-            other_key_shortcuts!(),
+            other_key_shortcuts!(("<ctrl-d>/<alt-d>", "Toggle sort by date")),
         ])
     }
 }

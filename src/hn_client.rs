@@ -328,11 +328,14 @@ impl HNClient {
     }
 
     /// Get a list of stories matching certain conditions
-    pub fn get_matched_stories(&self, query: &str) -> Result<Vec<Story>> {
+    pub fn get_matched_stories(&self, query: &str, by_date: bool) -> Result<Vec<Story>> {
         let search_story_limit = CONFIG.get().unwrap().client.story_limit.search;
         let request_url = format!(
-            "{}/search?{}&hitsPerPage={}",
-            HN_ALGOLIA_PREFIX, HN_SEARCH_QUERY_STRING, search_story_limit
+            "{}/{}?{}&hitsPerPage={}",
+            HN_ALGOLIA_PREFIX,
+            if by_date { "search_by_date" } else { "search" },
+            HN_SEARCH_QUERY_STRING,
+            search_story_limit
         );
         let time = SystemTime::now();
         let response = self
@@ -366,7 +369,7 @@ impl HNClient {
             .call()?
             .into_json::<StoriesResponse>()?;
         if let Ok(elapsed) = time.elapsed() {
-            info!("get top stories took {}ms", elapsed.as_millis());
+            info!("get front-page stories took {}ms", elapsed.as_millis());
         }
 
         Ok(response.parse_into_stories())

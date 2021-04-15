@@ -18,6 +18,7 @@ pub enum SearchViewMode {
 /// a matched story list matching a query string
 pub struct SearchView {
     // ("query_text", "need_update_view") pair
+    by_date: bool,
     query: Arc<RwLock<(String, bool)>>,
     stories: Arc<RwLock<Vec<hn_client::Story>>>,
 
@@ -39,7 +40,7 @@ impl SearchView {
 
     fn get_query_text_view(query: String) -> impl View {
         let mut style_string = StyledString::styled(
-            format!("Query String:"),
+            format!("Query:"),
             ColorStyle::new(
                 PaletteColor::TitlePrimary,
                 get_config_theme().search_highlight_bg.color,
@@ -81,8 +82,9 @@ impl SearchView {
         let client = self.client.clone();
         let query = self.query.read().unwrap().0.clone();
         let cb_sink = self.cb_sink.clone();
+        let by_date = self.by_date;
 
-        thread::spawn(move || match client.get_matched_stories(&query) {
+        thread::spawn(move || match client.get_matched_stories(&query, by_date) {
             Err(err) => {
                 error!(
                     "failed to get stories matching the query '{}': {:#?}",
@@ -117,11 +119,17 @@ impl SearchView {
         self.update_matched_stories();
     }
 
+    pub fn toggle_by_date(&mut self) {
+        self.by_date = !self.by_date;
+        self.update_matched_stories();
+    }
+
     pub fn new(client: &hn_client::HNClient, cb_sink: CbSink) -> Self {
         let view = Self::get_search_view("", vec![], client);
         let stories = Arc::new(RwLock::new(vec![]));
         let query = Arc::new(RwLock::new((String::new(), false)));
         SearchView {
+            by_date: false,
             client: client.clone(),
             mode: SearchViewMode::Search,
             query,
@@ -205,6 +213,16 @@ fn get_search_main_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl V
                 Some(EventResult::Consumed(None))
             }
         })
+        .on_pre_event_inner(
+            EventTrigger::from_fn(|e| match e {
+                Event::CtrlChar('d') | Event::AltChar('d') => true,
+                _ => false,
+            }),
+            |s, _| {
+                s.toggle_by_date();
+                Some(EventResult::Consumed(None))
+            },
+        )
 }
 
 /// Return a view representing a SearchView that searches stories with queries
@@ -212,7 +230,7 @@ pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl Vi
     let client = client.clone();
     let main_view = get_search_main_view(&client, cb_sink);
     let mut view = LinearLayout::vertical()
-        .child(get_status_bar_with_desc("Story Search View"))
+        .child(get_status_bar_with_desc("Story View - Search"))
         .child(main_view)
         .child(construct_footer_view::<SearchView>(&client));
     view.set_focus_index(1).unwrap_or_else(|_| {});
