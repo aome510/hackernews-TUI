@@ -50,7 +50,7 @@ impl StoryView {
                 None => break,
                 Some(c) => {
                     let m = c.get(0).unwrap();
-                    let match_text = c.name("match").unwrap().as_str();
+                    let matched_text = c.name("match").unwrap().as_str();
 
                     let range = m.range();
                     let mut prefix: String = s
@@ -66,8 +66,11 @@ impl StoryView {
                     }
 
                     styled_s.append_styled(
-                        match_text,
-                        ColorStyle::back(get_config_theme().search_highlight_bg.color),
+                        matched_text,
+                        ColorStyle::new(
+                            PaletteColor::TitlePrimary,
+                            get_config_theme().search_highlight_bg.color,
+                        ),
                     );
                     continue;
                 }
