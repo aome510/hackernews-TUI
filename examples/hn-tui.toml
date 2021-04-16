@@ -30,7 +30,7 @@ client_timeout = 16
 # - "show_hn" -> "Story View - Show HN"
 # - "job" -> "Story View - Jobs"
 search = 10
-front_page = 25
+front_page = 20
 story = 20
 ask_hn = 15
 show_hn = 15

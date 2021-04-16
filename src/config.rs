@@ -153,7 +153,7 @@ impl Default for Config {
             client: Client {
                 story_limit: StoryLimit {
                     search: 10,
-                    front_page: 25,
+                    front_page: 20,
                     story: 20,
                     ask_hn: 15,
                     show_hn: 15,
