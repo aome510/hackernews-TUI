@@ -25,6 +25,10 @@ pub struct StoryPooling {
 #[derive(Deserialize, Debug, Clone)]
 pub struct StoryLimit {
     pub front_page: usize,
+    pub story: usize,
+    pub ask_hn: usize,
+    pub show_hn: usize,
+    pub job: usize,
     pub search: usize,
 }
 
@@ -44,6 +48,19 @@ impl Color {
         match theme::Color::parse(s) {
             None => None,
             Some(color) => Some(Color { color }),
+        }
+    }
+}
+
+impl StoryLimit {
+    pub fn get_story_limit_by_tag(&self, tag: &str) -> usize {
+        match tag {
+            "front_page" => self.front_page,
+            "story" => self.story,
+            "job" => self.job,
+            "ask_hn" => self.ask_hn,
+            "show_hn" => self.show_hn,
+            _ => panic!("unknown tag: {}", tag),
         }
     }
 }
@@ -135,8 +152,12 @@ impl Default for Config {
             page_scrolling: true,
             client: Client {
                 story_limit: StoryLimit {
-                    front_page: 25,
                     search: 10,
+                    front_page: 25,
+                    story: 20,
+                    ask_hn: 15,
+                    show_hn: 15,
+                    job: 15,
                 },
                 client_timeout: 16,
             },

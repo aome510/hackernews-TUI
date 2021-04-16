@@ -17,13 +17,24 @@ delay = 2
 allows = ["front_page"]
 
 [client]
-# "client_timeout" is the application Client timeout (in seconds) when making an API request
+# "client_timeout" is the application's client timeout (in seconds) when making an API request
 client_timeout = 16
 
 [client.story_limit]
 # "story_limit" stores the number of maximum stories displayed in a page in each View
+# fields of "story_limit"
+# - "search" -> "Search View"
+# - "front_page" -> "Story View - Front Page"
+# - "story" -> "Story View - All Stories"
+# - "ask_hn" -> "Story View - Ask HN"
+# - "show_hn" -> "Story View - Show HN"
+# - "job" -> "Story View - Jobs"
 search = 10
 front_page = 25
+story = 20
+ask_hn = 15
+show_hn = 15
+job = 15
 
 [theme]
 # cursive's palette color
