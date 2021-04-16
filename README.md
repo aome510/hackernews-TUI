@@ -172,6 +172,12 @@ You can specify the path by specifying the `-c` or `--config` argument when runn
 hackernews_tui -c ~/.config/hn-tui.toml
 ```
 
-For the further information about the config options, please look into the [example config file](./examples/hn-tui.toml) for references.
+For the further information about the config options, please refer to the example config file by running `hackernews_tui --example-config`.
 
-**Note**: all config options (as included in the example config file) are **required**. You can download the example file then modify it based on your needs.
+**Note**: all config options (as included in the example config file) are **required**. You can run
+
+```shell
+hackernews_tui --example-config > ~/.config/hn-tui.toml
+```
+
+then modify the config options in `~/.config/hn-tui.toml` based on your preferences.
