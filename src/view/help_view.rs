@@ -134,8 +134,10 @@ impl HasHelpView for StoryView {
                     ("`{story_id} g`", "Focus the {story_id}-th story"),
                     (
                         "<enter>",
-                        "Go the comment view associated with the focused story",
+                        "Go to the comment view associated with the focused story",
                     ),
+                    ("n", "Go to the next page"),
+                    ("p", "Go the previous page"),
                 ],
             ),
             (

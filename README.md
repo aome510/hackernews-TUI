@@ -89,7 +89,7 @@ $ cd /usr/pkgsrc/www/hackernews-tui
 
 ### Search View
 
-![Example of a Story View - Search](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/story_search_view.png)
+![Example of a Search View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/story_search_view.png)
 
 ### Comment View
 
@@ -122,6 +122,8 @@ In each `View`, press `<ctrl-h>` to see a list of supported keyboard shortcuts a
 - `b`: Focus the story at the bottom
 - `{story_id} g`: Focus the {story_id}-th story
 - `<enter>`: Go the comment view associated with the focused story
+- `n`: Go to the next page
+- `p`: Go the previous page
 - `O`: Open in browser the link associated with the focused story
 - `S`: Open in browser the focused story
 - `<ctrl-d>/<alt-d>`: Toggle sort by date
@@ -156,7 +158,7 @@ Key shortcuts:
 - `<esc>`: Enter `Navigation` mode from `Search` mode
 - `<ctrl-d>/<alt-d>`: Toggle sort by date
 
-`Navigation` mode also supports all `StoryView`'s key shortcuts.
+`Navigation` mode also supports all `StoryView`'s key shortcuts beside paging shortcuts (`n`, `p`).
 
 ## Configuration
 
