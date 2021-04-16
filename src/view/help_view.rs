@@ -98,7 +98,11 @@ macro_rules! other_key_shortcuts {
                     ($k, $d),
                 )*
                 ("<ctrl-f>/<alt-f>", "Go to the front page"),
-                ("<ctrl-s>/<alt-s>", "Go to the story search page"),
+                ("<ctrl-s>/<alt-s>", "Go to the search page"),
+                ("<ctrl-z>/<alt-z>", "Go to the all stories page"),
+                ("<ctrl-x>/<alt-x>", "Go to the ask HN page"),
+                ("<ctrl-c>/<alt-c>", "Go to the show HN page"),
+                ("<ctrl-v>/<alt-v>", "Go to the jobs page"),
                 ("<ctrl-q>/<alt-q>", "Quit the application"),
                 ("<esc>", "Close this help dialog"),
             ],
@@ -144,7 +148,7 @@ impl HasHelpView for StoryView {
                     ("S", "Open in browser the focused story"),
                 ],
             ),
-            other_key_shortcuts!(),
+            other_key_shortcuts!(("<ctrl-d>/<alt-d>", "Toggle sort by date")),
         ])
     }
 }
