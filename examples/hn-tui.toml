@@ -1,20 +1,40 @@
-# "story_pooling" is a feature that allows the application to fetch stories
-# in background and store them in cache memory.
-# Views currently support "story_pooling":
-# - StoryView - Front Page
-story_pooling = true
 # "page_scrolling" is a feature that enables page-like behavior when navigating.
 # The application will automatically adjust the View based on the scrolling direction.
 page_scrolling = true
 
+[story_pooling]
+# "story_pooling" is a feature that allows the application to fetch stories
+# in background and store them in cache memory.
+enable = true
+# delay (in seconds) between two story API requests
+delay = 2
+# possible values for allows:
+# - "front_page" -> "Story View - Front Page"
+# - "story" -> "Story View - All Stories"
+# - "ask_hn" -> "Story View - Ask HN"
+# - "show_hn" -> "Story View - Show HN"
+# - "job" -> "Story View - Jobs"
+allows = ["front_page"]
+
 [client]
-# "client_timeout" is the application Client timeout (in seconds) when making an API request
+# "client_timeout" is the application's client timeout (in seconds) when making an API request
 client_timeout = 16
 
 [client.story_limit]
 # "story_limit" stores the number of maximum stories displayed in a page in each View
+# fields of "story_limit"
+# - "search" -> "Search View"
+# - "front_page" -> "Story View - Front Page"
+# - "story" -> "Story View - All Stories"
+# - "ask_hn" -> "Story View - Ask HN"
+# - "show_hn" -> "Story View - Show HN"
+# - "job" -> "Story View - Jobs"
 search = 10
-front_page = 25
+front_page = 20
+story = 20
+ask_hn = 15
+show_hn = 15
+job = 15
 
 [theme]
 # cursive's palette color

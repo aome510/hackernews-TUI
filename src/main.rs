@@ -8,6 +8,13 @@ use clap::*;
 use prelude::*;
 
 fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
+    // we already have <alt-q>/<ctrl-q> for quit
+    s.clear_global_callbacks(Event::CtrlChar('c'));
+
+    // .............................................................
+    // global shortcuts for switching between different Story Views
+    // .............................................................
+
     s.set_on_post_event(
         EventTrigger::from_fn(|e| match e {
             Event::CtrlChar('f') | Event::AltChar('f') => true,
@@ -16,10 +23,66 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
         {
             let client = client.clone();
             move |s| {
-                story_view::add_story_view_layer(s, &client);
+                story_view::add_story_view_layer(s, &client, "front_page", false, 0);
             }
         },
     );
+
+    s.set_on_post_event(
+        EventTrigger::from_fn(|e| match e {
+            Event::CtrlChar('z') | Event::AltChar('z') => true,
+            _ => false,
+        }),
+        {
+            let client = client.clone();
+            move |s| {
+                story_view::add_story_view_layer(s, &client, "story", true, 0);
+            }
+        },
+    );
+
+    s.set_on_post_event(
+        EventTrigger::from_fn(|e| match e {
+            Event::CtrlChar('x') | Event::AltChar('x') => true,
+            _ => false,
+        }),
+        {
+            let client = client.clone();
+            move |s| {
+                story_view::add_story_view_layer(s, &client, "ask_hn", true, 0);
+            }
+        },
+    );
+
+    s.set_on_post_event(
+        EventTrigger::from_fn(|e| match e {
+            Event::CtrlChar('c') | Event::AltChar('c') => true,
+            _ => false,
+        }),
+        {
+            let client = client.clone();
+            move |s| {
+                story_view::add_story_view_layer(s, &client, "show_hn", true, 0);
+            }
+        },
+    );
+
+    s.set_on_post_event(
+        EventTrigger::from_fn(|e| match e {
+            Event::CtrlChar('v') | Event::AltChar('v') => true,
+            _ => false,
+        }),
+        {
+            let client = client.clone();
+            move |s| {
+                story_view::add_story_view_layer(s, &client, "job", true, 0);
+            }
+        },
+    );
+
+    // .........................................
+    // end of switching shortcuts for StoryView
+    // .........................................
 
     s.set_on_post_event(
         EventTrigger::from_fn(|e| match e {
@@ -89,7 +152,7 @@ fn run() {
     });
 
     let client = hn_client::HNClient::new().unwrap();
-    story_view::add_story_view_layer(&mut s, &client);
+    story_view::add_story_view_layer(&mut s, &client, "front_page", false, 0);
 
     set_up_global_callbacks(&mut s, &client);
 

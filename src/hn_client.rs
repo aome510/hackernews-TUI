@@ -346,8 +346,9 @@ impl HNClient {
             .into_json::<StoriesResponse>()?;
         if let Ok(elapsed) = time.elapsed() {
             info!(
-                "get matched stories with query {} took {}ms",
+                "get matched stories with query {} (by_date={}) took {}ms",
                 query,
+                by_date,
                 elapsed.as_millis()
             );
         }
@@ -355,12 +356,21 @@ impl HNClient {
         Ok(response.parse_into_stories())
     }
 
-    /// Get a list of stories on HN front page
-    pub fn get_front_page_stories(&self) -> Result<Vec<Story>> {
-        let front_page_story_limit = CONFIG.get().unwrap().client.story_limit.front_page;
+    /// Get a list of stories filtering on a specific tag
+    pub fn get_stories_by_tag(&self, tag: &str, by_date: bool, page: usize) -> Result<Vec<Story>> {
+        let story_limit = CONFIG
+            .get()
+            .unwrap()
+            .client
+            .story_limit
+            .get_story_limit_by_tag(tag);
         let request_url = format!(
-            "{}/search?tags=front_page&hitsPerPage={}",
-            HN_ALGOLIA_PREFIX, front_page_story_limit
+            "{}/{}?tags={}&hitsPerPage={}&page={}",
+            HN_ALGOLIA_PREFIX,
+            if by_date { "search_by_date" } else { "search" },
+            tag,
+            story_limit,
+            page
         );
         let time = SystemTime::now();
         let response = self
@@ -369,7 +379,13 @@ impl HNClient {
             .call()?
             .into_json::<StoriesResponse>()?;
         if let Ok(elapsed) = time.elapsed() {
-            info!("get front-page stories took {}ms", elapsed.as_millis());
+            info!(
+                "get stories (tag={}, by_date={}, page={}) took {}ms",
+                tag,
+                by_date,
+                page,
+                elapsed.as_millis()
+            );
         }
 
         Ok(response.parse_into_stories())

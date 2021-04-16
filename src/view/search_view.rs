@@ -35,12 +35,12 @@ impl SearchView {
         client: &hn_client::HNClient,
     ) -> impl View {
         let client = client.clone();
-        story_view::get_story_main_view(stories, &client)
+        story_view::get_story_main_view(stories, &client, 0).full_height()
     }
 
     fn get_query_text_view(query: String) -> impl View {
         let mut style_string = StyledString::styled(
-            format!("Query:"),
+            format!("Search Query:"),
             ColorStyle::new(
                 PaletteColor::TitlePrimary,
                 get_config_theme().search_highlight_bg.color,
@@ -230,9 +230,9 @@ pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl Vi
     let client = client.clone();
     let main_view = get_search_main_view(&client, cb_sink);
     let mut view = LinearLayout::vertical()
-        .child(get_status_bar_with_desc("Story View - Search"))
+        .child(get_status_bar_with_desc("Search View"))
         .child(main_view)
-        .child(construct_footer_view::<SearchView>(&client));
+        .child(construct_footer_view::<SearchView>());
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
     OnEventView::new(view).on_event(

@@ -301,7 +301,7 @@ pub fn get_comment_view(
     let mut view = LinearLayout::vertical()
         .child(status_bar)
         .child(main_view)
-        .child(construct_footer_view::<CommentView>(client));
+        .child(construct_footer_view::<CommentView>());
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
     let id = story.id;

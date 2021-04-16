@@ -18,7 +18,10 @@ impl HelpView {
     fn construct_key_view(key: (String, String), max_key_width: usize) -> impl View {
         let key_string = StyledString::styled(
             key.0,
-            ColorStyle::back(get_config_theme().code_block_bg.color),
+            ColorStyle::new(
+                PaletteColor::TitlePrimary,
+                get_config_theme().code_block_bg.color,
+            ),
         );
         let desc_string = StyledString::plain(key.1);
         LinearLayout::horizontal()
@@ -95,7 +98,11 @@ macro_rules! other_key_shortcuts {
                     ($k, $d),
                 )*
                 ("<ctrl-f>/<alt-f>", "Go to the front page"),
-                ("<ctrl-s>/<alt-s>", "Go to the story search page"),
+                ("<ctrl-s>/<alt-s>", "Go to the search page"),
+                ("<ctrl-z>/<alt-z>", "Go to the all stories page"),
+                ("<ctrl-x>/<alt-x>", "Go to the ask HN page"),
+                ("<ctrl-c>/<alt-c>", "Go to the show HN page"),
+                ("<ctrl-v>/<alt-v>", "Go to the jobs page"),
                 ("<ctrl-q>/<alt-q>", "Quit the application"),
                 ("<esc>", "Close this help dialog"),
             ],
@@ -127,8 +134,10 @@ impl HasHelpView for StoryView {
                     ("`{story_id} g`", "Focus the {story_id}-th story"),
                     (
                         "<enter>",
-                        "Go the comment view associated with the focused story",
+                        "Go to the comment view associated with the focused story",
                     ),
+                    ("n", "Go to the next page"),
+                    ("p", "Go the previous page"),
                 ],
             ),
             (
@@ -141,7 +150,7 @@ impl HasHelpView for StoryView {
                     ("S", "Open in browser the focused story"),
                 ],
             ),
-            other_key_shortcuts!(),
+            other_key_shortcuts!(("<ctrl-d>/<alt-d>", "Toggle sort by date")),
         ])
     }
 }

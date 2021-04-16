@@ -9,15 +9,26 @@ use cursive::theme;
 #[derive(Deserialize, Debug, Clone)]
 /// Config is a struct storing the application's configurations
 pub struct Config {
-    pub story_pooling: bool,
+    pub story_pooling: StoryPooling,
     pub page_scrolling: bool,
     pub client: Client,
     pub theme: Theme,
 }
 
 #[derive(Deserialize, Debug, Clone)]
+pub struct StoryPooling {
+    pub enable: bool,
+    pub delay: u64,
+    pub allows: Vec<String>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
 pub struct StoryLimit {
     pub front_page: usize,
+    pub story: usize,
+    pub ask_hn: usize,
+    pub show_hn: usize,
+    pub job: usize,
     pub search: usize,
 }
 
@@ -37,6 +48,19 @@ impl Color {
         match theme::Color::parse(s) {
             None => None,
             Some(color) => Some(Color { color }),
+        }
+    }
+}
+
+impl StoryLimit {
+    pub fn get_story_limit_by_tag(&self, tag: &str) -> usize {
+        match tag {
+            "front_page" => self.front_page,
+            "story" => self.story,
+            "job" => self.job,
+            "ask_hn" => self.ask_hn,
+            "show_hn" => self.show_hn,
+            _ => panic!("unknown tag: {}", tag),
         }
     }
 }
@@ -120,12 +144,20 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            story_pooling: true,
+            story_pooling: StoryPooling {
+                enable: true,
+                delay: 2,
+                allows: vec!["front_page".to_string()],
+            },
             page_scrolling: true,
             client: Client {
                 story_limit: StoryLimit {
-                    front_page: 25,
                     search: 10,
+                    front_page: 20,
+                    story: 20,
+                    ask_hn: 15,
+                    show_hn: 15,
+                    job: 15,
                 },
                 client_timeout: 16,
             },

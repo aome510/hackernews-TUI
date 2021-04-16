@@ -1,4 +1,5 @@
 use super::error_view::{self, ErrorViewEnum, ErrorViewWrapper};
+use super::utils::get_story_view_desc_by_tag;
 
 use crate::prelude::*;
 use cursive_async_view::AsyncView;
@@ -40,7 +41,6 @@ pub fn get_comment_view_async(
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
                         &format!("failed to get comments from story (id={})", id),
                         err,
-                        &client,
                     )),
                 })
             }
@@ -48,21 +48,26 @@ pub fn get_comment_view_async(
     )
 }
 
-/// Return an async view wraps StoryView (front page)
-/// with a loading screen when loading data
-pub fn get_front_page_story_view_async(
+/// Return an async view wraps StoryView with a loading screen when loading data
+pub fn get_story_view_async(
     siv: &mut Cursive,
     client: &hn_client::HNClient,
+    tag: &'static str,
+    by_date: bool,
+    page: usize,
 ) -> impl View {
     AsyncView::new_with_bg_creator(
         siv,
         {
             let client = client.clone();
-            move || match client.get_front_page_stories() {
+            move || match client.get_stories_by_tag(tag, by_date, page) {
                 Ok(stories) => Ok(Ok(stories)),
                 Err(err) => {
-                    warn!("failed to get front page stories: {:#?}\nRetrying...", err);
-                    Ok(client.get_front_page_stories())
+                    warn!(
+                        "failed to get stories (tag={}, by_date={}, page={}): {:#?}\nRetrying...",
+                        err, tag, by_date, page
+                    );
+                    Ok(client.get_stories_by_tag(tag, by_date, page))
                 }
             }
         },
@@ -71,14 +76,19 @@ pub fn get_front_page_story_view_async(
             move |result| {
                 ErrorViewWrapper::new(match result {
                     Ok(stories) => ErrorViewEnum::Ok(story_view::get_story_view(
-                        "Story View - Front Page",
+                        &get_story_view_desc_by_tag(tag, by_date, page),
                         stories,
                         &client,
+                        tag,
+                        by_date,
+                        page,
                     )),
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
-                        "failed to get front page stories",
+                        &format!(
+                            "failed to get stories (tag={}, by_date={}, page={})",
+                            tag, by_date, page
+                        ),
                         err,
-                        &client,
                     )),
                 })
             }

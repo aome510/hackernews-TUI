@@ -36,7 +36,7 @@ pub fn shorten_url(url: &str) -> String {
 }
 
 /// Construct a simple footer view
-pub fn construct_footer_view<T: HasHelpView>(client: &hn_client::HNClient) -> impl View {
+pub fn construct_footer_view<T: HasHelpView>() -> impl View {
     LinearLayout::horizontal()
         .child(
             TextView::new(StyledString::styled(
@@ -48,14 +48,6 @@ pub fn construct_footer_view<T: HasHelpView>(client: &hn_client::HNClient) -> im
         )
         .child(
             LinearLayout::horizontal()
-                .child(Button::new_raw("[front page] ", {
-                    let client = client.clone();
-                    move |s| story_view::add_story_view_layer(s, &client)
-                }))
-                .child(Button::new_raw("[search] ", {
-                    let client = client.clone();
-                    move |s| search_view::add_search_view_layer(s, &client)
-                }))
                 .child(Button::new_raw("[help] ", |s| {
                     s.add_layer(T::construct_help_view())
                 }))
@@ -76,5 +68,22 @@ pub fn get_status_bar_with_desc(desc: &str) -> impl View {
         .h_align(align::HAlign::Center)
         .full_width(),
         ColorStyle::back(get_config_theme().status_bar_bg.color),
+    )
+}
+
+/// Construct StoryView based on the filtering tag
+pub fn get_story_view_desc_by_tag(tag: &str, by_date: bool, page: usize) -> String {
+    format!(
+        "Story View - {} ({}, page: {})",
+        match tag {
+            "front_page" => "Front Page",
+            "story" => "All Stories",
+            "job" => "Jobs",
+            "ask_hn" => "Ask HN",
+            "show_hn" => "Show HN",
+            _ => panic!("unknown tag: {}", tag),
+        },
+        if by_date { "new" } else { "popular" },
+        page + 1
     )
 }
