@@ -35,7 +35,7 @@ impl SearchView {
         client: &hn_client::HNClient,
     ) -> impl View {
         let client = client.clone();
-        story_view::get_story_main_view(stories, &client)
+        story_view::get_story_main_view(stories, &client).full_height()
     }
 
     fn get_query_text_view(query: String) -> impl View {
