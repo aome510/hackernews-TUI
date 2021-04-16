@@ -9,10 +9,17 @@ use cursive::theme;
 #[derive(Deserialize, Debug, Clone)]
 /// Config is a struct storing the application's configurations
 pub struct Config {
-    pub story_pooling: bool,
+    pub story_pooling: StoryPooling,
     pub page_scrolling: bool,
     pub client: Client,
     pub theme: Theme,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct StoryPooling {
+    pub enable: bool,
+    pub delay: u64,
+    pub allows: Vec<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -120,7 +127,11 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            story_pooling: true,
+            story_pooling: StoryPooling {
+                enable: true,
+                delay: 2,
+                allows: vec!["front_page".to_string()],
+            },
             page_scrolling: true,
             client: Client {
                 story_limit: StoryLimit {
