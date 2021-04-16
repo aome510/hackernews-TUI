@@ -99,7 +99,9 @@ $ cd /usr/pkgsrc/www/hackernews-tui
 
 ### Keyboard shortcuts
 
-In each `View`, press `<ctrl-h>` to see a list of supported keyboard shortcuts and their functionalities.
+In each `View`, press `<ctrl-h>` to see a list of supported keyboard shortcuts and their functionalities:
+
+![Example of a Help View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/help_view.png)
 
 **Global key shortcuts:**
 
