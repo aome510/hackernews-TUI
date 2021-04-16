@@ -267,14 +267,14 @@ pub fn get_story_view(
             let client = client.clone();
             move |s| {
                 if page > 0 {
-                    add_story_view_layer(s, &client, tag, !by_date, page - 1);
+                    add_story_view_layer(s, &client, tag, by_date, page - 1);
                 }
             }
         })
         .on_event('n', {
             let client = client.clone();
             move |s| {
-                add_story_view_layer(s, &client, tag, !by_date, page + 1);
+                add_story_view_layer(s, &client, tag, by_date, page + 1);
             }
         })
 }
