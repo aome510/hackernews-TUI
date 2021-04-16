@@ -231,8 +231,13 @@ pub fn get_story_view(
 }
 
 /// Add StoryView as a new layer to the main Cursive View
-pub fn add_story_view_layer(s: &mut Cursive, client: &hn_client::HNClient) {
-    let async_view = async_view::get_front_page_story_view_async(s, client);
+pub fn add_story_view_layer(
+    s: &mut Cursive,
+    client: &hn_client::HNClient,
+    tag: &'static str,
+    by_date: bool,
+) {
+    let async_view = async_view::get_story_view_async(s, client, tag, by_date);
     s.pop_layer();
     s.screen_mut().add_transparent_layer(Layer::new(async_view));
 }

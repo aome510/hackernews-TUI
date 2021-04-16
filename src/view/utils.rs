@@ -50,7 +50,7 @@ pub fn construct_footer_view<T: HasHelpView>(client: &hn_client::HNClient) -> im
             LinearLayout::horizontal()
                 .child(Button::new_raw("[front page] ", {
                     let client = client.clone();
-                    move |s| story_view::add_story_view_layer(s, &client)
+                    move |s| story_view::add_story_view_layer(s, &client, "front_page", false)
                 }))
                 .child(Button::new_raw("[search] ", {
                     let client = client.clone();
@@ -77,4 +77,16 @@ pub fn get_status_bar_with_desc(desc: &str) -> impl View {
         .full_width(),
         ColorStyle::back(get_config_theme().status_bar_bg.color),
     )
+}
+
+/// Construct StoryView based on the filtering tag
+pub fn get_story_view_desc_by_tag(tag: &str) -> String {
+    "Story View - ".to_owned()
+        + match tag {
+            "front_page" => "Front Page",
+            "job" => "Jos",
+            "ask_hn" => "Ask",
+            "show_hn" => "Show",
+            _ => panic!("unknown tag: {}", tag),
+        }
 }
