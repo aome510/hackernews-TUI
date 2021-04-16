@@ -13,7 +13,7 @@ The application mainly consists of the following views:
   - `Show HN`: show HN stories only
   - `Jobs`: jobs stories only
 - `Comment View` displaying a list of comments in a story.
-- `Story View - Search` displaying a search bar and a list of stories matching the search query.
+- `Serrch View` displaying a search bar and a list of stories matching the search query.
 
 ### Why hackernews-TUI?
 
@@ -91,7 +91,7 @@ $ cd /usr/pkgsrc/www/hackernews-tui
 
 ![Example of a Story View - Search](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/story_search_view.png)
 
-### Comment View:
+### Comment View
 
 ![Example of a Comment View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/comment_view.png)
 
