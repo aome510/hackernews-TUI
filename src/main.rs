@@ -8,7 +8,12 @@ use clap::*;
 use prelude::*;
 
 fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
+    // we already have <alt-q>/<ctrl-q> for quit
     s.clear_global_callbacks(Event::CtrlChar('c'));
+
+    // .............................................................
+    // global shortcuts for switching between different Story Views
+    // .............................................................
 
     s.set_on_post_event(
         EventTrigger::from_fn(|e| match e {
@@ -74,6 +79,10 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
             }
         },
     );
+
+    // .........................................
+    // end of switching shortcuts for StoryView
+    // .........................................
 
     s.set_on_post_event(
         EventTrigger::from_fn(|e| match e {
