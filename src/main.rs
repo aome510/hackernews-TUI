@@ -8,6 +8,8 @@ use clap::*;
 use prelude::*;
 
 fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
+    s.clear_global_callbacks(Event::CtrlChar('c'));
+
     s.set_on_post_event(
         EventTrigger::from_fn(|e| match e {
             Event::CtrlChar('f') | Event::AltChar('f') => true,
@@ -17,6 +19,58 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
             let client = client.clone();
             move |s| {
                 story_view::add_story_view_layer(s, &client, "front_page", false);
+            }
+        },
+    );
+
+    s.set_on_post_event(
+        EventTrigger::from_fn(|e| match e {
+            Event::CtrlChar('z') | Event::AltChar('z') => true,
+            _ => false,
+        }),
+        {
+            let client = client.clone();
+            move |s| {
+                story_view::add_story_view_layer(s, &client, "story", true);
+            }
+        },
+    );
+
+    s.set_on_post_event(
+        EventTrigger::from_fn(|e| match e {
+            Event::CtrlChar('x') | Event::AltChar('x') => true,
+            _ => false,
+        }),
+        {
+            let client = client.clone();
+            move |s| {
+                story_view::add_story_view_layer(s, &client, "ask_hn", true);
+            }
+        },
+    );
+
+    s.set_on_post_event(
+        EventTrigger::from_fn(|e| match e {
+            Event::CtrlChar('c') | Event::AltChar('c') => true,
+            _ => false,
+        }),
+        {
+            let client = client.clone();
+            move |s| {
+                story_view::add_story_view_layer(s, &client, "show_hn", true);
+            }
+        },
+    );
+
+    s.set_on_post_event(
+        EventTrigger::from_fn(|e| match e {
+            Event::CtrlChar('v') | Event::AltChar('v') => true,
+            _ => false,
+        }),
+        {
+            let client = client.clone();
+            move |s| {
+                story_view::add_story_view_layer(s, &client, "job", true);
             }
         },
     );

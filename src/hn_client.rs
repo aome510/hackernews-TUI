@@ -356,7 +356,7 @@ impl HNClient {
         Ok(response.parse_into_stories())
     }
 
-    /// Get a list of stories on HN front page
+    /// Get a list of stories filtering on a specific tag
     pub fn get_stories_by_tag(&self, tag: &str, by_date: bool) -> Result<Vec<Story>> {
         let front_page_story_limit = CONFIG.get().unwrap().client.story_limit.front_page;
         let request_url = format!(
