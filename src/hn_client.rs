@@ -357,7 +357,7 @@ impl HNClient {
     }
 
     /// Get a list of stories filtering on a specific tag
-    pub fn get_stories_by_tag(&self, tag: &str, by_date: bool) -> Result<Vec<Story>> {
+    pub fn get_stories_by_tag(&self, tag: &str, by_date: bool, page: usize) -> Result<Vec<Story>> {
         let story_limit = CONFIG
             .get()
             .unwrap()
@@ -365,11 +365,12 @@ impl HNClient {
             .story_limit
             .get_story_limit_by_tag(tag);
         let request_url = format!(
-            "{}/{}?tags={}&hitsPerPage={}",
+            "{}/{}?tags={}&hitsPerPage={}&page={}",
             HN_ALGOLIA_PREFIX,
             if by_date { "search_by_date" } else { "search" },
             tag,
-            story_limit
+            story_limit,
+            page
         );
         let time = SystemTime::now();
         let response = self
@@ -379,9 +380,10 @@ impl HNClient {
             .into_json::<StoriesResponse>()?;
         if let Ok(elapsed) = time.elapsed() {
             info!(
-                "get stories (tag={}, by_date={}) took {}ms",
+                "get stories (tag={}, by_date={}, page={}) took {}ms",
                 tag,
                 by_date,
+                page,
                 elapsed.as_millis()
             );
         }

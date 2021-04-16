@@ -23,7 +23,7 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
         {
             let client = client.clone();
             move |s| {
-                story_view::add_story_view_layer(s, &client, "front_page", false);
+                story_view::add_story_view_layer(s, &client, "front_page", false, 0);
             }
         },
     );
@@ -36,7 +36,7 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
         {
             let client = client.clone();
             move |s| {
-                story_view::add_story_view_layer(s, &client, "story", true);
+                story_view::add_story_view_layer(s, &client, "story", true, 0);
             }
         },
     );
@@ -49,7 +49,7 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
         {
             let client = client.clone();
             move |s| {
-                story_view::add_story_view_layer(s, &client, "ask_hn", true);
+                story_view::add_story_view_layer(s, &client, "ask_hn", true, 0);
             }
         },
     );
@@ -62,7 +62,7 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
         {
             let client = client.clone();
             move |s| {
-                story_view::add_story_view_layer(s, &client, "show_hn", true);
+                story_view::add_story_view_layer(s, &client, "show_hn", true, 0);
             }
         },
     );
@@ -75,7 +75,7 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
         {
             let client = client.clone();
             move |s| {
-                story_view::add_story_view_layer(s, &client, "job", true);
+                story_view::add_story_view_layer(s, &client, "job", true, 0);
             }
         },
     );
@@ -152,7 +152,7 @@ fn run() {
     });
 
     let client = hn_client::HNClient::new().unwrap();
-    story_view::add_story_view_layer(&mut s, &client, "front_page", false);
+    story_view::add_story_view_layer(&mut s, &client, "front_page", false, 0);
 
     set_up_global_callbacks(&mut s, &client);
 

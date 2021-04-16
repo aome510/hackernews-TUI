@@ -50,7 +50,7 @@ pub fn construct_footer_view<T: HasHelpView>(client: &hn_client::HNClient) -> im
             LinearLayout::horizontal()
                 .child(Button::new_raw("[front page] ", {
                     let client = client.clone();
-                    move |s| story_view::add_story_view_layer(s, &client, "front_page", false)
+                    move |s| story_view::add_story_view_layer(s, &client, "front_page", false, 0)
                 }))
                 .child(Button::new_raw("[search] ", {
                     let client = client.clone();
@@ -80,15 +80,18 @@ pub fn get_status_bar_with_desc(desc: &str) -> impl View {
 }
 
 /// Construct StoryView based on the filtering tag
-pub fn get_story_view_desc_by_tag(tag: &str, by_date: bool) -> String {
-    "Story View - ".to_owned()
-        + match tag {
+pub fn get_story_view_desc_by_tag(tag: &str, by_date: bool, page: usize) -> String {
+    format!(
+        "Story View - {} ({}, page: {})",
+        match tag {
             "front_page" => "Front Page",
             "story" => "All Stories",
             "job" => "Jobs",
             "ask_hn" => "Ask HN",
             "show_hn" => "Show HN",
             _ => panic!("unknown tag: {}", tag),
-        }
-        + if by_date { " (new)" } else { " (popular)" }
+        },
+        if by_date { "new" } else { "popular" },
+        page + 1
+    )
 }

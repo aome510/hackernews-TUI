@@ -26,11 +26,11 @@ impl ViewWrapper for StoryView {
 }
 
 impl StoryView {
-    pub fn new(stories: Vec<hn_client::Story>) -> Self {
+    pub fn new(stories: Vec<hn_client::Story>, starting_id: usize) -> Self {
         let view = LinearLayout::vertical()
             .with(|s| {
                 stories.iter().enumerate().for_each(|(i, story)| {
-                    let mut story_text = StyledString::plain(format!("{}. ", i + 1));
+                    let mut story_text = StyledString::plain(format!("{}. ", starting_id + i + 1));
                     story_text.append(Self::get_story_text(story));
                     s.add_child(text_view::TextView::new(story_text));
                 })
@@ -117,8 +117,9 @@ impl StoryView {
 pub fn get_story_main_view(
     stories: Vec<hn_client::Story>,
     client: &hn_client::HNClient,
+    starting_id: usize,
 ) -> OnEventView<StoryView> {
-    construct_scroll_list_event_view(StoryView::new(stories))
+    construct_scroll_list_event_view(StoryView::new(stories, starting_id))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
             match *e {
                 Event::Char(c) if '0' <= c && c <= '9' => {
@@ -175,10 +176,10 @@ pub fn get_story_main_view(
         .on_pre_event_inner('g', move |s, _| match s.raw_command.parse::<usize>() {
             Ok(number) => {
                 s.raw_command.clear();
-                if number == 0 {
+                if number < starting_id + 1 {
                     return None;
                 }
-                let number = number - 1;
+                let number = number - 1 - starting_id;
                 if number < s.len() {
                     s.set_focus_index(number).unwrap();
                     Some(EventResult::Consumed(None))
@@ -197,21 +198,16 @@ pub fn get_story_view(
     client: &hn_client::HNClient,
     tag: &'static str,
     by_date: bool,
+    page: usize,
 ) -> impl View {
-    let main_view = get_story_main_view(stories.clone(), client)
-        .on_event(
-            EventTrigger::from_fn(|e| match e {
-                Event::CtrlChar('d') | Event::AltChar('d') => true,
-                _ => false,
-            }),
-            {
-                let client = client.clone();
-                move |s| {
-                    add_story_view_layer(s, &client, tag, !by_date);
-                }
-            },
-        )
-        .full_height();
+    let starting_id = CONFIG
+        .get()
+        .unwrap()
+        .client
+        .story_limit
+        .get_story_limit_by_tag(tag)
+        * page;
+    let main_view = get_story_main_view(stories.clone(), client, starting_id).full_height();
 
     let mut view = LinearLayout::vertical()
         .child(get_status_bar_with_desc(desc))
@@ -247,13 +243,40 @@ pub fn get_story_view(
         }
     }
 
-    OnEventView::new(view).on_pre_event(
-        EventTrigger::from_fn(|e| match e {
-            Event::CtrlChar('h') | Event::AltChar('h') => true,
-            _ => false,
-        }),
-        |s| s.add_layer(StoryView::construct_help_view()),
-    )
+    OnEventView::new(view)
+        .on_pre_event(
+            EventTrigger::from_fn(|e| match e {
+                Event::CtrlChar('h') | Event::AltChar('h') => true,
+                _ => false,
+            }),
+            |s| s.add_layer(StoryView::construct_help_view()),
+        )
+        .on_event(
+            EventTrigger::from_fn(|e| match e {
+                Event::CtrlChar('d') | Event::AltChar('d') => true,
+                _ => false,
+            }),
+            {
+                let client = client.clone();
+                move |s| {
+                    add_story_view_layer(s, &client, tag, !by_date, page);
+                }
+            },
+        )
+        .on_event('p', {
+            let client = client.clone();
+            move |s| {
+                if page > 0 {
+                    add_story_view_layer(s, &client, tag, !by_date, page - 1);
+                }
+            }
+        })
+        .on_event('n', {
+            let client = client.clone();
+            move |s| {
+                add_story_view_layer(s, &client, tag, !by_date, page + 1);
+            }
+        })
 }
 
 /// Add StoryView as a new layer to the main Cursive View
@@ -262,8 +285,9 @@ pub fn add_story_view_layer(
     client: &hn_client::HNClient,
     tag: &'static str,
     by_date: bool,
+    page: usize,
 ) {
-    let async_view = async_view::get_story_view_async(s, client, tag, by_date);
+    let async_view = async_view::get_story_view_async(s, client, tag, by_date, page);
     s.pop_layer();
     s.screen_mut().add_transparent_layer(Layer::new(async_view));
 }

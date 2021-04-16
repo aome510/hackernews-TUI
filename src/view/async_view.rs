@@ -55,19 +55,20 @@ pub fn get_story_view_async(
     client: &hn_client::HNClient,
     tag: &'static str,
     by_date: bool,
+    page: usize,
 ) -> impl View {
     AsyncView::new_with_bg_creator(
         siv,
         {
             let client = client.clone();
-            move || match client.get_stories_by_tag(tag, by_date) {
+            move || match client.get_stories_by_tag(tag, by_date, page) {
                 Ok(stories) => Ok(Ok(stories)),
                 Err(err) => {
                     warn!(
-                        "failed to get stories (tag={}, by_date={}): {:#?}\nRetrying...",
-                        err, tag, by_date
+                        "failed to get stories (tag={}, by_date={}, page={}): {:#?}\nRetrying...",
+                        err, tag, by_date, page
                     );
-                    Ok(client.get_stories_by_tag(tag, by_date))
+                    Ok(client.get_stories_by_tag(tag, by_date, page))
                 }
             }
         },
@@ -76,14 +77,18 @@ pub fn get_story_view_async(
             move |result| {
                 ErrorViewWrapper::new(match result {
                     Ok(stories) => ErrorViewEnum::Ok(story_view::get_story_view(
-                        &get_story_view_desc_by_tag(tag, by_date),
+                        &get_story_view_desc_by_tag(tag, by_date, page),
                         stories,
                         &client,
                         tag,
                         by_date,
+                        page,
                     )),
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
-                        &format!("failed to get stories (tag={}, by_date={})", tag, by_date),
+                        &format!(
+                            "failed to get stories (tag={}, by_date={}, page={})",
+                            tag, by_date, page
+                        ),
                         err,
                         &client,
                     )),
