@@ -232,7 +232,7 @@ pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl Vi
     let mut view = LinearLayout::vertical()
         .child(get_status_bar_with_desc("Search View"))
         .child(main_view)
-        .child(construct_footer_view::<SearchView>(&client));
+        .child(construct_footer_view::<SearchView>());
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
     OnEventView::new(view).on_event(

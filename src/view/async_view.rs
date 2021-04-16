@@ -41,7 +41,6 @@ pub fn get_comment_view_async(
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
                         &format!("failed to get comments from story (id={})", id),
                         err,
-                        &client,
                     )),
                 })
             }
@@ -90,7 +89,6 @@ pub fn get_story_view_async(
                             tag, by_date, page
                         ),
                         err,
-                        &client,
                     )),
                 })
             }
