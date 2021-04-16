@@ -1,27 +1,66 @@
 # hackernews-TUI
 
-`hackernews_tui` is a Terminal UI to browse Hacker News.
+`hackernews_tui` is a Terminal UI to browse Hacker News with vim-like key bindings.
 
 `hackernews_tui` is written in Rust with the help of [Cursive TUI library](https://github.com/gyscos/cursive/). It uses [HN Algolia search APIs](https://hn.algolia.com/api/) to get Hacker News data.
 
 The application mainly consists of the following views:
 
-- `Story View - Front Page` displaying a list of stories in front page of Hacker News.
+- `Story View` displaying a list of stories. There are different kinds of `Story View` depending on the `tag` it uses to filter stories:
+  - `Front Page`: stories on the front-page
+  - `All Stories`: all stories
+  - `Ask HN`: ask HN stories only
+  - `Show HN`: show HN stories only
+  - `Jobs`: jobs stories only
 - `Comment View` displaying a list of comments in a story.
 - `Story View - Search` displaying a search bar and a list of stories matching the search query.
+
+### Why hackernews-TUI?
+
+If you are either
+
+- a Hacker News reader
+- a computer nerd who likes doing things on terminal
+- a vim key-bindings fan boy
+- a person who prefers navigating using keyboard to using mouse
+
+This application is a right tool for you :muscle:
 
 ### Table of Contents
 
 - [Install](#install)
 - [Examples](#examples)
 - [Documentation](#documentation)
+  - [Story View](#storyview)
+  - [Comment View](#commentview)
+  - [Search View](#searchview)
 - [Configuration](#configuration)
 
 ## Install
 
 ### Using cargo
 
+#### Install the latest version from [crates.io](https://crates.io/crates/hackernews_tui)
+
 Run `cargo install hackernews_tui` to install the application as a binary.
+
+#### Build from the `master` branch
+
+Run
+
+```shell
+# git clone https://github.com/aome510/hackernews-TUI.git
+# cd hackernews-TUI
+# cargo build --release
+```
+
+to build the application then run
+
+```shell
+# ./target/release/hackernews_tui
+```
+
+to run the application
 
 ### Arch Linux
 
@@ -44,14 +83,17 @@ $ cd /usr/pkgsrc/www/hackernews-tui
 
 ## Examples
 
-Story View - Front Page:
+### Story View
+
 ![Example of a Story View - Front Page](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/story_view.png)
 
-Comment View:
-![Example of a Comment View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/comment_view.png)
+### Search View
 
-Story View - Search
 ![Example of a Story View - Search](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/story_search_view.png)
+
+### Comment View:
+
+![Example of a Comment View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/comment_view.png)
 
 ## Documentation
 
@@ -61,13 +103,14 @@ In each `View`, press `<ctrl-h>` to see a list of supported keyboard shortcuts a
 
 **Global key shortcuts:**
 
-- `<ctrl-h>\<alt-h>`: Open the help dialog
-- `<ctrl-s>\<alt-s>`: Go to the story search
-- `<ctrl-f>\<alt-f>`: Go to the front page
-- `<ctrl-q>\<alt-q>`: Quit the application
-
-In case the above shortcuts don't work, you can always use the corresponding buttons at the bottom of the `View`:
-![Footer buttons](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/footer_buttons.png)
+- `<ctrl-h>/<alt-h>`: Open the help dialog
+- `<ctrl-q>/<alt-q>`: Quit the application
+- `<ctrl-f>/<alt-f>`: Go to the front page
+- `<ctrl-s>/<alt-s>`: Go to the search page
+- `<ctrl-z>/<alt-z>`: Go to the all stories page
+- `<ctrl-x>/<alt-x>`: Go to the ask HN page
+- `<ctrl-c>/<alt-c>`: Go to the show HN page
+- `<ctrl-v>/<alt-v>`: Go to the jobs page
 
 **Key shortcuts for each `View`:**
 
@@ -81,6 +124,7 @@ In case the above shortcuts don't work, you can always use the corresponding but
 - `<enter>`: Go the comment view associated with the focused story
 - `O`: Open in browser the link associated with the focused story
 - `S`: Open in browser the focused story
+- `<ctrl-d>/<alt-d>`: Toggle sort by date
 
 #### CommentView
 
