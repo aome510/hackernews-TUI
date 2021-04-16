@@ -76,9 +76,11 @@ pub fn get_story_view_async(
             move |result| {
                 ErrorViewWrapper::new(match result {
                     Ok(stories) => ErrorViewEnum::Ok(story_view::get_story_view(
-                        &get_story_view_desc_by_tag(tag),
+                        &get_story_view_desc_by_tag(tag, by_date),
                         stories,
                         &client,
+                        tag,
+                        by_date,
                     )),
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
                         &format!("failed to get stories (tag={}, by_date={})", tag, by_date),

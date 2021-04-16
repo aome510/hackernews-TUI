@@ -1,5 +1,8 @@
 use regex::Regex;
-use std::thread;
+use std::{
+    thread::{self, sleep},
+    time::Duration,
+};
 
 use super::async_view;
 use super::help_view::*;
@@ -114,7 +117,7 @@ impl StoryView {
 pub fn get_story_main_view(
     stories: Vec<hn_client::Story>,
     client: &hn_client::HNClient,
-) -> impl View {
+) -> OnEventView<StoryView> {
     construct_scroll_list_event_view(StoryView::new(stories))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
             match *e {
@@ -185,7 +188,6 @@ pub fn get_story_main_view(
             }
             Err(_) => None,
         })
-        .full_height()
 }
 
 /// Return a StoryView given a story list and the view description
@@ -193,32 +195,56 @@ pub fn get_story_view(
     desc: &str,
     stories: Vec<hn_client::Story>,
     client: &hn_client::HNClient,
+    tag: &'static str,
+    by_date: bool,
 ) -> impl View {
-    let main_view = get_story_main_view(stories.clone(), client);
+    let main_view = get_story_main_view(stories.clone(), client)
+        .on_event(
+            EventTrigger::from_fn(|e| match e {
+                Event::CtrlChar('d') | Event::AltChar('d') => true,
+                _ => false,
+            }),
+            {
+                let client = client.clone();
+                move |s| {
+                    add_story_view_layer(s, &client, tag, !by_date);
+                }
+            },
+        )
+        .full_height();
+
     let mut view = LinearLayout::vertical()
         .child(get_status_bar_with_desc(desc))
         .child(main_view)
         .child(construct_footer_view::<StoryView>(client));
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
-    let config = CONFIG.get().unwrap();
+    let story_pooling = &CONFIG.get().unwrap().story_pooling;
 
     // pooling stories in background
-    if config.story_pooling {
-        let client = client.clone();
-        thread::spawn(move || {
-            stories.iter().for_each(|story| {
-                match client.get_comments_from_story(story, false) {
-                    Err(err) => {
-                        error!(
-                            "failed to get comments from story (id={}): {:#?}",
-                            story.id, err
-                        );
-                    }
-                    _ => {}
-                };
+    if story_pooling.enable {
+        if story_pooling
+            .allows
+            .iter()
+            .any(|allowed_tag| allowed_tag == tag)
+        {
+            let client = client.clone();
+            thread::spawn(move || {
+                stories.iter().for_each(|story| {
+                    match client.get_comments_from_story(story, false) {
+                        Err(err) => {
+                            error!(
+                                "failed to get comments from story (id={}): {:#?}",
+                                story.id, err
+                            );
+                        }
+                        _ => {}
+                    };
+
+                    sleep(Duration::from_secs(story_pooling.delay));
+                });
             });
-        });
+        }
     }
 
     OnEventView::new(view).on_pre_event(
