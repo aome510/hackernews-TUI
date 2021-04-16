@@ -80,13 +80,15 @@ pub fn get_status_bar_with_desc(desc: &str) -> impl View {
 }
 
 /// Construct StoryView based on the filtering tag
-pub fn get_story_view_desc_by_tag(tag: &str) -> String {
+pub fn get_story_view_desc_by_tag(tag: &str, by_date: bool) -> String {
     "Story View - ".to_owned()
         + match tag {
             "front_page" => "Front Page",
-            "job" => "Jos",
-            "ask_hn" => "Ask",
-            "show_hn" => "Show",
+            "story" => "All Stories",
+            "job" => "Jobs",
+            "ask_hn" => "Ask HN",
+            "show_hn" => "Show HN",
             _ => panic!("unknown tag: {}", tag),
         }
+        + if by_date { " (new)" } else { " (popular)" }
 }
