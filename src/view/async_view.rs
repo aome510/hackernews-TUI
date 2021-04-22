@@ -77,7 +77,7 @@ pub fn get_story_view_async(
             move |result| {
                 ErrorViewWrapper::new(match result {
                     Ok(stories) => ErrorViewEnum::Ok(story_view::get_story_view(
-                        &get_story_view_desc_by_tag(tag, by_date, page),
+                        &get_story_view_desc_by_tag(tag, by_date, page, time_offset_in_secs),
                         stories,
                         &client,
                         tag,
