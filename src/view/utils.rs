@@ -74,7 +74,7 @@ pub fn get_status_bar_with_desc(desc: &str) -> impl View {
 /// Construct StoryView based on the filtering tag
 pub fn get_story_view_desc_by_tag(tag: &str, by_date: bool, page: usize) -> String {
     format!(
-        "Story View - {} ({}, page: {})",
+        "Story View - {} (sort_by: {}, page: {})",
         match tag {
             "front_page" => "Front Page",
             "story" => "All Stories",
@@ -83,7 +83,7 @@ pub fn get_story_view_desc_by_tag(tag: &str, by_date: bool, page: usize) -> Stri
             "show_hn" => "Show HN",
             _ => panic!("unknown tag: {}", tag),
         },
-        if by_date { "new" } else { "popular" },
+        if by_date { "date" } else { "popular" },
         page + 1
     )
 }

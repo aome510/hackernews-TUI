@@ -38,9 +38,12 @@ impl SearchView {
         story_view::get_story_main_view(stories, &client, 0).full_height()
     }
 
-    fn get_query_text_view(query: String) -> impl View {
+    fn get_query_text_view(query: String, by_date: bool) -> impl View {
         let mut style_string = StyledString::styled(
-            format!("Search Query:"),
+            format!(
+                "Search (sort_by: {}):",
+                if by_date { "date" } else { "popular" }
+            ),
             ColorStyle::new(
                 PaletteColor::TitlePrimary,
                 get_config_theme().search_highlight_bg.color,
@@ -54,11 +57,12 @@ impl SearchView {
 
     fn get_search_view(
         query: &str,
+        by_date: bool,
         stories: Vec<hn_client::Story>,
         client: &hn_client::HNClient,
     ) -> LinearLayout {
         LinearLayout::vertical()
-            .child(Self::get_query_text_view(query.to_string()))
+            .child(Self::get_query_text_view(query.to_string(), by_date))
             .child(Self::get_matched_stories_view(stories, client))
     }
 
@@ -66,6 +70,7 @@ impl SearchView {
         if self.query.read().unwrap().1 {
             self.view = Self::get_search_view(
                 &self.query.read().unwrap().0.clone(),
+                self.by_date,
                 self.stories.read().unwrap().clone(),
                 &self.client,
             );
@@ -125,7 +130,7 @@ impl SearchView {
     }
 
     pub fn new(client: &hn_client::HNClient, cb_sink: CbSink) -> Self {
-        let view = Self::get_search_view("", vec![], client);
+        let view = Self::get_search_view("", false, vec![], client);
         let stories = Arc::new(RwLock::new(vec![]));
         let query = Arc::new(RwLock::new((String::new(), false)));
         SearchView {
