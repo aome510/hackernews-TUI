@@ -18,7 +18,7 @@ allows = ["front_page"]
 
 [client]
 # "client_timeout" is the application's client timeout (in seconds) when making an API request
-client_timeout = 16
+client_timeout = 60
 
 [client.story_limit]
 # "story_limit" stores the number of maximum stories displayed in a page in each View
