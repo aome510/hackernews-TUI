@@ -9,6 +9,7 @@ use super::utils::*;
 
 use crate::prelude::*;
 
+#[derive(Clone)]
 pub enum SearchViewMode {
     Navigation,
     Search,
@@ -56,26 +57,40 @@ impl SearchView {
     }
 
     fn get_search_view(
+        mode: SearchViewMode,
         query: &str,
         by_date: bool,
         stories: Vec<hn_client::Story>,
         client: &hn_client::HNClient,
     ) -> LinearLayout {
-        LinearLayout::vertical()
+        let mut view = LinearLayout::vertical()
             .child(Self::get_query_text_view(query.to_string(), by_date))
-            .child(Self::get_matched_stories_view(stories, client))
+            .child(Self::get_matched_stories_view(stories, client));
+        match mode {
+            SearchViewMode::Search => {
+                view.set_focus_index(0).unwrap();
+            }
+            SearchViewMode::Navigation => {
+                view.set_focus_index(1).unwrap();
+            }
+        };
+        view
     }
 
     fn update_view(&mut self) {
         if self.query.read().unwrap().1 {
+            let stories = self.stories.read().unwrap().clone();
+            if stories.len() == 0 {
+                self.mode = SearchViewMode::Search;
+            };
+
             self.view = Self::get_search_view(
+                self.mode.clone(),
                 &self.query.read().unwrap().0.clone(),
                 self.by_date,
-                self.stories.read().unwrap().clone(),
+                stories,
                 &self.client,
             );
-            // every time view is updated, reset SearchViewMode to insert/search mode
-            self.mode = SearchViewMode::Search;
             self.query.write().unwrap().1 = false;
         }
     }
@@ -130,7 +145,7 @@ impl SearchView {
     }
 
     pub fn new(client: &hn_client::HNClient, cb_sink: CbSink) -> Self {
-        let view = Self::get_search_view("", false, vec![], client);
+        let view = Self::get_search_view(SearchViewMode::Search, "", false, vec![], client);
         let stories = Arc::new(RwLock::new(vec![]));
         let query = Arc::new(RwLock::new((String::new(), false)));
         SearchView {
