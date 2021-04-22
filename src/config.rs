@@ -159,7 +159,7 @@ impl Default for Config {
                     show_hn: 15,
                     job: 15,
                 },
-                client_timeout: 60,
+                client_timeout: 16,
             },
             theme: Theme {
                 background: Color::parse("#f6f6ef").unwrap(),

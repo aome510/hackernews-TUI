@@ -2,6 +2,7 @@ use super::error_view::{self, ErrorViewEnum, ErrorViewWrapper};
 use super::utils::get_story_view_desc_by_tag;
 
 use crate::prelude::*;
+use cursive_aligned_view::Alignable;
 use cursive_async_view::AsyncView;
 
 /// Return an async view wraps CommentView of a HN story
@@ -46,6 +47,8 @@ pub fn get_comment_view_async(
             }
         },
     )
+    .align_center()
+    .full_screen()
 }
 
 /// Return an async view wraps StoryView with a loading screen when loading data
@@ -96,4 +99,6 @@ pub fn get_story_view_async(
             }
         },
     )
+    .align_center()
+    .full_screen()
 }

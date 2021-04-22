@@ -143,7 +143,7 @@ pub fn get_story_main_view(
                     let client = client.clone();
                     move |s| {
                         let async_view = async_view::get_comment_view_async(s, &client, &story, 0);
-                        s.pop_layer();
+                        // s.pop_layer();
                         s.screen_mut().add_transparent_layer(Layer::new(async_view))
                     }
                 }))
