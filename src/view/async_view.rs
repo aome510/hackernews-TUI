@@ -55,19 +55,20 @@ pub fn get_story_view_async(
     tag: &'static str,
     by_date: bool,
     page: usize,
+    time_offset_in_secs: Option<u64>,
 ) -> impl View {
     AsyncView::new_with_bg_creator(
         siv,
         {
             let client = client.clone();
-            move || match client.get_stories_by_tag(tag, by_date, page) {
+            move || match client.get_stories_by_tag(tag, by_date, page, time_offset_in_secs) {
                 Ok(stories) => Ok(Ok(stories)),
                 Err(err) => {
                     warn!(
                         "failed to get stories (tag={}, by_date={}, page={}): {:#?}\nRetrying...",
                         err, tag, by_date, page
                     );
-                    Ok(client.get_stories_by_tag(tag, by_date, page))
+                    Ok(client.get_stories_by_tag(tag, by_date, page, time_offset_in_secs))
                 }
             }
         },
@@ -82,6 +83,7 @@ pub fn get_story_view_async(
                         tag,
                         by_date,
                         page,
+                        time_offset_in_secs,
                     )),
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
                         &format!(

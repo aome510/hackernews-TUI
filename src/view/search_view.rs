@@ -233,16 +233,15 @@ fn get_search_main_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl V
                 Some(EventResult::Consumed(None))
             }
         })
-        .on_pre_event_inner(
-            EventTrigger::from_fn(|e| match e {
-                Event::CtrlChar('d') | Event::AltChar('d') => true,
-                _ => false,
-            }),
-            |s, _| {
-                s.toggle_by_date();
-                Some(EventResult::Consumed(None))
-            },
-        )
+        .on_pre_event_inner('d', |s, _| {
+            match s.mode {
+                SearchViewMode::Navigation => {
+                    s.toggle_by_date();
+                }
+                SearchViewMode::Search => {}
+            };
+            Some(EventResult::Consumed(None))
+        })
 }
 
 /// Return a view representing a SearchView that searches stories with queries

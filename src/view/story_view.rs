@@ -199,6 +199,7 @@ pub fn get_story_view(
     tag: &'static str,
     by_date: bool,
     page: usize,
+    time_offset_in_secs: Option<u64>,
 ) -> impl View {
     let starting_id = CONFIG
         .get()
@@ -243,6 +244,8 @@ pub fn get_story_view(
         }
     }
 
+    let day_in_secs = 24 * 60 * 60;
+
     OnEventView::new(view)
         .on_pre_event(
             EventTrigger::from_fn(|e| match e {
@@ -251,30 +254,51 @@ pub fn get_story_view(
             }),
             |s| s.add_layer(StoryView::construct_help_view()),
         )
-        .on_event(
-            EventTrigger::from_fn(|e| match e {
-                Event::CtrlChar('d') | Event::AltChar('d') => true,
-                _ => false,
-            }),
-            {
-                let client = client.clone();
-                move |s| {
-                    add_story_view_layer(s, &client, tag, !by_date, page);
-                }
-            },
-        )
+        // time_offset filtering
+        .on_event('q', {
+            let client = client.clone();
+            move |s| {
+                add_story_view_layer(s, &client, tag, by_date, page, Some(day_in_secs * 1));
+            }
+        })
+        .on_event('w', {
+            let client = client.clone();
+            move |s| {
+                add_story_view_layer(s, &client, tag, by_date, page, Some(day_in_secs * 7));
+            }
+        })
+        .on_event('e', {
+            let client = client.clone();
+            move |s| {
+                add_story_view_layer(s, &client, tag, by_date, page, Some(day_in_secs * 30));
+            }
+        })
+        .on_event('r', {
+            let client = client.clone();
+            move |s| {
+                add_story_view_layer(s, &client, tag, by_date, page, Some(day_in_secs * 365));
+            }
+        })
+        // toggle sort_by
+        .on_event('d', {
+            let client = client.clone();
+            move |s| {
+                add_story_view_layer(s, &client, tag, !by_date, page, time_offset_in_secs);
+            }
+        })
+        // paging
         .on_event('p', {
             let client = client.clone();
             move |s| {
                 if page > 0 {
-                    add_story_view_layer(s, &client, tag, by_date, page - 1);
+                    add_story_view_layer(s, &client, tag, by_date, page - 1, time_offset_in_secs);
                 }
             }
         })
         .on_event('n', {
             let client = client.clone();
             move |s| {
-                add_story_view_layer(s, &client, tag, by_date, page + 1);
+                add_story_view_layer(s, &client, tag, by_date, page + 1, time_offset_in_secs);
             }
         })
 }
@@ -286,8 +310,10 @@ pub fn add_story_view_layer(
     tag: &'static str,
     by_date: bool,
     page: usize,
+    time_offset_in_secs: Option<u64>,
 ) {
-    let async_view = async_view::get_story_view_async(s, client, tag, by_date, page);
+    let async_view =
+        async_view::get_story_view_async(s, client, tag, by_date, page, time_offset_in_secs);
     s.pop_layer();
     s.screen_mut().add_transparent_layer(Layer::new(async_view));
 }
