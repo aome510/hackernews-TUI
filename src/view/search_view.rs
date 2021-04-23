@@ -114,6 +114,8 @@ impl SearchView {
         let by_date = self.by_date;
         let page = self.page;
 
+        // create a loading screen if the comand triggers
+        // update_matched_stories is from NavigationMode's commands
         let mut is_navigation_mode = false;
         if let SearchViewMode::Navigation = self.mode {
             is_navigation_mode = true;
@@ -144,7 +146,6 @@ impl SearchView {
                         *self_stories = stories;
                         self_query.write().unwrap().1 = true;
 
-                        // send an empty callback to force redrawing
                         cb_sink
                             .send(Box::new(move |s| {
                                 if is_navigation_mode {
@@ -278,6 +279,7 @@ fn get_search_main_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl V
                 Some(EventResult::Consumed(None))
             }
         })
+        // paging/filtering while in NavigationMode
         .on_pre_event_inner('d', |s, _| {
             if let SearchViewMode::Navigation = s.mode {
                 s.toggle_by_date();

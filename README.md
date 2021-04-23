@@ -30,10 +30,12 @@ This application is a right tool for you :muscle:
 
 - [Install](#install)
 - [Examples](#examples)
-- [Documentation](#documentation)
-  - [Story View](#storyview)
-  - [Comment View](#commentview)
-  - [Search View](#searchview)
+- [Shortcuts](#shortcuts)
+  - [Global key shortcuts](#global-key-shortcuts)
+  - [Key shortcuts for each View](#key-shortcuts-for-each-view)
+    - [Story View](#story-view-shortcuts)
+    - [Comment View](#comment-view-shortcuts)
+    - [Search View](#search-view-shortcuts)
 - [Configuration](#configuration)
 
 ## Install
@@ -95,28 +97,27 @@ $ cd /usr/pkgsrc/www/hackernews-tui
 
 ![Example of a Comment View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/comment_view.png)
 
-## Documentation
-
-### Keyboard shortcuts
+## Shortcuts
 
 In each `View`, press `<ctrl-h>` to see a list of supported keyboard shortcuts and their functionalities:
 
 ![Example of a Help View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/help_view.png)
 
-**Global key shortcuts:**
+### Global key shortcuts
 
 - `<ctrl-h>/<alt-h>`: Open the help dialog
 - `<ctrl-q>/<alt-q>`: Quit the application
-- `<ctrl-f>/<alt-f>`: Go to the front page
-- `<ctrl-s>/<alt-s>`: Go to the search page
-- `<ctrl-z>/<alt-z>`: Go to the all stories page
-- `<ctrl-x>/<alt-x>`: Go to the ask HN page
-- `<ctrl-c>/<alt-c>`: Go to the show HN page
-- `<ctrl-v>/<alt-v>`: Go to the jobs page
+- `<ctrl-p>/<alt-p>`: Go to the previous view
+- `<ctrl-f>/<alt-f>`: Go to front page view
+- `<ctrl-s>/<alt-s>`: Go to search view
+- `<ctrl-z>/<alt-z>`: Go to all stories view
+- `<ctrl-x>/<alt-x>`: Go to ask HN view
+- `<ctrl-c>/<alt-c>`: Go to show HN view
+- `<ctrl-v>/<alt-v>`: Go to jobs view
 
-**Key shortcuts for each `View`:**
+### Key shortcuts for each `View`
 
-#### StoryView
+#### Story View shortcuts
 
 - `j`: Focus the next story
 - `k`: Focus the previous story
@@ -124,13 +125,17 @@ In each `View`, press `<ctrl-h>` to see a list of supported keyboard shortcuts a
 - `b`: Focus the story at the bottom
 - `{story_id} g`: Focus the {story_id}-th story
 - `<enter>`: Go the comment view associated with the focused story
-- `n`: Go to the next page
-- `p`: Go the previous page
 - `O`: Open in browser the link associated with the focused story
 - `S`: Open in browser the focused story
-- `<ctrl-d>/<alt-d>`: Toggle sort by date
+- `n`: Go to the next page
+- `p`: Go the previous page
+- `d`: Toggle sort by date/popularity
+- `q`: Filter stories past 24 hours
+- `w`: Filter stories past week
+- `e`: Filter stories past month
+- `r`: Filter stories past year
 
-#### CommentView
+#### Comment View shortcuts
 
 - `j`: Focus the next comment
 - `k`: Focus the previous comment
@@ -146,7 +151,7 @@ In each `View`, press `<ctrl-h>` to see a list of supported keyboard shortcuts a
 - `C`: Open in browser the focused comment
 - `{link_id} f`: Open in browser the {link_id}-th link in the focused comment
 
-#### SearchView
+#### Search View shortcuts
 
 In `SearchView`, there are two modes: `Navigation` and `Search`. The default mode is `Search`.
 
@@ -158,9 +163,8 @@ Key shortcuts:
 
 - `i`: Enter `Search` mode from `Navigation` mode
 - `<esc>`: Enter `Navigation` mode from `Search` mode
-- `<ctrl-d>/<alt-d>`: Toggle sort by date
 
-`Navigation` mode also supports all `StoryView`'s key shortcuts beside paging shortcuts (`n`, `p`).
+`Navigation` mode also supports all `StoryView`'s key shortcuts beside `q`,`w`,`e`,`r`.
 
 ## Configuration
 

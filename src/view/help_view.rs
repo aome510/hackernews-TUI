@@ -105,10 +105,10 @@ macro_rules! other_key_shortcuts {
 }
 
 #[macro_export]
-macro_rules! switch_view_key_shortcuts {
+macro_rules! view_navigation_key_shortcuts {
     ($(($k:expr,$d:expr)),*) => {
         (
-            "Switch View",
+            "View Navigation",
             vec![
                 $(
                     ($k, $d),
@@ -128,7 +128,10 @@ macro_rules! switch_view_key_shortcuts {
 
 pub trait HasHelpView {
     fn construct_help_view() -> HelpView {
-        HelpView::new().keys(vec![switch_view_key_shortcuts!(), other_key_shortcuts!()])
+        HelpView::new().keys(vec![
+            view_navigation_key_shortcuts!(),
+            other_key_shortcuts!(),
+        ])
     }
 }
 
@@ -172,7 +175,7 @@ impl HasHelpView for StoryView {
                     ("S", "Open in browser the focused story"),
                 ],
             ),
-            switch_view_key_shortcuts!((
+            view_navigation_key_shortcuts!((
                 "<enter>",
                 "Go to the comment view associated with the focused story"
             )),
@@ -212,7 +215,7 @@ impl HasHelpView for CommentView {
                     ),
                 ],
             ),
-            switch_view_key_shortcuts!(),
+            view_navigation_key_shortcuts!(),
             other_key_shortcuts!(("r", "Reload the comment view")),
         ])
     }
@@ -256,7 +259,7 @@ impl HasHelpView for SearchView {
                     ("S", "Open in browser the focused story"),
                 ],
             ),
-            switch_view_key_shortcuts!(),
+            view_navigation_key_shortcuts!(),
             other_key_shortcuts!(),
         ])
     }
