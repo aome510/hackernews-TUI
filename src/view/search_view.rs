@@ -3,6 +3,8 @@ use std::{
     thread,
 };
 
+use cursive_async_view::{AsyncState, AsyncView};
+
 use super::help_view::*;
 use super::text_view;
 use super::utils::*;
@@ -18,9 +20,11 @@ pub enum SearchViewMode {
 /// SearchView is a view displaying a search bar and
 /// a matched story list matching a query string
 pub struct SearchView {
-    // ("query_text", "need_update_view") pair
     by_date: bool,
+    page: usize,
+    // ("query_text", "need_update_view") pair
     query: Arc<RwLock<(String, bool)>>,
+
     stories: Arc<RwLock<Vec<hn_client::Story>>>,
 
     mode: SearchViewMode,
@@ -34,9 +38,10 @@ impl SearchView {
     fn get_matched_stories_view(
         stories: Vec<hn_client::Story>,
         client: &hn_client::HNClient,
+        starting_id: usize,
     ) -> impl View {
         let client = client.clone();
-        story_view::get_story_main_view(stories, &client, 0).full_height()
+        story_view::get_story_main_view(stories, &client, starting_id).full_height()
     }
 
     fn get_query_text_view(query: String, by_date: bool) -> impl View {
@@ -60,12 +65,14 @@ impl SearchView {
         mode: SearchViewMode,
         query: &str,
         by_date: bool,
+        page: usize,
         stories: Vec<hn_client::Story>,
         client: &hn_client::HNClient,
     ) -> LinearLayout {
+        let starting_id = CONFIG.get().unwrap().client.story_limit.search * page;
         let mut view = LinearLayout::vertical()
             .child(Self::get_query_text_view(query.to_string(), by_date))
-            .child(Self::get_matched_stories_view(stories, client));
+            .child(Self::get_matched_stories_view(stories, client, starting_id));
         match mode {
             SearchViewMode::Search => {
                 view.set_focus_index(0).unwrap();
@@ -88,6 +95,7 @@ impl SearchView {
                 self.mode.clone(),
                 &self.query.read().unwrap().0.clone(),
                 self.by_date,
+                self.page,
                 stories,
                 &self.client,
             );
@@ -99,57 +107,94 @@ impl SearchView {
         let self_stories = Arc::clone(&self.stories);
         let self_query = Arc::clone(&self.query);
 
+        let cb_sink = self.cb_sink.clone();
+
         let client = self.client.clone();
         let query = self.query.read().unwrap().0.clone();
-        let cb_sink = self.cb_sink.clone();
         let by_date = self.by_date;
+        let page = self.page;
 
-        thread::spawn(move || match client.get_matched_stories(&query, by_date) {
-            Err(err) => {
-                warn!(
-                    "failed to get stories matching the query '{}': {:#?}",
-                    query, err
-                );
-            }
-            Ok(stories) => {
-                // if the query used to search for "stories"
-                // matches the current query, update view and force redrawing
-                if *self_query.read().unwrap().0 == query {
-                    let mut self_stories = self_stories.write().unwrap();
+        let mut is_navigation_mode = false;
+        if let SearchViewMode::Navigation = self.mode {
+            is_navigation_mode = true;
+            cb_sink
+                .send(Box::new(|s| {
+                    let loading_view = Dialog::new()
+                        .content(AsyncView::<TextView>::new(s, || AsyncState::Pending))
+                        .max_width(32);
+                    s.add_layer(loading_view);
+                }))
+                .unwrap();
+        }
 
-                    *self_stories = stories;
-                    self_query.write().unwrap().1 = true;
-
-                    // send an empty callback to force redrawing
-                    cb_sink.send(Box::new(|_| {})).unwrap();
+        thread::spawn(
+            move || match client.get_matched_stories(&query, by_date, page) {
+                Err(err) => {
+                    warn!(
+                        "failed to get stories matching the query '{}': {:#?}",
+                        query, err
+                    );
                 }
-            }
-        });
+                Ok(stories) => {
+                    // if the query used to search for "stories"
+                    // matches the current query, update view and force redrawing
+                    if *self_query.read().unwrap().0 == query {
+                        let mut self_stories = self_stories.write().unwrap();
+
+                        *self_stories = stories;
+                        self_query.write().unwrap().1 = true;
+
+                        // send an empty callback to force redrawing
+                        cb_sink
+                            .send(Box::new(move |s| {
+                                if is_navigation_mode {
+                                    s.pop_layer();
+                                }
+                            }))
+                            .unwrap();
+                    }
+                }
+            },
+        );
     }
 
     pub fn add_char(&mut self, c: char) {
+        self.page = 0;
         self.query.write().unwrap().0.push(c);
         self.query.write().unwrap().1 = true;
         self.update_matched_stories();
     }
 
     pub fn del_char(&mut self) {
+        self.page = 0;
         self.query.write().unwrap().0.pop();
         self.query.write().unwrap().1 = true;
         self.update_matched_stories();
     }
 
     pub fn toggle_by_date(&mut self) {
+        self.page = 0;
         self.by_date = !self.by_date;
         self.update_matched_stories();
     }
 
+    pub fn update_page(&mut self, next_page: bool) {
+        if next_page {
+            self.page += 1;
+            self.update_matched_stories();
+        } else if self.page > 0 {
+            self.page -= 1;
+            self.update_matched_stories();
+        }
+    }
+
     pub fn new(client: &hn_client::HNClient, cb_sink: CbSink) -> Self {
-        let view = Self::get_search_view(SearchViewMode::Search, "", false, vec![], client);
+        let view = Self::get_search_view(SearchViewMode::Search, "", false, 0, vec![], client);
         let stories = Arc::new(RwLock::new(vec![]));
         let query = Arc::new(RwLock::new((String::new(), false)));
         SearchView {
             by_date: false,
+            page: 0,
             client: client.clone(),
             mode: SearchViewMode::Search,
             query,
@@ -234,12 +279,21 @@ fn get_search_main_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl V
             }
         })
         .on_pre_event_inner('d', |s, _| {
-            match s.mode {
-                SearchViewMode::Navigation => {
-                    s.toggle_by_date();
-                }
-                SearchViewMode::Search => {}
-            };
+            if let SearchViewMode::Navigation = s.mode {
+                s.toggle_by_date();
+            }
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner('n', |s, _| {
+            if let SearchViewMode::Navigation = s.mode {
+                s.update_page(true);
+            }
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner('p', |s, _| {
+            if let SearchViewMode::Navigation = s.mode {
+                s.update_page(false);
+            }
             Some(EventResult::Consumed(None))
         })
 }

@@ -328,14 +328,20 @@ impl HNClient {
     }
 
     /// Get a list of stories matching certain conditions
-    pub fn get_matched_stories(&self, query: &str, by_date: bool) -> Result<Vec<Story>> {
+    pub fn get_matched_stories(
+        &self,
+        query: &str,
+        by_date: bool,
+        page: usize,
+    ) -> Result<Vec<Story>> {
         let search_story_limit = CONFIG.get().unwrap().client.story_limit.search;
         let request_url = format!(
-            "{}/{}?{}&hitsPerPage={}",
+            "{}/{}?{}&hitsPerPage={}&page={}",
             HN_ALGOLIA_PREFIX,
             if by_date { "search_by_date" } else { "search" },
             HN_SEARCH_QUERY_STRING,
-            search_story_limit
+            search_story_limit,
+            page
         );
         let time = SystemTime::now();
         let response = self
