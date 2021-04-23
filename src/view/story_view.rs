@@ -143,7 +143,6 @@ pub fn get_story_main_view(
                     let client = client.clone();
                     move |s| {
                         let async_view = async_view::get_comment_view_async(s, &client, &story, 0);
-                        // s.pop_layer();
                         s.screen_mut().add_transparent_layer(Layer::new(async_view))
                     }
                 }))
@@ -254,7 +253,7 @@ pub fn get_story_view(
             }),
             |s| s.add_layer(StoryView::construct_help_view()),
         )
-        // time_offset filtering
+        // time_offset filter options
         .on_event('q', {
             let client = client.clone();
             move |s| {
