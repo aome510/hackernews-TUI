@@ -48,7 +48,7 @@ impl SearchView {
         let mut style_string = StyledString::styled(
             format!(
                 "Search (sort_by: {}):",
-                if by_date { "date" } else { "popular" }
+                if by_date { "date" } else { "popularity" }
             ),
             ColorStyle::new(
                 PaletteColor::TitlePrimary,
