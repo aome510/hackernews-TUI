@@ -94,7 +94,7 @@ pub fn get_story_view_desc_by_tag(
             "show_hn" => "Show HN",
             _ => panic!("unknown tag: {}", tag),
         },
-        if by_date { "date" } else { "popular" },
+        if by_date { "date" } else { "popularity" },
         match time_offset_in_secs {
             None => "all time".to_string(),
             Some(time_offset_in_secs) =>
