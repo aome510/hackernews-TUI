@@ -143,7 +143,6 @@ pub fn get_story_main_view(
                     let client = client.clone();
                     move |s| {
                         let async_view = async_view::get_comment_view_async(s, &client, &story, 0);
-                        s.pop_layer();
                         s.screen_mut().add_transparent_layer(Layer::new(async_view))
                     }
                 }))
@@ -199,6 +198,7 @@ pub fn get_story_view(
     tag: &'static str,
     by_date: bool,
     page: usize,
+    time_offset_in_secs: Option<u64>,
 ) -> impl View {
     let starting_id = CONFIG
         .get()
@@ -243,6 +243,8 @@ pub fn get_story_view(
         }
     }
 
+    let day_in_secs = 24 * 60 * 60;
+
     OnEventView::new(view)
         .on_pre_event(
             EventTrigger::from_fn(|e| match e {
@@ -251,30 +253,75 @@ pub fn get_story_view(
             }),
             |s| s.add_layer(StoryView::construct_help_view()),
         )
-        .on_event(
-            EventTrigger::from_fn(|e| match e {
-                Event::CtrlChar('d') | Event::AltChar('d') => true,
-                _ => false,
-            }),
-            {
-                let client = client.clone();
-                move |s| {
-                    add_story_view_layer(s, &client, tag, !by_date, page);
-                }
-            },
-        )
+        // time_offset filter options
+        .on_event('q', {
+            let client = client.clone();
+            move |s| {
+                add_story_view_layer(s, &client, tag, by_date, page, Some(day_in_secs * 1), true);
+            }
+        })
+        .on_event('w', {
+            let client = client.clone();
+            move |s| {
+                add_story_view_layer(s, &client, tag, by_date, page, Some(day_in_secs * 7), true);
+            }
+        })
+        .on_event('e', {
+            let client = client.clone();
+            move |s| {
+                add_story_view_layer(s, &client, tag, by_date, page, Some(day_in_secs * 30), true);
+            }
+        })
+        .on_event('r', {
+            let client = client.clone();
+            move |s| {
+                add_story_view_layer(
+                    s,
+                    &client,
+                    tag,
+                    by_date,
+                    page,
+                    Some(day_in_secs * 365),
+                    true,
+                );
+            }
+        })
+        // toggle sort_by
+        .on_event('d', {
+            let client = client.clone();
+            move |s| {
+                add_story_view_layer(s, &client, tag, !by_date, page, time_offset_in_secs, true);
+            }
+        })
+        // paging
         .on_event('p', {
             let client = client.clone();
             move |s| {
                 if page > 0 {
-                    add_story_view_layer(s, &client, tag, by_date, page - 1);
+                    add_story_view_layer(
+                        s,
+                        &client,
+                        tag,
+                        by_date,
+                        page - 1,
+                        time_offset_in_secs,
+                        true,
+                    );
                 }
             }
         })
         .on_event('n', {
             let client = client.clone();
             move |s| {
-                add_story_view_layer(s, &client, tag, by_date, page + 1);
+                add_story_view_layer(
+                    s,
+                    &client,
+                    tag,
+                    by_date,
+                    page + 1,
+                    time_offset_in_secs,
+                    true,
+                );
             }
         })
 }
@@ -286,8 +333,13 @@ pub fn add_story_view_layer(
     tag: &'static str,
     by_date: bool,
     page: usize,
+    time_offset_in_secs: Option<u64>,
+    pop_layer: bool,
 ) {
-    let async_view = async_view::get_story_view_async(s, client, tag, by_date, page);
-    s.pop_layer();
+    let async_view =
+        async_view::get_story_view_async(s, client, tag, by_date, page, time_offset_in_secs);
+    if pop_layer {
+        s.pop_layer();
+    }
     s.screen_mut().add_transparent_layer(Layer::new(async_view));
 }

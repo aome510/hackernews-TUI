@@ -2,6 +2,7 @@ use super::error_view::{self, ErrorViewEnum, ErrorViewWrapper};
 use super::utils::get_story_view_desc_by_tag;
 
 use crate::prelude::*;
+use cursive_aligned_view::Alignable;
 use cursive_async_view::AsyncView;
 
 /// Return an async view wraps CommentView of a HN story
@@ -46,6 +47,8 @@ pub fn get_comment_view_async(
             }
         },
     )
+    .align_center()
+    .full_screen()
 }
 
 /// Return an async view wraps StoryView with a loading screen when loading data
@@ -55,19 +58,20 @@ pub fn get_story_view_async(
     tag: &'static str,
     by_date: bool,
     page: usize,
+    time_offset_in_secs: Option<u64>,
 ) -> impl View {
     AsyncView::new_with_bg_creator(
         siv,
         {
             let client = client.clone();
-            move || match client.get_stories_by_tag(tag, by_date, page) {
+            move || match client.get_stories_by_tag(tag, by_date, page, time_offset_in_secs) {
                 Ok(stories) => Ok(Ok(stories)),
                 Err(err) => {
                     warn!(
                         "failed to get stories (tag={}, by_date={}, page={}): {:#?}\nRetrying...",
                         err, tag, by_date, page
                     );
-                    Ok(client.get_stories_by_tag(tag, by_date, page))
+                    Ok(client.get_stories_by_tag(tag, by_date, page, time_offset_in_secs))
                 }
             }
         },
@@ -76,12 +80,13 @@ pub fn get_story_view_async(
             move |result| {
                 ErrorViewWrapper::new(match result {
                     Ok(stories) => ErrorViewEnum::Ok(story_view::get_story_view(
-                        &get_story_view_desc_by_tag(tag, by_date, page),
+                        &get_story_view_desc_by_tag(tag, by_date, page, time_offset_in_secs),
                         stories,
                         &client,
                         tag,
                         by_date,
                         page,
+                        time_offset_in_secs,
                     )),
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
                         &format!(
@@ -94,4 +99,6 @@ pub fn get_story_view_async(
             }
         },
     )
+    .align_center()
+    .full_screen()
 }

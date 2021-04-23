@@ -328,14 +328,20 @@ impl HNClient {
     }
 
     /// Get a list of stories matching certain conditions
-    pub fn get_matched_stories(&self, query: &str, by_date: bool) -> Result<Vec<Story>> {
+    pub fn get_matched_stories(
+        &self,
+        query: &str,
+        by_date: bool,
+        page: usize,
+    ) -> Result<Vec<Story>> {
         let search_story_limit = CONFIG.get().unwrap().client.story_limit.search;
         let request_url = format!(
-            "{}/{}?{}&hitsPerPage={}",
+            "{}/{}?{}&hitsPerPage={}&page={}",
             HN_ALGOLIA_PREFIX,
             if by_date { "search_by_date" } else { "search" },
             HN_SEARCH_QUERY_STRING,
-            search_story_limit
+            search_story_limit,
+            page
         );
         let time = SystemTime::now();
         let response = self
@@ -357,7 +363,13 @@ impl HNClient {
     }
 
     /// Get a list of stories filtering on a specific tag
-    pub fn get_stories_by_tag(&self, tag: &str, by_date: bool, page: usize) -> Result<Vec<Story>> {
+    pub fn get_stories_by_tag(
+        &self,
+        tag: &str,
+        by_date: bool,
+        page: usize,
+        time_offset_in_secs: Option<u64>,
+    ) -> Result<Vec<Story>> {
         let story_limit = CONFIG
             .get()
             .unwrap()
@@ -365,12 +377,23 @@ impl HNClient {
             .story_limit
             .get_story_limit_by_tag(tag);
         let request_url = format!(
-            "{}/{}?tags={}&hitsPerPage={}&page={}",
+            "{}/{}?tags={}&hitsPerPage={}&page={}{}",
             HN_ALGOLIA_PREFIX,
             if by_date { "search_by_date" } else { "search" },
             tag,
             story_limit,
-            page
+            page,
+            match time_offset_in_secs {
+                None => "".to_string(),
+                Some(time_offset_in_secs) => {
+                    let curr_time = SystemTime::now()
+                        .duration_since(SystemTime::UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs();
+                    let time_lowerbound = curr_time - time_offset_in_secs;
+                    "&numericFilters=created_at_i>".to_owned() + &time_lowerbound.to_string()
+                }
+            }
         );
         let time = SystemTime::now();
         let response = self

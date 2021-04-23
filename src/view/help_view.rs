@@ -97,12 +97,6 @@ macro_rules! other_key_shortcuts {
                 $(
                     ($k, $d),
                 )*
-                ("<ctrl-f>/<alt-f>", "Go to the front page"),
-                ("<ctrl-s>/<alt-s>", "Go to the search page"),
-                ("<ctrl-z>/<alt-z>", "Go to the all stories page"),
-                ("<ctrl-x>/<alt-x>", "Go to the ask HN page"),
-                ("<ctrl-c>/<alt-c>", "Go to the show HN page"),
-                ("<ctrl-v>/<alt-v>", "Go to the jobs page"),
                 ("<ctrl-q>/<alt-q>", "Quit the application"),
                 ("<esc>", "Close this help dialog"),
             ],
@@ -110,9 +104,31 @@ macro_rules! other_key_shortcuts {
     };
 }
 
+#[macro_export]
+macro_rules! switch_view_key_shortcuts {
+    ($(($k:expr,$d:expr)),*) => {
+        (
+            "Switch View",
+            vec![
+                $(
+                    ($k, $d),
+                )*
+                    ("<ctrl-p>/<alt-p>", "Go to the previous view"),
+                    ("<ctrl-f>/<alt-f>", "Go to front page view"),
+                    ("<ctrl-s>/<alt-s>", "Go to search view"),
+                    ("<ctrl-z>/<alt-z>", "Go to all stories view"),
+                    ("<ctrl-x>/<alt-x>", "Go to ask HN view"),
+                    ("<ctrl-c>/<alt-c>", "Go to show HN view"),
+                    ("<ctrl-v>/<alt-v>", "Go to jobs view"),
+            ],
+
+        )
+    };
+}
+
 pub trait HasHelpView {
     fn construct_help_view() -> HelpView {
-        HelpView::new().keys(vec![other_key_shortcuts!()])
+        HelpView::new().keys(vec![switch_view_key_shortcuts!(), other_key_shortcuts!()])
     }
 }
 
@@ -132,12 +148,18 @@ impl HasHelpView for StoryView {
                     ("t", "Focus the story at the top"),
                     ("b", "Focus the story at the bottom"),
                     ("`{story_id} g`", "Focus the {story_id}-th story"),
-                    (
-                        "<enter>",
-                        "Go to the comment view associated with the focused story",
-                    ),
+                ],
+            ),
+            (
+                "Paging/Filtering",
+                vec![
                     ("n", "Go to the next page"),
                     ("p", "Go the previous page"),
+                    ("d", "Toggle sort by date/popularity"),
+                    ("q", "Filter stories past 24 hours"),
+                    ("w", "Filter stories past week"),
+                    ("e", "Filter stories past month"),
+                    ("r", "Filter stories past year"),
                 ],
             ),
             (
@@ -150,7 +172,11 @@ impl HasHelpView for StoryView {
                     ("S", "Open in browser the focused story"),
                 ],
             ),
-            other_key_shortcuts!(("<ctrl-d>/<alt-d>", "Toggle sort by date")),
+            switch_view_key_shortcuts!((
+                "<enter>",
+                "Go to the comment view associated with the focused story"
+            )),
+            other_key_shortcuts!(),
         ])
     }
 }
@@ -186,6 +212,7 @@ impl HasHelpView for CommentView {
                     ),
                 ],
             ),
+            switch_view_key_shortcuts!(),
             other_key_shortcuts!(("r", "Reload the comment view")),
         ])
     }
@@ -195,22 +222,33 @@ impl HasHelpView for SearchView {
     fn construct_help_view() -> HelpView {
         HelpView::new().keys(vec![
             (
-                "Search Mode - Keys",
-                vec![("<esc>", "Switch to navigation mode")],
+                "Switch Mode",
+                vec![
+                    ("<esc>", "Switch to navigation mode"),
+                    ("i", "Switch to search mode"),
+                ],
             ),
             (
-                "Navigation Mode - Keys",
+                "Navigation Mode - Navigation",
                 vec![
-                    ("i", "Switch to search mode"),
                     ("j", "Focus the next story"),
                     ("k", "Focus the previous story"),
                     ("t", "Focus the story at the top"),
                     ("b", "Focus the story at the bottom"),
                     ("`{story_id} g`", "Focus the {story_id}-th story"),
-                    (
-                        "<enter>",
-                        "Go the comment view associated with the focused story",
-                    ),
+                ],
+            ),
+            (
+                "Navigation Mode - Paging/Filtering",
+                vec![
+                    ("n", "Go to the next page"),
+                    ("p", "Go the previous page"),
+                    ("d", "Toggle sort by date/popularity"),
+                ],
+            ),
+            (
+                "Navigation Mode - Open external links",
+                vec![
                     (
                         "O",
                         "Open in browser the link associated with the focused story",
@@ -218,7 +256,8 @@ impl HasHelpView for SearchView {
                     ("S", "Open in browser the focused story"),
                 ],
             ),
-            other_key_shortcuts!(("<ctrl-d>/<alt-d>", "Toggle sort by date")),
+            switch_view_key_shortcuts!(),
+            other_key_shortcuts!(),
         ])
     }
 }
