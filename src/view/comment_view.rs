@@ -317,9 +317,6 @@ pub fn get_comment_view(
                 s.add_layer(CommentView::construct_help_view());
             },
         )
-        .on_event(Key::Backspace, |s| {
-            s.pop_layer();
-        })
         .on_event('O', move |_| {
             if url.len() > 0 {
                 let url = url.clone();

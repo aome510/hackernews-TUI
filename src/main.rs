@@ -23,7 +23,7 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
         {
             let client = client.clone();
             move |s| {
-                story_view::add_story_view_layer(s, &client, "front_page", false, 0, None);
+                story_view::add_story_view_layer(s, &client, "front_page", false, 0, None, false);
             }
         },
     );
@@ -36,7 +36,7 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
         {
             let client = client.clone();
             move |s| {
-                story_view::add_story_view_layer(s, &client, "story", true, 0, None);
+                story_view::add_story_view_layer(s, &client, "story", true, 0, None, false);
             }
         },
     );
@@ -49,7 +49,7 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
         {
             let client = client.clone();
             move |s| {
-                story_view::add_story_view_layer(s, &client, "ask_hn", true, 0, None);
+                story_view::add_story_view_layer(s, &client, "ask_hn", true, 0, None, false);
             }
         },
     );
@@ -62,7 +62,7 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
         {
             let client = client.clone();
             move |s| {
-                story_view::add_story_view_layer(s, &client, "show_hn", true, 0, None);
+                story_view::add_story_view_layer(s, &client, "show_hn", true, 0, None, false);
             }
         },
     );
@@ -75,7 +75,7 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
         {
             let client = client.clone();
             move |s| {
-                story_view::add_story_view_layer(s, &client, "job", true, 0, None);
+                story_view::add_story_view_layer(s, &client, "job", true, 0, None, false);
             }
         },
     );
@@ -83,6 +83,18 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
     // .........................................
     // end of switching shortcuts for StoryView
     // .........................................
+
+    s.set_on_post_event(
+        EventTrigger::from_fn(|e| match e {
+            Event::CtrlChar('p') | Event::AltChar('p') => true,
+            _ => false,
+        }),
+        |s| {
+            if s.screen_mut().len() > 1 {
+                s.pop_layer();
+            }
+        },
+    );
 
     s.set_on_post_event(
         EventTrigger::from_fn(|e| match e {
@@ -152,7 +164,7 @@ fn run() {
     });
 
     let client = hn_client::HNClient::new().unwrap();
-    story_view::add_story_view_layer(&mut s, &client, "front_page", false, 0, None);
+    story_view::add_story_view_layer(&mut s, &client, "front_page", false, 0, None, false);
 
     set_up_global_callbacks(&mut s, &client);
 
