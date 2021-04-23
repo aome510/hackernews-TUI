@@ -5,17 +5,23 @@ use crate::prelude::*;
 
 const MAX_URL_LEN: usize = 64;
 
+fn format_plural(amount: u64, time: &str) -> String {
+    format!("{} {}{}", amount, time, if amount == 1 { "" } else { "s" })
+}
+
 fn get_offset_time_as_text(offset: u64) -> String {
-    if offset <= 60 {
-        format!("{} seconds", offset)
-    } else if offset <= 60 * 60 {
-        format!("{} minutes", offset / 60)
-    } else if offset <= 60 * 60 * 24 {
-        format!("{} hours", offset / 60 / 60)
-    } else if offset <= 60 * 60 * 24 * 365 {
-        format!("{} days", offset / 60 / 60 / 24)
+    if offset < 60 {
+        format_plural(offset, "second")
+    } else if offset < 60 * 60 {
+        format_plural(offset / 60, "minute")
+    } else if offset < 60 * 60 * 24 {
+        format_plural(offset / (60 * 60), "hour")
+    } else if offset < 60 * 60 * 24 * 30 {
+        format_plural(offset / (60 * 60 * 24), "day")
+    } else if offset < 60 * 60 * 24 * 365 {
+        format_plural(offset / (60 * 60 * 24 * 30), "month")
     } else {
-        format!("{} years", offset / 60 / 60 / 24 / 365)
+        format_plural(offset / (60 * 60 * 24 * 365), "year")
     }
 }
 
