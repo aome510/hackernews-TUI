@@ -79,6 +79,10 @@ impl CommentView {
         }
     }
 
+    fn decode_html(s: &str) -> String {
+        htmlescape::decode_html(s).unwrap_or(s.to_string())
+    }
+
     /// Parse a comment in HTML text style to markdown text style (with colors)
     fn parse_single_comment(
         s: String,
@@ -87,8 +91,7 @@ impl CommentView {
         code_re: &Regex,
         link_re: &Regex,
     ) -> (StyledString, Vec<String>) {
-        let mut s = htmlescape::decode_html(&s).unwrap_or(s);
-        s = paragraph_re.replace_all(&s, "${paragraph}\n").to_string();
+        let mut s = paragraph_re.replace_all(&s, "${paragraph}\n").to_string();
         s = italic_re.replace_all(&s, "*${text}*").to_string();
         s = code_re.replace_all(&s, "```\n${code}\n```").to_string();
 
@@ -102,7 +105,7 @@ impl CommentView {
                 None => break,
                 Some(c) => {
                     let m = c.get(0).unwrap();
-                    let link = c.name("link").unwrap().as_str();
+                    let link = Self::decode_html(c.name("link").unwrap().as_str());
 
                     let range = m.range();
                     let mut prefix: String = s
@@ -114,11 +117,11 @@ impl CommentView {
                     prefix.drain(range);
 
                     if prefix.len() > 0 {
-                        styled_s.append_plain(&prefix);
+                        styled_s.append_plain(Self::decode_html(&prefix));
                     }
 
                     styled_s.append_styled(
-                        format!("\"{}\"", shorten_url(link)),
+                        format!("\"{}\"", shorten_url(&link)),
                         Style::from(get_config_theme().link_text.color),
                     );
                     styled_s.append_styled(
@@ -128,13 +131,13 @@ impl CommentView {
                             get_config_theme().link_id_bg.color,
                         ),
                     );
-                    links.push(link.to_string());
+                    links.push(link);
                     continue;
                 }
             }
         }
         if s.len() > 0 {
-            styled_s.append_plain(&s)
+            styled_s.append_plain(Self::decode_html(&s));
         }
         (styled_s, links)
     }
