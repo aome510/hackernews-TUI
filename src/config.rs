@@ -93,6 +93,7 @@ pub struct Theme {
     pub highlight_inactive: Color,
     pub highlight_text: Color,
 
+    // additional custom colors
     pub link_text: Color,
     pub link_id_bg: Color,
     pub search_highlight_bg: Color,
@@ -131,7 +132,7 @@ impl Config {
             // if cannot open the file, use the default configurations
             Err(err) => {
                 warn!(
-                    "failed to open {}: {:#?}\nUse the default configurations instead",
+                    "failed to open {}: {:#?}\n...Use the default configurations instead",
                     file_path, err
                 );
                 Ok(Self::default())
@@ -159,7 +160,7 @@ impl Default for Config {
                     show_hn: 15,
                     job: 15,
                 },
-                client_timeout: 16,
+                client_timeout: 32,
             },
             theme: Theme {
                 background: Color::parse("#f6f6ef").unwrap(),
