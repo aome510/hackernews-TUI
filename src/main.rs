@@ -185,7 +185,7 @@ fn main() {
 
     // parse command line arguments
     let matches = App::new("hackernews-tui")
-        .version("0.4.0")
+        .version("0.5.0")
         .author("Thang Pham <phamducthang1234@gmail>")
         .arg(
             Arg::with_name("config")
