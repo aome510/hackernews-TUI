@@ -203,7 +203,7 @@ fn main() {
         .get_matches();
 
     if matches.is_present("example-config") {
-        println!("{}", include_str!("../examples/hn-tui.toml"));
+        println!("{}", include_str!("hn-tui-default.toml"));
     } else {
         load_config(matches.value_of("config"));
         run();
