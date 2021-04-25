@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>README.html</title>
+<meta http-equiv="Content-Type" content="application/xhtml+xml;charset=utf-8"/>
+<link rel="stylesheet" type="text/css" media="all" href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css"  />
+<link rel="stylesheet" type="text/css" media="all" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/styles/github.min.css"  /><meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'><style> body { box-sizing: border-box; max-width: 740px; width: 100%; margin: 40px auto; padding: 0 10px; } </style><script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script><script src='https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/highlight.min.js'></script><script>document.addEventListener('DOMContentLoaded', () => { document.body.classList.add('markdown-body'); document.querySelectorAll('pre[lang] > code').forEach((code) => { code.classList.add(code.parentElement.lang); }); document.querySelectorAll('pre > code').forEach((code) => { hljs.highlightBlock(code); }); });</script>
+</head>
+
+<body>
+
+<h1 id="hackernews-tui">hackernews-TUI</h1>
+<p><code>hackernews_tui</code> is a Terminal UI to browse Hacker News with vim-like key bindings.</p>
+<p><code>hackernews_tui</code> is written in Rust with the help of <a href="https://github.com/gyscos/cursive/">Cursive TUI library</a>. It uses <a href="https://hn.algolia.com/api/">HN Algolia search APIs</a> to get Hacker News data.</p>
+<p>The application mainly consists of the following views:</p>
+<ul>
+<li><code>Story View</code> displaying a list of stories. There are different kinds of <code>Story View</code> depending on the <code>tag</code> it uses to filter stories:<ul>
+<li><code>Front Page</code>: stories on the front-page</li>
+<li><code>All Stories</code>: all stories</li>
+<li><code>Ask HN</code>: ask HN stories only</li>
+<li><code>Show HN</code>: show HN stories only</li>
+<li><code>Jobs</code>: jobs stories only</li>
+</ul>
+</li>
+<li><code>Comment View</code> displaying a list of comments in a story.</li>
+<li><code>Serrch View</code> displaying a search bar and a list of stories matching the search query.</li>
+</ul>
+<h3 id="why-hackernews-tui">Why hackernews-TUI?</h3>
+<p>If you are either</p>
+<ul>
+<li>a Hacker News reader</li>
+<li>a computer nerd who likes doing things on terminal</li>
+<li>a vim key-bindings fan boy</li>
+<li>a person who prefers navigating using keyboard to using mouse</li>
+</ul>
+<p>This application is a right tool for you :muscle:</p>
+<h3 id="table-of-contents">Table of Contents</h3>
+<ul>
+<li><a href="#install">Install</a></li>
+<li><a href="#examples">Examples</a><ul>
+<li><a href="#demo">Demo</a></li>
+</ul>
+</li>
+<li><a href="#shortcuts">Shortcuts</a><ul>
+<li><a href="#global-key-shortcuts">Global key shortcuts</a></li>
+<li><a href="#key-shortcuts-for-each-view">Key shortcuts for each View</a><ul>
+<li><a href="#story-view-shortcuts">Story View</a></li>
+<li><a href="#comment-view-shortcuts">Comment View</a></li>
+<li><a href="#search-view-shortcuts">Search View</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#configuration">Configuration</a></li>
+</ul>
+<h2 id="install">Install</h2>
+<h3 id="using-cargo">Using cargo</h3>
+<h4 id="install-the-latest-version-from-cratesio">Install the latest version from <a href="https://crates.io/crates/hackernews_tui">crates.io</a></h4>
+<p>Run <code>cargo install hackernews_tui</code> to install the application as a binary.</p>
+<h4 id="build-from-the-master-branch">Build from the <code>master</code> branch</h4>
+<p>Run</p>
+<pre><code class="language-shell"># git clone https://github.com/aome510/hackernews-TUI.git
+# cd hackernews-TUI
+# cargo build --release
+</code></pre>
+<p>to build the application then run</p>
+<pre><code class="language-shell"># ./target/release/hackernews_tui
+</code></pre>
+<p>to run the application</p>
+<h3 id="arch-linux">Arch Linux</h3>
+<p>Run <code>yay -S hackernews_tui</code> to install the application as an AUR package.</p>
+<h3 id="netbsd">NetBSD</h3>
+<h4 id="using-the-package-manager">Using the package manager</h4>
+<pre><code class="language-shell"># pkgin install hackernews-tui
+</code></pre>
+<h4 id="building-from-source">Building from source</h4>
+<pre><code class="language-shell">$ cd /usr/pkgsrc/www/hackernews-tui
+# make install
+</code></pre>
+<h2 id="examples">Examples</h2>
+<h3 id="demo">Demo</h3>
+<p>A demo video made from <code>hackernews_tui</code> version <code>v0.5.0</code>:<br><img src="./examples/assets/v0-5-demo.gif" alt=""></p>
+<h3 id="story-view">Story View</h3>
+<p><img src="https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/story_view.png" alt="Example of a Story View - Front Page"></p>
+<h3 id="search-view">Search View</h3>
+<p><img src="https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/story_search_view.png" alt="Example of a Search View"></p>
+<h3 id="comment-view">Comment View</h3>
+<p><img src="https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/comment_view.png" alt="Example of a Comment View"></p>
+<h2 id="shortcuts">Shortcuts</h2>
+<p>In each <code>View</code>, press <code>&lt;ctrl-h&gt;</code> to see a list of supported keyboard shortcuts and their functionalities:</p>
+<p><img src="https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/help_view.png" alt="Example of a Help View"></p>
+<h3 id="global-key-shortcuts">Global key shortcuts</h3>
+<ul>
+<li><code>&lt;ctrl-h&gt;/&lt;alt-h&gt;</code>: Open the help dialog</li>
+<li><code>&lt;ctrl-q&gt;/&lt;alt-q&gt;</code>: Quit the application</li>
+<li><code>&lt;ctrl-p&gt;/&lt;alt-p&gt;</code>: Go to the previous view</li>
+<li><code>&lt;ctrl-f&gt;/&lt;alt-f&gt;</code>: Go to front page view</li>
+<li><code>&lt;ctrl-s&gt;/&lt;alt-s&gt;</code>: Go to search view</li>
+<li><code>&lt;ctrl-z&gt;/&lt;alt-z&gt;</code>: Go to all stories view</li>
+<li><code>&lt;ctrl-x&gt;/&lt;alt-x&gt;</code>: Go to ask HN view</li>
+<li><code>&lt;ctrl-c&gt;/&lt;alt-c&gt;</code>: Go to show HN view</li>
+<li><code>&lt;ctrl-v&gt;/&lt;alt-v&gt;</code>: Go to jobs view</li>
+</ul>
+<h3 id="key-shortcuts-for-each-view">Key shortcuts for each <code>View</code></h3>
+<h4 id="story-view-shortcuts">Story View shortcuts</h4>
+<ul>
+<li><code>j</code>: Focus the next story</li>
+<li><code>k</code>: Focus the previous story</li>
+<li><code>t</code>: Focus the story at the top</li>
+<li><code>b</code>: Focus the story at the bottom</li>
+<li><code>{story_id} g</code>: Focus the {story_id}-th story</li>
+<li><code>&lt;enter&gt;</code>: Go the comment view associated with the focused story</li>
+<li><code>O</code>: Open in browser the link associated with the focused story</li>
+<li><code>S</code>: Open in browser the focused story</li>
+<li><code>n</code>: Go to the next page</li>
+<li><code>p</code>: Go the previous page</li>
+<li><code>d</code>: Toggle sort by date/popularity</li>
+<li><code>q</code>: Filter stories past 24 hours</li>
+<li><code>w</code>: Filter stories past week</li>
+<li><code>e</code>: Filter stories past month</li>
+<li><code>r</code>: Filter stories past year</li>
+</ul>
+<h4 id="comment-view-shortcuts">Comment View shortcuts</h4>
+<ul>
+<li><code>j</code>: Focus the next comment</li>
+<li><code>k</code>: Focus the previous comment</li>
+<li><code>n</code>: Focus the next top level comment</li>
+<li><code>p</code>: Focus the previous top level comment</li>
+<li><code>l</code>: Focus the next comment with smaller or equal level</li>
+<li><code>h</code>: Focus the previous comment with smaller or equal level</li>
+<li><code>t</code>: Focus the comment at the top</li>
+<li><code>b</code>: Focus the comment at the bottom</li>
+<li><code>r</code>: Reload the comment view.</li>
+<li><code>O</code>: Open in browser the link associated with the discussed story</li>
+<li><code>S</code>: Open in browser the discussed story</li>
+<li><code>C</code>: Open in browser the focused comment</li>
+<li><code>{link_id} f</code>: Open in browser the {link_id}-th link in the focused comment</li>
+</ul>
+<h4 id="search-view-shortcuts">Search View shortcuts</h4>
+<p>In <code>SearchView</code>, there are two modes: <code>Navigation</code> and <code>Search</code>. The default mode is <code>Search</code>.</p>
+<p><code>Search</code> mode is similar to Vim&#39;s Insert mode, in which users can input the query string.</p>
+<p><code>Navigation</code> mode allows the <code>SearchView</code> to behave like a <code>StoryView</code> with all <code>StoryView</code> shortcuts enabled.</p>
+<p>Key shortcuts:</p>
+<ul>
+<li><code>i</code>: Enter <code>Search</code> mode from <code>Navigation</code> mode</li>
+<li><code>&lt;esc&gt;</code>: Enter <code>Navigation</code> mode from <code>Search</code> mode</li>
+</ul>
+<p><code>Navigation</code> mode also supports all <code>StoryView</code>&#39;s key shortcuts beside <code>q</code>,<code>w</code>,<code>e</code>,<code>r</code>.</p>
+<h2 id="configuration">Configuration</h2>
+<p>By default, the application will look for <code>~/.config/hn-tui.toml</code> as its configuration file.</p>
+<p>You can specify the path by specifying the <code>-c</code> or <code>--config</code> argument when running the application:</p>
+<pre><code class="language-shell">hackernews_tui -c ~/.config/hn-tui.toml
+</code></pre>
+<p>For the further information about the config options, please refer to the example config file by running <code>hackernews_tui --example-config</code>.</p>
+<p><strong>Note</strong>: all config options (as included in the example config file) are <strong>required</strong>. You can run</p>
+<pre><code class="language-shell">hackernews_tui --example-config &gt; ~/.config/hn-tui.toml
+</code></pre>
+<p>then modify the config options in <code>~/.config/hn-tui.toml</code> based on your preferences.</p>
+
+
+</body>
+</html>

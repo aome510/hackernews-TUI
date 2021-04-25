@@ -89,7 +89,7 @@ $ cd /usr/pkgsrc/www/hackernews-tui
 ### Demo
 
 A demo video made from `hackernews_tui` version `v0.5.0`:
-![](./examples/assets/v0-5-demo.mp4)
+![](./examples/assets/v0-5-demo.gif)
 
 ### Story View
 
