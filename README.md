@@ -38,6 +38,7 @@ This application is the right tool for you :muscle:
     - [Comment View](#comment-view-shortcuts)
     - [Search View](#search-view-shortcuts)
 - [Configuration](#configuration)
+- [Roadmap](#roadmap)
 
 ## Install
 
@@ -190,3 +191,13 @@ hackernews_tui --example-config > ~/.config/hn-tui.toml
 ```
 
 then modify the config options in `~/.config/hn-tui.toml` based on your preferences.
+
+## Roadmap
+
+- [ ] make all commands customizable
+- [ ] add a `View` to read the linked story in reader mode on the terminal. A list of possible suggestion can be found [here](https://news.ycombinator.com/item?id=26930466)
+- [ ] add commands to navigate parent comments and collapse a comment
+- [ ] integrate [HackerNews Official APIs](https://github.com/HackerNews/API) for real-time updating, lazy-loading comments, and sorting stories
+- [ ] snipe-like navigation, inspired by [vim-snipe](https://github.com/yangmillstheory/vim-snipe)
+- [ ] support more themes
+- [ ] add some extra transition effects
