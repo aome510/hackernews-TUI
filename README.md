@@ -30,6 +30,7 @@ This application is a right tool for you :muscle:
 
 - [Install](#install)
 - [Examples](#examples)
+  - [Demo](#demo)
 - [Shortcuts](#shortcuts)
   - [Global key shortcuts](#global-key-shortcuts)
   - [Key shortcuts for each View](#key-shortcuts-for-each-view)
@@ -84,6 +85,11 @@ $ cd /usr/pkgsrc/www/hackernews-tui
 ```
 
 ## Examples
+
+### Demo
+
+A demo video made from `hackernews_tui` version `v0.5.0`:
+![](./examples/assets/v0-5-demo.mp4)
 
 ### Story View
 
