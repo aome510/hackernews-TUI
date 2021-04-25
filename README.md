@@ -88,8 +88,8 @@ $ cd /usr/pkgsrc/www/hackernews-tui
 
 ### Demo
 
-A demo video made from `hackernews_tui` version `v0.5.0`:
-![](./examples/assets/v0-5-demo.gif)
+A quick demo video made from `hackernews_tui` version `v0.5.0`:
+![Example demo video](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/v0-5-demo.gif)
 
 ### Story View
 
