@@ -8,6 +8,7 @@ description = "A Terminal UI to browse Hacker News"
 repository = "https://github.com/aome510/hackernews-TUI"
 keywords = ["hackernews", "tui"]
 readme = "README.md"
+include = ["src/**/*", "LICENSE", "README.*", "examples/hn-tui.toml", "!**/examples/**/*"]
 
 [dependencies]
 cursive = { version = "0.16", default-features = false, features = ["crossterm-backend"] }
