@@ -13,7 +13,7 @@ The application mainly consists of the following views:
   - `Show HN`: show HN stories only
   - `Jobs`: jobs stories only
 - `Comment View` displaying a list of comments in a story.
-- `Serrch View` displaying a search bar and a list of stories matching the search query.
+- `Search View` displaying a search bar and a list of stories matching the search query.
 
 ### Why hackernews-TUI?
 
@@ -21,10 +21,10 @@ If you are either
 
 - a Hacker News reader
 - a computer nerd who likes doing things on terminal
-- a vim key-bindings fan boy
-- a person who prefers navigating using keyboard to using mouse
+- a vim key-bindings fanboy
+- a person who prefers navigating using the keyboard over a mouse
 
-This application is a right tool for you :muscle:
+This application is the right tool for you :muscle:
 
 ### Table of Contents
 
@@ -57,7 +57,7 @@ Run
 # cargo build --release
 ```
 
-to build the application then run
+to build the application, then run
 
 ```shell
 # ./target/release/hackernews_tui
@@ -184,7 +184,7 @@ You can specify the path by specifying the `-c` or `--config` argument when runn
 hackernews_tui -c ~/.config/hn-tui.toml
 ```
 
-For the further information about the config options, please refer to the example config file by running `hackernews_tui --example-config`.
+For further information about the config options, please refer to the example config file by running `hackernews_tui --example-config`.
 
 **Note**: all config options (as included in the example config file) are **required**. You can run
 
