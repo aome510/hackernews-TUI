@@ -107,13 +107,13 @@ A quick demo video made from `hackernews_tui` version `v0.5.0`:
 
 ## Shortcuts
 
-In each `View`, press `<ctrl-h>` to see a list of supported keyboard shortcuts and their functionalities:
+In each `View`, press `?/<ctrl-h>/<alt-h>` to see a list of supported keyboard shortcuts and their functionalities:
 
 ![Example of a Help View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/help_view.png)
 
 ### Global key shortcuts
 
-- `<ctrl-h>/<alt-h>`: Open the help dialog
+- `?/<ctrl-h>/<alt-h>`: Open the help dialog
 - `<ctrl-q>/<alt-q>`: Quit the application
 - `<ctrl-p>/<alt-p>`: Go to the previous view
 - `<ctrl-f>/<alt-f>`: Go to front page view

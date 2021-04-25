@@ -111,7 +111,7 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
 
     s.set_on_post_event(
         EventTrigger::from_fn(|e| match e {
-            Event::CtrlChar('h') | Event::AltChar('h') => true,
+            Event::Char('?') | Event::CtrlChar('h') | Event::AltChar('h') => true,
             _ => false,
         }),
         |s| s.add_layer(DefaultHelpView::construct_help_view()),

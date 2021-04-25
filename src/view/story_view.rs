@@ -248,7 +248,7 @@ pub fn get_story_view(
     OnEventView::new(view)
         .on_pre_event(
             EventTrigger::from_fn(|e| match e {
-                Event::CtrlChar('h') | Event::AltChar('h') => true,
+                Event::Char('?') | Event::CtrlChar('h') | Event::AltChar('h') => true,
                 _ => false,
             }),
             |s| s.add_layer(StoryView::construct_help_view()),

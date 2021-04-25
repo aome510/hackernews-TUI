@@ -313,7 +313,7 @@ pub fn get_comment_view(
     OnEventView::new(view)
         .on_event(
             EventTrigger::from_fn(|e| match e {
-                Event::CtrlChar('h') | Event::AltChar('h') => true,
+                Event::Char('?') | Event::CtrlChar('h') | Event::AltChar('h') => true,
                 _ => false,
             }),
             |s| {

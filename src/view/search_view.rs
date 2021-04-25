@@ -245,11 +245,11 @@ fn get_search_main_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl V
                     match *e {
                         Event::Char(c) => {
                             s.add_char(c);
-                            None
+                            Some(EventResult::Consumed(None))
                         }
                         Event::Key(Key::Backspace) => {
                             s.del_char();
-                            None
+                            Some(EventResult::Consumed(None))
                         }
                         // ignore all keys that move the focus out of the search bar
                         Event::Key(Key::Up)
@@ -312,7 +312,7 @@ pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl Vi
 
     OnEventView::new(view).on_event(
         EventTrigger::from_fn(|e| match e {
-            Event::CtrlChar('h') | Event::AltChar('h') => true,
+            Event::Char('?') | Event::CtrlChar('h') | Event::AltChar('h') => true,
             _ => false,
         }),
         |s| {

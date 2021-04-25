@@ -97,6 +97,7 @@ macro_rules! other_key_shortcuts {
                 $(
                     ($k, $d),
                 )*
+                ("?/<ctrl-h>/<alt-h>", "Open the help dialog"),
                 ("<ctrl-q>/<alt-q>", "Quit the application"),
                 ("<esc>", "Close this help dialog"),
             ],
