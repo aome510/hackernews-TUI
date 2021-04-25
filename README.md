@@ -88,7 +88,7 @@ $ cd /usr/pkgsrc/www/hackernews-tui
 
 ### Demo
 
-A quick demo video made from `hackernews_tui` version `v0.5.0`can be found [here](https://www.youtube.com/watch?v=AArtVod0b6A)
+A quick demo video made from `hackernews_tui` version `v0.5.0` can be found [here](https://www.youtube.com/watch?v=AArtVod0b6A)
 
 ### Story View
 

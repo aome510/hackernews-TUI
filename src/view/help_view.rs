@@ -40,37 +40,39 @@ impl HelpView {
     }
 
     fn construct_keys_view(&self) -> impl View {
-        LinearLayout::vertical().with(|s| {
-            self.keys.iter().for_each(|(desc, keys)| {
-                s.add_child(TextView::new(StyledString::styled(
-                    desc.to_string(),
-                    ColorStyle::from(PaletteColor::TitlePrimary),
-                )));
-                s.add_child({
-                    let max_key_len = match keys.iter().max_by_key(|key| key.0.len()) {
-                        None => 0,
-                        Some(key) => key.0.len(),
-                    };
+        LinearLayout::vertical()
+            .with(|s| {
+                self.keys.iter().for_each(|(desc, keys)| {
+                    s.add_child(TextView::new(StyledString::styled(
+                        desc.to_string(),
+                        ColorStyle::from(PaletteColor::TitlePrimary),
+                    )));
+                    s.add_child({
+                        let max_key_len = match keys.iter().max_by_key(|key| key.0.len()) {
+                            None => 0,
+                            Some(key) => key.0.len(),
+                        };
 
-                    PaddedView::lrtb(
-                        0,
-                        0,
-                        0,
-                        1,
-                        LinearLayout::vertical()
-                            .with(|s| {
-                                keys.iter().for_each(|key| {
-                                    s.add_child(HelpView::construct_key_view(
-                                        (key.0.to_string(), key.1.to_string()),
-                                        max_key_len + 1,
-                                    ));
-                                });
-                            })
-                            .fixed_width(64),
-                    )
+                        PaddedView::lrtb(
+                            0,
+                            0,
+                            0,
+                            1,
+                            LinearLayout::vertical()
+                                .with(|s| {
+                                    keys.iter().for_each(|key| {
+                                        s.add_child(HelpView::construct_key_view(
+                                            (key.0.to_string(), key.1.to_string()),
+                                            max_key_len + 1,
+                                        ));
+                                    });
+                                })
+                                .fixed_width(64),
+                        )
+                    });
                 });
-            });
-        })
+            })
+            .scrollable()
     }
 
     pub fn keys(
