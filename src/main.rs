@@ -130,7 +130,7 @@ fn load_config(config_file_path: Option<&str>) {
     // if no config file is specified, use the default value
     // at $HOME/.config/hn-tui.toml
     let config_file_path = match config_file_path {
-        None => match dirs::home_dir() {
+        None => match dirs_next::home_dir() {
             None => None,
             Some(path) => Some(format!("{}/.config/hn-tui.toml", path.to_str().unwrap())),
         },
