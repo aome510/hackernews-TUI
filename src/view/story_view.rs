@@ -121,12 +121,8 @@ pub fn get_story_main_view(
 ) -> OnEventView<StoryView> {
     let story_view_keymap = get_story_view_keymap().clone();
 
-    let is_suffix_key = |c: &Event| -> bool {
-        *c == get_story_view_keymap()
-            .goto_story_comment_view
-            .clone()
-            .into()
-    };
+    let is_suffix_key =
+        |c: &Event| -> bool { *c == get_story_view_keymap().goto_story.clone().into() };
 
     construct_scroll_list_event_view(StoryView::new(stories, starting_id))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
