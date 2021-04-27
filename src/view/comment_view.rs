@@ -194,97 +194,140 @@ fn get_comment_main_view(
     focus_id: u32,
 ) -> impl View {
     let client = client.clone();
+    let comment_view_keymap = &get_config_keymap().comment_view_keymap;
+
+    let is_suffix_key = |c: &Event| -> bool {
+        *c == get_config_keymap()
+            .comment_view_keymap
+            .open_link_in_browser
+            .clone()
+            .into()
+    };
 
     construct_scroll_list_event_view(CommentView::new(story.clone(), comments, focus_id))
-        .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
+        .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
             match *e {
                 Event::Char(c) if '0' <= c && c <= '9' => {
                     s.raw_command.push(c);
                 }
-                Event::Char('f') => {}
                 _ => {
-                    s.raw_command.clear();
+                    if !is_suffix_key(e) {
+                        s.raw_command.clear();
+                    }
                 }
             };
             None
         })
-        .on_pre_event_inner('l', move |s, _| {
-            let heights = s.get_heights();
+        .on_pre_event_inner(comment_view_keymap.prev_comment.clone(), |s, _| {
             let id = s.get_focus_index();
-            let (_, right) = heights.split_at(id + 1);
-            let offset = right.iter().position(|&h| h <= heights[id]);
-            let next_id = match offset {
-                None => id,
-                Some(offset) => id + offset + 1,
-            };
-            s.set_focus_index(next_id)
-        })
-        .on_pre_event_inner('h', move |s, _| {
-            let heights = s.get_heights();
-            let id = s.get_focus_index();
-            let (left, _) = heights.split_at(id);
-            let next_id = left.iter().rposition(|&h| h <= heights[id]).unwrap_or(id);
-            s.set_focus_index(next_id)
-        })
-        .on_pre_event_inner('n', move |s, _| {
-            let heights = s.get_heights();
-            let id = s.get_focus_index();
-            let (_, right) = heights.split_at(id + 1);
-            let offset = right.iter().position(|&h| h == 0);
-            let next_id = match offset {
-                None => id,
-                Some(offset) => id + offset + 1,
-            };
-            s.set_focus_index(next_id)
-        })
-        .on_pre_event_inner('p', move |s, _| {
-            let heights = s.get_heights();
-            let id = s.get_focus_index();
-            let (left, _) = heights.split_at(id);
-            let next_id = left.iter().rposition(|&h| h == 0).unwrap_or(id);
-            s.set_focus_index(next_id)
-        })
-        .on_pre_event_inner('f', |s, _| match s.raw_command.parse::<usize>() {
-            Ok(num) => {
-                s.raw_command.clear();
-                let id = s.get_focus_index();
-                if num < s.comments[id].links.len() {
-                    let url = s.comments[id].links[num].clone();
-                    thread::spawn(move || {
-                        if let Err(err) = webbrowser::open(&url) {
-                            warn!("failed to open link {}: {}", url, err);
-                        }
-                    });
-                    Some(EventResult::Consumed(None))
-                } else {
-                    Some(EventResult::Consumed(None))
-                }
+            if id == 0 {
+                None
+            } else {
+                s.set_focus_index(id - 1)
             }
-            Err(_) => None,
         })
-        .on_pre_event_inner('r', move |s, _| {
-            let focus_id = s.comments[s.get_focus_index()].id;
-            Some(EventResult::with_cb({
-                let client = client.clone();
-                let story = s.story.clone();
-                move |s| {
-                    let async_view =
-                        async_view::get_comment_view_async(s, &client, &story, focus_id);
-                    s.pop_layer();
-                    s.screen_mut().add_transparent_layer(Layer::new(async_view))
+        .on_pre_event_inner(comment_view_keymap.next_comment.clone(), |s, _| {
+            let id = s.get_focus_index();
+            s.set_focus_index(id + 1)
+        })
+        .on_pre_event_inner(
+            comment_view_keymap.next_leq_level_comment.clone(),
+            move |s, _| {
+                let heights = s.get_heights();
+                let id = s.get_focus_index();
+                let (_, right) = heights.split_at(id + 1);
+                let offset = right.iter().position(|&h| h <= heights[id]);
+                let next_id = match offset {
+                    None => id,
+                    Some(offset) => id + offset + 1,
+                };
+                s.set_focus_index(next_id)
+            },
+        )
+        .on_pre_event_inner(
+            comment_view_keymap.prev_leq_level_comment.clone(),
+            move |s, _| {
+                let heights = s.get_heights();
+                let id = s.get_focus_index();
+                let (left, _) = heights.split_at(id);
+                let next_id = left.iter().rposition(|&h| h <= heights[id]).unwrap_or(id);
+                s.set_focus_index(next_id)
+            },
+        )
+        .on_pre_event_inner(
+            comment_view_keymap.next_top_level_comment.clone(),
+            move |s, _| {
+                let heights = s.get_heights();
+                let id = s.get_focus_index();
+                let (_, right) = heights.split_at(id + 1);
+                let offset = right.iter().position(|&h| h == 0);
+                let next_id = match offset {
+                    None => id,
+                    Some(offset) => id + offset + 1,
+                };
+                s.set_focus_index(next_id)
+            },
+        )
+        .on_pre_event_inner(
+            comment_view_keymap.prev_top_level_comment.clone(),
+            move |s, _| {
+                let heights = s.get_heights();
+                let id = s.get_focus_index();
+                let (left, _) = heights.split_at(id);
+                let next_id = left.iter().rposition(|&h| h == 0).unwrap_or(id);
+                s.set_focus_index(next_id)
+            },
+        )
+        .on_pre_event_inner(
+            comment_view_keymap.open_link_in_browser.clone(),
+            |s, _| match s.raw_command.parse::<usize>() {
+                Ok(num) => {
+                    s.raw_command.clear();
+                    let id = s.get_focus_index();
+                    if num < s.comments[id].links.len() {
+                        let url = s.comments[id].links[num].clone();
+                        thread::spawn(move || {
+                            if let Err(err) = webbrowser::open(&url) {
+                                warn!("failed to open link {}: {}", url, err);
+                            }
+                        });
+                        Some(EventResult::Consumed(None))
+                    } else {
+                        Some(EventResult::Consumed(None))
+                    }
                 }
-            }))
-        })
-        .on_pre_event_inner('C', move |s, _| {
-            let id = s.comments[s.get_focus_index()].id;
-            thread::spawn(move || {
-                let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
-                if let Err(err) = webbrowser::open(&url) {
-                    warn!("failed to open link {}: {}", url, err);
-                }
-            });
-            Some(EventResult::Consumed(None))
-        })
+                Err(_) => None,
+            },
+        )
+        .on_pre_event_inner(
+            comment_view_keymap.reload_comment_view.clone(),
+            move |s, _| {
+                let focus_id = s.comments[s.get_focus_index()].id;
+                Some(EventResult::with_cb({
+                    let client = client.clone();
+                    let story = s.story.clone();
+                    move |s| {
+                        let async_view =
+                            async_view::get_comment_view_async(s, &client, &story, focus_id);
+                        s.pop_layer();
+                        s.screen_mut().add_transparent_layer(Layer::new(async_view))
+                    }
+                }))
+            },
+        )
+        .on_pre_event_inner(
+            comment_view_keymap.open_comment_in_browser.clone(),
+            move |s, _| {
+                let id = s.comments[s.get_focus_index()].id;
+                thread::spawn(move || {
+                    let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
+                    if let Err(err) = webbrowser::open(&url) {
+                        warn!("failed to open link {}: {}", url, err);
+                    }
+                });
+                Some(EventResult::Consumed(None))
+            },
+        )
         .full_height()
 }
 
@@ -312,30 +355,39 @@ pub fn get_comment_view(
 
     OnEventView::new(view)
         .on_event(
-            EventTrigger::from_fn(|e| match e {
-                Event::Char('?') | Event::CtrlChar('h') | Event::AltChar('h') => true,
-                _ => false,
-            }),
+            get_config_keymap().global_keymap.open_help_dialog.clone(),
             |s| {
                 s.add_layer(CommentView::construct_help_view());
             },
         )
-        .on_event('O', move |_| {
-            if url.len() > 0 {
-                let url = url.clone();
+        .on_event(
+            get_config_keymap()
+                .story_view_keymap
+                .open_article_in_browser
+                .clone(),
+            move |_| {
+                if url.len() > 0 {
+                    let url = url.clone();
+                    thread::spawn(move || {
+                        if let Err(err) = webbrowser::open(&url) {
+                            warn!("failed to open link {}: {}", url, err);
+                        }
+                    });
+                }
+            },
+        )
+        .on_event(
+            get_config_keymap()
+                .story_view_keymap
+                .open_story_in_browser
+                .clone(),
+            move |_| {
                 thread::spawn(move || {
+                    let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
                     if let Err(err) = webbrowser::open(&url) {
                         warn!("failed to open link {}: {}", url, err);
                     }
                 });
-            }
-        })
-        .on_event('S', move |_| {
-            thread::spawn(move || {
-                let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
-                if let Err(err) = webbrowser::open(&url) {
-                    warn!("failed to open link {}: {}", url, err);
-                }
-            });
-        })
+            },
+        )
 }
