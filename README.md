@@ -1,6 +1,6 @@
 # hackernews-TUI
 
-`hackernews_tui` is a Terminal UI to browse Hacker News with vim-like key bindings.
+`hackernews_tui` is a Terminal UI to browse Hacker News with fully customizable and vim-like key bindings.
 
 `hackernews_tui` is written in Rust with the help of [Cursive TUI library](https://github.com/gyscos/cursive/). It uses [HN Algolia search APIs](https://hn.algolia.com/api/) to get Hacker News data.
 
@@ -31,13 +31,14 @@ This application is the right tool for you :muscle:
 - [Install](#install)
 - [Examples](#examples)
   - [Demo](#demo)
-- [Shortcuts](#shortcuts)
+- [Default Shortcuts](#default-shortcuts)
   - [Global key shortcuts](#global-key-shortcuts)
   - [Key shortcuts for each View](#key-shortcuts-for-each-view)
     - [Story View](#story-view-shortcuts)
     - [Comment View](#comment-view-shortcuts)
     - [Search View](#search-view-shortcuts)
 - [Configuration](#configuration)
+  - [User-defined shortcuts](#user-defined-shortcuts)
 - [Roadmap](#roadmap)
 
 ## Install
@@ -103,23 +104,23 @@ A quick demo video made from `hackernews_tui` version `v0.5.0` can be found [her
 
 ![Example of a Comment View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/comment_view.png)
 
-## Shortcuts
+## Default Shortcuts
 
-In each `View`, press `?/<ctrl-h>/<alt-h>` to see a list of supported keyboard shortcuts and their functionalities:
+In each `View`, press `?` to see a list of supported keyboard shortcuts and their functionalities:
 
 ![Example of a Help View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/help_view.png)
 
 ### Global key shortcuts
 
-- `?/<ctrl-h>/<alt-h>`: Open the help dialog
-- `<ctrl-q>/<alt-q>`: Quit the application
-- `<ctrl-p>/<alt-p>`: Go to the previous view
-- `<ctrl-f>/<alt-f>`: Go to front page view
-- `<ctrl-s>/<alt-s>`: Go to search view
-- `<ctrl-z>/<alt-z>`: Go to all stories view
-- `<ctrl-x>/<alt-x>`: Go to ask HN view
-- `<ctrl-c>/<alt-c>`: Go to show HN view
-- `<ctrl-v>/<alt-v>`: Go to jobs view
+- `?`: Open the help dialog
+- `C-q`: Quit the application
+- `C-p`: Go to the previous view
+- `C-f`: Go to front page view
+- `C-s`: Go to search view
+- `C-z`: Go to all stories view
+- `C-x`: Go to ask HN view
+- `C-c`: Go to show HN view
+- `C-v`: Go to jobs view
 
 ### Key shortcuts for each `View`
 
@@ -130,9 +131,9 @@ In each `View`, press `?/<ctrl-h>/<alt-h>` to see a list of supported keyboard s
 - `t`: Focus the story at the top
 - `b`: Focus the story at the bottom
 - `{story_id} g`: Focus the {story_id}-th story
-- `<enter>`: Go the comment view associated with the focused story
-- `O`: Open in browser the link associated with the focused story
-- `S`: Open in browser the focused story
+- `enter`: Go the comment view associated with the focused story
+- `o`: Open in browser the article associated with the focused story
+- `s`: Open in browser the focused story
 - `n`: Go to the next page
 - `p`: Go the previous page
 - `d`: Toggle sort by date/popularity
@@ -149,12 +150,10 @@ In each `View`, press `?/<ctrl-h>/<alt-h>` to see a list of supported keyboard s
 - `p`: Focus the previous top level comment
 - `l`: Focus the next comment with smaller or equal level
 - `h`: Focus the previous comment with smaller or equal level
-- `t`: Focus the comment at the top
-- `b`: Focus the comment at the bottom
 - `r`: Reload the comment view.
-- `O`: Open in browser the link associated with the discussed story
-- `S`: Open in browser the discussed story
-- `C`: Open in browser the focused comment
+- `o`: Open in browser the article associated with the discussed story
+- `s`: Open in browser the discussed story
+- `c`: Open in browser the focused comment
 - `{link_id} f`: Open in browser the {link_id}-th link in the focused comment
 
 #### Search View shortcuts
@@ -170,7 +169,7 @@ Key shortcuts:
 - `i`: Enter `Search` mode from `Navigation` mode
 - `<esc>`: Enter `Navigation` mode from `Search` mode
 
-`Navigation` mode also supports all `StoryView`'s key shortcuts beside `q`,`w`,`e`,`r`.
+`Navigation` mode also supports a subset of `StoryView`'s key shortcuts.
 
 ## Configuration
 
@@ -192,9 +191,13 @@ hackernews_tui --example-config > ~/.config/hn-tui.toml
 
 then modify the config options in `~/.config/hn-tui.toml` based on your preferences.
 
+### User-defined shortcuts
+
+Shortcuts in each `View` are full customizable, for futher information about the supported keys and the corresponding functionalities, please refer to the **user-defined key bindings** sections in the example config file by running `hackernews_tui --example-config`.
+
 ## Roadmap
 
-- [ ] make all commands customizable
+- [x] make all commands customizable
 - [ ] add a `View` to read the linked story in reader mode on the terminal. A list of possible suggestion can be found [here](https://news.ycombinator.com/item?id=26930466)
 - [ ] add commands to navigate parent comments and collapse a comment
 - [ ] integrate [HackerNews Official APIs](https://github.com/HackerNews/API) for real-time updating, lazy-loading comments, and sorting stories

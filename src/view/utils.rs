@@ -60,9 +60,10 @@ pub fn construct_footer_view<T: HasHelpView>() -> impl View {
         )
         .child(
             LinearLayout::horizontal()
-                .child(Button::new_raw("[?/<ctrl-h>: help] ", |s| {
-                    s.add_layer(T::construct_help_view())
-                }))
+                .child(Button::new_raw(
+                    format!("[{}: help] ", get_global_keymap().open_help_dialog),
+                    |s| s.add_layer(T::construct_help_view()),
+                ))
                 .child(Button::new_raw("[quit] ", |s| s.quit())),
         )
 }

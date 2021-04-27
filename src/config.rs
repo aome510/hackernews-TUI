@@ -1,28 +1,31 @@
 use anyhow::Result;
+use cursive::theme;
 use log::warn;
 use once_cell::sync::OnceCell;
 use serde::{de, Deserialize, Deserializer};
 use std::fs;
 
-use cursive::theme;
+use super::keybindings::*;
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize)]
 /// Config is a struct storing the application's configurations
 pub struct Config {
     pub story_pooling: StoryPooling,
     pub page_scrolling: bool,
     pub client: Client,
     pub theme: Theme,
+
+    pub keymap: KeyMap,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize)]
 pub struct StoryPooling {
     pub enable: bool,
     pub delay: u64,
     pub allows: Vec<String>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize)]
 pub struct StoryLimit {
     pub front_page: usize,
     pub story: usize,
@@ -32,13 +35,13 @@ pub struct StoryLimit {
     pub search: usize,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize)]
 pub struct Client {
     pub story_limit: StoryLimit,
     pub client_timeout: u64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Color {
     pub color: theme::Color,
 }
@@ -78,7 +81,7 @@ impl<'de> de::Deserialize<'de> for Color {
     }
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Clone)]
 pub struct Theme {
     // cursive's palette colors
     pub background: Color,
@@ -142,6 +145,30 @@ impl Config {
     }
 }
 
+impl Default for Theme {
+    fn default() -> Self {
+        Theme {
+            background: Color::parse("#f6f6ef").unwrap(),
+            shadow: Color::parse("black").unwrap(),
+            view: Color::parse("#f6f6ef").unwrap(),
+            primary: Color::parse("#4a4a48").unwrap(),
+            secondary: Color::parse("#a5a5a5").unwrap(),
+            tertiary: Color::parse("white").unwrap(),
+            title_primary: Color::parse("black").unwrap(),
+            title_secondary: Color::parse("yellow").unwrap(),
+            highlight: Color::parse("#6c6c6c").unwrap(),
+            highlight_inactive: Color::parse("blue").unwrap(),
+            highlight_text: Color::parse("white").unwrap(),
+
+            link_text: Color::parse("#4fbbfd").unwrap(),
+            link_id_bg: Color::parse("#ffff00").unwrap(),
+            search_highlight_bg: Color::parse("#ffff00").unwrap(),
+            status_bar_bg: Color::parse("#ff6600").unwrap(),
+            code_block_bg: Color::parse("#c8c8c8").unwrap(),
+        }
+    }
+}
+
 impl Default for Config {
     fn default() -> Self {
         Config {
@@ -162,25 +189,8 @@ impl Default for Config {
                 },
                 client_timeout: 32,
             },
-            theme: Theme {
-                background: Color::parse("#f6f6ef").unwrap(),
-                shadow: Color::parse("black").unwrap(),
-                view: Color::parse("#f6f6ef").unwrap(),
-                primary: Color::parse("#4a4a48").unwrap(),
-                secondary: Color::parse("#a5a5a5").unwrap(),
-                tertiary: Color::parse("white").unwrap(),
-                title_primary: Color::parse("black").unwrap(),
-                title_secondary: Color::parse("yellow").unwrap(),
-                highlight: Color::parse("#6c6c6c").unwrap(),
-                highlight_inactive: Color::parse("blue").unwrap(),
-                highlight_text: Color::parse("white").unwrap(),
-
-                link_text: Color::parse("#4fbbfd").unwrap(),
-                link_id_bg: Color::parse("#ffff00").unwrap(),
-                search_highlight_bg: Color::parse("#ffff00").unwrap(),
-                status_bar_bg: Color::parse("#ff6600").unwrap(),
-                code_block_bg: Color::parse("#c8c8c8").unwrap(),
-            },
+            theme: Theme::default(),
+            keymap: KeyMap::default(),
         }
     }
 }
@@ -189,4 +199,20 @@ pub static CONFIG: OnceCell<Config> = OnceCell::new();
 
 pub fn get_config_theme() -> &'static Theme {
     &CONFIG.get().unwrap().theme
+}
+
+pub fn get_global_keymap() -> &'static GlobalKeyMap {
+    &CONFIG.get().unwrap().keymap.global_keymap
+}
+
+pub fn get_story_view_keymap() -> &'static StoryViewKeyMap {
+    &CONFIG.get().unwrap().keymap.story_view_keymap
+}
+
+pub fn get_search_view_keymap() -> &'static SearchViewKeyMap {
+    &CONFIG.get().unwrap().keymap.search_view_keymap
+}
+
+pub fn get_comment_view_keymap() -> &'static CommentViewKeyMap {
+    &CONFIG.get().unwrap().keymap.comment_view_keymap
 }
