@@ -5,27 +5,6 @@ pub type ScrollListView = ScrollView<LinearLayout>;
 /// Construct a new OnEventView wrapping a ScrollListView
 pub fn construct_scroll_list_event_view<T: ScrollableList>(view: T) -> OnEventView<T> {
     OnEventView::new(view)
-        .on_pre_event_inner('k', |s, _| {
-            let id = s.get_focus_index();
-            if id == 0 {
-                None
-            } else {
-                s.set_focus_index(id - 1)
-            }
-        })
-        .on_pre_event_inner('j', |s, _| {
-            let id = s.get_focus_index();
-            s.set_focus_index(id + 1)
-        })
-        .on_pre_event_inner('t', |s, _| s.set_focus_index(0))
-        .on_pre_event_inner('b', |s, _| {
-            let len = s.len();
-            if len == 0 {
-                None
-            } else {
-                s.set_focus_index(len - 1)
-            }
-        })
         .on_pre_event_inner(Key::Up, |s, _| {
             s.get_scroller_mut().scroll_up(1);
             Some(EventResult::Consumed(None))
