@@ -142,6 +142,30 @@ impl Config {
     }
 }
 
+impl Default for Theme {
+    fn default() -> Self {
+        Theme {
+            background: Color::parse("#f6f6ef").unwrap(),
+            shadow: Color::parse("black").unwrap(),
+            view: Color::parse("#f6f6ef").unwrap(),
+            primary: Color::parse("#4a4a48").unwrap(),
+            secondary: Color::parse("#a5a5a5").unwrap(),
+            tertiary: Color::parse("white").unwrap(),
+            title_primary: Color::parse("black").unwrap(),
+            title_secondary: Color::parse("yellow").unwrap(),
+            highlight: Color::parse("#6c6c6c").unwrap(),
+            highlight_inactive: Color::parse("blue").unwrap(),
+            highlight_text: Color::parse("white").unwrap(),
+
+            link_text: Color::parse("#4fbbfd").unwrap(),
+            link_id_bg: Color::parse("#ffff00").unwrap(),
+            search_highlight_bg: Color::parse("#ffff00").unwrap(),
+            status_bar_bg: Color::parse("#ff6600").unwrap(),
+            code_block_bg: Color::parse("#c8c8c8").unwrap(),
+        }
+    }
+}
+
 impl Default for Config {
     fn default() -> Self {
         Config {
@@ -162,25 +186,7 @@ impl Default for Config {
                 },
                 client_timeout: 32,
             },
-            theme: Theme {
-                background: Color::parse("#f6f6ef").unwrap(),
-                shadow: Color::parse("black").unwrap(),
-                view: Color::parse("#f6f6ef").unwrap(),
-                primary: Color::parse("#4a4a48").unwrap(),
-                secondary: Color::parse("#a5a5a5").unwrap(),
-                tertiary: Color::parse("white").unwrap(),
-                title_primary: Color::parse("black").unwrap(),
-                title_secondary: Color::parse("yellow").unwrap(),
-                highlight: Color::parse("#6c6c6c").unwrap(),
-                highlight_inactive: Color::parse("blue").unwrap(),
-                highlight_text: Color::parse("white").unwrap(),
-
-                link_text: Color::parse("#4fbbfd").unwrap(),
-                link_id_bg: Color::parse("#ffff00").unwrap(),
-                search_highlight_bg: Color::parse("#ffff00").unwrap(),
-                status_bar_bg: Color::parse("#ff6600").unwrap(),
-                code_block_bg: Color::parse("#c8c8c8").unwrap(),
-            },
+            theme: Theme::default(),
         }
     }
 }
