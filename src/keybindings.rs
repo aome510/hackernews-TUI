@@ -64,7 +64,7 @@ pub struct StoryViewKeyMap {
     // stories paging/filtering keymaps
     pub next_page: Key,
     pub prev_page: Key,
-    pub toggle_sory_by: Key,
+    pub toggle_sort_by: Key,
     pub filter_past_day: Key,
     pub filter_past_week: Key,
     pub filter_past_month: Key,
@@ -86,7 +86,7 @@ impl Default for StoryViewKeyMap {
 
             next_page: Key::new('n'),
             prev_page: Key::new('p'),
-            toggle_sory_by: Key::new('d'),
+            toggle_sort_by: Key::new('d'),
             filter_past_day: Key::new('q'),
             filter_past_week: Key::new('w'),
             filter_past_month: Key::new('e'),
