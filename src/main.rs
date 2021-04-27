@@ -9,122 +9,71 @@ use clap::*;
 use prelude::*;
 
 fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
-    // we already have <alt-q>/<ctrl-q> for quit
     s.clear_global_callbacks(Event::CtrlChar('c'));
+
+    let global_keymap = &get_config_keymap().global_keymap;
 
     // .............................................................
     // global shortcuts for switching between different Story Views
     // .............................................................
 
-    s.set_on_post_event(
-        EventTrigger::from_fn(|e| match e {
-            Event::CtrlChar('f') | Event::AltChar('f') => true,
-            _ => false,
-        }),
-        {
-            let client = client.clone();
-            move |s| {
-                story_view::add_story_view_layer(s, &client, "front_page", false, 0, None, false);
-            }
-        },
-    );
+    s.set_on_post_event(global_keymap.goto_front_page_view.clone(), {
+        let client = client.clone();
+        move |s| {
+            story_view::add_story_view_layer(s, &client, "front_page", false, 0, None, false);
+        }
+    });
 
-    s.set_on_post_event(
-        EventTrigger::from_fn(|e| match e {
-            Event::CtrlChar('z') | Event::AltChar('z') => true,
-            _ => false,
-        }),
-        {
-            let client = client.clone();
-            move |s| {
-                story_view::add_story_view_layer(s, &client, "story", true, 0, None, false);
-            }
-        },
-    );
+    s.set_on_post_event(global_keymap.goto_all_stories_view.clone(), {
+        let client = client.clone();
+        move |s| {
+            story_view::add_story_view_layer(s, &client, "story", true, 0, None, false);
+        }
+    });
 
-    s.set_on_post_event(
-        EventTrigger::from_fn(|e| match e {
-            Event::CtrlChar('x') | Event::AltChar('x') => true,
-            _ => false,
-        }),
-        {
-            let client = client.clone();
-            move |s| {
-                story_view::add_story_view_layer(s, &client, "ask_hn", true, 0, None, false);
-            }
-        },
-    );
+    s.set_on_post_event(global_keymap.goto_ask_hn_view.clone(), {
+        let client = client.clone();
+        move |s| {
+            story_view::add_story_view_layer(s, &client, "ask_hn", true, 0, None, false);
+        }
+    });
 
-    s.set_on_post_event(
-        EventTrigger::from_fn(|e| match e {
-            Event::CtrlChar('c') | Event::AltChar('c') => true,
-            _ => false,
-        }),
-        {
-            let client = client.clone();
-            move |s| {
-                story_view::add_story_view_layer(s, &client, "show_hn", true, 0, None, false);
-            }
-        },
-    );
+    s.set_on_post_event(global_keymap.goto_show_hn_view.clone(), {
+        let client = client.clone();
+        move |s| {
+            story_view::add_story_view_layer(s, &client, "show_hn", true, 0, None, false);
+        }
+    });
 
-    s.set_on_post_event(
-        EventTrigger::from_fn(|e| match e {
-            Event::CtrlChar('v') | Event::AltChar('v') => true,
-            _ => false,
-        }),
-        {
-            let client = client.clone();
-            move |s| {
-                story_view::add_story_view_layer(s, &client, "job", true, 0, None, false);
-            }
-        },
-    );
+    s.set_on_post_event(global_keymap.goto_jobs_view.clone(), {
+        let client = client.clone();
+        move |s| {
+            story_view::add_story_view_layer(s, &client, "job", true, 0, None, false);
+        }
+    });
 
     // .........................................
     // end of switching shortcuts for StoryView
     // .........................................
 
-    s.set_on_post_event(
-        EventTrigger::from_fn(|e| match e {
-            Event::CtrlChar('p') | Event::AltChar('p') => true,
-            _ => false,
-        }),
-        |s| {
-            if s.screen_mut().len() > 1 {
-                s.pop_layer();
-            }
-        },
-    );
+    s.set_on_post_event(global_keymap.goto_previous_view.clone(), |s| {
+        if s.screen_mut().len() > 1 {
+            s.pop_layer();
+        }
+    });
 
-    s.set_on_post_event(
-        EventTrigger::from_fn(|e| match e {
-            Event::CtrlChar('s') | Event::AltChar('s') => true,
-            _ => false,
-        }),
-        {
-            let client = client.clone();
-            move |s| {
-                search_view::add_search_view_layer(s, &client);
-            }
-        },
-    );
+    s.set_on_post_event(global_keymap.goto_search_view.clone(), {
+        let client = client.clone();
+        move |s| {
+            search_view::add_search_view_layer(s, &client);
+        }
+    });
 
-    s.set_on_post_event(
-        EventTrigger::from_fn(|e| match e {
-            Event::Char('?') | Event::CtrlChar('h') | Event::AltChar('h') => true,
-            _ => false,
-        }),
-        |s| s.add_layer(DefaultHelpView::construct_help_view()),
-    );
+    s.set_on_post_event(global_keymap.open_help_dialog.clone(), |s| {
+        s.add_layer(DefaultHelpView::construct_help_view())
+    });
 
-    s.set_on_post_event(
-        EventTrigger::from_fn(|e| match e {
-            Event::CtrlChar('q') | Event::AltChar('q') => true,
-            _ => false,
-        }),
-        |s| s.quit(),
-    );
+    s.set_on_post_event(global_keymap.quit.clone(), |s| s.quit());
 }
 
 fn load_config(config_file_path: Option<&str>) {
@@ -167,9 +116,9 @@ fn run() {
     });
 
     let client = hn_client::HNClient::new().unwrap();
-    story_view::add_story_view_layer(&mut s, &client, "front_page", false, 0, None, false);
-
     set_up_global_callbacks(&mut s, &client);
+
+    story_view::add_story_view_layer(&mut s, &client, "front_page", false, 0, None, false);
 
     // use buffered_backend to fix the flickering issue
     // when using cursive with crossterm_backend

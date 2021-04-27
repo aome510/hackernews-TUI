@@ -1,4 +1,4 @@
-use cursive::event::{self, Event};
+use cursive::event::{self, Event, EventTrigger};
 use serde::{de, Deserialize, Deserializer};
 
 #[derive(Deserialize)]
@@ -151,13 +151,14 @@ impl Default for CommentViewKeyMap {
     }
 }
 
+#[derive(Clone)]
 pub struct Key {
     event: Event,
 }
 
-impl From<Key> for Event {
+impl From<Key> for EventTrigger {
     fn from(k: Key) -> Self {
-        k.event
+        k.event.into()
     }
 }
 
@@ -184,7 +185,7 @@ impl<'de> de::Deserialize<'de> for Key {
             Ok(Key::new(chars[0]))
         } else if chars.len() > 2 && chars[1] == '-' {
             // M-<c> for alt-<c> and C-<c> for ctrl-C
-            match chars[1] {
+            match chars[0] {
                 'C' => Ok(Key::new(Event::CtrlChar(chars[2]))),
                 'M' => Ok(Key::new(Event::AltChar(chars[2]))),
                 _ => err,
