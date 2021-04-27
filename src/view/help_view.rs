@@ -4,7 +4,7 @@ use crate::prelude::*;
 pub struct HelpView {
     view: OnEventView<Dialog>,
     // "section description" followed by a vector of ("key", "key description") pairs
-    keys: Vec<(&'static str, Vec<(&'static str, &'static str)>)>,
+    keys: Vec<(&'static str, Vec<(String, &'static str)>)>,
 }
 
 impl HelpView {
@@ -74,10 +74,7 @@ impl HelpView {
             .scrollable()
     }
 
-    pub fn keys(
-        mut self,
-        mut keys: Vec<(&'static str, Vec<(&'static str, &'static str)>)>,
-    ) -> Self {
+    pub fn keys(mut self, mut keys: Vec<(&'static str, Vec<(String, &'static str)>)>) -> Self {
         self.keys.append(&mut keys);
         let key_view = self.construct_keys_view();
         self.view.get_inner_mut().set_content(key_view);
@@ -98,9 +95,9 @@ macro_rules! other_key_shortcuts {
                 $(
                     ($k, $d),
                 )*
-                ("?/<ctrl-h>/<alt-h>", "Open the help dialog"),
-                ("<ctrl-q>/<alt-q>", "Quit the application"),
-                ("<esc>", "Close this help dialog"),
+                (get_global_keymap().open_help_dialog.to_string(), "Open the help dialog"),
+                (get_global_keymap().quit.to_string(), "Quit the application"),
+                (get_global_keymap().close_dialog.to_string(), "Close this help dialog"),
             ],
         )
     };
@@ -115,13 +112,13 @@ macro_rules! view_navigation_key_shortcuts {
                 $(
                     ($k, $d),
                 )*
-                    ("<ctrl-p>/<alt-p>", "Go to the previous view"),
-                    ("<ctrl-f>/<alt-f>", "Go to front page view"),
-                    ("<ctrl-s>/<alt-s>", "Go to search view"),
-                    ("<ctrl-z>/<alt-z>", "Go to all stories view"),
-                    ("<ctrl-x>/<alt-x>", "Go to ask HN view"),
-                    ("<ctrl-c>/<alt-c>", "Go to show HN view"),
-                    ("<ctrl-v>/<alt-v>", "Go to jobs view"),
+                    (get_global_keymap().goto_previous_view.to_string(), "Go to the previous view"),
+                    (get_global_keymap().goto_front_page_view.to_string(), "Go to front page view"),
+                    (get_global_keymap().goto_search_view.to_string(), "Go to search view"),
+                    (get_global_keymap().goto_all_stories_view.to_string(), "Go to all stories view"),
+                    (get_global_keymap().goto_ask_hn_view.to_string(), "Go to ask HN view"),
+                    (get_global_keymap().goto_show_hn_view.to_string(), "Go to show HN view"),
+                    (get_global_keymap().goto_jobs_view.to_string(), "Go to jobs view"),
             ],
 
         )
@@ -144,41 +141,74 @@ impl HasHelpView for DefaultHelpView {}
 
 impl HasHelpView for StoryView {
     fn construct_help_view() -> HelpView {
+        let story_view_keymap = get_story_view_keymap();
+
         HelpView::new().keys(vec![
             (
                 "Navigation",
                 vec![
-                    ("j", "Focus the next story"),
-                    ("k", "Focus the previous story"),
-                    ("t", "Focus the story at the top"),
-                    ("b", "Focus the story at the bottom"),
-                    ("`{story_id} g`", "Focus the {story_id}-th story"),
+                    (
+                        story_view_keymap.next_story.to_string(),
+                        "Focus the next story",
+                    ),
+                    (
+                        story_view_keymap.prev_story.to_string(),
+                        "Focus the previous story",
+                    ),
+                    (
+                        format!("`{{story_id}} {}`", story_view_keymap.goto_story),
+                        "Focus the {story_id}-th story",
+                    ),
                 ],
             ),
             (
                 "Paging/Filtering",
                 vec![
-                    ("n", "Go to the next page"),
-                    ("p", "Go the previous page"),
-                    ("d", "Toggle sort by date/popularity"),
-                    ("q", "Filter stories past 24 hours"),
-                    ("w", "Filter stories past week"),
-                    ("e", "Filter stories past month"),
-                    ("r", "Filter stories past year"),
+                    (
+                        story_view_keymap.next_page.to_string(),
+                        "Go to the next page",
+                    ),
+                    (
+                        story_view_keymap.prev_page.to_string(),
+                        "Go the previous page",
+                    ),
+                    (
+                        story_view_keymap.toggle_sort_by.to_string(),
+                        "Toggle sort by date/popularity",
+                    ),
+                    (
+                        story_view_keymap.filter_past_day.to_string(),
+                        "Filter stories past day",
+                    ),
+                    (
+                        story_view_keymap.filter_past_week.to_string(),
+                        "Filter stories past week",
+                    ),
+                    (
+                        story_view_keymap.filter_past_month.to_string(),
+                        "Filter stories past month",
+                    ),
+                    (
+                        story_view_keymap.filter_past_year.to_string(),
+                        "Filter stories past year",
+                    ),
                 ],
             ),
             (
                 "Open external links",
                 vec![
                     (
-                        "O",
-                        "Open in browser the link associated with the focused story",
+                        story_view_keymap.open_article_in_browser.to_string(),
+                        "Open in browser the article associated with the focused story",
                     ),
-                    ("S", "Open in browser the focused story"),
+                    (
+                        story_view_keymap.open_story_in_browser.to_string(),
+                        "Open in browser the focused story",
+                    ),
                 ],
             ),
             view_navigation_key_shortcuts!((
-                "<enter>",
+                story_view_keymap.goto_story_comment_view.to_string(),
                 "Go to the comment view associated with the focused story"
             )),
             other_key_shortcuts!(),
@@ -188,77 +218,133 @@ impl HasHelpView for StoryView {
 
 impl HasHelpView for CommentView {
     fn construct_help_view() -> HelpView {
+        let comment_view_keymap = get_comment_view_keymap();
+        let story_view_keymap = get_story_view_keymap();
+
         HelpView::new().keys(vec![
             (
                 "Navigation",
                 vec![
-                    ("j", "Focus the next comment"),
-                    ("k", "Focus the previous comment"),
-                    ("n", "Focus the next top level comment"),
-                    ("p", "Focus the previous top level comment"),
-                    ("l", "Focus the next comment at smaller or equal level"),
-                    ("h", "Focus the previous comment at smaller or equal level"),
-                    ("t", "Focus the comment at the top"),
-                    ("b", "Focus the comment at the bottom"),
+                    (
+                        comment_view_keymap.next_comment.to_string(),
+                        "Focus the next comment",
+                    ),
+                    (
+                        comment_view_keymap.prev_comment.to_string(),
+                        "Focus the previous comment",
+                    ),
+                    (
+                        comment_view_keymap.next_top_level_comment.to_string(),
+                        "Focus the next top level comment",
+                    ),
+                    (
+                        comment_view_keymap.prev_top_level_comment.to_string(),
+                        "Focus the previous top level comment",
+                    ),
+                    (
+                        comment_view_keymap.next_leq_level_comment.to_string(),
+                        "Focus the next comment at smaller or equal level",
+                    ),
+                    (
+                        comment_view_keymap.prev_leq_level_comment.to_string(),
+                        "Focus the previous comment at smaller or equal level",
+                    ),
                 ],
             ),
             (
                 "Open external links",
                 vec![
                     (
-                        "O",
-                        "Open in browser the link associated with the discussed story",
+                        story_view_keymap.open_article_in_browser.to_string(),
+                        "Open in browser the article associated with the discussed story",
                     ),
-                    ("S", "Open in browser the discussed story"),
-                    ("C", "Open in browser the focused comment"),
                     (
-                        "`{link_id} f`",
+                        story_view_keymap.open_story_in_browser.to_string(),
+                        "Open in browser the discussed story",
+                    ),
+                    (
+                        comment_view_keymap.open_comment_in_browser.to_string(),
+                        "Open in browser the focused comment",
+                    ),
+                    (
+                        format!("`{{link_id}} {}`", comment_view_keymap.open_link_in_browser),
                         "Open in browser the {link_id}-th link in the focused comment",
                     ),
                 ],
             ),
             view_navigation_key_shortcuts!(),
-            other_key_shortcuts!(("r", "Reload the comment view")),
+            other_key_shortcuts!((
+                comment_view_keymap.reload_comment_view.to_string(),
+                "Reload the comment view"
+            )),
         ])
     }
 }
 
 impl HasHelpView for SearchView {
     fn construct_help_view() -> HelpView {
+        let search_view_keymap = get_search_view_keymap();
+        let story_view_keymap = get_story_view_keymap();
+
         HelpView::new().keys(vec![
             (
                 "Switch Mode",
                 vec![
-                    ("<esc>", "Switch to navigation mode"),
-                    ("i", "Switch to search mode"),
+                    (
+                        search_view_keymap.to_navigation_mode.to_string(),
+                        "Switch to navigation mode",
+                    ),
+                    (
+                        search_view_keymap.to_search_mode.to_string(),
+                        "Switch to search mode",
+                    ),
                 ],
             ),
             (
                 "Navigation Mode - Navigation",
                 vec![
-                    ("j", "Focus the next story"),
-                    ("k", "Focus the previous story"),
-                    ("t", "Focus the story at the top"),
-                    ("b", "Focus the story at the bottom"),
-                    ("`{story_id} g`", "Focus the {story_id}-th story"),
+                    (
+                        story_view_keymap.next_story.to_string(),
+                        "Focus the next story",
+                    ),
+                    (
+                        story_view_keymap.prev_story.to_string(),
+                        "Focus the previous story",
+                    ),
+                    (
+                        format!("`{{story_id}} {}`", story_view_keymap.goto_story),
+                        "Focus the {story_id}-th story",
+                    ),
                 ],
             ),
             (
                 "Navigation Mode - Paging/Filtering",
                 vec![
-                    ("n", "Go to the next page"),
-                    ("p", "Go the previous page"),
-                    ("d", "Toggle sort by date/popularity"),
+                    (
+                        story_view_keymap.next_page.to_string(),
+                        "Go to the next page",
+                    ),
+                    (
+                        story_view_keymap.prev_page.to_string(),
+                        "Go the previous page",
+                    ),
+                    (
+                        story_view_keymap.toggle_sort_by.to_string(),
+                        "Toggle sort by date/popularity",
+                    ),
                 ],
             ),
             (
                 "Navigation Mode - Open external links",
                 vec![
                     (
-                        "O",
+                        story_view_keymap.open_article_in_browser.to_string(),
                         "Open in browser the link associated with the focused story",
                     ),
-                    ("S", "Open in browser the focused story"),
+                    (
+                        story_view_keymap.open_story_in_browser.to_string(),
+                        "Open in browser the focused story",
+                    ),
                 ],
             ),
             view_navigation_key_shortcuts!(),
