@@ -347,7 +347,10 @@ impl HasHelpView for SearchView {
                     ),
                 ],
             ),
-            view_navigation_key_shortcuts!(),
+            view_navigation_key_shortcuts!((
+                story_view_keymap.goto_story_comment_view.to_string(),
+                "Go to the comment view associated with the focused story"
+            )),
             other_key_shortcuts!(),
         ])
     }
