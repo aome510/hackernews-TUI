@@ -193,7 +193,7 @@ then modify the config options in `~/.config/hn-tui.toml` based on your preferen
 
 ### User-defined shortcuts
 
-Shortcuts in each `View` are full customizable, for futher information about the supported keys and the corresponding functionalities, please refer to the `[keymap.*]` sections in the example config file by running `hackernews_tui --example-config`.
+Shortcuts in each `View` are full customizable, for futher information about the supported keys and the corresponding functionalities, please refer to the **user-defined key bindings** sections in the example config file by running `hackernews_tui --example-config`.
 
 ## Roadmap
 
