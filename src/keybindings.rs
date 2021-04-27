@@ -1,3 +1,5 @@
+use core::fmt;
+
 use cursive::event::{self, Event, EventTrigger};
 use serde::{de, Deserialize, Deserializer};
 
@@ -165,6 +167,50 @@ impl From<Key> for EventTrigger {
 impl From<Key> for Event {
     fn from(k: Key) -> Self {
         k.event
+    }
+}
+
+impl fmt::Display for Key {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.event {
+            Event::Char(c) => write!(f, "{}", c),
+            Event::CtrlChar(c) => write!(f, "C-{}", c),
+            Event::AltChar(c) => write!(f, "M-{}", c),
+            Event::Key(k) => match k {
+                event::Key::Enter => write!(f, "enter"),
+                event::Key::Tab => write!(f, "tab"),
+                event::Key::Backspace => write!(f, "backspace"),
+                event::Key::Esc => write!(f, "esc"),
+
+                event::Key::Left => write!(f, "left"),
+                event::Key::Right => write!(f, "right"),
+                event::Key::Up => write!(f, "up"),
+                event::Key::Down => write!(f, "down"),
+
+                event::Key::Ins => write!(f, "ins"),
+                event::Key::Del => write!(f, "del"),
+                event::Key::Home => write!(f, "home"),
+                event::Key::End => write!(f, "end"),
+                event::Key::PageUp => write!(f, "page_up"),
+                event::Key::PageDown => write!(f, "page_down"),
+
+                event::Key::F1 => write!(f, "f1"),
+                event::Key::F2 => write!(f, "f2"),
+                event::Key::F3 => write!(f, "f3"),
+                event::Key::F4 => write!(f, "f4"),
+                event::Key::F5 => write!(f, "f5"),
+                event::Key::F6 => write!(f, "f6"),
+                event::Key::F7 => write!(f, "f7"),
+                event::Key::F8 => write!(f, "f8"),
+                event::Key::F9 => write!(f, "f9"),
+                event::Key::F10 => write!(f, "f10"),
+                event::Key::F11 => write!(f, "f11"),
+                event::Key::F12 => write!(f, "f12"),
+
+                _ => panic!("unknown key: {:?}", k),
+            },
+            _ => panic!("unknown event: {:?}", self.event),
+        }
     }
 }
 
