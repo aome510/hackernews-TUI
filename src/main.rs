@@ -1,6 +1,7 @@
 // modules
 pub mod config;
 pub mod hn_client;
+pub mod keybindings;
 pub mod prelude;
 pub mod view;
 
