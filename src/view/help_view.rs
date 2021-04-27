@@ -31,13 +31,10 @@ impl HelpView {
 
     fn construct_help_dialog_event_view(view: Dialog) -> OnEventView<Dialog> {
         OnEventView::new(view)
-            .on_event(
-                get_config_keymap().global_keymap.close_dialog.clone(),
-                |s| {
-                    s.pop_layer();
-                },
-            )
-            .on_event(get_config_keymap().global_keymap.quit.clone(), |s| s.quit())
+            .on_event(get_global_keymap().close_dialog.clone(), |s| {
+                s.pop_layer();
+            })
+            .on_event(get_global_keymap().quit.clone(), |s| s.quit())
             .on_event(EventTrigger::from_fn(|_| true), |_| {})
     }
 

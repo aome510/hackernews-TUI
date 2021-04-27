@@ -15,7 +15,7 @@ pub struct Config {
     pub client: Client,
     pub theme: Theme,
 
-    pub keymap: Keymap,
+    pub keymap: KeyMap,
 }
 
 #[derive(Deserialize)]
@@ -190,7 +190,7 @@ impl Default for Config {
                 client_timeout: 32,
             },
             theme: Theme::default(),
-            keymap: Keymap::default(),
+            keymap: KeyMap::default(),
         }
     }
 }
@@ -201,6 +201,18 @@ pub fn get_config_theme() -> &'static Theme {
     &CONFIG.get().unwrap().theme
 }
 
-pub fn get_config_keymap() -> &'static Keymap {
-    &CONFIG.get().unwrap().keymap
+pub fn get_global_keymap() -> &'static GlobalKeyMap {
+    &CONFIG.get().unwrap().keymap.global_keymap
+}
+
+pub fn get_story_view_keymap() -> &'static StoryViewKeyMap {
+    &CONFIG.get().unwrap().keymap.story_view_keymap
+}
+
+pub fn get_search_view_keymap() -> &'static SearchViewKeyMap {
+    &CONFIG.get().unwrap().keymap.search_view_keymap
+}
+
+pub fn get_comment_view_keymap() -> &'static CommentViewKeyMap {
+    &CONFIG.get().unwrap().keymap.comment_view_keymap
 }

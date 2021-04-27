@@ -93,7 +93,7 @@ impl SearchView {
 
             self.view = Self::get_search_view(
                 self.mode.clone(),
-                &self.query.read().unwrap().0.clone(),
+                &self.query.read().unwrap().0,
                 self.by_date,
                 self.page,
                 stories,
@@ -237,8 +237,8 @@ impl ViewWrapper for SearchView {
 /// Return a main view of a SearchView displaying the matched story list with a search bar.
 /// The main view of a SearchView is a View without status bar or footer.
 fn get_search_main_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl View {
-    let story_view_keymap = &get_config_keymap().story_view_keymap;
-    let search_view_keymap = &get_config_keymap().search_view_keymap;
+    let story_view_keymap = get_story_view_keymap().clone();
+    let search_view_keymap = get_search_view_keymap().clone();
 
     OnEventView::new(SearchView::new(&client, cb_sink))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
@@ -265,41 +265,36 @@ fn get_search_main_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl V
                 }
             }
         })
-        .on_pre_event_inner(
-            search_view_keymap.to_navigation_mode.clone(),
-            |s, _| match s.mode {
-                SearchViewMode::Navigation => None,
-                SearchViewMode::Search => {
-                    s.mode = SearchViewMode::Navigation;
-                    s.view.set_focus_index(1).unwrap_or_else(|_| {});
-                    Some(EventResult::Consumed(None))
-                }
-            },
-        )
-        .on_pre_event_inner(search_view_keymap.to_search_mode.clone(), |s, _| {
-            match s.mode {
-                SearchViewMode::Search => None,
-                SearchViewMode::Navigation => {
-                    s.mode = SearchViewMode::Search;
-                    s.view.set_focus_index(0).unwrap_or_else(|_| {});
-                    Some(EventResult::Consumed(None))
-                }
+        .on_pre_event_inner(search_view_keymap.to_navigation_mode, |s, _| match s.mode {
+            SearchViewMode::Navigation => None,
+            SearchViewMode::Search => {
+                s.mode = SearchViewMode::Navigation;
+                s.view.set_focus_index(1).unwrap_or_else(|_| {});
+                Some(EventResult::Consumed(None))
+            }
+        })
+        .on_pre_event_inner(search_view_keymap.to_search_mode, |s, _| match s.mode {
+            SearchViewMode::Search => None,
+            SearchViewMode::Navigation => {
+                s.mode = SearchViewMode::Search;
+                s.view.set_focus_index(0).unwrap_or_else(|_| {});
+                Some(EventResult::Consumed(None))
             }
         })
         // paging/filtering while in NavigationMode
-        .on_pre_event_inner(story_view_keymap.toggle_sort_by.clone(), |s, _| {
+        .on_pre_event_inner(story_view_keymap.toggle_sort_by, |s, _| {
             if let SearchViewMode::Navigation = s.mode {
                 s.toggle_by_date();
             }
             Some(EventResult::Consumed(None))
         })
-        .on_pre_event_inner(story_view_keymap.next_page.clone(), |s, _| {
+        .on_pre_event_inner(story_view_keymap.next_page, |s, _| {
             if let SearchViewMode::Navigation = s.mode {
                 s.update_page(true);
             }
             Some(EventResult::Consumed(None))
         })
-        .on_pre_event_inner(story_view_keymap.prev_page.clone(), |s, _| {
+        .on_pre_event_inner(story_view_keymap.prev_page, |s, _| {
             if let SearchViewMode::Navigation = s.mode {
                 s.update_page(false);
             }
@@ -317,12 +312,9 @@ pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl Vi
         .child(construct_footer_view::<SearchView>());
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
-    OnEventView::new(view).on_event(
-        get_config_keymap().global_keymap.open_help_dialog.clone(),
-        |s| {
-            s.add_layer(SearchView::construct_help_view());
-        },
-    )
+    OnEventView::new(view).on_event(get_global_keymap().open_help_dialog.clone(), |s| {
+        s.add_layer(SearchView::construct_help_view());
+    })
 }
 
 /// Add SearchView as a new layer to the main Cursive View

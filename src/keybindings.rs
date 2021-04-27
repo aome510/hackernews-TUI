@@ -3,17 +3,17 @@ use core::fmt;
 use cursive::event::{self, Event, EventTrigger};
 use serde::{de, Deserialize, Deserializer};
 
-#[derive(Deserialize)]
-pub struct Keymap {
+#[derive(Clone, Deserialize)]
+pub struct KeyMap {
     pub global_keymap: GlobalKeyMap,
     pub story_view_keymap: StoryViewKeyMap,
     pub search_view_keymap: SearchViewKeyMap,
     pub comment_view_keymap: CommentViewKeyMap,
 }
 
-impl Default for Keymap {
+impl Default for KeyMap {
     fn default() -> Self {
-        Keymap {
+        KeyMap {
             global_keymap: GlobalKeyMap::default(),
             story_view_keymap: StoryViewKeyMap::default(),
             search_view_keymap: SearchViewKeyMap::default(),
@@ -22,7 +22,7 @@ impl Default for Keymap {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 pub struct GlobalKeyMap {
     pub open_help_dialog: Key,
     pub quit: Key,
@@ -56,7 +56,7 @@ impl Default for GlobalKeyMap {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 pub struct StoryViewKeyMap {
     // stories navigation keymaps
     pub next_story: Key,
@@ -102,7 +102,7 @@ impl Default for StoryViewKeyMap {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 pub struct SearchViewKeyMap {
     // switch mode keymaps
     pub to_navigation_mode: Key,
@@ -118,7 +118,7 @@ impl Default for SearchViewKeyMap {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 pub struct CommentViewKeyMap {
     // comments navigation keymaps
     pub next_comment: Key,

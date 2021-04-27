@@ -119,11 +119,10 @@ pub fn get_story_main_view(
     client: &hn_client::HNClient,
     starting_id: usize,
 ) -> OnEventView<StoryView> {
-    let story_view_keymap = &get_config_keymap().story_view_keymap;
+    let story_view_keymap = get_story_view_keymap().clone();
 
     let is_suffix_key = |c: &Event| -> bool {
-        *c == get_config_keymap()
-            .story_view_keymap
+        *c == get_story_view_keymap()
             .goto_story_comment_view
             .clone()
             .into()
@@ -143,7 +142,7 @@ pub fn get_story_main_view(
             };
             None
         })
-        .on_pre_event_inner(story_view_keymap.prev_story.clone(), |s, _| {
+        .on_pre_event_inner(story_view_keymap.prev_story, |s, _| {
             let id = s.get_focus_index();
             if id == 0 {
                 None
@@ -151,11 +150,11 @@ pub fn get_story_main_view(
                 s.set_focus_index(id - 1)
             }
         })
-        .on_pre_event_inner(story_view_keymap.next_story.clone(), |s, _| {
+        .on_pre_event_inner(story_view_keymap.next_story, |s, _| {
             let id = s.get_focus_index();
             s.set_focus_index(id + 1)
         })
-        .on_pre_event_inner(story_view_keymap.goto_story_comment_view.clone(), {
+        .on_pre_event_inner(story_view_keymap.goto_story_comment_view, {
             let client = client.clone();
             move |s, _| {
                 let id = s.get_focus_index();
@@ -171,37 +170,31 @@ pub fn get_story_main_view(
                 }))
             }
         })
-        .on_pre_event_inner(
-            story_view_keymap.open_article_in_browser.clone(),
-            move |s, _| {
-                let id = s.get_focus_index();
-                let url = s.stories[id].url.clone();
-                if url.len() > 0 {
-                    thread::spawn(move || {
-                        if let Err(err) = webbrowser::open(&url) {
-                            warn!("failed to open link {}: {}", url, err);
-                        }
-                    });
-                    Some(EventResult::Consumed(None))
-                } else {
-                    Some(EventResult::Consumed(None))
-                }
-            },
-        )
-        .on_pre_event_inner(
-            story_view_keymap.open_story_in_browser.clone(),
-            move |s, _| {
-                let id = s.stories[s.get_focus_index()].id;
+        .on_pre_event_inner(story_view_keymap.open_article_in_browser, move |s, _| {
+            let id = s.get_focus_index();
+            let url = s.stories[id].url.clone();
+            if url.len() > 0 {
                 thread::spawn(move || {
-                    let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
                     if let Err(err) = webbrowser::open(&url) {
                         warn!("failed to open link {}: {}", url, err);
                     }
                 });
                 Some(EventResult::Consumed(None))
-            },
-        )
-        .on_pre_event_inner(story_view_keymap.goto_story.clone(), move |s, _| {
+            } else {
+                Some(EventResult::Consumed(None))
+            }
+        })
+        .on_pre_event_inner(story_view_keymap.open_story_in_browser, move |s, _| {
+            let id = s.stories[s.get_focus_index()].id;
+            thread::spawn(move || {
+                let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
+                if let Err(err) = webbrowser::open(&url) {
+                    warn!("failed to open link {}: {}", url, err);
+                }
+            });
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(story_view_keymap.goto_story, move |s, _| {
             match s.raw_command.parse::<usize>() {
                 Ok(number) => {
                     s.raw_command.clear();
@@ -275,33 +268,32 @@ pub fn get_story_view(
     }
 
     let day_in_secs = 24 * 60 * 60;
-    let story_view_keymap = &get_config_keymap().story_view_keymap;
+    let story_view_keymap = get_story_view_keymap().clone();
 
     OnEventView::new(view)
-        .on_pre_event(
-            get_config_keymap().global_keymap.open_help_dialog.clone(),
-            |s| s.add_layer(StoryView::construct_help_view()),
-        )
+        .on_pre_event(get_global_keymap().open_help_dialog.clone(), |s| {
+            s.add_layer(StoryView::construct_help_view())
+        })
         // time_offset filter options
-        .on_event(story_view_keymap.filter_past_day.clone(), {
+        .on_event(story_view_keymap.filter_past_day, {
             let client = client.clone();
             move |s| {
                 add_story_view_layer(s, &client, tag, by_date, page, Some(day_in_secs * 1), true);
             }
         })
-        .on_event(story_view_keymap.filter_past_week.clone(), {
+        .on_event(story_view_keymap.filter_past_week, {
             let client = client.clone();
             move |s| {
                 add_story_view_layer(s, &client, tag, by_date, page, Some(day_in_secs * 7), true);
             }
         })
-        .on_event(story_view_keymap.filter_past_month.clone(), {
+        .on_event(story_view_keymap.filter_past_month, {
             let client = client.clone();
             move |s| {
                 add_story_view_layer(s, &client, tag, by_date, page, Some(day_in_secs * 30), true);
             }
         })
-        .on_event(story_view_keymap.filter_past_year.clone(), {
+        .on_event(story_view_keymap.filter_past_year, {
             let client = client.clone();
             move |s| {
                 add_story_view_layer(
@@ -316,14 +308,14 @@ pub fn get_story_view(
             }
         })
         // toggle sort_by
-        .on_event(story_view_keymap.toggle_sort_by.clone(), {
+        .on_event(story_view_keymap.toggle_sort_by, {
             let client = client.clone();
             move |s| {
                 add_story_view_layer(s, &client, tag, !by_date, page, time_offset_in_secs, true);
             }
         })
         // paging
-        .on_event(story_view_keymap.prev_page.clone(), {
+        .on_event(story_view_keymap.prev_page, {
             let client = client.clone();
             move |s| {
                 if page > 0 {
@@ -339,7 +331,7 @@ pub fn get_story_view(
                 }
             }
         })
-        .on_event(story_view_keymap.next_page.clone(), {
+        .on_event(story_view_keymap.next_page, {
             let client = client.clone();
             move |s| {
                 add_story_view_layer(
