@@ -1,28 +1,31 @@
 use anyhow::Result;
+use cursive::theme;
 use log::warn;
 use once_cell::sync::OnceCell;
 use serde::{de, Deserialize, Deserializer};
 use std::fs;
 
-use cursive::theme;
+use super::keybindings::*;
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize)]
 /// Config is a struct storing the application's configurations
 pub struct Config {
     pub story_pooling: StoryPooling,
     pub page_scrolling: bool,
     pub client: Client,
     pub theme: Theme,
+
+    pub keymap: Keymap,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize)]
 pub struct StoryPooling {
     pub enable: bool,
     pub delay: u64,
     pub allows: Vec<String>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize)]
 pub struct StoryLimit {
     pub front_page: usize,
     pub story: usize,
@@ -32,13 +35,13 @@ pub struct StoryLimit {
     pub search: usize,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize)]
 pub struct Client {
     pub story_limit: StoryLimit,
     pub client_timeout: u64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Color {
     pub color: theme::Color,
 }
@@ -78,7 +81,7 @@ impl<'de> de::Deserialize<'de> for Color {
     }
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Clone)]
 pub struct Theme {
     // cursive's palette colors
     pub background: Color,
@@ -187,6 +190,7 @@ impl Default for Config {
                 client_timeout: 32,
             },
             theme: Theme::default(),
+            keymap: Keymap::default(),
         }
     }
 }
@@ -195,4 +199,8 @@ pub static CONFIG: OnceCell<Config> = OnceCell::new();
 
 pub fn get_config_theme() -> &'static Theme {
     &CONFIG.get().unwrap().theme
+}
+
+pub fn get_config_keymap() -> &'static Keymap {
+    &CONFIG.get().unwrap().keymap
 }

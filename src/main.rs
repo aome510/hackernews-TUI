@@ -152,7 +152,9 @@ fn load_config(config_file_path: Option<&str>) {
             Ok(config) => config,
         },
     };
-    config::CONFIG.set(config).unwrap();
+    config::CONFIG.set(config).unwrap_or_else(|_| {
+        panic!("failed to set up the application's configurations");
+    })
 }
 
 fn run() {
