@@ -162,6 +162,12 @@ impl From<Key> for EventTrigger {
     }
 }
 
+impl From<Key> for Event {
+    fn from(k: Key) -> Self {
+        k.event
+    }
+}
+
 impl Key {
     pub fn new<T: Into<Event>>(e: T) -> Self {
         Key { event: e.into() }

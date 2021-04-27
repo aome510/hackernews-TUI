@@ -119,20 +119,43 @@ pub fn get_story_main_view(
     client: &hn_client::HNClient,
     starting_id: usize,
 ) -> OnEventView<StoryView> {
+    let story_view_keymap = &get_config_keymap().story_view_keymap;
+
+    let is_suffix_key = |c: &Event| -> bool {
+        *c == get_config_keymap()
+            .story_view_keymap
+            .goto_story_comment_view
+            .clone()
+            .into()
+    };
+
     construct_scroll_list_event_view(StoryView::new(stories, starting_id))
-        .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
+        .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
             match *e {
                 Event::Char(c) if '0' <= c && c <= '9' => {
                     s.raw_command.push(c);
                 }
-                Event::Char('g') => {}
                 _ => {
-                    s.raw_command.clear();
+                    if !is_suffix_key(e) {
+                        s.raw_command.clear();
+                    }
                 }
             };
             None
         })
-        .on_pre_event_inner(Key::Enter, {
+        .on_pre_event_inner(story_view_keymap.prev_story.clone(), |s, _| {
+            let id = s.get_focus_index();
+            if id == 0 {
+                None
+            } else {
+                s.set_focus_index(id - 1)
+            }
+        })
+        .on_pre_event_inner(story_view_keymap.next_story.clone(), |s, _| {
+            let id = s.get_focus_index();
+            s.set_focus_index(id + 1)
+        })
+        .on_pre_event_inner(story_view_keymap.goto_story_comment_view.clone(), {
             let client = client.clone();
             move |s, _| {
                 let id = s.get_focus_index();
@@ -148,45 +171,53 @@ pub fn get_story_main_view(
                 }))
             }
         })
-        .on_pre_event_inner('O', move |s, _| {
-            let id = s.get_focus_index();
-            let url = s.stories[id].url.clone();
-            if url.len() > 0 {
+        .on_pre_event_inner(
+            story_view_keymap.open_article_in_browser.clone(),
+            move |s, _| {
+                let id = s.get_focus_index();
+                let url = s.stories[id].url.clone();
+                if url.len() > 0 {
+                    thread::spawn(move || {
+                        if let Err(err) = webbrowser::open(&url) {
+                            warn!("failed to open link {}: {}", url, err);
+                        }
+                    });
+                    Some(EventResult::Consumed(None))
+                } else {
+                    Some(EventResult::Consumed(None))
+                }
+            },
+        )
+        .on_pre_event_inner(
+            story_view_keymap.open_story_in_browser.clone(),
+            move |s, _| {
+                let id = s.stories[s.get_focus_index()].id;
                 thread::spawn(move || {
+                    let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
                     if let Err(err) = webbrowser::open(&url) {
                         warn!("failed to open link {}: {}", url, err);
                     }
                 });
                 Some(EventResult::Consumed(None))
-            } else {
-                Some(EventResult::Consumed(None))
+            },
+        )
+        .on_pre_event_inner(story_view_keymap.goto_story.clone(), move |s, _| {
+            match s.raw_command.parse::<usize>() {
+                Ok(number) => {
+                    s.raw_command.clear();
+                    if number < starting_id + 1 {
+                        return None;
+                    }
+                    let number = number - 1 - starting_id;
+                    if number < s.len() {
+                        s.set_focus_index(number).unwrap();
+                        Some(EventResult::Consumed(None))
+                    } else {
+                        None
+                    }
+                }
+                Err(_) => None,
             }
-        })
-        .on_pre_event_inner('S', move |s, _| {
-            let id = s.stories[s.get_focus_index()].id;
-            thread::spawn(move || {
-                let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
-                if let Err(err) = webbrowser::open(&url) {
-                    warn!("failed to open link {}: {}", url, err);
-                }
-            });
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner('g', move |s, _| match s.raw_command.parse::<usize>() {
-            Ok(number) => {
-                s.raw_command.clear();
-                if number < starting_id + 1 {
-                    return None;
-                }
-                let number = number - 1 - starting_id;
-                if number < s.len() {
-                    s.set_focus_index(number).unwrap();
-                    Some(EventResult::Consumed(None))
-                } else {
-                    None
-                }
-            }
-            Err(_) => None,
         })
 }
 
@@ -244,35 +275,33 @@ pub fn get_story_view(
     }
 
     let day_in_secs = 24 * 60 * 60;
+    let story_view_keymap = &get_config_keymap().story_view_keymap;
 
     OnEventView::new(view)
         .on_pre_event(
-            EventTrigger::from_fn(|e| match e {
-                Event::Char('?') | Event::CtrlChar('h') | Event::AltChar('h') => true,
-                _ => false,
-            }),
+            get_config_keymap().global_keymap.open_help_dialog.clone(),
             |s| s.add_layer(StoryView::construct_help_view()),
         )
         // time_offset filter options
-        .on_event('q', {
+        .on_event(story_view_keymap.filter_past_day.clone(), {
             let client = client.clone();
             move |s| {
                 add_story_view_layer(s, &client, tag, by_date, page, Some(day_in_secs * 1), true);
             }
         })
-        .on_event('w', {
+        .on_event(story_view_keymap.filter_past_week.clone(), {
             let client = client.clone();
             move |s| {
                 add_story_view_layer(s, &client, tag, by_date, page, Some(day_in_secs * 7), true);
             }
         })
-        .on_event('e', {
+        .on_event(story_view_keymap.filter_past_month.clone(), {
             let client = client.clone();
             move |s| {
                 add_story_view_layer(s, &client, tag, by_date, page, Some(day_in_secs * 30), true);
             }
         })
-        .on_event('r', {
+        .on_event(story_view_keymap.filter_past_year.clone(), {
             let client = client.clone();
             move |s| {
                 add_story_view_layer(
@@ -287,14 +316,14 @@ pub fn get_story_view(
             }
         })
         // toggle sort_by
-        .on_event('d', {
+        .on_event(story_view_keymap.toggle_sort_by.clone(), {
             let client = client.clone();
             move |s| {
                 add_story_view_layer(s, &client, tag, !by_date, page, time_offset_in_secs, true);
             }
         })
         // paging
-        .on_event('p', {
+        .on_event(story_view_keymap.prev_page.clone(), {
             let client = client.clone();
             move |s| {
                 if page > 0 {
@@ -310,7 +339,7 @@ pub fn get_story_view(
                 }
             }
         })
-        .on_event('n', {
+        .on_event(story_view_keymap.next_page.clone(), {
             let client = client.clone();
             move |s| {
                 add_story_view_layer(
