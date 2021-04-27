@@ -36,6 +36,11 @@ ask_hn = 15
 show_hn = 15
 job = 15
 
+
+# ---------------------------------
+# user-defined theme
+# ---------------------------------
+
 [theme]
 # cursive's palette color
 # (more information can be found in https://docs.rs/cursive/0.16.3/cursive/theme/index.html)
@@ -62,6 +67,11 @@ link_id_bg = "#ffff00"
 search_highlight_bg = "#ffff00"
 status_bar_bg = "#ff6600"
 code_block_bg = "#c8c8c8"
+
+# ---------------------------------
+# user-defined keybindings
+# ---------------------------------
+# Go to the end of this section to see list of supported keys
 
 [keymap.global_keymap]
 open_help_dialog = "?"
@@ -104,3 +114,34 @@ prev_leq_level_comment = "h"
 open_comment_in_browser = "c"
 open_link_in_browser = "f"
 reload_comment_view = "r"
+
+# List of supported keys:
+# - <char> (any single character)
+# - C-<char> (ctrl-<char>)
+# - M-<char> (alt-<char>)
+# - enter
+# - tab
+# - backspace
+# - esc
+# - left
+# - right
+# - up
+# - down
+# - ins
+# - del
+# - home
+# - end
+# - page_up
+# - page_down
+# - f1
+# - f2
+# - f3
+# - f4
+# - f5
+# - f6
+# - f7
+# - f8
+# - f9
+# - f10
+# - f11
+# - f12
