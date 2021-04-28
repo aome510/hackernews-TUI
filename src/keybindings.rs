@@ -133,6 +133,7 @@ pub struct CommentViewKeyMap {
     // link opening keymaps
     pub open_comment_in_browser: Key,
     pub open_link_in_browser: Key,
+    pub open_link_in_article_view: Key,
 
     pub reload_comment_view: Key,
 }
@@ -149,6 +150,7 @@ impl Default for CommentViewKeyMap {
 
             open_comment_in_browser: Key::new('c'),
             open_link_in_browser: Key::new('f'),
+            open_link_in_article_view: Key::new('F'),
 
             reload_comment_view: Key::new('r'),
         }

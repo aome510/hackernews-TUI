@@ -5,7 +5,7 @@ use crate::prelude::*;
 use cursive_aligned_view::Alignable;
 use cursive_async_view::AsyncView;
 
-/// Return an async view wraps CommentView of a HN story
+/// Return an async view wrapping CommentView of a HN story
 /// with a loading screen when loading data
 pub fn get_comment_view_async(
     siv: &mut Cursive,
@@ -51,7 +51,7 @@ pub fn get_comment_view_async(
     .full_screen()
 }
 
-/// Return an async view wraps StoryView with a loading screen when loading data
+/// Return an async view wrapping StoryView with a loading screen when loading data
 pub fn get_story_view_async(
     siv: &mut Cursive,
     client: &hn_client::HNClient,
@@ -103,6 +103,8 @@ pub fn get_story_view_async(
     .full_screen()
 }
 
+/// Return an async_view wrapping ArticleView with a loading screen when
+/// parsing the Article data
 pub fn get_article_view_async(siv: &mut Cursive, article_url: String) -> impl View {
     let err_desc = format!(
         "failed to execute command `mercury-parser --format markdown {}`",
