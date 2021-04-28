@@ -26,8 +26,8 @@ pub struct Article {
 impl Article {
     /// parse links from the article's content (in markdown format)
     pub fn parse_link(&self) -> (StyledString, Vec<String>) {
-        // escape characters in markdown
-        let md_escape_char_re = Regex::new(r"\\(?P<char>[*_\[\]\(\)])").unwrap();
+        // escape characters in markdown: \ ` * _ { } [ ] ( ) # + - . !
+        let md_escape_char_re = Regex::new(r"\\(?P<char>[\\`\*_\{\}\[\]\(\)#\+\-\.!`])").unwrap();
 
         let md_img_re = Regex::new(r"!\[(?P<desc>.*?)\]\((?P<link>[^\[\]]*)\)").unwrap();
         let mut s = md_img_re
