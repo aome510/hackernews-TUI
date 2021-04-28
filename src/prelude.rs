@@ -1,6 +1,7 @@
 pub use crate::config::*;
 pub use crate::hn_client;
 pub use crate::view::{
+    article_view::{self, ArticleView},
     comment_view::{self, CommentView},
     help_view::*,
     search_view::{self, SearchView},

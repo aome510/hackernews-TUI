@@ -180,6 +180,23 @@ pub fn get_story_main_view(
                 Some(EventResult::Consumed(None))
             }
         })
+        .on_pre_event_inner(
+            story_view_keymap.open_article_in_article_view,
+            move |s, _| {
+                let id = s.get_focus_index();
+                let url = s.stories[id].url.clone();
+                if url.len() > 0 {
+                    Some(EventResult::with_cb({
+                        move |s| {
+                            let async_view = async_view::get_article_view_async(s, url.clone());
+                            s.screen_mut().add_transparent_layer(Layer::new(async_view))
+                        }
+                    }))
+                } else {
+                    Some(EventResult::Consumed(None))
+                }
+            },
+        )
         .on_pre_event_inner(story_view_keymap.open_story_in_browser, move |s, _| {
             let id = s.stories[s.get_focus_index()].id;
             thread::spawn(move || {

@@ -102,3 +102,22 @@ pub fn get_story_view_async(
     .align_center()
     .full_screen()
 }
+
+pub fn get_article_view_async(siv: &mut Cursive, article_url: String) -> impl View {
+    AsyncView::new_with_bg_creator(
+        siv,
+        move || {
+            let stdout_output = std::process::Command::new("mercury-parser")
+                .arg("--format")
+                .arg("markdown")
+                .arg(&article_url)
+                .output()
+                .unwrap()
+                .stdout;
+            Ok(std::str::from_utf8(&stdout_output).unwrap().to_string())
+        },
+        |result| ArticleView::new(result),
+    )
+    .align_center()
+    .full_screen()
+}

@@ -74,6 +74,7 @@ pub struct StoryViewKeyMap {
 
     // link opening keymaps
     pub open_article_in_browser: Key,
+    pub open_article_in_article_view: Key,
     pub open_story_in_browser: Key,
 
     pub goto_story_comment_view: Key,
@@ -95,6 +96,7 @@ impl Default for StoryViewKeyMap {
             filter_past_year: Key::new('r'),
 
             open_article_in_browser: Key::new('o'),
+            open_article_in_article_view: Key::new('O'),
             open_story_in_browser: Key::new('s'),
 
             goto_story_comment_view: Key::new(event::Key::Enter),
@@ -152,6 +154,8 @@ impl Default for CommentViewKeyMap {
         }
     }
 }
+
+pub struct ArticleViewKeyMap {}
 
 #[derive(Clone)]
 pub struct Key {
