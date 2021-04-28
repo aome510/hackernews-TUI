@@ -41,7 +41,7 @@ pub fn get_comment_view_async(
                     )),
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
                         &format!("failed to get comments from story (id={})", id),
-                        err,
+                        &format!("{:?}", err),
                     )),
                 })
             }
@@ -93,7 +93,7 @@ pub fn get_story_view_async(
                             "failed to get stories (tag={}, by_date={}, page={})",
                             tag, by_date, page
                         ),
-                        err,
+                        &format!("{:?}", err),
                     )),
                 })
             }
@@ -104,19 +104,37 @@ pub fn get_story_view_async(
 }
 
 pub fn get_article_view_async(siv: &mut Cursive, article_url: String) -> impl View {
+    let err_desc = format!(
+        "failed to execute command `mercury-parser --format markdown {}`",
+        article_url
+    );
     AsyncView::new_with_bg_creator(
         siv,
         move || {
-            let stdout_output = std::process::Command::new("mercury-parser")
+            Ok(std::process::Command::new("mercury-parser")
                 .arg("--format")
                 .arg("markdown")
                 .arg(&article_url)
-                .output()
-                .unwrap()
-                .stdout;
-            Ok(std::str::from_utf8(&stdout_output).unwrap().to_string())
+                .output())
         },
-        |result| ArticleView::new(result),
+        move |output| {
+            ErrorViewWrapper::new(match output {
+                Ok(output) => {
+                    if output.status.success() {
+                        ErrorViewEnum::Ok(ArticleView::new(output.stdout))
+                    } else {
+                        ErrorViewEnum::Err(error_view::get_error_view(
+                            &err_desc,
+                            std::str::from_utf8(&output.stderr).unwrap(),
+                        ))
+                    }
+                }
+                Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
+                    &&err_desc,
+                    &format!("{:?}", err),
+                )),
+            })
+        },
     )
     .align_center()
     .full_screen()
