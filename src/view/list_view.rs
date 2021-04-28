@@ -14,11 +14,13 @@ pub fn construct_scroll_list_event_view<T: ScrollableList>(view: T) -> OnEventVi
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(Key::PageUp, |s, _| {
-            s.get_scroller_mut().scroll_up(5);
+            let height = s.get_scroller_mut().last_available_size().y;
+            s.get_scroller_mut().scroll_up(height / 2);
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(Key::PageDown, |s, _| {
-            s.get_scroller_mut().scroll_down(5);
+            let height = s.get_scroller_mut().last_available_size().y;
+            s.get_scroller_mut().scroll_down(height / 2);
             Some(EventResult::Consumed(None))
         })
 }

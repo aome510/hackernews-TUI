@@ -24,6 +24,10 @@ pub struct Article {
 
 impl ViewWrapper for ArticleView {
     wrap_impl!(self.view: ScrollView<TextView>);
+
+    fn wrap_take_focus(&mut self, _: Direction) -> bool {
+        true
+    }
 }
 
 impl ArticleView {
@@ -36,12 +40,39 @@ impl ArticleView {
             links: vec![],
         }
     }
+
+    inner_getters!(self.view: ScrollView<TextView>);
+}
+
+/// Return a main view of a ArticleView displaying an article in reader mode.
+/// The main view of a ArticleView is a View without status bar or footer.
+pub fn get_article_main_view(article: Article) -> OnEventView<ArticleView> {
+    let article_view_keymap = get_article_view_keymap().clone();
+    OnEventView::new(ArticleView::new(article))
+        .on_pre_event_inner(article_view_keymap.down, |s, _| {
+            s.get_inner_mut().get_scroller_mut().scroll_down(1);
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(article_view_keymap.up, |s, _| {
+            s.get_inner_mut().get_scroller_mut().scroll_up(1);
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(article_view_keymap.page_down, |s, _| {
+            let height = s.get_inner().get_scroller().last_available_size().y;
+            s.get_inner_mut().get_scroller_mut().scroll_down(height / 2);
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(article_view_keymap.page_up, |s, _| {
+            let height = s.get_inner().get_scroller().last_available_size().y;
+            s.get_inner_mut().get_scroller_mut().scroll_up(height / 2);
+            Some(EventResult::Consumed(None))
+        })
 }
 
 /// Return a ArticleView constructed from a Article struct
 pub fn get_article_view(article: Article) -> impl View {
     let desc = format!("Article View - {}", article.title);
-    let main_view = ArticleView::new(article).full_height();
+    let main_view = get_article_main_view(article).full_height();
     let mut view = LinearLayout::vertical()
         .child(get_status_bar_with_desc(&desc))
         .child(main_view)

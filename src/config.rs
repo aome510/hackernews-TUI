@@ -216,3 +216,7 @@ pub fn get_search_view_keymap() -> &'static SearchViewKeyMap {
 pub fn get_comment_view_keymap() -> &'static CommentViewKeyMap {
     &CONFIG.get().unwrap().keymap.comment_view_keymap
 }
+
+pub fn get_article_view_keymap() -> &'static ArticleViewKeyMap {
+    &CONFIG.get().unwrap().keymap.article_view_keymap
+}

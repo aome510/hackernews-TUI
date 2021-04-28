@@ -9,6 +9,7 @@ pub struct KeyMap {
     pub story_view_keymap: StoryViewKeyMap,
     pub search_view_keymap: SearchViewKeyMap,
     pub comment_view_keymap: CommentViewKeyMap,
+    pub article_view_keymap: ArticleViewKeyMap,
 }
 
 impl Default for KeyMap {
@@ -18,6 +19,7 @@ impl Default for KeyMap {
             story_view_keymap: StoryViewKeyMap::default(),
             search_view_keymap: SearchViewKeyMap::default(),
             comment_view_keymap: CommentViewKeyMap::default(),
+            article_view_keymap: ArticleViewKeyMap::default(),
         }
     }
 }
@@ -157,7 +159,24 @@ impl Default for CommentViewKeyMap {
     }
 }
 
-pub struct ArticleViewKeyMap {}
+#[derive(Clone, Deserialize)]
+pub struct ArticleViewKeyMap {
+    pub down: Key,
+    pub up: Key,
+    pub page_down: Key,
+    pub page_up: Key,
+}
+
+impl Default for ArticleViewKeyMap {
+    fn default() -> Self {
+        ArticleViewKeyMap {
+            down: Key::new('j'),
+            up: Key::new('k'),
+            page_down: Key::new('d'),
+            page_up: Key::new('u'),
+        }
+    }
+}
 
 #[derive(Clone)]
 pub struct Key {
