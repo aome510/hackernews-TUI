@@ -310,12 +310,7 @@ fn get_comment_main_view(
             Some(EventResult::with_cb({
                 let client = client.clone();
                 let story = s.story.clone();
-                move |s| {
-                    let async_view =
-                        async_view::get_comment_view_async(s, &client, &story, focus_id);
-                    s.pop_layer();
-                    s.screen_mut().add_transparent_layer(Layer::new(async_view))
-                }
+                move |s| add_comment_view_layer(s, &client, &story, focus_id)
             }))
         })
         .on_pre_event_inner(comment_view_keymap.open_comment_in_browser, move |s, _| {
@@ -394,4 +389,16 @@ pub fn get_comment_view(
                 });
             },
         )
+}
+
+/// Add CommentView as a new layer to the main Cursive View
+pub fn add_comment_view_layer(
+    s: &mut Cursive,
+    client: &hn_client::HNClient,
+    story: &hn_client::Story,
+    focus_id: u32,
+) {
+    let async_view = async_view::get_comment_view_async(s, client, story, focus_id);
+    s.pop_layer();
+    s.screen_mut().add_transparent_layer(Layer::new(async_view));
 }
