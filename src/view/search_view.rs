@@ -317,7 +317,7 @@ pub fn get_search_view(client: &hn_client::HNClient, cb_sink: CbSink) -> impl Vi
     })
 }
 
-/// Add SearchView as a new layer to the main Cursive View
+/// Add a SearchView as a new layer to the main Cursive View
 pub fn add_search_view_layer(s: &mut Cursive, client: &hn_client::HNClient) {
     let cb_sink = s.cb_sink().clone();
     s.screen_mut()

@@ -159,7 +159,7 @@ pub fn get_story_main_view(
                 let story = s.stories[id].clone();
                 Some(EventResult::with_cb({
                     let client = client.clone();
-                    move |s| comment_view::add_comment_view_layer(s, &client, &story, 0)
+                    move |s| comment_view::add_comment_view_layer(s, &client, &story, 0, false)
                 }))
             }
         })
@@ -184,10 +184,7 @@ pub fn get_story_main_view(
                 let url = s.stories[id].url.clone();
                 if url.len() > 0 {
                     Some(EventResult::with_cb({
-                        move |s| {
-                            let async_view = async_view::get_article_view_async(s, url.clone());
-                            s.screen_mut().add_transparent_layer(Layer::new(async_view))
-                        }
+                        move |s| article_view::add_article_view_layer(s, url.clone())
                     }))
                 } else {
                     Some(EventResult::Consumed(None))
@@ -357,7 +354,7 @@ pub fn get_story_view(
         })
 }
 
-/// Add StoryView as a new layer to the main Cursive View
+/// Add a StoryView as a new layer to the main Cursive View
 pub fn add_story_view_layer(
     s: &mut Cursive,
     client: &hn_client::HNClient,

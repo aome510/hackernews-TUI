@@ -355,3 +355,12 @@ impl HasHelpView for SearchView {
         ])
     }
 }
+
+impl HasHelpView for ArticleView {
+    fn construct_help_view() -> HelpView {
+        HelpView::new().keys(vec![
+            view_navigation_key_shortcuts!(),
+            other_key_shortcuts!(),
+        ])
+    }
+}

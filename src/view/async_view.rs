@@ -123,7 +123,9 @@ pub fn get_article_view_async(siv: &mut Cursive, article_url: String) -> impl Vi
             ErrorViewWrapper::new(match output {
                 Ok(output) => {
                     if output.status.success() {
-                        ErrorViewEnum::Ok(ArticleView::new(output.stdout))
+                        let article: article_view::Article =
+                            serde_json::from_slice(&output.stdout).unwrap();
+                        ErrorViewEnum::Ok(article_view::get_article_view(article))
                     } else {
                         ErrorViewEnum::Err(error_view::get_error_view(
                             &err_desc,
