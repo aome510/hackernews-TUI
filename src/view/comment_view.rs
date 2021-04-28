@@ -121,11 +121,11 @@ impl CommentView {
                     }
 
                     styled_s.append_styled(
-                        format!("\"{}\"", shorten_url(&link)),
+                        format!("\"{}\" ", shorten_url(&link)),
                         Style::from(get_config_theme().link_text.color),
                     );
                     styled_s.append_styled(
-                        links.len().to_string(),
+                        format!("[{}]", links.len()),
                         ColorStyle::new(
                             PaletteColor::TitlePrimary,
                             get_config_theme().link_id_bg.color,

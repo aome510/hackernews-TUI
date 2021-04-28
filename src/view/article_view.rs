@@ -1,9 +1,10 @@
-use crate::prelude::*;
+use regex::Regex;
+use serde::Deserialize;
 
 use super::async_view;
 use super::utils::*;
 
-use serde::Deserialize;
+use crate::prelude::*;
 
 pub struct ArticleView {
     article: Article,
@@ -22,6 +23,80 @@ pub struct Article {
     word_count: usize,
 }
 
+impl Article {
+    /// parse links from the article's content (in markdown format)
+    pub fn parse_link(&self) -> (StyledString, Vec<String>) {
+        // escape characters in markdown
+        let md_escape_char_re = Regex::new(r"\\(?P<char>[*_\[\]\(\)])").unwrap();
+
+        let md_img_re = Regex::new(r"!\[(?P<desc>.*?)\]\((?P<link>.*?)\)").unwrap();
+        let mut s = md_img_re
+            .replace_all(&self.content, "${desc}\\(image\\)")
+            .to_string();
+
+        let md_link_re = Regex::new(r"[^\\]\[(?P<desc>.*?)\]\((?P<link>.*?)\)").unwrap();
+        let mut styled_s = StyledString::new();
+        let mut links: Vec<String> = vec![];
+
+        loop {
+            match md_link_re.captures(&s.clone()) {
+                None => break,
+                Some(c) => {
+                    let m = c.get(0).unwrap();
+                    let link = c.name("link").unwrap().as_str();
+                    let desc = c.name("desc").unwrap().as_str();
+
+                    let link = if !link.starts_with("http") {
+                        self.url.clone() + link
+                    } else {
+                        link.to_string()
+                    };
+                    let desc = if desc.len() == 0 {
+                        format!("\"{}\"", shorten_url(&link))
+                    } else {
+                        md_escape_char_re.replace_all(&desc, "${char}").to_string()
+                    };
+
+                    let range = m.range();
+                    let mut prefix: String = s
+                        .drain(std::ops::Range {
+                            start: 0,
+                            end: m.end(),
+                        })
+                        .collect();
+                    prefix.drain(range);
+
+                    if prefix.len() > 0 {
+                        styled_s.append_plain(
+                            md_escape_char_re
+                                .replace_all(&&prefix, "${char}")
+                                .to_string(),
+                        );
+                    }
+
+                    styled_s.append_styled(
+                        format!(" {} ", desc),
+                        Style::from(get_config_theme().link_text.color),
+                    );
+                    styled_s.append_styled(
+                        format!("[{}]", links.len()),
+                        ColorStyle::new(
+                            PaletteColor::TitlePrimary,
+                            get_config_theme().link_id_bg.color,
+                        ),
+                    );
+                    links.push(link.to_string());
+                    continue;
+                }
+            }
+        }
+        if s.len() > 0 {
+            styled_s.append_plain(md_escape_char_re.replace_all(&s, "${char}").to_string());
+        }
+        (styled_s, links)
+    }
+}
+
 impl ViewWrapper for ArticleView {
     wrap_impl!(self.view: ScrollView<TextView>);
 
@@ -32,12 +107,13 @@ impl ViewWrapper for ArticleView {
 
 impl ArticleView {
     pub fn new(article: Article) -> Self {
-        let view = TextView::new(article.content.clone()).scrollable();
+        let (content, links) = article.parse_link();
+        let view = TextView::new(content).scrollable();
 
         ArticleView {
             article,
             view,
-            links: vec![],
+            links,
         }
     }
 
