@@ -1,8 +1,22 @@
 use crate::prelude::*;
 
+use serde::Deserialize;
+
 pub struct ArticleView {
-    view: ScrollView<TextView>,
+    article: Article,
     links: Vec<String>,
+    view: ScrollView<TextView>,
+}
+
+#[derive(Clone, Deserialize)]
+pub struct Article {
+    title: String,
+    url: String,
+    content: String,
+    author: Option<String>,
+    date_published: Option<String>,
+    excerpt: Option<String>,
+    word_count: usize,
 }
 
 impl ViewWrapper for ArticleView {
@@ -10,15 +24,14 @@ impl ViewWrapper for ArticleView {
 }
 
 impl ArticleView {
-    pub fn new(content: String) -> Self {
-        let (parsed_text, links) = Self::parse_markdown(content);
-        ArticleView {
-            view: TextView::new(parsed_text).scrollable(),
-            links,
-        }
-    }
+    pub fn new(data: Vec<u8>) -> Self {
+        let article: Article = serde_json::from_slice(&data).unwrap();
+        let view = TextView::new(article.content.clone()).scrollable();
 
-    fn parse_markdown(raw_text: String) -> (StyledString, Vec<String>) {
-        (StyledString::plain(raw_text), vec![])
+        ArticleView {
+            article,
+            view,
+            links: vec![],
+        }
     }
 }
