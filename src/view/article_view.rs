@@ -9,7 +9,7 @@ use crate::prelude::*;
 
 pub struct ArticleView {
     links: Vec<String>,
-    view: ScrollView<TextView>,
+    view: ScrollView<LinearLayout>,
 
     raw_command: String,
 }
@@ -21,7 +21,6 @@ pub struct Article {
     content: String,
     author: Option<String>,
     date_published: Option<String>,
-    excerpt: Option<String>,
     word_count: usize,
 }
 
@@ -109,7 +108,7 @@ impl Article {
 }
 
 impl ViewWrapper for ArticleView {
-    wrap_impl!(self.view: ScrollView<TextView>);
+    wrap_impl!(self.view: ScrollView<LinearLayout>);
 
     fn wrap_take_focus(&mut self, _: Direction) -> bool {
         true
@@ -119,7 +118,34 @@ impl ViewWrapper for ArticleView {
 impl ArticleView {
     pub fn new(article: Article) -> Self {
         let (content, links) = article.parse_link();
-        let view = TextView::new(content).scrollable();
+        let title = article.title + "\n";
+
+        let desc = format!(
+            "by: {}, date_published: {}, word_count: {}\n\n",
+            article.author.unwrap_or("[unknown]".to_string()),
+            article.date_published.unwrap_or("[unknown]".to_string()),
+            article.word_count
+        );
+
+        let view = LinearLayout::vertical()
+            .child(
+                TextView::new(StyledString::styled(
+                    title,
+                    ColorStyle::front(PaletteColor::TitlePrimary),
+                ))
+                .center()
+                .full_width(),
+            )
+            .child(
+                TextView::new(StyledString::styled(
+                    desc,
+                    ColorStyle::front(PaletteColor::Secondary),
+                ))
+                .center()
+                .full_width(),
+            )
+            .child(TextView::new(content).full_width())
+            .scrollable();
 
         ArticleView {
             view,
@@ -128,7 +154,7 @@ impl ArticleView {
         }
     }
 
-    inner_getters!(self.view: ScrollView<TextView>);
+    inner_getters!(self.view: ScrollView<LinearLayout>);
 }
 
 pub fn get_link_dialog(links: &Vec<String>) -> impl View {
