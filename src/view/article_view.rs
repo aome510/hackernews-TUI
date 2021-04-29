@@ -35,7 +35,9 @@ impl Article {
             .replace_all(&self.content, "!\\[${desc}\\]\\(image\\)")
             .to_string();
 
-        let md_link_re = Regex::new(r"([^\\]|^)\[(?P<desc>.*?)\]\((?P<link>[^\[\]\s]*)\)").unwrap();
+        let md_link_re =
+            Regex::new(r"(?P<prefix_char>[^\\]|^)\[(?P<desc>.*?)\]\((?P<link>[^\[\]\s]*)\)")
+                .unwrap();
         let mut styled_s = StyledString::new();
         let mut links: Vec<String> = vec![];
 
@@ -44,6 +46,7 @@ impl Article {
                 None => break,
                 Some(c) => {
                     let m = c.get(0).unwrap();
+                    let prefix_char = c.name("prefix_char").unwrap().as_str();
                     let link = c.name("link").unwrap().as_str();
                     let desc = c.name("desc").unwrap().as_str();
 
@@ -67,6 +70,7 @@ impl Article {
                         .collect();
                     prefix.drain(range);
 
+                    prefix += prefix_char;
                     if prefix.len() > 0 {
                         styled_s.append_plain(
                             md_escape_char_re
@@ -76,7 +80,7 @@ impl Article {
                     }
 
                     styled_s.append_styled(
-                        format!(" {} ", desc),
+                        format!("{} ", desc),
                         Style::from(get_config_theme().link_text.color),
                     );
                     styled_s.append_styled(
