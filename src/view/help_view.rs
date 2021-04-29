@@ -30,12 +30,9 @@ impl HelpView {
     }
 
     fn construct_help_dialog_event_view(view: Dialog) -> OnEventView<Dialog> {
-        OnEventView::new(view)
-            .on_event(get_global_keymap().close_dialog.clone(), |s| {
-                s.pop_layer();
-            })
-            .on_event(get_global_keymap().quit.clone(), |s| s.quit())
-            .on_event(EventTrigger::from_fn(|_| true), |_| {})
+        OnEventView::new(view).on_event(get_global_keymap().close_dialog.clone(), |s| {
+            s.pop_layer();
+        })
     }
 
     fn construct_keys_view(&self) -> impl View {
@@ -97,7 +94,7 @@ macro_rules! other_key_shortcuts {
                 )*
                 (get_global_keymap().open_help_dialog.to_string(), "Open the help dialog"),
                 (get_global_keymap().quit.to_string(), "Quit the application"),
-                (get_global_keymap().close_dialog.to_string(), "Close this help dialog"),
+                (get_global_keymap().close_dialog.to_string(), "Close a dialog"),
             ],
         )
     };
@@ -202,6 +199,10 @@ impl HasHelpView for StoryView {
                         "Open in browser the article associated with the focused story",
                     ),
                     (
+                        story_view_keymap.open_article_in_article_view.to_string(),
+                        "Open in article view the article associated with the focused story",
+                    ),
+                    (
                         story_view_keymap.open_story_in_browser.to_string(),
                         "Open in browser the focused story",
                     ),
@@ -259,6 +260,10 @@ impl HasHelpView for CommentView {
                         "Open in browser the article associated with the discussed story",
                     ),
                     (
+                        story_view_keymap.open_article_in_article_view.to_string(),
+                        "Open in article view the article associated with the discussed story",
+                    ),
+                    (
                         story_view_keymap.open_story_in_browser.to_string(),
                         "Open in browser the discussed story",
                     ),
@@ -269,6 +274,13 @@ impl HasHelpView for CommentView {
                     (
                         format!("`{{link_id}} {}`", comment_view_keymap.open_link_in_browser),
                         "Open in browser the {link_id}-th link in the focused comment",
+                    ),
+                    (
+                        format!(
+                            "`{{link_id}} {}`",
+                            comment_view_keymap.open_link_in_article_view
+                        ),
+                        "Open in article view the {link_id}-th link in the focused comment",
                     ),
                 ],
             ),
@@ -342,6 +354,10 @@ impl HasHelpView for SearchView {
                         "Open in browser the link associated with the focused story",
                     ),
                     (
+                        story_view_keymap.open_article_in_article_view.to_string(),
+                        "Open in article view the link associated with the focused story",
+                    ),
+                    (
                         story_view_keymap.open_story_in_browser.to_string(),
                         "Open in browser the focused story",
                     ),
@@ -351,6 +367,81 @@ impl HasHelpView for SearchView {
                 story_view_keymap.goto_story_comment_view.to_string(),
                 "Go to the comment view associated with the focused story"
             )),
+            other_key_shortcuts!(),
+        ])
+    }
+}
+
+impl HasHelpView for ArticleView {
+    fn construct_help_view() -> HelpView {
+        let article_view_keymap = get_article_view_keymap().clone();
+        HelpView::new().keys(vec![
+            (
+                "Navigation",
+                vec![
+                    (article_view_keymap.up.to_string(), "Scroll up"),
+                    (article_view_keymap.down.to_string(), "Scroll down"),
+                    (
+                        article_view_keymap.page_up.to_string(),
+                        "Scroll up half a page",
+                    ),
+                    (
+                        article_view_keymap.page_down.to_string(),
+                        "Scroll down half a page",
+                    ),
+                    (article_view_keymap.top.to_string(), "Scroll to top"),
+                    (article_view_keymap.bottom.to_string(), "Scroll to bottom"),
+                ],
+            ),
+            (
+                "Open external links",
+                vec![
+                    (
+                        article_view_keymap.open_article_in_browser.to_string(),
+                        "Open article in browser",
+                    ),
+                    (
+                        format!(
+                            "`{{link_id}} {}`",
+                            article_view_keymap.open_link_in_browser.to_string()
+                        ),
+                        "Open in browser {link_id}-th link",
+                    ),
+                    (
+                        format!(
+                            "`{{link_id}} {}`",
+                            article_view_keymap.open_link_in_article_view.to_string()
+                        ),
+                        "Open in article view {link_id}-th link",
+                    ),
+                ],
+            ),
+            (
+                "Link dialog",
+                vec![
+                    (
+                        article_view_keymap.open_link_dialog.to_string(),
+                        "Open link dialog",
+                    ),
+                    (
+                        article_view_keymap.link_dialog_focus_next.to_string(),
+                        "Focus next link",
+                    ),
+                    (
+                        article_view_keymap.link_dialog_focus_prev.to_string(),
+                        "Focus previous link",
+                    ),
+                    (
+                        article_view_keymap.open_link_in_browser.to_string(),
+                        "Open in browser the focused link",
+                    ),
+                    (
+                        article_view_keymap.open_link_in_article_view.to_string(),
+                        "Open in article view the focused link",
+                    ),
+                ],
+            ),
+            view_navigation_key_shortcuts!(),
             other_key_shortcuts!(),
         ])
     }

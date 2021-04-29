@@ -4,11 +4,11 @@ use super::utils::*;
 use crate::{impl_view_for_fn_wrapper, prelude::*};
 
 /// Return an ErrorView given an error
-pub fn get_error_view(err_desc: &str, err: Error) -> impl View {
+pub fn get_error_view(err_desc: &str, err_output: &str) -> impl View {
     let main_view = Dialog::around(
         LinearLayout::vertical()
             .child(TextView::new(err_desc))
-            .child(TextView::new(format!("{:#?}", err)))
+            .child(TextView::new(err_output))
             .scrollable(),
     )
     .full_height();

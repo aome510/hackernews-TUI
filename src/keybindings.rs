@@ -9,6 +9,7 @@ pub struct KeyMap {
     pub story_view_keymap: StoryViewKeyMap,
     pub search_view_keymap: SearchViewKeyMap,
     pub comment_view_keymap: CommentViewKeyMap,
+    pub article_view_keymap: ArticleViewKeyMap,
 }
 
 impl Default for KeyMap {
@@ -18,6 +19,7 @@ impl Default for KeyMap {
             story_view_keymap: StoryViewKeyMap::default(),
             search_view_keymap: SearchViewKeyMap::default(),
             comment_view_keymap: CommentViewKeyMap::default(),
+            article_view_keymap: ArticleViewKeyMap::default(),
         }
     }
 }
@@ -74,6 +76,7 @@ pub struct StoryViewKeyMap {
 
     // link opening keymaps
     pub open_article_in_browser: Key,
+    pub open_article_in_article_view: Key,
     pub open_story_in_browser: Key,
 
     pub goto_story_comment_view: Key,
@@ -95,6 +98,7 @@ impl Default for StoryViewKeyMap {
             filter_past_year: Key::new('r'),
 
             open_article_in_browser: Key::new('o'),
+            open_article_in_article_view: Key::new('O'),
             open_story_in_browser: Key::new('s'),
 
             goto_story_comment_view: Key::new(event::Key::Enter),
@@ -131,6 +135,7 @@ pub struct CommentViewKeyMap {
     // link opening keymaps
     pub open_comment_in_browser: Key,
     pub open_link_in_browser: Key,
+    pub open_link_in_article_view: Key,
 
     pub reload_comment_view: Key,
 }
@@ -147,8 +152,48 @@ impl Default for CommentViewKeyMap {
 
             open_comment_in_browser: Key::new('c'),
             open_link_in_browser: Key::new('f'),
+            open_link_in_article_view: Key::new('F'),
 
             reload_comment_view: Key::new('r'),
+        }
+    }
+}
+
+#[derive(Clone, Deserialize)]
+pub struct ArticleViewKeyMap {
+    pub down: Key,
+    pub up: Key,
+    pub page_down: Key,
+    pub page_up: Key,
+    pub top: Key,
+    pub bottom: Key,
+
+    pub open_link_dialog: Key,
+    pub link_dialog_focus_next: Key,
+    pub link_dialog_focus_prev: Key,
+
+    pub open_article_in_browser: Key,
+    pub open_link_in_browser: Key,
+    pub open_link_in_article_view: Key,
+}
+
+impl Default for ArticleViewKeyMap {
+    fn default() -> Self {
+        ArticleViewKeyMap {
+            down: Key::new('j'),
+            up: Key::new('k'),
+            page_down: Key::new('d'),
+            page_up: Key::new('u'),
+            top: Key::new('t'),
+            bottom: Key::new('b'),
+
+            open_link_dialog: Key::new('l'),
+            link_dialog_focus_next: Key::new('j'),
+            link_dialog_focus_prev: Key::new('k'),
+
+            open_article_in_browser: Key::new('o'),
+            open_link_in_browser: Key::new('f'),
+            open_link_in_article_view: Key::new('F'),
         }
     }
 }

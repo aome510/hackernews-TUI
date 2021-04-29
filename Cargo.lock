@@ -444,9 +444,11 @@ dependencies = [
  "rayon",
  "regex",
  "serde",
+ "serde_json",
  "substring",
  "toml",
  "ureq",
+ "url",
  "webbrowser",
 ]
 

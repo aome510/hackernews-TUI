@@ -121,11 +121,11 @@ impl CommentView {
                     }
 
                     styled_s.append_styled(
-                        format!("\"{}\"", shorten_url(&link)),
+                        format!("\"{}\" ", shorten_url(&link)),
                         Style::from(get_config_theme().link_text.color),
                     );
                     styled_s.append_styled(
-                        links.len().to_string(),
+                        format!("[{}]", links.len()),
                         ColorStyle::new(
                             PaletteColor::TitlePrimary,
                             get_config_theme().link_id_bg.color,
@@ -197,10 +197,9 @@ fn get_comment_main_view(
     let comment_view_keymap = get_comment_view_keymap().clone();
 
     let is_suffix_key = |c: &Event| -> bool {
-        *c == get_comment_view_keymap()
-            .open_link_in_browser
-            .clone()
-            .into()
+        let comment_view_keymap = get_comment_view_keymap().clone();
+        *c == comment_view_keymap.open_link_in_browser.into()
+            || *c == comment_view_keymap.open_link_in_article_view.into()
     };
 
     construct_scroll_list_event_view(CommentView::new(story.clone(), comments, focus_id))
@@ -285,17 +284,30 @@ fn get_comment_main_view(
                 Err(_) => None,
             }
         })
+        .on_pre_event_inner(
+            comment_view_keymap.open_link_in_article_view,
+            |s, _| match s.raw_command.parse::<usize>() {
+                Ok(num) => {
+                    s.raw_command.clear();
+                    let id = s.get_focus_index();
+                    if num < s.comments[id].links.len() {
+                        let url = s.comments[id].links[num].clone();
+                        Some(EventResult::with_cb({
+                            move |s| article_view::add_article_view_layer(s, url.clone())
+                        }))
+                    } else {
+                        Some(EventResult::Consumed(None))
+                    }
+                }
+                Err(_) => None,
+            },
+        )
         .on_pre_event_inner(comment_view_keymap.reload_comment_view, move |s, _| {
             let focus_id = s.comments[s.get_focus_index()].id;
             Some(EventResult::with_cb({
                 let client = client.clone();
                 let story = s.story.clone();
-                move |s| {
-                    let async_view =
-                        async_view::get_comment_view_async(s, &client, &story, focus_id);
-                    s.pop_layer();
-                    s.screen_mut().add_transparent_layer(Layer::new(async_view))
-                }
+                move |s| add_comment_view_layer(s, &client, &story, focus_id, true)
             }))
         })
         .on_pre_event_inner(comment_view_keymap.open_comment_in_browser, move |s, _| {
@@ -331,22 +343,34 @@ pub fn get_comment_view(
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
     let id = story.id;
-    let url = story.url.clone();
 
     OnEventView::new(view)
         .on_event(get_global_keymap().open_help_dialog.clone(), |s| {
             s.add_layer(CommentView::construct_help_view());
         })
+        .on_event(get_story_view_keymap().open_article_in_browser.clone(), {
+            {
+                let url = story.url.clone();
+                move |_| {
+                    if url.len() > 0 {
+                        let url = url.clone();
+                        thread::spawn(move || {
+                            if let Err(err) = webbrowser::open(&url) {
+                                warn!("failed to open link {}: {}", url, err);
+                            }
+                        });
+                    }
+                }
+            }
+        })
         .on_event(
-            get_story_view_keymap().open_article_in_browser.clone(),
-            move |_| {
-                if url.len() > 0 {
-                    let url = url.clone();
-                    thread::spawn(move || {
-                        if let Err(err) = webbrowser::open(&url) {
-                            warn!("failed to open link {}: {}", url, err);
-                        }
-                    });
+            get_story_view_keymap().open_article_in_article_view.clone(),
+            {
+                let url = story.url.clone();
+                move |s| {
+                    if url.len() > 0 {
+                        article_view::add_article_view_layer(s, url.clone())
+                    }
                 }
             },
         )
@@ -361,4 +385,19 @@ pub fn get_comment_view(
                 });
             },
         )
+}
+
+/// Add a CommentView as a new layer to the main Cursive View
+pub fn add_comment_view_layer(
+    s: &mut Cursive,
+    client: &hn_client::HNClient,
+    story: &hn_client::Story,
+    focus_id: u32,
+    pop_layer: bool,
+) {
+    let async_view = async_view::get_comment_view_async(s, client, story, focus_id);
+    if pop_layer {
+        s.pop_layer();
+    }
+    s.screen_mut().add_transparent_layer(Layer::new(async_view));
 }
