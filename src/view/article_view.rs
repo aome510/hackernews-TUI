@@ -53,7 +53,12 @@ impl Article {
                     let desc = c.name("desc").unwrap().as_str();
 
                     let link = if !link.starts_with("http") {
-                        self.url.clone() + link
+                        // not an absolute link
+                        url::Url::parse(&self.url)
+                            .unwrap()
+                            .join(link)
+                            .unwrap()
+                            .to_string()
                     } else {
                         link.to_string()
                     };

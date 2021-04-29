@@ -448,6 +448,7 @@ dependencies = [
  "substring",
  "toml",
  "ureq",
+ "url",
  "webbrowser",
 ]
 
