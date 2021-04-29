@@ -97,7 +97,7 @@ macro_rules! other_key_shortcuts {
                 )*
                 (get_global_keymap().open_help_dialog.to_string(), "Open the help dialog"),
                 (get_global_keymap().quit.to_string(), "Quit the application"),
-                (get_global_keymap().close_dialog.to_string(), "Close this help dialog"),
+                (get_global_keymap().close_dialog.to_string(), "Close a dialog"),
             ],
         )
     };

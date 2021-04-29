@@ -168,6 +168,8 @@ pub struct ArticleViewKeyMap {
     pub top: Key,
     pub bottom: Key,
 
+    pub open_link_dialog: Key,
+
     pub open_article_in_browser: Key,
     pub open_link_in_browser: Key,
     pub open_link_in_article_view: Key,
@@ -182,6 +184,8 @@ impl Default for ArticleViewKeyMap {
             page_up: Key::new('u'),
             top: Key::new('t'),
             bottom: Key::new('b'),
+
+            open_link_dialog: Key::new('l'),
 
             open_article_in_browser: Key::new('o'),
             open_link_in_browser: Key::new('f'),

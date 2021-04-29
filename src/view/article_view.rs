@@ -2,8 +2,8 @@ use regex::Regex;
 use serde::Deserialize;
 use std::thread;
 
-use super::async_view;
 use super::utils::*;
+use super::{async_view, text_view};
 
 use crate::prelude::*;
 
@@ -133,6 +133,28 @@ impl ArticleView {
     inner_getters!(self.view: ScrollView<TextView>);
 }
 
+pub fn get_link_dialog(links: &Vec<String>) -> impl View {
+    let links_view = LinearLayout::vertical().with(|v| {
+        links.iter().enumerate().for_each(|(id, link)| {
+            let mut link_styled_string = StyledString::plain(format!("{}. ", id));
+            link_styled_string.append_styled(
+                shorten_url(link),
+                ColorStyle::front(get_config_theme().link_text.color),
+            );
+            v.add_child(text_view::TextView::new(link_styled_string));
+        })
+    });
+    OnEventView::new(
+        Dialog::new()
+            .content(links_view)
+            .scrollable()
+            .fixed_width(75),
+    )
+    .on_event(get_global_keymap().close_dialog.clone(), |s| {
+        s.pop_layer();
+    })
+}
+
 /// Return a main view of a ArticleView displaying an article in reader mode.
 /// The main view of a ArticleView is a View without status bar or footer.
 pub fn get_article_main_view(article: Article) -> OnEventView<ArticleView> {
@@ -183,6 +205,12 @@ pub fn get_article_main_view(article: Article) -> OnEventView<ArticleView> {
         .on_pre_event_inner(article_view_keymap.bottom, |s, _| {
             s.get_inner_mut().get_scroller_mut().scroll_to_bottom();
             Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(article_view_keymap.open_link_dialog, |s, _| {
+            Some(EventResult::with_cb({
+                let links = s.links.clone();
+                move |s| s.add_layer(get_link_dialog(&links))
+            }))
         })
         .on_pre_event_inner(article_view_keymap.open_link_in_browser, |s, _| {
             match s.raw_command.parse::<usize>() {
