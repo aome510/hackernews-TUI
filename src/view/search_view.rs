@@ -121,9 +121,12 @@ impl SearchView {
             is_navigation_mode = true;
             cb_sink
                 .send(Box::new(|s| {
-                    let loading_view = Dialog::new()
-                        .content(AsyncView::<TextView>::new(s, || AsyncState::Pending))
-                        .max_width(32);
+                    let loading_view = OnEventView::new(
+                        Dialog::new()
+                            .content(AsyncView::<TextView>::new(s, || AsyncState::Pending))
+                            .max_width(32),
+                    )
+                    .on_event(EventTrigger::from_fn(|_| true), |_| {});
                     s.add_layer(loading_view);
                 }))
                 .unwrap();

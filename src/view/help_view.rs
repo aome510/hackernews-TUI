@@ -30,12 +30,9 @@ impl HelpView {
     }
 
     fn construct_help_dialog_event_view(view: Dialog) -> OnEventView<Dialog> {
-        OnEventView::new(view)
-            .on_event(get_global_keymap().close_dialog.clone(), |s| {
-                s.pop_layer();
-            })
-            .on_event(get_global_keymap().quit.clone(), |s| s.quit())
-            .on_event(EventTrigger::from_fn(|_| true), |_| {})
+        OnEventView::new(view).on_event(get_global_keymap().close_dialog.clone(), |s| {
+            s.pop_layer();
+        })
     }
 
     fn construct_keys_view(&self) -> impl View {
@@ -202,6 +199,10 @@ impl HasHelpView for StoryView {
                         "Open in browser the article associated with the focused story",
                     ),
                     (
+                        story_view_keymap.open_article_in_article_view.to_string(),
+                        "Open in article view the article associated with the focused story",
+                    ),
+                    (
                         story_view_keymap.open_story_in_browser.to_string(),
                         "Open in browser the focused story",
                     ),
@@ -259,6 +260,10 @@ impl HasHelpView for CommentView {
                         "Open in browser the article associated with the discussed story",
                     ),
                     (
+                        story_view_keymap.open_article_in_article_view.to_string(),
+                        "Open in article view the article associated with the discussed story",
+                    ),
+                    (
                         story_view_keymap.open_story_in_browser.to_string(),
                         "Open in browser the discussed story",
                     ),
@@ -269,6 +274,13 @@ impl HasHelpView for CommentView {
                     (
                         format!("`{{link_id}} {}`", comment_view_keymap.open_link_in_browser),
                         "Open in browser the {link_id}-th link in the focused comment",
+                    ),
+                    (
+                        format!(
+                            "`{{link_id}} {}`",
+                            comment_view_keymap.open_link_in_article_view
+                        ),
+                        "Open in article view the {link_id}-th link in the focused comment",
                     ),
                 ],
             ),
@@ -340,6 +352,10 @@ impl HasHelpView for SearchView {
                     (
                         story_view_keymap.open_article_in_browser.to_string(),
                         "Open in browser the link associated with the focused story",
+                    ),
+                    (
+                        story_view_keymap.open_article_in_article_view.to_string(),
+                        "Open in article view the link associated with the focused story",
                     ),
                     (
                         story_view_keymap.open_story_in_browser.to_string(),

@@ -192,6 +192,9 @@ pub fn get_link_dialog(links: &Vec<String>) -> impl View {
                 }))
             }
         })
+        .on_event(get_global_keymap().open_help_dialog.clone(), |s| {
+            s.add_layer(ArticleView::construct_help_view())
+        })
         .scrollable()
         .fixed_width(75)
 }
