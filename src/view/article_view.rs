@@ -8,7 +8,6 @@ use super::{async_view, text_view};
 use crate::prelude::*;
 
 pub struct ArticleView {
-    article: Article,
     links: Vec<String>,
     view: ScrollView<TextView>,
 
@@ -123,7 +122,6 @@ impl ArticleView {
         let view = TextView::new(content).scrollable();
 
         ArticleView {
-            article,
             view,
             links,
             raw_command: "".to_string(),
@@ -305,19 +303,23 @@ pub fn get_article_view(article: Article) -> impl View {
 
     let article_view_keymap = get_article_view_keymap().clone();
 
-    OnEventView::new(view).on_event(article_view_keymap.open_article_in_browser, {
-        let url = article.url.clone();
-        move |_| {
-            if url.len() > 0 {
-                let url = url.clone();
-                thread::spawn(move || {
-                    if let Err(err) = webbrowser::open(&url) {
-                        warn!("failed to open link {}: {}", url, err);
-                    }
-                });
+    OnEventView::new(view)
+        .on_event(article_view_keymap.open_article_in_browser, {
+            let url = article.url.clone();
+            move |_| {
+                if url.len() > 0 {
+                    let url = url.clone();
+                    thread::spawn(move || {
+                        if let Err(err) = webbrowser::open(&url) {
+                            warn!("failed to open link {}: {}", url, err);
+                        }
+                    });
+                }
             }
-        }
-    })
+        })
+        .on_event(get_global_keymap().open_help_dialog.clone(), |s| {
+            s.add_layer(ArticleView::construct_help_view())
+        })
 }
 
 /// Add a ArticleView as a new layer to the main Cursive View

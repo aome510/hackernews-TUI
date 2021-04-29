@@ -358,7 +358,73 @@ impl HasHelpView for SearchView {
 
 impl HasHelpView for ArticleView {
     fn construct_help_view() -> HelpView {
+        let article_view_keymap = get_article_view_keymap().clone();
         HelpView::new().keys(vec![
+            (
+                "Navigation",
+                vec![
+                    (article_view_keymap.up.to_string(), "Scroll up"),
+                    (article_view_keymap.down.to_string(), "Scroll down"),
+                    (
+                        article_view_keymap.page_up.to_string(),
+                        "Scroll up half a page",
+                    ),
+                    (
+                        article_view_keymap.page_down.to_string(),
+                        "Scroll down half a page",
+                    ),
+                    (article_view_keymap.top.to_string(), "Scroll to top"),
+                    (article_view_keymap.bottom.to_string(), "Scroll to bottom"),
+                ],
+            ),
+            (
+                "Open external links",
+                vec![
+                    (
+                        article_view_keymap.open_article_in_browser.to_string(),
+                        "Open article in browser",
+                    ),
+                    (
+                        format!(
+                            "`{{link_id}} {}`",
+                            article_view_keymap.open_link_in_browser.to_string()
+                        ),
+                        "Open {link_id}-th link in browser",
+                    ),
+                    (
+                        format!(
+                            "`{{link_id}} {}`",
+                            article_view_keymap.open_link_in_article_view.to_string()
+                        ),
+                        "Open link {link_id}-th in article view",
+                    ),
+                ],
+            ),
+            (
+                "Link dialog",
+                vec![
+                    (
+                        article_view_keymap.open_link_dialog.to_string(),
+                        "Open link dialog",
+                    ),
+                    (
+                        article_view_keymap.link_dialog_focus_next.to_string(),
+                        "Focus next link",
+                    ),
+                    (
+                        article_view_keymap.link_dialog_focus_prev.to_string(),
+                        "Focus previous link",
+                    ),
+                    (
+                        article_view_keymap.open_link_in_browser.to_string(),
+                        "Open the focused link in browser",
+                    ),
+                    (
+                        article_view_keymap.open_link_in_article_view.to_string(),
+                        "Open the focused link in article view",
+                    ),
+                ],
+            ),
             view_navigation_key_shortcuts!(),
             other_key_shortcuts!(),
         ])
