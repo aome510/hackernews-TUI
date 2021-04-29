@@ -11,6 +11,8 @@ pub struct ArticleView {
     article: Article,
     links: Vec<String>,
     view: ScrollView<TextView>,
+
+    raw_command: String,
 }
 
 #[derive(Clone, Deserialize)]
@@ -119,6 +121,7 @@ impl ArticleView {
             article,
             view,
             links,
+            raw_command: "".to_string(),
         }
     }
 
@@ -129,7 +132,27 @@ impl ArticleView {
 /// The main view of a ArticleView is a View without status bar or footer.
 pub fn get_article_main_view(article: Article) -> OnEventView<ArticleView> {
     let article_view_keymap = get_article_view_keymap().clone();
+
+    let is_suffix_key = |c: &Event| -> bool {
+        let article_view_keymap = get_article_view_keymap().clone();
+        *c == article_view_keymap.open_link_in_browser.into()
+            || *c == article_view_keymap.open_link_in_article_view.into()
+    };
+
     OnEventView::new(ArticleView::new(article))
+        .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
+            match *e {
+                Event::Char(c) if '0' <= c && c <= '9' => {
+                    s.raw_command.push(c);
+                }
+                _ => {
+                    if !is_suffix_key(e) {
+                        s.raw_command.clear();
+                    }
+                }
+            };
+            None
+        })
         .on_pre_event_inner(article_view_keymap.down, |s, _| {
             s.get_inner_mut().get_scroller_mut().scroll_down(1);
             Some(EventResult::Consumed(None))
@@ -148,6 +171,42 @@ pub fn get_article_main_view(article: Article) -> OnEventView<ArticleView> {
             s.get_inner_mut().get_scroller_mut().scroll_up(height / 2);
             Some(EventResult::Consumed(None))
         })
+        .on_pre_event_inner(article_view_keymap.open_link_in_browser, |s, _| {
+            match s.raw_command.parse::<usize>() {
+                Ok(num) => {
+                    s.raw_command.clear();
+                    if num < s.links.len() {
+                        let url = s.links[num].clone();
+                        thread::spawn(move || {
+                            if let Err(err) = webbrowser::open(&url) {
+                                warn!("failed to open link {}: {}", url, err);
+                            }
+                        });
+                        Some(EventResult::Consumed(None))
+                    } else {
+                        Some(EventResult::Consumed(None))
+                    }
+                }
+                Err(_) => None,
+            }
+        })
+        .on_pre_event_inner(
+            article_view_keymap.open_link_in_article_view,
+            |s, _| match s.raw_command.parse::<usize>() {
+                Ok(num) => {
+                    s.raw_command.clear();
+                    if num < s.links.len() {
+                        let url = s.links[num].clone();
+                        Some(EventResult::with_cb({
+                            move |s| add_article_view_layer(s, url.clone())
+                        }))
+                    } else {
+                        Some(EventResult::Consumed(None))
+                    }
+                }
+                Err(_) => None,
+            },
+        )
 }
 
 /// Return a ArticleView constructed from a Article struct
