@@ -31,7 +31,7 @@ impl Article {
 
         let md_img_re = Regex::new(r"!\[(?P<desc>.*?)\]\((?P<link>[^\[\]]*)\)").unwrap();
         let mut s = md_img_re
-            .replace_all(&self.content, "${desc}\\(image\\)")
+            .replace_all(&self.content, "!\\[${desc}\\]\\(image\\)")
             .to_string();
 
         let md_link_re = Regex::new(r"[^\\]\[(?P<desc>.*?)\]\((?P<link>[^\[\]]*)\)").unwrap();
