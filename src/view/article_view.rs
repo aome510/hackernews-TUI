@@ -176,6 +176,14 @@ pub fn get_article_main_view(article: Article) -> OnEventView<ArticleView> {
             s.get_inner_mut().get_scroller_mut().scroll_up(height / 2);
             Some(EventResult::Consumed(None))
         })
+        .on_pre_event_inner(article_view_keymap.top, |s, _| {
+            s.get_inner_mut().get_scroller_mut().scroll_to_top();
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(article_view_keymap.bottom, |s, _| {
+            s.get_inner_mut().get_scroller_mut().scroll_to_bottom();
+            Some(EventResult::Consumed(None))
+        })
         .on_pre_event_inner(article_view_keymap.open_link_in_browser, |s, _| {
             match s.raw_command.parse::<usize>() {
                 Ok(num) => {
