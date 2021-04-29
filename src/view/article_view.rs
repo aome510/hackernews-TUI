@@ -52,7 +52,7 @@ impl Article {
                     let link = c.name("link").unwrap().as_str();
                     let desc = c.name("desc").unwrap().as_str();
 
-                    let link = if !link.starts_with("http") {
+                    let link = if url::Url::parse(link).is_err() {
                         // not an absolute link
                         url::Url::parse(&self.url)
                             .unwrap()
