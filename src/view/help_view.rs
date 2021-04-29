@@ -405,14 +405,14 @@ impl HasHelpView for ArticleView {
                             "`{{link_id}} {}`",
                             article_view_keymap.open_link_in_browser.to_string()
                         ),
-                        "Open {link_id}-th link in browser",
+                        "Open in browser {link_id}-th link",
                     ),
                     (
                         format!(
                             "`{{link_id}} {}`",
                             article_view_keymap.open_link_in_article_view.to_string()
                         ),
-                        "Open link {link_id}-th in article view",
+                        "Open in article view {link_id}-th link",
                     ),
                 ],
             ),
@@ -433,11 +433,11 @@ impl HasHelpView for ArticleView {
                     ),
                     (
                         article_view_keymap.open_link_in_browser.to_string(),
-                        "Open the focused link in browser",
+                        "Open in browser the focused link",
                     ),
                     (
                         article_view_keymap.open_link_in_article_view.to_string(),
-                        "Open the focused link in article view",
+                        "Open in article view the focused link",
                     ),
                 ],
             ),

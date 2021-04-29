@@ -6,12 +6,13 @@
 
 The application mainly consists of the following views:
 
-- `Story View` displaying a list of stories. There are different kinds of `Story View` depending on the `tag` it uses to filter stories:
+- `Story View` displaying a list of HN stories. There are different kinds of `Story View` depending on the `tag` used to filter stories:
   - `Front Page`: stories on the front-page
   - `All Stories`: all stories
   - `Ask HN`: ask HN stories only
   - `Show HN`: show HN stories only
   - `Jobs`: jobs stories only
+- `Article View` displaying the content of a web article in reader mode.
 - `Comment View` displaying a list of comments in a story.
 - `Search View` displaying a search bar and a list of stories matching the search query.
 
@@ -35,6 +36,7 @@ This application is the right tool for you :muscle:
   - [Global key shortcuts](#global-key-shortcuts)
   - [Key shortcuts for each View](#key-shortcuts-for-each-view)
     - [Story View](#story-view-shortcuts)
+    - [Article View](#article-view-shortcuts)
     - [Comment View](#comment-view-shortcuts)
     - [Search View](#search-view-shortcuts)
 - [Configuration](#configuration)
@@ -128,11 +130,10 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 
 - `j`: Focus the next story
 - `k`: Focus the previous story
-- `t`: Focus the story at the top
-- `b`: Focus the story at the bottom
 - `{story_id} g`: Focus the {story_id}-th story
 - `enter`: Go the comment view associated with the focused story
 - `o`: Open in browser the article associated with the focused story
+- `O`: Open in article view the article associated with the focused story
 - `s`: Open in browser the focused story
 - `n`: Go to the next page
 - `p`: Go the previous page
@@ -141,6 +142,26 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 - `w`: Filter stories past week
 - `e`: Filter stories past month
 - `r`: Filter stories past year
+
+#### Article View shortcuts
+
+- `j`: Scroll down
+- `k`: Scroll up
+- `d`: Scroll down half a page
+- `u`: Scroll up half a page
+- `b`: Scroll to bottom
+- `t`: Scroll to top
+- `o`: Open article in browser
+- `{link_id} f`: Open in browser {link_id}-th link
+- `{link_id} F`: Open in article view {link_id}-th link
+
+##### Link dialog shortcuts
+
+- `l`: Open link dialog
+- `j`: Focus next link
+- `k`: Focus previous link
+- `f`: Open in browser the focused link
+- `F`: Open in article view the focused link
 
 #### Comment View shortcuts
 
@@ -152,9 +173,11 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 - `h`: Focus the previous comment with smaller or equal level
 - `r`: Reload the comment view.
 - `o`: Open in browser the article associated with the discussed story
+- `O`: Open in article view the article associated with the discussed story
 - `s`: Open in browser the discussed story
 - `c`: Open in browser the focused comment
 - `{link_id} f`: Open in browser the {link_id}-th link in the focused comment
+- `{link_id} F`: Open in article view the {link_id}-th link in the focused comment
 
 #### Search View shortcuts
 
@@ -198,7 +221,7 @@ Shortcuts in each `View` are full customizable, for futher information about the
 ## Roadmap
 
 - [x] make all commands customizable
-- [ ] add a `View` to read the linked story in reader mode on the terminal. A list of possible suggestion can be found [here](https://news.ycombinator.com/item?id=26930466)
+- [x] add a `View` to read the linked story in reader mode on the terminal. A list of possible suggestion can be found [here](https://news.ycombinator.com/item?id=26930466)
 - [ ] add commands to navigate parent comments and collapse a comment
 - [ ] integrate [HackerNews Official APIs](https://github.com/HackerNews/API) for real-time updating, lazy-loading comments, and sorting stories
 - [ ] snipe-like navigation, inspired by [vim-snipe](https://github.com/yangmillstheory/vim-snipe)
