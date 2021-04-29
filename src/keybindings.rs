@@ -165,6 +165,8 @@ pub struct ArticleViewKeyMap {
     pub up: Key,
     pub page_down: Key,
     pub page_up: Key,
+
+    pub open_article_in_browser: Key,
 }
 
 impl Default for ArticleViewKeyMap {
@@ -174,6 +176,8 @@ impl Default for ArticleViewKeyMap {
             up: Key::new('k'),
             page_down: Key::new('d'),
             page_up: Key::new('u'),
+
+            open_article_in_browser: Key::new('o'),
         }
     }
 }

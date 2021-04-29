@@ -1,5 +1,6 @@
 use regex::Regex;
 use serde::Deserialize;
+use std::thread;
 
 use super::async_view;
 use super::utils::*;
@@ -34,7 +35,7 @@ impl Article {
             .replace_all(&self.content, "!\\[${desc}\\]\\(image\\)")
             .to_string();
 
-        let md_link_re = Regex::new(r"[^\\]\[(?P<desc>.*?)\]\((?P<link>[^\[\]]*)\)").unwrap();
+        let md_link_re = Regex::new(r"([^\\]|^)\[(?P<desc>.*?)\]\((?P<link>[^\[\]]*)\)").unwrap();
         let mut styled_s = StyledString::new();
         let mut links: Vec<String> = vec![];
 
@@ -148,14 +149,28 @@ pub fn get_article_main_view(article: Article) -> OnEventView<ArticleView> {
 /// Return a ArticleView constructed from a Article struct
 pub fn get_article_view(article: Article) -> impl View {
     let desc = format!("Article View - {}", article.title);
-    let main_view = get_article_main_view(article).full_height();
+    let main_view = get_article_main_view(article.clone()).full_height();
     let mut view = LinearLayout::vertical()
         .child(get_status_bar_with_desc(&desc))
         .child(main_view)
         .child(construct_footer_view::<ArticleView>());
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
-    view
+    let article_view_keymap = get_article_view_keymap().clone();
+
+    OnEventView::new(view).on_event(article_view_keymap.open_article_in_browser, {
+        let url = article.url.clone();
+        move |_| {
+            if url.len() > 0 {
+                let url = url.clone();
+                thread::spawn(move || {
+                    if let Err(err) = webbrowser::open(&url) {
+                        warn!("failed to open link {}: {}", url, err);
+                    }
+                });
+            }
+        }
+    })
 }
 
 /// Add a ArticleView as a new layer to the main Cursive View
