@@ -144,15 +144,58 @@ pub fn get_link_dialog(links: &Vec<String>) -> impl View {
             v.add_child(text_view::TextView::new(link_styled_string));
         })
     });
-    OnEventView::new(
-        Dialog::new()
-            .content(links_view)
-            .scrollable()
-            .fixed_width(75),
-    )
-    .on_event(get_global_keymap().close_dialog.clone(), |s| {
-        s.pop_layer();
-    })
+
+    let article_view_keymap = get_article_view_keymap().clone();
+
+    OnEventView::new(Dialog::new().content(links_view))
+        .on_event(get_global_keymap().close_dialog.clone(), |s| {
+            s.pop_layer();
+        })
+        .on_pre_event_inner(article_view_keymap.link_dialog_focus_next, |s, _| {
+            let links_view = s.get_content_mut().downcast_mut::<LinearLayout>().unwrap();
+            let focus_id = links_view.get_focus_index();
+            links_view
+                .set_focus_index(focus_id + 1)
+                .unwrap_or_else(|_| {});
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(article_view_keymap.link_dialog_focus_prev, |s, _| {
+            let links_view = s.get_content_mut().downcast_mut::<LinearLayout>().unwrap();
+            let focus_id = links_view.get_focus_index();
+            if focus_id > 0 {
+                links_view
+                    .set_focus_index(focus_id - 1)
+                    .unwrap_or_else(|_| {});
+            }
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(article_view_keymap.open_link_in_browser, {
+            let links = links.clone();
+            move |s, _| {
+                let links_view = s.get_content_mut().downcast_mut::<LinearLayout>().unwrap();
+                let focus_id = links_view.get_focus_index();
+                let url = links[focus_id].clone();
+                thread::spawn(move || {
+                    if let Err(err) = webbrowser::open(&url) {
+                        warn!("failed to open link {}: {}", url, err);
+                    }
+                });
+                Some(EventResult::Consumed(None))
+            }
+        })
+        .on_pre_event_inner(article_view_keymap.open_link_in_article_view, {
+            let links = links.clone();
+            move |s, _| {
+                let links_view = s.get_content_mut().downcast_mut::<LinearLayout>().unwrap();
+                let focus_id = links_view.get_focus_index();
+                let url = links[focus_id].clone();
+                Some(EventResult::with_cb({
+                    move |s| add_article_view_layer(s, url.clone())
+                }))
+            }
+        })
+        .scrollable()
+        .fixed_width(75)
 }
 
 /// Return a main view of a ArticleView displaying an article in reader mode.

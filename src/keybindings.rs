@@ -169,6 +169,8 @@ pub struct ArticleViewKeyMap {
     pub bottom: Key,
 
     pub open_link_dialog: Key,
+    pub link_dialog_focus_next: Key,
+    pub link_dialog_focus_prev: Key,
 
     pub open_article_in_browser: Key,
     pub open_link_in_browser: Key,
@@ -186,6 +188,8 @@ impl Default for ArticleViewKeyMap {
             bottom: Key::new('b'),
 
             open_link_dialog: Key::new('l'),
+            link_dialog_focus_next: Key::new('j'),
+            link_dialog_focus_prev: Key::new('k'),
 
             open_article_in_browser: Key::new('o'),
             open_link_in_browser: Key::new('f'),
