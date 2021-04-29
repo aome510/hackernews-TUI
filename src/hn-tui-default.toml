@@ -97,6 +97,7 @@ filter_past_week = "w"
 filter_past_month = "e"
 filter_past_year = "r"
 open_article_in_browser = "o"
+open_article_in_article_view = "O"
 open_story_in_browser = "s"
 goto_story_comment_view = "enter"
 
@@ -113,7 +114,22 @@ next_leq_level_comment = "l"
 prev_leq_level_comment = "h"
 open_comment_in_browser = "c"
 open_link_in_browser = "f"
+open_link_in_article_view = "F"
 reload_comment_view = "r"
+
+[keymap.article_view_keymap]
+down = 'j'
+up = 'k'
+page_down = 'd'
+page_up = 'u'
+top = 't'
+bottom = 'b'
+open_article_in_browser = 'o'
+open_link_in_browser = 'f'
+open_link_in_article_view = 'F'
+open_link_dialog = 'l'
+link_dialog_focus_next = 'j'
+link_dialog_focus_prev = 'k'
 
 # List of supported keys:
 # - <char> (any single character)
