@@ -7,6 +7,7 @@ use super::{async_view, text_view};
 
 use crate::prelude::*;
 
+/// ArticleView is a View used to display the content of a web page in reader mode
 pub struct ArticleView {
     links: Vec<String>,
     view: ScrollView<LinearLayout>,
@@ -14,6 +15,7 @@ pub struct ArticleView {
     raw_command: String,
 }
 
+/// Article is a struct representing the data of a web page
 #[derive(Clone, Deserialize)]
 pub struct Article {
     title: String,
@@ -157,6 +159,7 @@ impl ArticleView {
     inner_getters!(self.view: ScrollView<LinearLayout>);
 }
 
+/// Construct a help dialog from a list of URLs
 pub fn get_link_dialog(links: &Vec<String>) -> impl View {
     let links_view = LinearLayout::vertical().with(|v| {
         links.iter().enumerate().for_each(|(id, link)| {

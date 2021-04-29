@@ -115,6 +115,7 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 ### Global key shortcuts
 
 - `?`: Open the help dialog
+- `esc`: Close a dialog
 - `C-q`: Quit the application
 - `C-p`: Go to the previous view
 - `C-f`: Go to front page view
