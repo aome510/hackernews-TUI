@@ -27,18 +27,25 @@ pub struct Article {
 
 impl Article {
     /// parse links from the article's content (in markdown format)
-    pub fn parse_link(&self) -> (StyledString, Vec<String>) {
+    pub fn parse_link(&self, raw_md: bool) -> (StyledString, Vec<String>) {
         // escape characters in markdown: \ ` * _ { } [ ] ( ) # + - . !
         let md_escape_char_re = Regex::new(r"\\(?P<char>[\\`\*_\{\}\[\]\(\)#\+\-\.!`])").unwrap();
 
-        let md_img_re = Regex::new(r"!\[(?P<desc>.*?)\]\((?P<link>[^\[\]\s]*)\)").unwrap();
+        // if raw_md is true, don't parse link
+        if raw_md {
+            let content = md_escape_char_re
+                .replace_all(&self.content, "${char}")
+                .to_string();
+            return (StyledString::plain(content), vec![]);
+        }
+
+        let md_img_re = Regex::new(r"!\[(?P<desc>.*?)\]\((?P<link>.*?)\)").unwrap();
         let mut s = md_img_re
             .replace_all(&self.content, "!\\[${desc}\\]\\(image\\)")
             .to_string();
 
         let md_link_re =
-            Regex::new(r"(?P<prefix_char>[^\\]|^)\[(?P<desc>.*?)\]\((?P<link>[^\[\]\s]*)\)")
-                .unwrap();
+            Regex::new(r"(?P<prefix_char>[^\\]|^)\[(?P<desc>.*?)\]\((?P<link>.*?)\)").unwrap();
         let mut styled_s = StyledString::new();
         let mut links: Vec<String> = vec![];
 
@@ -117,8 +124,8 @@ impl ViewWrapper for ArticleView {
 }
 
 impl ArticleView {
-    pub fn new(article: Article) -> Self {
-        let (content, links) = article.parse_link();
+    pub fn new(article: Article, raw_md: bool) -> Self {
+        let (content, links) = article.parse_link(raw_md);
         let title = article.title + "\n";
 
         let desc = format!(
@@ -164,7 +171,9 @@ impl ArticleView {
 
 /// Construct a help dialog from a list of URLs
 pub fn get_link_dialog(links: &Vec<String>) -> impl View {
-    let links_view = LinearLayout::vertical().with(|v| {
+    let article_view_keymap = get_article_view_keymap().clone();
+
+    let links_view = OnEventView::new(LinearLayout::vertical().with(|v| {
         links.iter().enumerate().for_each(|(id, link)| {
             let mut link_styled_string = StyledString::plain(format!("{}. ", id));
             link_styled_string.append_styled(
@@ -173,62 +182,53 @@ pub fn get_link_dialog(links: &Vec<String>) -> impl View {
             );
             v.add_child(text_view::TextView::new(link_styled_string));
         })
-    });
+    }))
+    .on_pre_event_inner(article_view_keymap.link_dialog_focus_next, |s, _| {
+        let focus_id = s.get_focus_index();
+        s.set_focus_index(focus_id + 1).unwrap_or_else(|_| {});
+        Some(EventResult::Consumed(None))
+    })
+    .on_pre_event_inner(article_view_keymap.link_dialog_focus_prev, |s, _| {
+        let focus_id = s.get_focus_index();
+        if focus_id > 0 {
+            s.set_focus_index(focus_id - 1).unwrap_or_else(|_| {});
+        }
+        Some(EventResult::Consumed(None))
+    })
+    .on_pre_event_inner(article_view_keymap.open_link_in_browser, {
+        let links = links.clone();
+        move |s, _| {
+            let focus_id = s.get_focus_index();
+            open_url_in_browser(&links[focus_id]);
+            Some(EventResult::Consumed(None))
+        }
+    })
+    .on_pre_event_inner(article_view_keymap.open_link_in_article_view, {
+        let links = links.clone();
+        move |s, _| {
+            let focus_id = s.get_focus_index();
+            let url = links[focus_id].clone();
+            Some(EventResult::with_cb({
+                move |s| add_article_view_layer(s, url.clone())
+            }))
+        }
+    })
+    .scrollable();
 
-    let article_view_keymap = get_article_view_keymap().clone();
-
-    OnEventView::new(Dialog::new().content(links_view).title("Link Dialog"))
+    OnEventView::new(Dialog::around(links_view).title("Link Dialog"))
         .on_event(get_global_keymap().close_dialog.clone(), |s| {
             s.pop_layer();
-        })
-        .on_pre_event_inner(article_view_keymap.link_dialog_focus_next, |s, _| {
-            let links_view = s.get_content_mut().downcast_mut::<LinearLayout>().unwrap();
-            let focus_id = links_view.get_focus_index();
-            links_view
-                .set_focus_index(focus_id + 1)
-                .unwrap_or_else(|_| {});
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(article_view_keymap.link_dialog_focus_prev, |s, _| {
-            let links_view = s.get_content_mut().downcast_mut::<LinearLayout>().unwrap();
-            let focus_id = links_view.get_focus_index();
-            if focus_id > 0 {
-                links_view
-                    .set_focus_index(focus_id - 1)
-                    .unwrap_or_else(|_| {});
-            }
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(article_view_keymap.open_link_in_browser, {
-            let links = links.clone();
-            move |s, _| {
-                let links_view = s.get_content_mut().downcast_mut::<LinearLayout>().unwrap();
-                let focus_id = links_view.get_focus_index();
-                open_url_in_browser(&links[focus_id]);
-                Some(EventResult::Consumed(None))
-            }
-        })
-        .on_pre_event_inner(article_view_keymap.open_link_in_article_view, {
-            let links = links.clone();
-            move |s, _| {
-                let links_view = s.get_content_mut().downcast_mut::<LinearLayout>().unwrap();
-                let focus_id = links_view.get_focus_index();
-                let url = links[focus_id].clone();
-                Some(EventResult::with_cb({
-                    move |s| add_article_view_layer(s, url.clone())
-                }))
-            }
         })
         .on_event(get_global_keymap().open_help_dialog.clone(), |s| {
             s.add_layer(ArticleView::construct_help_view())
         })
-        .scrollable()
-        .fixed_width(75)
+        .max_height(32)
+        .max_width(64)
 }
 
 /// Return a main view of a ArticleView displaying an article in reader mode.
 /// The main view of a ArticleView is a View without status bar or footer.
-pub fn get_article_main_view(article: Article) -> OnEventView<ArticleView> {
+pub fn get_article_main_view(article: Article, raw_md: bool) -> OnEventView<ArticleView> {
     let article_view_keymap = get_article_view_keymap().clone();
 
     let is_suffix_key = |c: &Event| -> bool {
@@ -237,7 +237,7 @@ pub fn get_article_main_view(article: Article) -> OnEventView<ArticleView> {
             || *c == article_view_keymap.open_link_in_article_view.into()
     };
 
-    OnEventView::new(ArticleView::new(article))
+    OnEventView::new(ArticleView::new(article, raw_md))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
             match *e {
                 Event::Char(c) if '0' <= c && c <= '9' => {
@@ -319,9 +319,9 @@ pub fn get_article_main_view(article: Article) -> OnEventView<ArticleView> {
 }
 
 /// Return a ArticleView constructed from a Article struct
-pub fn get_article_view(article: Article) -> impl View {
+pub fn get_article_view(article: Article, raw_md: bool) -> impl View {
     let desc = format!("Article View - {}", article.title);
-    let main_view = get_article_main_view(article.clone()).full_height();
+    let main_view = get_article_main_view(article.clone(), raw_md).full_height();
     let mut view = LinearLayout::vertical()
         .child(get_status_bar_with_desc(&desc))
         .child(main_view)
@@ -335,6 +335,13 @@ pub fn get_article_view(article: Article) -> impl View {
             let url = article.url.clone();
             move |_| {
                 open_url_in_browser(&url);
+            }
+        })
+        .on_event(article_view_keymap.toggle_raw_markdown_mode, {
+            move |s| {
+                let view = get_article_view(article.clone(), !raw_md);
+                s.pop_layer();
+                s.screen_mut().add_transparent_layer(Layer::new(view))
             }
         })
         .on_event(get_global_keymap().open_help_dialog.clone(), |s| {

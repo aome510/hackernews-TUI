@@ -186,6 +186,8 @@ pub struct ArticleViewKeyMap {
     pub open_article_in_browser: Key,
     pub open_link_in_browser: Key,
     pub open_link_in_article_view: Key,
+
+    pub toggle_raw_markdown_mode: Key,
 }
 
 impl Default for ArticleViewKeyMap {
@@ -205,6 +207,8 @@ impl Default for ArticleViewKeyMap {
             open_article_in_browser: Key::new('o'),
             open_link_in_browser: Key::new('f'),
             open_link_in_article_view: Key::new('F'),
+
+            toggle_raw_markdown_mode: Key::new('T'),
         }
     }
 }

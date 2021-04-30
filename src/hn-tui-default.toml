@@ -142,6 +142,7 @@ open_link_in_article_view = 'F'
 open_link_dialog = 'l'
 link_dialog_focus_next = 'j'
 link_dialog_focus_prev = 'k'
+toggle_raw_markdown_mode = 'T'
 
 # List of supported keys:
 # - <char> (any single character)
