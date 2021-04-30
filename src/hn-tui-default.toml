@@ -2,6 +2,11 @@
 # The application will automatically adjust the View based on the scrolling direction.
 page_scrolling = true
 
+# "scroll_offset" denotes the scrolling speed.
+# **Note**: this behavior only applies to customizable scrolling shortcuts
+# defined in the [user-defined key bindings] section
+scroll_offset = 3
+
 [story_pooling]
 # "story_pooling" is a feature that allows the application to fetch stories
 # in background and store them in cache memory.
@@ -112,6 +117,10 @@ next_top_level_comment = "n"
 prev_top_level_comment = "p"
 next_leq_level_comment = "l"
 prev_leq_level_comment = "h"
+down = 'j'
+up = 'k'
+page_down = 'd'
+page_up = 'u'
 open_comment_in_browser = "c"
 open_link_in_browser = "f"
 open_link_in_article_view = "F"

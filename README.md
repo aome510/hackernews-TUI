@@ -153,12 +153,12 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 
 #### Article View shortcuts
 
-- `j`: Scroll down
 - `k`: Scroll up
-- `d`: Scroll down half a page
+- `j`: Scroll down
 - `u`: Scroll up half a page
-- `b`: Scroll to bottom
+- `d`: Scroll down half a page
 - `t`: Scroll to top
+- `b`: Scroll to bottom
 - `o`: Open article in browser
 - `{link_id} f`: Open in browser {link_id}-th link
 - `{link_id} F`: Open in article view {link_id}-th link
@@ -180,6 +180,10 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 - `l`: Focus the next comment with smaller or equal level
 - `h`: Focus the previous comment with smaller or equal level
 - `r`: Reload the comment view.
+- `up`: Scroll up
+- `down`: Scroll down
+- `page_up`: Scroll up half a page
+- `page_down`: Scroll down half a page
 - `o`: Open in browser the article associated with the discussed story
 - `O`: Open in article view the article associated with the discussed story
 - `s`: Open in browser the discussed story

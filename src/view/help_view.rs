@@ -253,6 +253,21 @@ impl HasHelpView for CommentView {
                 ],
             ),
             (
+                "Scrolling",
+                vec![
+                    (comment_view_keymap.up.to_string(), "Scroll up"),
+                    (comment_view_keymap.down.to_string(), "Scroll down"),
+                    (
+                        comment_view_keymap.page_up.to_string(),
+                        "Scroll up half a page",
+                    ),
+                    (
+                        comment_view_keymap.page_down.to_string(),
+                        "Scroll down half a page",
+                    ),
+                ],
+            ),
+            (
                 "Open external links",
                 vec![
                     (

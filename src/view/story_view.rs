@@ -4,11 +4,11 @@ use std::{
     time::Duration,
 };
 
+use super::async_view;
 use super::help_view::*;
 use super::list_view::*;
 use super::text_view;
 use super::utils::*;
-use super::{async_view, comment_view::get_comment_view};
 
 use crate::prelude::*;
 
