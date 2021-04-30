@@ -125,7 +125,11 @@ impl ArticleView {
             "by: {}, date_published: {}, word_count: {}\n\n",
             article.author.unwrap_or("[unknown]".to_string()),
             article.date_published.unwrap_or("[unknown]".to_string()),
-            article.word_count
+            if article.word_count > 1 {
+                article.word_count.to_string()
+            } else {
+                "[unknown]".to_string()
+            }
         );
 
         let view = LinearLayout::vertical()
