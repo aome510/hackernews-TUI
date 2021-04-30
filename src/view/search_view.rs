@@ -136,6 +136,16 @@ impl SearchView {
                         "failed to get stories matching the query '{}': {:#?}",
                         query, err
                     );
+
+                    if *self_query.read().unwrap().0 == query {
+                        cb_sink
+                            .send(Box::new(move |s| {
+                                if is_navigation_mode {
+                                    s.pop_layer();
+                                }
+                            }))
+                            .unwrap();
+                    }
                 }
                 Ok(stories) => {
                     // if the query used to search for "stories"
