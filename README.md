@@ -30,6 +30,10 @@ This application is the right tool for you :muscle:
 ### Table of Contents
 
 - [Install](#install)
+  - [Dependencies](#dependencies)
+  - [Using Cargo](#using-cargo)
+  - [Arch Linux](#arch-linux)
+  - [NetBSD](#netbsd)
 - [Examples](#examples)
   - [Demo](#demo)
 - [Default Shortcuts](#default-shortcuts)
@@ -41,9 +45,24 @@ This application is the right tool for you :muscle:
     - [Search View](#search-view-shortcuts)
 - [Configuration](#configuration)
   - [User-defined shortcuts](#user-defined-shortcuts)
+- [Debug](#debug)
 - [Roadmap](#roadmap)
 
 ## Install
+
+### Dependencies
+
+#### Mercury Parser
+
+To enable viewing a web page in reader mode with `Article View`, install [`mercury-parser`](https://github.com/postlight/mercury-parser) globally by running
+
+```shell
+# using yarn
+yarn global add @postlight/mercury-parser
+
+# or using npm
+npm install -g @postlight/mercury-parser
+```
 
 ### Using cargo
 
@@ -229,6 +248,16 @@ then modify the config options in `~/.config/hn-tui.toml` based on your preferen
 ### User-defined shortcuts
 
 Shortcuts in each `View` are full customizable, for futher information about the supported keys and the corresponding functionalities, please refer to the **user-defined key bindings** sections in the example config file by running `hackernews_tui --example-config`.
+
+## Debug
+
+Run
+
+```shell
+RUST_LOG=debug hackernews_tui 2> log.txt
+```
+
+to view the application's log in `log.txt` file.
 
 ## Roadmap
 
