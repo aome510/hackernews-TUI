@@ -3,7 +3,6 @@ use cursive::theme;
 use log::warn;
 use once_cell::sync::OnceCell;
 use serde::{de, Deserialize, Deserializer};
-use std::fs;
 
 use super::keybindings::*;
 
@@ -134,7 +133,7 @@ impl Theme {
 impl Config {
     // parse config struct from a file
     pub fn from_config_file(file_path: &str) -> Result<Self> {
-        match fs::read_to_string(file_path) {
+        match std::fs::read_to_string(file_path) {
             // if cannot open the file, use the default configurations
             Err(err) => {
                 warn!(

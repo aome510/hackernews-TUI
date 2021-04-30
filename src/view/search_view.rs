@@ -1,7 +1,4 @@
-use std::{
-    sync::{Arc, RwLock},
-    thread,
-};
+use std::sync::{Arc, RwLock};
 
 use cursive_async_view::{AsyncState, AsyncView};
 
@@ -132,7 +129,7 @@ impl SearchView {
                 .unwrap();
         }
 
-        thread::spawn(
+        std::thread::spawn(
             move || match client.get_matched_stories(&query, by_date, page) {
                 Err(err) => {
                     warn!(
