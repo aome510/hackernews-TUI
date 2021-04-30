@@ -120,29 +120,29 @@ next_top_level_comment = "n"
 prev_top_level_comment = "p"
 next_leq_level_comment = "l"
 prev_leq_level_comment = "h"
-down = 'j'
-up = 'k'
-page_down = 'd'
-page_up = 'u'
+down = "down"
+up = "up"
+page_down = "page_down"
+page_up = "page_up"
 open_comment_in_browser = "c"
 open_link_in_browser = "f"
 open_link_in_article_view = "F"
 reload_comment_view = "r"
 
 [keymap.article_view_keymap]
-down = 'j'
-up = 'k'
-page_down = 'd'
-page_up = 'u'
-top = 't'
-bottom = 'b'
-open_article_in_browser = 'o'
-open_link_in_browser = 'f'
-open_link_in_article_view = 'F'
-open_link_dialog = 'l'
-link_dialog_focus_next = 'j'
-link_dialog_focus_prev = 'k'
-toggle_raw_markdown_mode = 'T'
+down = "j"
+up = "k"
+page_down = "d"
+page_up = "u"
+top = "t"
+bottom = "b"
+open_article_in_browser = "o"
+open_link_in_browser = "f"
+open_link_in_article_view = "F"
+open_link_dialog = "l"
+link_dialog_focus_next = "j"
+link_dialog_focus_prev = "k"
+toggle_raw_markdown_mode = "T"
 
 # List of supported keys:
 # - <char> (any single character)
