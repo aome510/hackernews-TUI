@@ -92,7 +92,7 @@ fn load_config(config_file_path: Option<&str>) {
         Some(config_file_path) => match config::Config::from_config_file(&config_file_path) {
             Err(err) => {
                 error!(
-                    "failed to load the application config from the file: {}: {:#?} \
+                    "failed to load the application config from the file {}: {:#?} \
                      \n...Use the default configurations instead",
                     config_file_path, err
                 );

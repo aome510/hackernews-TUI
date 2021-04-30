@@ -40,7 +40,7 @@ pub fn get_comment_view_async(
                         &story, &comments, &client, focus_id,
                     )),
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
-                        &format!("failed to get comments from story (id={})", id),
+                        &format!("failed to get comments from story (id={}):", id),
                         &err.to_string(),
                     )),
                 })
@@ -90,7 +90,7 @@ pub fn get_story_view_async(
                     )),
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
                         &format!(
-                            "failed to get stories (tag={}, by_date={}, page={})",
+                            "failed to get stories (tag={}, by_date={}, page={}):",
                             tag, by_date, page
                         ),
                         &err.to_string(),
@@ -107,7 +107,7 @@ pub fn get_story_view_async(
 /// parsing the Article data
 pub fn get_article_view_async(siv: &mut Cursive, article_url: String) -> impl View {
     let err_desc = format!(
-        "failed to execute command `mercury-parser --format markdown {}`",
+        "failed to execute command `mercury-parser --format markdown {}`:",
         article_url
     );
     AsyncView::new_with_bg_creator(
@@ -123,9 +123,16 @@ pub fn get_article_view_async(siv: &mut Cursive, article_url: String) -> impl Vi
             ErrorViewWrapper::new(match output {
                 Ok(output) => {
                     if output.status.success() {
-                        let article: article_view::Article =
-                            serde_json::from_slice(&output.stdout).unwrap();
-                        ErrorViewEnum::Ok(article_view::get_article_view(article, false))
+                        match serde_json::from_slice::<article_view::Article>(&output.stdout) {
+                            Ok(article) => {
+                                ErrorViewEnum::Ok(article_view::get_article_view(article, false))
+                            }
+                            Err(_) => {
+                                let stdout = std::str::from_utf8(&output.stdout).unwrap();
+                                warn!("failed to deserialize {} into Article struct:", stdout);
+                                ErrorViewEnum::Err(error_view::get_error_view(&err_desc, stdout))
+                            }
+                        }
                     } else {
                         ErrorViewEnum::Err(error_view::get_error_view(
                             &err_desc,
