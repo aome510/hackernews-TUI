@@ -41,7 +41,7 @@ pub fn get_comment_view_async(
                     )),
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
                         &format!("failed to get comments from story (id={})", id),
-                        &format!("{:?}", err),
+                        &err.to_string(),
                     )),
                 })
             }
@@ -93,7 +93,7 @@ pub fn get_story_view_async(
                             "failed to get stories (tag={}, by_date={}, page={})",
                             tag, by_date, page
                         ),
-                        &format!("{:?}", err),
+                        &err.to_string(),
                     )),
                 })
             }
@@ -133,10 +133,9 @@ pub fn get_article_view_async(siv: &mut Cursive, article_url: String) -> impl Vi
                         ))
                     }
                 }
-                Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
-                    &&err_desc,
-                    &format!("{:?}", err),
-                )),
+                Err(err) => {
+                    ErrorViewEnum::Err(error_view::get_error_view(&&err_desc, &err.to_string()))
+                }
             })
         },
     )
