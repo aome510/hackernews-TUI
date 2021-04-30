@@ -12,6 +12,7 @@ use super::keybindings::*;
 pub struct Config {
     pub story_pooling: StoryPooling,
     pub page_scrolling: bool,
+    pub scroll_offset: usize,
     pub client: Client,
     pub theme: Theme,
 
@@ -178,6 +179,7 @@ impl Default for Config {
                 allows: vec!["front_page".to_string()],
             },
             page_scrolling: true,
+            scroll_offset: 3,
             client: Client {
                 story_limit: StoryLimit {
                     search: 10,
@@ -195,28 +197,38 @@ impl Default for Config {
     }
 }
 
-pub static CONFIG: OnceCell<Config> = OnceCell::new();
+static CONFIG: OnceCell<Config> = OnceCell::new();
+
+pub fn init_config(config: Config) {
+    CONFIG.set(config).unwrap_or_else(|_| {
+        panic!("failed to set up the application's configurations");
+    })
+}
+
+pub fn get_config() -> &'static Config {
+    &CONFIG.get().unwrap()
+}
 
 pub fn get_config_theme() -> &'static Theme {
-    &CONFIG.get().unwrap().theme
+    &get_config().theme
 }
 
 pub fn get_global_keymap() -> &'static GlobalKeyMap {
-    &CONFIG.get().unwrap().keymap.global_keymap
+    &get_config().keymap.global_keymap
 }
 
 pub fn get_story_view_keymap() -> &'static StoryViewKeyMap {
-    &CONFIG.get().unwrap().keymap.story_view_keymap
+    &get_config().keymap.story_view_keymap
 }
 
 pub fn get_search_view_keymap() -> &'static SearchViewKeyMap {
-    &CONFIG.get().unwrap().keymap.search_view_keymap
+    &get_config().keymap.search_view_keymap
 }
 
 pub fn get_comment_view_keymap() -> &'static CommentViewKeyMap {
-    &CONFIG.get().unwrap().keymap.comment_view_keymap
+    &get_config().keymap.comment_view_keymap
 }
 
 pub fn get_article_view_keymap() -> &'static ArticleViewKeyMap {
-    &CONFIG.get().unwrap().keymap.article_view_keymap
+    &get_config().keymap.article_view_keymap
 }

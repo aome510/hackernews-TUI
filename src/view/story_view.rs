@@ -4,11 +4,11 @@ use std::{
     time::Duration,
 };
 
-use super::async_view;
 use super::help_view::*;
 use super::list_view::*;
 use super::text_view;
 use super::utils::*;
+use super::{async_view, comment_view::get_comment_view};
 
 use crate::prelude::*;
 
@@ -124,7 +124,8 @@ pub fn get_story_main_view(
     let is_suffix_key =
         |c: &Event| -> bool { *c == get_story_view_keymap().goto_story.clone().into() };
 
-    construct_scroll_list_event_view(StoryView::new(stories, starting_id))
+    OnEventView::new(StoryView::new(stories, starting_id))
+        // number parsing
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
             match *e {
                 Event::Char(c) if '0' <= c && c <= '9' => {
@@ -138,6 +139,7 @@ pub fn get_story_main_view(
             };
             None
         })
+        // story navigation shortcuts
         .on_pre_event_inner(story_view_keymap.prev_story, |s, _| {
             let id = s.get_focus_index();
             if id == 0 {
@@ -163,6 +165,7 @@ pub fn get_story_main_view(
                 }))
             }
         })
+        // open external link shortcuts
         .on_pre_event_inner(story_view_keymap.open_article_in_browser, move |s, _| {
             let id = s.get_focus_index();
             let url = s.stories[id].url.clone();
@@ -231,13 +234,7 @@ pub fn get_story_view(
     page: usize,
     time_offset_in_secs: Option<u64>,
 ) -> impl View {
-    let starting_id = CONFIG
-        .get()
-        .unwrap()
-        .client
-        .story_limit
-        .get_story_limit_by_tag(tag)
-        * page;
+    let starting_id = get_config().client.story_limit.get_story_limit_by_tag(tag) * page;
     let main_view = get_story_main_view(stories.clone(), client, starting_id).full_height();
 
     let mut view = LinearLayout::vertical()
@@ -246,7 +243,7 @@ pub fn get_story_view(
         .child(construct_footer_view::<StoryView>());
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
-    let story_pooling = &CONFIG.get().unwrap().story_pooling;
+    let story_pooling = &get_config().story_pooling;
 
     // pooling stories in background
     if story_pooling.enable {

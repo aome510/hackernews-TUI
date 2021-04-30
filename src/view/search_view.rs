@@ -69,7 +69,7 @@ impl SearchView {
         stories: Vec<hn_client::Story>,
         client: &hn_client::HNClient,
     ) -> LinearLayout {
-        let starting_id = CONFIG.get().unwrap().client.story_limit.search * page;
+        let starting_id = get_config().client.story_limit.search * page;
         let mut view = LinearLayout::vertical()
             .child(Self::get_query_text_view(query.to_string(), by_date))
             .child(Self::get_matched_stories_view(stories, client, starting_id));

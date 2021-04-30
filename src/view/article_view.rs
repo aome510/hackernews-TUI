@@ -174,7 +174,7 @@ pub fn get_link_dialog(links: &Vec<String>) -> impl View {
 
     let article_view_keymap = get_article_view_keymap().clone();
 
-    OnEventView::new(Dialog::new().content(links_view))
+    OnEventView::new(Dialog::new().content(links_view).title("Link Dialog"))
         .on_event(get_global_keymap().close_dialog.clone(), |s| {
             s.pop_layer();
         })
@@ -254,11 +254,15 @@ pub fn get_article_main_view(article: Article) -> OnEventView<ArticleView> {
             None
         })
         .on_pre_event_inner(article_view_keymap.down, |s, _| {
-            s.get_inner_mut().get_scroller_mut().scroll_down(1);
+            s.get_inner_mut()
+                .get_scroller_mut()
+                .scroll_down(get_config().scroll_offset);
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(article_view_keymap.up, |s, _| {
-            s.get_inner_mut().get_scroller_mut().scroll_up(1);
+            s.get_inner_mut()
+                .get_scroller_mut()
+                .scroll_up(get_config().scroll_offset);
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(article_view_keymap.page_down, |s, _| {

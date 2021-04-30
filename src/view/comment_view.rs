@@ -202,7 +202,7 @@ fn get_comment_main_view(
             || *c == comment_view_keymap.open_link_in_article_view.into()
     };
 
-    construct_scroll_list_event_view(CommentView::new(story.clone(), comments, focus_id))
+    OnEventView::new(CommentView::new(story.clone(), comments, focus_id))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
             match *e {
                 Event::Char(c) if '0' <= c && c <= '9' => {
@@ -216,6 +216,26 @@ fn get_comment_main_view(
             };
             None
         })
+        // scrolling shortcuts
+        .on_pre_event_inner(comment_view_keymap.up, |s, _| {
+            s.get_scroller_mut().scroll_up(get_config().scroll_offset);
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(comment_view_keymap.down, |s, _| {
+            s.get_scroller_mut().scroll_down(get_config().scroll_offset);
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(comment_view_keymap.page_up, |s, _| {
+            let height = s.get_scroller_mut().last_available_size().y;
+            s.get_scroller_mut().scroll_up(height / 2);
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(comment_view_keymap.page_down, |s, _| {
+            let height = s.get_scroller_mut().last_available_size().y;
+            s.get_scroller_mut().scroll_down(height / 2);
+            Some(EventResult::Consumed(None))
+        })
+        // comment navigation shortcuts
         .on_pre_event_inner(comment_view_keymap.prev_comment, |s, _| {
             let id = s.get_focus_index();
             if id == 0 {
@@ -264,6 +284,7 @@ fn get_comment_main_view(
             let next_id = left.iter().rposition(|&h| h == 0).unwrap_or(id);
             s.set_focus_index(next_id)
         })
+        // open external link shortcuts
         .on_pre_event_inner(comment_view_keymap.open_link_in_browser, |s, _| {
             match s.raw_command.parse::<usize>() {
                 Ok(num) => {

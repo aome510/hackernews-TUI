@@ -101,16 +101,15 @@ fn load_config(config_file_path: Option<&str>) {
             Ok(config) => config,
         },
     };
-    config::CONFIG.set(config).unwrap_or_else(|_| {
-        panic!("failed to set up the application's configurations");
-    })
+
+    init_config(config);
 }
 
 fn run() {
     let mut s = cursive::default();
 
     // update cursive's default theme
-    let config_theme = CONFIG.get().unwrap().theme.clone();
+    let config_theme = get_config().theme.clone();
     s.update_theme(|theme| {
         config_theme.update_theme(theme);
     });

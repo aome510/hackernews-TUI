@@ -137,6 +137,12 @@ pub struct CommentViewKeyMap {
     pub open_link_in_browser: Key,
     pub open_link_in_article_view: Key,
 
+    // scrolling
+    pub down: Key,
+    pub up: Key,
+    pub page_down: Key,
+    pub page_up: Key,
+
     pub reload_comment_view: Key,
 }
 
@@ -153,6 +159,11 @@ impl Default for CommentViewKeyMap {
             open_comment_in_browser: Key::new('c'),
             open_link_in_browser: Key::new('f'),
             open_link_in_article_view: Key::new('F'),
+
+            up: Key::new(event::Key::Up),
+            down: Key::new(event::Key::Down),
+            page_up: Key::new(event::Key::PageUp),
+            page_down: Key::new(event::Key::PageDown),
 
             reload_comment_view: Key::new('r'),
         }

@@ -2,29 +2,6 @@ use crate::prelude::*;
 
 pub type ScrollListView = ScrollView<LinearLayout>;
 
-/// Construct a new OnEventView wrapping a ScrollListView
-pub fn construct_scroll_list_event_view<T: ScrollableList>(view: T) -> OnEventView<T> {
-    OnEventView::new(view)
-        .on_pre_event_inner(Key::Up, |s, _| {
-            s.get_scroller_mut().scroll_up(1);
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(Key::Down, |s, _| {
-            s.get_scroller_mut().scroll_down(1);
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(Key::PageUp, |s, _| {
-            let height = s.get_scroller_mut().last_available_size().y;
-            s.get_scroller_mut().scroll_up(height / 2);
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(Key::PageDown, |s, _| {
-            let height = s.get_scroller_mut().last_available_size().y;
-            s.get_scroller_mut().scroll_down(height / 2);
-            Some(EventResult::Consumed(None))
-        })
-}
-
 /// ScrollableList is a trait that implements basic methods
 /// to interact with a View that wraps a ScrollListView
 pub trait ScrollableList {
@@ -51,7 +28,7 @@ macro_rules! impl_scrollable_list {
         }
 
         fn scroll(&mut self, direction: bool) {
-            if !CONFIG.get().unwrap().page_scrolling {
+            if !get_config().page_scrolling {
                 self.get_inner_mut().scroll_to_important_area();
             }
 
