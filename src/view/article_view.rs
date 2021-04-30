@@ -1,6 +1,5 @@
 use regex::Regex;
 use serde::Deserialize;
-use std::thread;
 
 use super::utils::*;
 use super::{async_view, text_view};
@@ -201,12 +200,7 @@ pub fn get_link_dialog(links: &Vec<String>) -> impl View {
             move |s, _| {
                 let links_view = s.get_content_mut().downcast_mut::<LinearLayout>().unwrap();
                 let focus_id = links_view.get_focus_index();
-                let url = links[focus_id].clone();
-                thread::spawn(move || {
-                    if let Err(err) = webbrowser::open(&url) {
-                        warn!("failed to open link {}: {}", url, err);
-                    }
-                });
+                open_url_in_browser(&links[focus_id]);
                 Some(EventResult::Consumed(None))
             }
         })
@@ -294,16 +288,9 @@ pub fn get_article_main_view(article: Article) -> OnEventView<ArticleView> {
                 Ok(num) => {
                     s.raw_command.clear();
                     if num < s.links.len() {
-                        let url = s.links[num].clone();
-                        thread::spawn(move || {
-                            if let Err(err) = webbrowser::open(&url) {
-                                warn!("failed to open link {}: {}", url, err);
-                            }
-                        });
-                        Some(EventResult::Consumed(None))
-                    } else {
-                        Some(EventResult::Consumed(None))
+                        open_url_in_browser(&s.links[num]);
                     }
+                    Some(EventResult::Consumed(None))
                 }
                 Err(_) => None,
             }
@@ -343,14 +330,7 @@ pub fn get_article_view(article: Article) -> impl View {
         .on_event(article_view_keymap.open_article_in_browser, {
             let url = article.url.clone();
             move |_| {
-                if url.len() > 0 {
-                    let url = url.clone();
-                    thread::spawn(move || {
-                        if let Err(err) = webbrowser::open(&url) {
-                            warn!("failed to open link {}: {}", url, err);
-                        }
-                    });
-                }
+                open_url_in_browser(&url);
             }
         })
         .on_event(get_global_keymap().open_help_dialog.clone(), |s| {

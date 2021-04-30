@@ -110,3 +110,29 @@ pub fn get_story_view_desc_by_tag(
         page + 1
     )
 }
+
+/// open a given url using a specific command
+pub fn open_url_in_browser(url: &str) {
+    if url.len() == 0 {
+        return;
+    }
+
+    let url = url.to_string();
+    let command = get_config().url_open_command.clone();
+    debug!("open url {} {}", url, command);
+    std::thread::spawn(
+        move || match std::process::Command::new(&command).arg(&url).output() {
+            Err(err) => warn!("failed to execute command `{} {}`: {:?}", command, url, err),
+            Ok(output) => {
+                if !output.status.success() {
+                    warn!(
+                        "failed to execute command `{} {}`: {:?}",
+                        command,
+                        url,
+                        std::str::from_utf8(&output.stderr).unwrap(),
+                    )
+                }
+            }
+        },
+    );
+}

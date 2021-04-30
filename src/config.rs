@@ -10,9 +10,11 @@ use super::keybindings::*;
 #[derive(Deserialize)]
 /// Config is a struct storing the application's configurations
 pub struct Config {
-    pub story_pooling: StoryPooling,
     pub page_scrolling: bool,
     pub scroll_offset: usize,
+    pub url_open_command: String,
+
+    pub story_pooling: StoryPooling,
     pub client: Client,
     pub theme: Theme,
 
@@ -173,13 +175,14 @@ impl Default for Theme {
 impl Default for Config {
     fn default() -> Self {
         Config {
+            page_scrolling: true,
+            scroll_offset: 3,
+            url_open_command: "xdg-open".to_string(),
             story_pooling: StoryPooling {
                 enable: true,
                 delay: 2,
                 allows: vec!["front_page".to_string()],
             },
-            page_scrolling: true,
-            scroll_offset: 3,
             client: Client {
                 story_limit: StoryLimit {
                     search: 10,

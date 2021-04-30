@@ -1,6 +1,5 @@
 use rayon::prelude::*;
 use regex::Regex;
-use std::thread;
 
 use super::async_view;
 use super::list_view::*;
@@ -291,12 +290,7 @@ fn get_comment_main_view(
                     s.raw_command.clear();
                     let id = s.get_focus_index();
                     if num < s.comments[id].links.len() {
-                        let url = s.comments[id].links[num].clone();
-                        thread::spawn(move || {
-                            if let Err(err) = webbrowser::open(&url) {
-                                warn!("failed to open link {}: {}", url, err);
-                            }
-                        });
+                        open_url_in_browser(&s.comments[id].links[num]);
                         Some(EventResult::Consumed(None))
                     } else {
                         Some(EventResult::Consumed(None))
@@ -333,12 +327,8 @@ fn get_comment_main_view(
         })
         .on_pre_event_inner(comment_view_keymap.open_comment_in_browser, move |s, _| {
             let id = s.comments[s.get_focus_index()].id;
-            thread::spawn(move || {
-                let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
-                if let Err(err) = webbrowser::open(&url) {
-                    warn!("failed to open link {}: {}", url, err);
-                }
-            });
+            let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
+            open_url_in_browser(&url);
             Some(EventResult::Consumed(None))
         })
         .full_height()
@@ -373,14 +363,7 @@ pub fn get_comment_view(
             {
                 let url = story.url.clone();
                 move |_| {
-                    if url.len() > 0 {
-                        let url = url.clone();
-                        thread::spawn(move || {
-                            if let Err(err) = webbrowser::open(&url) {
-                                warn!("failed to open link {}: {}", url, err);
-                            }
-                        });
-                    }
+                    open_url_in_browser(&url);
                 }
             }
         })
@@ -398,12 +381,8 @@ pub fn get_comment_view(
         .on_event(
             get_story_view_keymap().open_story_in_browser.clone(),
             move |_| {
-                thread::spawn(move || {
-                    let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
-                    if let Err(err) = webbrowser::open(&url) {
-                        warn!("failed to open link {}: {}", url, err);
-                    }
-                });
+                let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
+                open_url_in_browser(&url);
             },
         )
 }

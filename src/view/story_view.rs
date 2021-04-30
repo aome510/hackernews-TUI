@@ -1,8 +1,4 @@
 use regex::Regex;
-use std::{
-    thread::{self, sleep},
-    time::Duration,
-};
 
 use super::async_view;
 use super::help_view::*;
@@ -168,17 +164,8 @@ pub fn get_story_main_view(
         // open external link shortcuts
         .on_pre_event_inner(story_view_keymap.open_article_in_browser, move |s, _| {
             let id = s.get_focus_index();
-            let url = s.stories[id].url.clone();
-            if url.len() > 0 {
-                thread::spawn(move || {
-                    if let Err(err) = webbrowser::open(&url) {
-                        warn!("failed to open link {}: {}", url, err);
-                    }
-                });
-                Some(EventResult::Consumed(None))
-            } else {
-                Some(EventResult::Consumed(None))
-            }
+            open_url_in_browser(&s.stories[id].url);
+            Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(
             story_view_keymap.open_article_in_article_view,
@@ -196,12 +183,8 @@ pub fn get_story_main_view(
         )
         .on_pre_event_inner(story_view_keymap.open_story_in_browser, move |s, _| {
             let id = s.stories[s.get_focus_index()].id;
-            thread::spawn(move || {
-                let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
-                if let Err(err) = webbrowser::open(&url) {
-                    warn!("failed to open link {}: {}", url, err);
-                }
-            });
+            let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
+            open_url_in_browser(&url);
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(story_view_keymap.goto_story, move |s, _| {
@@ -253,7 +236,7 @@ pub fn get_story_view(
             .any(|allowed_tag| allowed_tag == tag)
         {
             let client = client.clone();
-            thread::spawn(move || {
+            std::thread::spawn(move || {
                 stories.iter().for_each(|story| {
                     match client.get_comments_from_story(story, false) {
                         Err(err) => {
@@ -265,7 +248,7 @@ pub fn get_story_view(
                         _ => {}
                     };
 
-                    sleep(Duration::from_secs(story_pooling.delay));
+                    std::thread::sleep(std::time::Duration::from_secs(story_pooling.delay));
                 });
             });
         }
