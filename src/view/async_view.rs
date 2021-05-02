@@ -107,7 +107,8 @@ pub fn get_story_view_async(
 /// parsing the Article data
 pub fn get_article_view_async(siv: &mut Cursive, article_url: String) -> impl View {
     let err_desc = format!(
-        "failed to execute command `mercury-parser --format markdown {}`:",
+        "failed to execute command `mercury-parser --format markdown {}`:\n\
+         Please make sure you have `mercury-parser` installed in your path (https://github.com/aome510/hackernews-TUI#dependencies)",
         article_url
     );
     AsyncView::new_with_bg_creator(

@@ -8,7 +8,7 @@ pub fn get_error_view(err_desc: &str, err_output: &str) -> impl View {
     let main_view = Dialog::around(
         LinearLayout::vertical()
             .child(TextView::new(err_desc))
-            .child(TextView::new(err_output))
+            .child(TextView::new(&format!("ERROR: {}", err_output)))
             .scrollable(),
     )
     .full_height();
