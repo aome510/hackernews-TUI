@@ -114,7 +114,7 @@ $ cd /usr/pkgsrc/www/hackernews-tui
 List of demo videos:
 
 - `hackernews_tui v0.5.0`: demo general usage of `Story View`, `Search View` and `Comment View` can be found [here](https://www.youtube.com/watch?v=AArtVod0b6A)
-- `hackernews_tui v0.6.0`: demo the usage of `Article View` to read a web page in reader mode can be found [here](https://www.youtube.com/watch?v=jIsKZwPi2T8)
+- `hackernews_tui v0.6.0-beta`: demo the usage of `Article View` to read a web page in reader mode can be found [here](https://www.youtube.com/watch?v=jIsKZwPi2T8)
 
 ### Story View
 
