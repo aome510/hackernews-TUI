@@ -69,6 +69,7 @@ impl HelpView {
                 });
             })
             .scrollable()
+            .max_height(32)
     }
 
     pub fn keys(mut self, mut keys: Vec<(&'static str, Vec<(String, &'static str)>)>) -> Self {
