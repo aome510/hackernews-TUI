@@ -146,7 +146,7 @@ impl CommentView {
         let paragraph_re = Regex::new(r"<p>(?s)(?P<paragraph>.*?)</p>").unwrap();
         let italic_re = Regex::new(r"<i>(?s)(?P<text>.+?)</i>").unwrap();
         let code_re = Regex::new(r"<pre><code>(?s)(?P<code>.+?)[\n]*</code></pre>").unwrap();
-        let link_re = Regex::new(r#"<a\s+?href="(?P<link>.+?)".+?</a>"#).unwrap();
+        let link_re = Regex::new(r#"<a\s+?href="(?P<link>.+?)"(?s).+?</a>"#).unwrap();
 
         comments
             .par_iter()
