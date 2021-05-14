@@ -113,19 +113,23 @@ pub fn get_article_view_async(siv: &mut Cursive, article_url: String) -> impl Vi
     );
     AsyncView::new_with_bg_creator(
         siv,
-        move || {
-            Ok(std::process::Command::new("mercury-parser")
-                .arg("--format")
-                .arg("markdown")
-                .arg(&article_url)
-                .output())
+        {
+            let article_url = article_url.clone();
+            move || {
+                Ok(std::process::Command::new("mercury-parser")
+                    .arg("--format")
+                    .arg("markdown")
+                    .arg(&article_url)
+                    .output())
+            }
         },
         move |output| {
             ErrorViewWrapper::new(match output {
                 Ok(output) => {
                     if output.status.success() {
                         match serde_json::from_slice::<article_view::Article>(&output.stdout) {
-                            Ok(article) => {
+                            Ok(mut article) => {
+                                article.update_url(article_url.clone());
                                 ErrorViewEnum::Ok(article_view::get_article_view(article, false))
                             }
                             Err(_) => {

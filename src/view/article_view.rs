@@ -26,6 +26,12 @@ pub struct Article {
 }
 
 impl Article {
+    pub fn update_url(&mut self, url: String) {
+        self.url = url;
+    }
+}
+
+impl Article {
     /// parse links from the article's content (in markdown format)
     pub fn parse_link(&self, raw_md: bool) -> (StyledString, Vec<String>) {
         // escape characters in markdown: \ ` * _ { } [ ] ( ) # + - . !
