@@ -206,7 +206,7 @@ impl From<StoryResponse> for Story {
 
 /// StoryCache is a cache storing all comments of a HN story.
 /// A story cache will be updated if the number of commments changes.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct StoryCache {
     // num_comments is an approximated number of comments received from HN APIs,
     // it can be different from number of comments in the [comments] field below
@@ -223,7 +223,7 @@ impl StoryCache {
     }
 }
 
-#[derive(Clone, Copy, Default, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, Deserialize)]
 pub struct FilterInterval<T> {
     start: Option<T>,
     end: Option<T>,
@@ -245,7 +245,7 @@ impl<T: Display + Copy> FilterInterval<T> {
     }
 }
 
-#[derive(Clone, Copy, Default, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, Deserialize)]
 pub struct StoryNumericFilters {
     elapsed_days_interval: FilterInterval<u32>,
     points_interval: FilterInterval<u32>,

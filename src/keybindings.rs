@@ -5,7 +5,7 @@ use serde::{de, Deserialize, Deserializer};
 
 use crate::hn_client;
 
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct KeyMap {
     pub custom_keymap: CustomKeyMap,
     pub global_keymap: GlobalKeyMap,
@@ -28,7 +28,7 @@ impl Default for KeyMap {
     }
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct CustomViewNavigation {
     pub key: Key,
     pub view: String,
@@ -36,7 +36,7 @@ pub struct CustomViewNavigation {
     pub numeric_filters: hn_client::StoryNumericFilters,
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct CustomKeyMap {
     pub custom_view_navigation: Vec<CustomViewNavigation>,
 }
@@ -49,7 +49,7 @@ impl Default for CustomKeyMap {
     }
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct GlobalKeyMap {
     pub open_help_dialog: Key,
     pub quit: Key,
@@ -83,7 +83,7 @@ impl Default for GlobalKeyMap {
     }
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct StoryViewKeyMap {
     // stories navigation keymaps
     pub next_story: Key,
@@ -123,7 +123,7 @@ impl Default for StoryViewKeyMap {
     }
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct SearchViewKeyMap {
     // switch mode keymaps
     pub to_navigation_mode: Key,
@@ -139,7 +139,7 @@ impl Default for SearchViewKeyMap {
     }
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct CommentViewKeyMap {
     // comments navigation keymaps
     pub next_comment: Key,
@@ -187,7 +187,7 @@ impl Default for CommentViewKeyMap {
     }
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct ArticleViewKeyMap {
     pub down: Key,
     pub up: Key,
@@ -230,7 +230,7 @@ impl Default for ArticleViewKeyMap {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Key {
     event: Event,
 }

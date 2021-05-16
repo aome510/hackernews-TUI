@@ -14,7 +14,7 @@ pub struct ArticleView {
 }
 
 /// Article is a struct representing the data of a web page
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Article {
     title: String,
     url: String,

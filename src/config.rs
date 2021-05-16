@@ -6,7 +6,7 @@ use serde::{de, Deserialize, Deserializer};
 
 use super::keybindings::*;
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 /// Config is a struct storing the application's configurations
 pub struct Config {
     pub page_scrolling: bool,
@@ -20,14 +20,14 @@ pub struct Config {
     pub keymap: KeyMap,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct StoryPooling {
     pub enable: bool,
     pub delay: u64,
     pub allows: Vec<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct StoryLimit {
     pub front_page: usize,
     pub story: usize,
@@ -37,13 +37,13 @@ pub struct StoryLimit {
     pub search: usize,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Client {
     pub story_limit: StoryLimit,
     pub client_timeout: u64,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Color {
     pub color: theme::Color,
 }
@@ -83,7 +83,7 @@ impl<'de> de::Deserialize<'de> for Color {
     }
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Theme {
     // cursive's palette colors
     pub background: Color,
