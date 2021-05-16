@@ -5,6 +5,7 @@ use serde::{de, Deserialize, Deserializer};
 
 #[derive(Clone, Deserialize)]
 pub struct KeyMap {
+    pub custom_keymap: CustomKeyMap,
     pub global_keymap: GlobalKeyMap,
     pub story_view_keymap: StoryViewKeyMap,
     pub search_view_keymap: SearchViewKeyMap,
@@ -15,11 +16,34 @@ pub struct KeyMap {
 impl Default for KeyMap {
     fn default() -> Self {
         KeyMap {
+            custom_keymap: CustomKeyMap::default(),
             global_keymap: GlobalKeyMap::default(),
             story_view_keymap: StoryViewKeyMap::default(),
             search_view_keymap: SearchViewKeyMap::default(),
             comment_view_keymap: CommentViewKeyMap::default(),
             article_view_keymap: ArticleViewKeyMap::default(),
+        }
+    }
+}
+
+#[derive(Clone, Deserialize)]
+pub struct CustomViewNavigation {
+    pub key: Key,
+    pub view: String,
+    pub elapsed_days_interval: Vec<u32>,
+    pub points_interval: Vec<u32>,
+    pub num_comments_interval: Vec<usize>,
+}
+
+#[derive(Clone, Deserialize)]
+pub struct CustomKeyMap {
+    pub custom_view_navigation: Vec<CustomViewNavigation>,
+}
+
+impl Default for CustomKeyMap {
+    fn default() -> Self {
+        CustomKeyMap {
+            custom_view_navigation: vec![],
         }
     }
 }

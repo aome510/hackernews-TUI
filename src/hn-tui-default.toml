@@ -80,6 +80,14 @@ code_block_bg = "#c8c8c8"
 # user-defined key bindings
 # ---------------------------------
 # Go to the end of this section to see list of supported keys
+#
+
+[[keymap.custom_keymap.custom_view_navigation]]
+key = "C-1"
+view = "story"
+elapsed_days_interval = [0, 3]
+points_interval = [10]
+num_comments_interval = []
 
 [keymap.global_keymap]
 open_help_dialog = "?"
