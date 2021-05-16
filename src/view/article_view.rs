@@ -34,8 +34,8 @@ impl Article {
 impl Article {
     /// parse links from the article's content (in markdown format)
     pub fn parse_link(&self, raw_md: bool) -> (StyledString, Vec<String>) {
-        // escape characters in markdown: \ ` * _ { } [ ] ( ) # + - . !
-        let md_escape_char_re = Regex::new(r"\\(?P<char>[\\`\*_\{\}\[\]\(\)#\+\-\.!`])").unwrap();
+        // escape characters in markdown: \ ` * _ { } [ ] ( ) # + - . ! =
+        let md_escape_char_re = Regex::new(r"\\(?P<char>[\\`\*_\{\}\[\]\(\)#\+\-\.!`=])").unwrap();
 
         // if raw_md is true, don't parse link
         if raw_md {
