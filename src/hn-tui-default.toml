@@ -144,30 +144,37 @@ toggle_raw_markdown_mode = "T"
 # custom keymap
 # ---------------------
 
-# User now can define a custom keymap to navigate
-# between different kinds of StoryView using
-# HN Alogilia "numericFilters" query parameter
-# Below is two examples of such keymap.
+# User now can define custom keymaps to navigate
+# between different kinds of StoryViews using
+# HN Alogilia "numericFilters" query parameter.
 
-# [[keymap.custom_keymap.custom_view_navigation]]
-# key = "M-1"
-# view = "story"
-# by_date = false
+# "custom_view_navigation" is a struct used to define such keymap.
+# Two examples of "keymap.custom_keymap.custom_view_navigation".
+#
+# possible values for "view"
+# - "front_page" -> "Story View - Front Page"
+# - "story" -> "Story View - All Stories"
+# - "ask_hn" -> "Story View - Ask HN"
+# - "show_hn" -> "Story View - Show HN"
+# - "job" -> "Story View - Jobs"
 
-# [keymap.custom_keymap.custom_view_navigation.numeric_filters]
-# elapsed_days_interval = {start = 0, end = 3}
-# points_interval = {start = 10}
-# num_comments_interval = {}
+[[keymap.custom_keymap.custom_view_navigation]]
+key = "M-1"
+view = "story"
+by_date = false
+[keymap.custom_keymap.custom_view_navigation.numeric_filters]
+elapsed_days_interval = {start = 0, end = 3} # stories posted between 0 day and 3 days ago
+points_interval = {start = 10} # stories with points >= 10
+num_comments_interval = {} # no restriction on the number of comments
 
-# [[keymap.custom_keymap.custom_view_navigation]]
-# key = "M-2"
-# view = "show_hn"
-# by_date = true
-
-# [keymap.custom_keymap.custom_view_navigation.numeric_filters]
-# elapsed_days_interval = {}
-# points_interval = {start = 100, end = 200}
-# num_comments_interval = { end = 100 }
+[[keymap.custom_keymap.custom_view_navigation]]
+key = "M-2"
+view = "show_hn"
+by_date = true
+[keymap.custom_keymap.custom_view_navigation.numeric_filters]
+elapsed_days_interval = {}
+points_interval = {start = 50, end = 200}
+num_comments_interval = {end = 100}
 
 # --------------------------
 # List of supported keys:

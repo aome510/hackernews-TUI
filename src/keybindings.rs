@@ -7,6 +7,7 @@ use crate::hn_client;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct KeyMap {
+    #[serde(default)]
     pub custom_keymap: CustomKeyMap,
     pub global_keymap: GlobalKeyMap,
     pub story_view_keymap: StoryViewKeyMap,
