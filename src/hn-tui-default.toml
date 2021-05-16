@@ -81,12 +81,6 @@ code_block_bg = "#c8c8c8"
 # ---------------------------------
 # Go to the end of this section to see list of supported keys
 
-[[keymap.custom_keymap.custom_view_navigation]]
-key = "M-1"
-view = "story"
-by_date = false
-numeric_filters = { elapsed_days_interval = {start = 0, end = 3}, points_interval = {start = 10}, num_comments_interval = {} }
-
 [keymap.global_keymap]
 open_help_dialog = "?"
 quit = "C-q"
@@ -146,7 +140,39 @@ link_dialog_focus_next = "j"
 link_dialog_focus_prev = "k"
 toggle_raw_markdown_mode = "T"
 
+# ---------------------
+# custom keymap
+# ---------------------
+
+# User now can define a custom keymap to navigate
+# between different kinds of StoryView using
+# HN Alogilia "numericFilters" query parameter
+# Below is two examples of such keymap.
+
+# [[keymap.custom_keymap.custom_view_navigation]]
+# key = "M-1"
+# view = "story"
+# by_date = false
+
+# [keymap.custom_keymap.custom_view_navigation.numeric_filters]
+# elapsed_days_interval = {start = 0, end = 3}
+# points_interval = {start = 10}
+# num_comments_interval = {}
+
+# [[keymap.custom_keymap.custom_view_navigation]]
+# key = "M-2"
+# view = "show_hn"
+# by_date = true
+
+# [keymap.custom_keymap.custom_view_navigation.numeric_filters]
+# elapsed_days_interval = {}
+# points_interval = {start = 100, end = 200}
+# num_comments_interval = { end = 100 }
+
+# --------------------------
 # List of supported keys:
+# --------------------------
+
 # - <char> (any single character)
 # - C-<char> (ctrl-<char>)
 # - M-<char> (alt-<char>)

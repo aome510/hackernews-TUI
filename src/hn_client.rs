@@ -1,7 +1,10 @@
 use rayon::prelude::*;
 use serde::{de, Deserialize, Deserializer};
-use std::time::{Duration, SystemTime};
 use std::{collections::HashMap, sync::Arc, sync::RwLock};
+use std::{
+    fmt::Display,
+    time::{Duration, SystemTime},
+};
 
 use crate::prelude::*;
 
@@ -221,9 +224,25 @@ impl StoryCache {
 }
 
 #[derive(Clone, Copy, Default, Deserialize)]
-pub struct FilterInterval<T: Default + Copy> {
+pub struct FilterInterval<T> {
     start: Option<T>,
     end: Option<T>,
+}
+
+impl<T: Display + Copy> FilterInterval<T> {
+    pub fn query(&self, field: &str) -> String {
+        format!(
+            "{}{}",
+            match self.start {
+                Some(x) => format!(",{}>={}", field, x),
+                None => "".to_string(),
+            },
+            match self.end {
+                Some(x) => format!(",{}<{}", field, x),
+                None => "".to_string(),
+            },
+        )
+    }
 }
 
 #[derive(Clone, Copy, Default, Deserialize)]
@@ -238,8 +257,38 @@ impl StoryNumericFilters {
         "".to_string()
     }
 
+    fn from_elapsed_days_to_unix_time(elapsed_days: Option<u32>) -> Option<u64> {
+        match elapsed_days {
+            None => None,
+            Some(day_offset) => {
+                let current_time = SystemTime::now()
+                    .duration_since(SystemTime::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs();
+                Some(current_time - from_day_offset_to_time_offset_in_secs(day_offset))
+            }
+        }
+    }
+
     pub fn query(&self) -> String {
-        "".to_string()
+        // convert elapsed_days to unix time (in seconds)
+        let time_interval = FilterInterval {
+            end: Self::from_elapsed_days_to_unix_time(self.elapsed_days_interval.start),
+            start: Self::from_elapsed_days_to_unix_time(self.elapsed_days_interval.end),
+        };
+
+        let mut query = format!(
+            "{}{}{}",
+            time_interval.query("created_at_i"),
+            self.points_interval.query("points"),
+            self.num_comments_interval.query("num_comments")
+        );
+        if query.len() > 0 {
+            query.remove(0); // remove trailing ,
+            format!("&numericFilters={}", query)
+        } else {
+            "".to_string()
+        }
     }
 }
 

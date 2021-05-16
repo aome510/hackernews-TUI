@@ -107,7 +107,7 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
                     &data.view,
                     data.by_date,
                     0,
-                    hn_client::StoryNumericFilters::default(),
+                    data.numeric_filters,
                     true,
                 )
             });
