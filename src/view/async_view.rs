@@ -1,5 +1,4 @@
 use super::error_view::{self, ErrorViewEnum, ErrorViewWrapper};
-use super::utils::get_story_view_desc_by_tag;
 
 use crate::prelude::*;
 use cursive_aligned_view::Alignable;

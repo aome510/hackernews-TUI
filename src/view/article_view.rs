@@ -1,7 +1,6 @@
 use regex::Regex;
 use serde::Deserialize;
 
-use super::utils::*;
 use super::{async_view, text_view};
 
 use crate::prelude::*;
