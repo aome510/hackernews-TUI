@@ -85,9 +85,7 @@ code_block_bg = "#c8c8c8"
 key = "M-1"
 view = "story"
 by_date = false
-elapsed_days_interval = [0, 3]
-points_interval = [10]
-num_comments_interval = []
+numeric_filters = { elapsed_days_interval = {start = 0, end = 3}, points_interval = {start = 10}, num_comments_interval = {} }
 
 [keymap.global_keymap]
 open_help_dialog = "?"

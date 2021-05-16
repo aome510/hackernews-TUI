@@ -94,7 +94,7 @@ pub fn get_story_view_desc_by_tag(
     tag: &str,
     by_date: bool,
     page: usize,
-    time_offset_in_secs: Option<u64>,
+    numeric_filters: &hn_client::StoryNumericFilters,
 ) -> String {
     format!(
         "Story View - {} (sort_by: {}, time_range: {}, page: {})",
@@ -107,11 +107,7 @@ pub fn get_story_view_desc_by_tag(
             _ => panic!("unknown tag: {}", tag),
         },
         if by_date { "date" } else { "popularity" },
-        match time_offset_in_secs {
-            None => "all time".to_string(),
-            Some(time_offset_in_secs) =>
-                "past ".to_owned() + &get_time_offset_in_text(time_offset_in_secs),
-        },
+        numeric_filters.desc(),
         page + 1
     )
 }

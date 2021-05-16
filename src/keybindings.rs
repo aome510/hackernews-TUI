@@ -3,6 +3,8 @@ use core::fmt;
 use cursive::event::{self, Event, EventTrigger};
 use serde::{de, Deserialize, Deserializer};
 
+use crate::hn_client;
+
 #[derive(Clone, Deserialize)]
 pub struct KeyMap {
     pub custom_keymap: CustomKeyMap,
@@ -31,9 +33,7 @@ pub struct CustomViewNavigation {
     pub key: Key,
     pub view: String,
     pub by_date: bool,
-    pub elapsed_days_interval: Vec<u32>,
-    pub points_interval: Vec<u32>,
-    pub num_comments_interval: Vec<usize>,
+    pub numeric_filters: hn_client::StoryNumericFilters,
 }
 
 #[derive(Clone, Deserialize)]

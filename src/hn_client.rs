@@ -220,6 +220,29 @@ impl StoryCache {
     }
 }
 
+#[derive(Clone, Copy, Default, Deserialize)]
+pub struct FilterInterval<T: Default + Copy> {
+    start: Option<T>,
+    end: Option<T>,
+}
+
+#[derive(Clone, Copy, Default, Deserialize)]
+pub struct StoryNumericFilters {
+    elapsed_days_interval: FilterInterval<u32>,
+    points_interval: FilterInterval<u32>,
+    num_comments_interval: FilterInterval<usize>,
+}
+
+impl StoryNumericFilters {
+    pub fn desc(&self) -> String {
+        "".to_string()
+    }
+
+    pub fn query(&self) -> String {
+        "".to_string()
+    }
+}
+
 /// HNClient is a HTTP client to communicate with Hacker News APIs.
 #[derive(Clone)]
 pub struct HNClient {
@@ -368,7 +391,7 @@ impl HNClient {
         tag: &str,
         by_date: bool,
         page: usize,
-        time_offset_in_secs: Option<u64>,
+        numeric_filters: StoryNumericFilters,
     ) -> Result<Vec<Story>> {
         let story_limit = get_config().client.story_limit.get_story_limit_by_tag(tag);
         let request_url = format!(
@@ -378,18 +401,9 @@ impl HNClient {
             tag,
             story_limit,
             page,
-            match time_offset_in_secs {
-                None => "".to_string(),
-                Some(time_offset_in_secs) => {
-                    let curr_time = SystemTime::now()
-                        .duration_since(SystemTime::UNIX_EPOCH)
-                        .unwrap()
-                        .as_secs();
-                    let time_lowerbound = curr_time - time_offset_in_secs;
-                    "&numericFilters=created_at_i>".to_owned() + &time_lowerbound.to_string()
-                }
-            }
+            numeric_filters.query(),
         );
+
         let time = SystemTime::now();
         let response = self
             .client
