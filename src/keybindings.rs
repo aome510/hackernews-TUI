@@ -30,6 +30,7 @@ impl Default for KeyMap {
 pub struct CustomViewNavigation {
     pub key: Key,
     pub view: String,
+    pub by_date: bool,
     pub elapsed_days_interval: Vec<u32>,
     pub points_interval: Vec<u32>,
     pub num_comments_interval: Vec<usize>,
@@ -93,10 +94,6 @@ pub struct StoryViewKeyMap {
     pub next_page: Key,
     pub prev_page: Key,
     pub toggle_sort_by: Key,
-    pub filter_past_day: Key,
-    pub filter_past_week: Key,
-    pub filter_past_month: Key,
-    pub filter_past_year: Key,
 
     // link opening keymaps
     pub open_article_in_browser: Key,
@@ -116,10 +113,6 @@ impl Default for StoryViewKeyMap {
             next_page: Key::new('n'),
             prev_page: Key::new('p'),
             toggle_sort_by: Key::new('d'),
-            filter_past_day: Key::new('q'),
-            filter_past_week: Key::new('w'),
-            filter_past_month: Key::new('e'),
-            filter_past_year: Key::new('r'),
 
             open_article_in_browser: Key::new('o'),
             open_article_in_article_view: Key::new('O'),

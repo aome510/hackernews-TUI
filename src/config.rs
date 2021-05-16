@@ -215,6 +215,10 @@ pub fn get_config_theme() -> &'static Theme {
     &get_config().theme
 }
 
+pub fn get_custom_keymap() -> &'static CustomKeyMap {
+    &get_config().keymap.custom_keymap
+}
+
 pub fn get_global_keymap() -> &'static GlobalKeyMap {
     &get_config().keymap.global_keymap
 }

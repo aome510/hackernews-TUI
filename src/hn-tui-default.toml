@@ -80,11 +80,11 @@ code_block_bg = "#c8c8c8"
 # user-defined key bindings
 # ---------------------------------
 # Go to the end of this section to see list of supported keys
-#
 
 [[keymap.custom_keymap.custom_view_navigation]]
-key = "C-1"
+key = "M-1"
 view = "story"
+by_date = false
 elapsed_days_interval = [0, 3]
 points_interval = [10]
 num_comments_interval = []
@@ -108,10 +108,6 @@ goto_story = "g"
 next_page = "n"
 prev_page = "p"
 toggle_sort_by = "d"
-filter_past_day = "q"
-filter_past_week = "w"
-filter_past_month = "e"
-filter_past_year = "r"
 open_article_in_browser = "o"
 open_article_in_article_view = "O"
 open_story_in_browser = "s"

@@ -259,63 +259,6 @@ pub fn get_story_view(
         .on_pre_event(get_global_keymap().open_help_dialog.clone(), |s| {
             s.add_layer(StoryView::construct_help_view())
         })
-        // time_offset filter options
-        .on_event(story_view_keymap.filter_past_day, {
-            let client = client.clone();
-            move |s| {
-                add_story_view_layer(
-                    s,
-                    &client,
-                    tag,
-                    by_date,
-                    page,
-                    Some(from_day_offset_to_time_offset_in_secs(1)),
-                    true,
-                );
-            }
-        })
-        .on_event(story_view_keymap.filter_past_week, {
-            let client = client.clone();
-            move |s| {
-                add_story_view_layer(
-                    s,
-                    &client,
-                    tag,
-                    by_date,
-                    page,
-                    Some(from_day_offset_to_time_offset_in_secs(7)),
-                    true,
-                );
-            }
-        })
-        .on_event(story_view_keymap.filter_past_month, {
-            let client = client.clone();
-            move |s| {
-                add_story_view_layer(
-                    s,
-                    &client,
-                    tag,
-                    by_date,
-                    page,
-                    Some(from_day_offset_to_time_offset_in_secs(30)),
-                    true,
-                );
-            }
-        })
-        .on_event(story_view_keymap.filter_past_year, {
-            let client = client.clone();
-            move |s| {
-                add_story_view_layer(
-                    s,
-                    &client,
-                    tag,
-                    by_date,
-                    page,
-                    Some(from_day_offset_to_time_offset_in_secs(365)),
-                    true,
-                );
-            }
-        })
         // toggle sort_by
         .on_event(story_view_keymap.toggle_sort_by, {
             let client = client.clone();

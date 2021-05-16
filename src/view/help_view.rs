@@ -174,22 +174,6 @@ impl HasHelpView for StoryView {
                         story_view_keymap.toggle_sort_by.to_string(),
                         "Toggle sort by date/popularity",
                     ),
-                    (
-                        story_view_keymap.filter_past_day.to_string(),
-                        "Filter stories past day",
-                    ),
-                    (
-                        story_view_keymap.filter_past_week.to_string(),
-                        "Filter stories past week",
-                    ),
-                    (
-                        story_view_keymap.filter_past_month.to_string(),
-                        "Filter stories past month",
-                    ),
-                    (
-                        story_view_keymap.filter_past_year.to_string(),
-                        "Filter stories past year",
-                    ),
                 ],
             ),
             (

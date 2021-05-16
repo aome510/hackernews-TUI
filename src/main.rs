@@ -3,6 +3,7 @@ pub mod config;
 pub mod hn_client;
 pub mod keybindings;
 pub mod prelude;
+pub mod utils;
 pub mod view;
 
 use clap::*;
@@ -52,8 +53,31 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
         }
     });
 
+    // custom navigation shortcuts
+    let custom_keymap = get_custom_keymap();
+    custom_keymap
+        .custom_view_navigation
+        .iter()
+        .for_each(|data| {
+            let client = client.clone();
+            debug!("custom key: {}", data.key);
+            s.set_on_post_event(data.key.clone(), move |s| {
+                story_view::add_story_view_layer(
+                    s,
+                    &client,
+                    &data.view,
+                    data.by_date,
+                    0,
+                    Some(from_day_offset_to_time_offset_in_secs(
+                        data.elapsed_days_interval[1],
+                    )),
+                    true,
+                )
+            });
+        });
+
     // .........................................
-    // end of switching shortcuts for StoryView
+    // end of navigation shortcuts for StoryView
     // .........................................
 
     s.set_on_post_event(global_keymap.goto_previous_view, |s| {

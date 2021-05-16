@@ -165,10 +165,6 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 - `n`: Go to the next page
 - `p`: Go the previous page
 - `d`: Toggle sort by date/popularity
-- `q`: Filter stories past 24 hours
-- `w`: Filter stories past week
-- `e`: Filter stories past month
-- `r`: Filter stories past year
 
 #### Article View shortcuts
 
