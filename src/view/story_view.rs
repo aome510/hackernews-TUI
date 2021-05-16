@@ -254,7 +254,6 @@ pub fn get_story_view(
         }
     }
 
-    let day_in_secs = 24 * 60 * 60;
     let story_view_keymap = get_story_view_keymap().clone();
 
     OnEventView::new(view)
@@ -265,19 +264,43 @@ pub fn get_story_view(
         .on_event(story_view_keymap.filter_past_day, {
             let client = client.clone();
             move |s| {
-                add_story_view_layer(s, &client, tag, by_date, page, Some(day_in_secs * 1), true);
+                add_story_view_layer(
+                    s,
+                    &client,
+                    tag,
+                    by_date,
+                    page,
+                    Some(from_day_offset_to_time_offset_in_secs(1)),
+                    true,
+                );
             }
         })
         .on_event(story_view_keymap.filter_past_week, {
             let client = client.clone();
             move |s| {
-                add_story_view_layer(s, &client, tag, by_date, page, Some(day_in_secs * 7), true);
+                add_story_view_layer(
+                    s,
+                    &client,
+                    tag,
+                    by_date,
+                    page,
+                    Some(from_day_offset_to_time_offset_in_secs(7)),
+                    true,
+                );
             }
         })
         .on_event(story_view_keymap.filter_past_month, {
             let client = client.clone();
             move |s| {
-                add_story_view_layer(s, &client, tag, by_date, page, Some(day_in_secs * 30), true);
+                add_story_view_layer(
+                    s,
+                    &client,
+                    tag,
+                    by_date,
+                    page,
+                    Some(from_day_offset_to_time_offset_in_secs(30)),
+                    true,
+                );
             }
         })
         .on_event(story_view_keymap.filter_past_year, {
@@ -289,7 +312,7 @@ pub fn get_story_view(
                     tag,
                     by_date,
                     page,
-                    Some(day_in_secs * 365),
+                    Some(from_day_offset_to_time_offset_in_secs(365)),
                     true,
                 );
             }
