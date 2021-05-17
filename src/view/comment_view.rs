@@ -90,7 +90,11 @@ impl CommentView {
         code_re: &Regex,
         link_re: &Regex,
     ) -> (StyledString, Vec<String>) {
-        let mut s = paragraph_re.replace_all(&s, "${paragraph}\n").to_string();
+        let mut s = paragraph_re.replace_all(&s, "${paragraph}\n\n").to_string();
+        if s.ends_with("\n\n") {
+            s.remove(s.len() - 1);
+        }
+
         s = italic_re.replace_all(&s, "*${text}*").to_string();
         s = code_re.replace_all(&s, "```\n${code}\n```").to_string();
 
