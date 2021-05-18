@@ -161,64 +161,92 @@ impl HasHelpView for StoryView {
     fn construct_help_view() -> HelpView {
         let story_view_keymap = get_story_view_keymap();
 
-        HelpView::new().key_groups(vec![
-            (
-                "Navigation",
-                vec![
-                    (
-                        story_view_keymap.next_story.to_string(),
-                        "Focus the next story",
-                    ),
-                    (
-                        story_view_keymap.prev_story.to_string(),
-                        "Focus the previous story",
-                    ),
-                    (
-                        format!("`{{story_id}} {}`", story_view_keymap.goto_story),
-                        "Focus the {story_id}-th story",
-                    ),
-                ],
-            ),
-            (
-                "Paging/Filtering",
-                vec![
-                    (
-                        story_view_keymap.next_page.to_string(),
-                        "Go to the next page",
-                    ),
-                    (
-                        story_view_keymap.prev_page.to_string(),
-                        "Go the previous page",
-                    ),
-                    (
-                        story_view_keymap.toggle_sort_by.to_string(),
-                        "Toggle sort by date/popularity",
-                    ),
-                ],
-            ),
-            (
-                "Open external links",
-                vec![
-                    (
-                        story_view_keymap.open_article_in_browser.to_string(),
-                        "Open in browser the article associated with the focused story",
-                    ),
-                    (
-                        story_view_keymap.open_article_in_article_view.to_string(),
-                        "Open in article view the article associated with the focused story",
-                    ),
-                    (
-                        story_view_keymap.open_story_in_browser.to_string(),
-                        "Open in browser the focused story",
-                    ),
-                ],
-            ),
-            view_navigation_key_shortcuts!((
-                story_view_keymap.goto_story_comment_view.to_string(),
-                "Go to the comment view associated with the focused story"
-            )),
-            other_key_shortcuts!(),
-        ])
+        HelpView::new()
+            .key_groups(vec![
+                (
+                    "Navigation",
+                    vec![
+                        (
+                            story_view_keymap.next_story.to_string(),
+                            "Focus the next story",
+                        ),
+                        (
+                            story_view_keymap.prev_story.to_string(),
+                            "Focus the previous story",
+                        ),
+                        (
+                            format!("`{{story_id}} {}`", story_view_keymap.goto_story),
+                            "Focus the {story_id}-th story",
+                        ),
+                    ],
+                ),
+                (
+                    "Paging/Filtering",
+                    vec![
+                        (
+                            story_view_keymap.next_page.to_string(),
+                            "Go to the next page",
+                        ),
+                        (
+                            story_view_keymap.prev_page.to_string(),
+                            "Go the previous page",
+                        ),
+                        (
+                            story_view_keymap.toggle_sort_by.to_string(),
+                            "Toggle sort by date/popularity",
+                        ),
+                    ],
+                ),
+                (
+                    "Open external links",
+                    vec![
+                        (
+                            story_view_keymap.open_article_in_browser.to_string(),
+                            "Open in browser the article associated with the focused story",
+                        ),
+                        (
+                            story_view_keymap.open_article_in_article_view.to_string(),
+                            "Open in article view the article associated with the focused story",
+                        ),
+                        (
+                            story_view_keymap.open_story_in_browser.to_string(),
+                            "Open in browser the focused story",
+                        ),
+                    ],
+                ),
+            ])
+            .key_groups(vec![(
+                "Custom keymaps",
+                get_custom_keymap()
+                    .custom_view_navigation
+                    .iter()
+                    .map(|keymap| {
+                        (
+                            keymap.key.to_string(),
+                            format!(
+                                "Go to {} view (sort_by: {}, {})",
+                                match keymap.view.as_str() {
+                                    "front_page" => "front page",
+                                    "story" => "all stories",
+                                    "job" => "jobs",
+                                    "ask_hn" => "ask HN",
+                                    "show_hn" => "show HN",
+                                    _ => panic!("unknown view: {}", keymap.view),
+                                },
+                                if keymap.by_date { "date" } else { "popularity" },
+                                keymap.numeric_filters.desc()
+                            ),
+                        )
+                    })
+                    .collect(),
+            )])
+            .key_groups(vec![
+                view_navigation_key_shortcuts!((
+                    story_view_keymap.goto_story_comment_view.to_string(),
+                    "Go to the comment view associated with the focused story"
+                )),
+                other_key_shortcuts!(),
+            ])
     }
 }
 
