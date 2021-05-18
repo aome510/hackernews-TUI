@@ -45,6 +45,7 @@ This application is the right tool for you :muscle:
     - [Search View](#search-view-shortcuts)
 - [Configuration](#configuration)
   - [User-defined shortcuts](#user-defined-shortcuts)
+  - [Custom keymap](#custom-keymap)
 - [Debug](#debug)
 - [Roadmap](#roadmap)
 
@@ -244,6 +245,10 @@ then modify the config options in `~/.config/hn-tui.toml` based on your preferen
 ### User-defined shortcuts
 
 Shortcuts in each `View` are full customizable, for futher information about the supported keys and the corresponding functionalities, please refer to the **user-defined key bindings** sections in the example config file by running `hackernews_tui --example-config`.
+
+### Custom Keymap
+
+It's possible to define a custom shortcut to switch between different kinds of `StoryView` (`front_page`, `show_hn`, `ask_hn`, etc) with stories filtered using HN Alogilia's [`numericFilters`](https://hn.algolia.com/api/). An example of defining such a custom shortcut can be found under the **Custom Keymap** section of the example configuration file.
 
 ## Debug
 
