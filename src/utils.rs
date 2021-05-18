@@ -97,7 +97,7 @@ pub fn get_story_view_desc_by_tag(
     numeric_filters: &hn_client::StoryNumericFilters,
 ) -> String {
     let story_filters = format!(
-        "\nsort_by: {}, numeric_filters: {{ {} }}, page: {}",
+        "\nsort_by: {}, {}, page: {}",
         if by_date { "date" } else { "popularity" },
         numeric_filters.desc(),
         page + 1

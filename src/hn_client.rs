@@ -246,7 +246,7 @@ impl<T: Display + Copy> FilterInterval<T> {
 
     pub fn desc(&self, field: &str) -> String {
         format!(
-            "{}=[{}:{}]",
+            "{}: [{}:{}]",
             field,
             match self.start {
                 Some(x) => x.to_string(),
@@ -284,9 +284,9 @@ impl StoryNumericFilters {
     pub fn desc(&self) -> String {
         format!(
             "{}, {}, {}",
-            self.elapsed_days_interval.desc("elapsed_days_interval"),
-            self.points_interval.desc("points_interval"),
-            self.num_comments_interval.desc("num_comments_interval")
+            self.elapsed_days_interval.desc("elapsed_days"),
+            self.points_interval.desc("points"),
+            self.num_comments_interval.desc("num_comments")
         )
     }
 
