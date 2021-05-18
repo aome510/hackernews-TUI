@@ -243,6 +243,21 @@ impl<T: Display + Copy> FilterInterval<T> {
             },
         )
     }
+
+    pub fn desc(&self, field: &str) -> String {
+        format!(
+            "{}=[{}:{}]",
+            field,
+            match self.start {
+                Some(x) => x.to_string(),
+                None => "".to_string(),
+            },
+            match self.end {
+                Some(x) => x.to_string(),
+                None => "".to_string(),
+            }
+        )
+    }
 }
 
 #[derive(Debug, Clone, Copy, Default, Deserialize)]
@@ -253,10 +268,6 @@ pub struct StoryNumericFilters {
 }
 
 impl StoryNumericFilters {
-    pub fn desc(&self) -> String {
-        "".to_string()
-    }
-
     fn from_elapsed_days_to_unix_time(elapsed_days: Option<u32>) -> Option<u64> {
         match elapsed_days {
             None => None,
@@ -268,6 +279,15 @@ impl StoryNumericFilters {
                 Some(current_time - from_day_offset_to_time_offset_in_secs(day_offset))
             }
         }
+    }
+
+    pub fn desc(&self) -> String {
+        format!(
+            "{}, {}, {}",
+            self.elapsed_days_interval.desc("elapsed_days_interval"),
+            self.points_interval.desc("points_interval"),
+            self.num_comments_interval.desc("num_comments_interval")
+        )
     }
 
     pub fn query(&self) -> String {

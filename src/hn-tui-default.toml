@@ -10,6 +10,8 @@ scroll_offset = 3
 # "url_open_command" is a terminal command used to open url in browser
 url_open_command = "xdg-open"
 
+hide_story_filters_in_status_bar = false
+
 [story_pooling]
 # "story_pooling" is a feature that allows the application to fetch stories
 # in background and store them in cache memory.
@@ -163,7 +165,7 @@ key = "M-1"
 view = "story"
 by_date = false
 [keymap.custom_keymap.custom_view_navigation.numeric_filters]
-elapsed_days_interval = {start = 0, end = 3} # stories posted between 0 day and 3 days ago
+elapsed_days_interval = {start = 0, end = 3} # stories posted between now and 3 days ago
 points_interval = {start = 10} # stories with points >= 10
 num_comments_interval = {} # no restriction on the number of comments
 
