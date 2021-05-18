@@ -13,9 +13,6 @@ pub struct Config {
     pub scroll_offset: usize,
     pub url_open_command: String,
 
-    #[serde(default)]
-    pub hide_story_filters_in_status_bar: bool,
-
     pub story_pooling: StoryPooling,
     pub client: Client,
     pub theme: Theme,
@@ -180,7 +177,6 @@ impl Default for Config {
             page_scrolling: true,
             scroll_offset: 3,
             url_open_command: "xdg-open".to_string(),
-            hide_story_filters_in_status_bar: false,
             story_pooling: StoryPooling {
                 enable: true,
                 delay: 2,

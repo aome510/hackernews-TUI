@@ -90,20 +90,9 @@ pub fn get_status_bar_with_desc(desc: &str) -> impl View {
 }
 
 /// Construct StoryView based on the filtering tag
-pub fn get_story_view_desc_by_tag(
-    tag: &str,
-    by_date: bool,
-    page: usize,
-    numeric_filters: &hn_client::StoryNumericFilters,
-) -> String {
-    let story_filters = format!(
-        "\nsort_by: {}, {}, page: {}",
-        if by_date { "date" } else { "popularity" },
-        numeric_filters.desc(),
-        page + 1
-    );
+pub fn get_story_view_desc_by_tag(tag: &str) -> String {
     format!(
-        "Story View - {}{}",
+        "Story View - {}",
         match tag {
             "front_page" => "Front Page",
             "story" => "All Stories",
@@ -111,11 +100,6 @@ pub fn get_story_view_desc_by_tag(
             "ask_hn" => "Ask HN",
             "show_hn" => "Show HN",
             _ => panic!("unknown tag: {}", tag),
-        },
-        if !get_config().hide_story_filters_in_status_bar {
-            story_filters
-        } else {
-            "".to_string()
         },
     )
 }
