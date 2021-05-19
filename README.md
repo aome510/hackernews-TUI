@@ -248,7 +248,7 @@ Shortcuts in each `View` are full customizable, for futher information about the
 
 ### Custom Keymap
 
-It's possible to define a custom shortcut to switch between different kinds of `StoryView` (`front_page`, `show_hn`, `ask_hn`, etc) with stories filtered using HN Alogilia's [`numericFilters`](https://hn.algolia.com/api/). An example of defining such a custom shortcut can be found under the **Custom Keymap** section of the example configuration file.
+It's possible to define a custom shortcut to switch between different kinds of `StoryView` (`front_page`, `show_hn`, `ask_hn`, etc) with stories filtered by HN Algolia's [`numericFilters`](https://hn.algolia.com/api/). An example of defining such a custom shortcut can be found under the **Custom Keymap** section of the example configuration file.
 
 ## Debug
 
