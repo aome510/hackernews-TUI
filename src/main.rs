@@ -104,7 +104,7 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
                 story_view::add_story_view_layer(
                     s,
                     &client,
-                    &data.view,
+                    &data.tag,
                     data.by_date,
                     0,
                     data.numeric_filters,

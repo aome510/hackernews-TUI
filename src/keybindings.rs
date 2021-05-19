@@ -32,7 +32,7 @@ impl Default for KeyMap {
 #[derive(Debug, Clone, Deserialize)]
 pub struct CustomViewNavigation {
     pub key: Key,
-    pub view: String,
+    pub tag: String,
     pub by_date: bool,
     pub numeric_filters: hn_client::StoryNumericFilters,
 }

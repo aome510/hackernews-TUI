@@ -225,13 +225,13 @@ impl HasHelpView for StoryView {
                             keymap.key.to_string(),
                             format!(
                                 "Go to {} view (sort_by: {}, {})",
-                                match keymap.view.as_str() {
+                                match keymap.tag.as_str() {
                                     "front_page" => "front page",
                                     "story" => "all stories",
                                     "job" => "jobs",
                                     "ask_hn" => "ask HN",
                                     "show_hn" => "show HN",
-                                    _ => panic!("unknown view: {}", keymap.view),
+                                    _ => panic!("unknown view: {}", keymap.tag),
                                 },
                                 if keymap.by_date { "date" } else { "popularity" },
                                 keymap.numeric_filters.desc()

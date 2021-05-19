@@ -144,24 +144,13 @@ toggle_raw_markdown_mode = "T"
 # custom keymap
 # ---------------------
 
-# User now can define custom keymaps to navigate
-# between different kinds of StoryViews using
-# HN Alogilia "numericFilters" query parameter.
-
-# "custom_view_navigation" is a struct used to define such keymap.
-# Below is an example of "keymap.custom_keymap.custom_view_navigation"
-# consisting of two custom shortcuts.
+# "custom_view_navigation" is used to define custom shortcuts
+# to navigate to a `StoryView` with stories filtered by certain conditions.
+# Below is an example of defining two custom shortcuts using "custom_view_navigation".
 #
-# possible values for "view"
-# - "front_page" -> "Story View - Front Page"
-# - "story" -> "Story View - All Stories"
-# - "ask_hn" -> "Story View - Ask HN"
-# - "show_hn" -> "Story View - Show HN"
-# - "job" -> "Story View - Jobs"
-
 # [[keymap.custom_keymap.custom_view_navigation]]
 # key = "M-1"
-# view = "story"
+# tag = "story"
 # by_date = false # false to sort_by date, true to sort_by popularity
 # [keymap.custom_keymap.custom_view_navigation.numeric_filters]
 # elapsed_days_interval = {start = 0, end = 3} # stories posted between now and 3 days ago
@@ -170,12 +159,20 @@ toggle_raw_markdown_mode = "T"
 
 # [[keymap.custom_keymap.custom_view_navigation]]
 # key = "M-2"
-# view = "show_hn"
+# tag = "show_hn"
 # by_date = true
 # [keymap.custom_keymap.custom_view_navigation.numeric_filters]
 # elapsed_days_interval = {}
 # points_interval = {start = 50, end = 200}
 # num_comments_interval = {end = 100}
+
+# possible values for "tag"
+# - "front_page" -> "Story View - Front Page"
+# - "story" -> "Story View - All Stories"
+# - "ask_hn" -> "Story View - Ask HN"
+# - "show_hn" -> "Story View - Show HN"
+# - "job" -> "Story View - Jobs"
+
 
 # --------------------------
 # List of supported keys:
