@@ -4,7 +4,6 @@ use super::async_view;
 use super::help_view::*;
 use super::list_view::*;
 use super::text_view;
-use super::utils::*;
 
 use crate::prelude::*;
 
@@ -215,7 +214,7 @@ pub fn get_story_view(
     tag: &'static str,
     by_date: bool,
     page: usize,
-    time_offset_in_secs: Option<u64>,
+    numeric_filters: hn_client::StoryNumericFilters,
 ) -> impl View {
     let starting_id = get_config().client.story_limit.get_story_limit_by_tag(tag) * page;
     let main_view = get_story_main_view(stories.clone(), client, starting_id).full_height();
@@ -254,51 +253,17 @@ pub fn get_story_view(
         }
     }
 
-    let day_in_secs = 24 * 60 * 60;
     let story_view_keymap = get_story_view_keymap().clone();
 
     OnEventView::new(view)
         .on_pre_event(get_global_keymap().open_help_dialog.clone(), |s| {
             s.add_layer(StoryView::construct_help_view())
         })
-        // time_offset filter options
-        .on_event(story_view_keymap.filter_past_day, {
-            let client = client.clone();
-            move |s| {
-                add_story_view_layer(s, &client, tag, by_date, page, Some(day_in_secs * 1), true);
-            }
-        })
-        .on_event(story_view_keymap.filter_past_week, {
-            let client = client.clone();
-            move |s| {
-                add_story_view_layer(s, &client, tag, by_date, page, Some(day_in_secs * 7), true);
-            }
-        })
-        .on_event(story_view_keymap.filter_past_month, {
-            let client = client.clone();
-            move |s| {
-                add_story_view_layer(s, &client, tag, by_date, page, Some(day_in_secs * 30), true);
-            }
-        })
-        .on_event(story_view_keymap.filter_past_year, {
-            let client = client.clone();
-            move |s| {
-                add_story_view_layer(
-                    s,
-                    &client,
-                    tag,
-                    by_date,
-                    page,
-                    Some(day_in_secs * 365),
-                    true,
-                );
-            }
-        })
         // toggle sort_by
         .on_event(story_view_keymap.toggle_sort_by, {
             let client = client.clone();
             move |s| {
-                add_story_view_layer(s, &client, tag, !by_date, page, time_offset_in_secs, true);
+                add_story_view_layer(s, &client, tag, !by_date, page, numeric_filters, true);
             }
         })
         // paging
@@ -306,30 +271,14 @@ pub fn get_story_view(
             let client = client.clone();
             move |s| {
                 if page > 0 {
-                    add_story_view_layer(
-                        s,
-                        &client,
-                        tag,
-                        by_date,
-                        page - 1,
-                        time_offset_in_secs,
-                        true,
-                    );
+                    add_story_view_layer(s, &client, tag, by_date, page - 1, numeric_filters, true);
                 }
             }
         })
         .on_event(story_view_keymap.next_page, {
             let client = client.clone();
             move |s| {
-                add_story_view_layer(
-                    s,
-                    &client,
-                    tag,
-                    by_date,
-                    page + 1,
-                    time_offset_in_secs,
-                    true,
-                );
+                add_story_view_layer(s, &client, tag, by_date, page + 1, numeric_filters, true);
             }
         })
 }
@@ -341,11 +290,11 @@ pub fn add_story_view_layer(
     tag: &'static str,
     by_date: bool,
     page: usize,
-    time_offset_in_secs: Option<u64>,
+    numeric_filters: hn_client::StoryNumericFilters,
     pop_layer: bool,
 ) {
     let async_view =
-        async_view::get_story_view_async(s, client, tag, by_date, page, time_offset_in_secs);
+        async_view::get_story_view_async(s, client, tag, by_date, page, numeric_filters);
     if pop_layer {
         s.pop_layer();
     }

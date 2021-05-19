@@ -1,5 +1,4 @@
 use super::error_view::{self, ErrorViewEnum, ErrorViewWrapper};
-use super::utils::get_story_view_desc_by_tag;
 
 use crate::prelude::*;
 use cursive_aligned_view::Alignable;
@@ -58,20 +57,20 @@ pub fn get_story_view_async(
     tag: &'static str,
     by_date: bool,
     page: usize,
-    time_offset_in_secs: Option<u64>,
+    numeric_filters: hn_client::StoryNumericFilters,
 ) -> impl View {
     AsyncView::new_with_bg_creator(
         siv,
         {
             let client = client.clone();
-            move || match client.get_stories_by_tag(tag, by_date, page, time_offset_in_secs) {
+            move || match client.get_stories_by_tag(tag, by_date, page, numeric_filters) {
                 Ok(stories) => Ok(Ok(stories)),
                 Err(err) => {
                     warn!(
                         "failed to get stories (tag={}, by_date={}, page={}): {:#?}\nRetrying...",
                         err, tag, by_date, page
                     );
-                    Ok(client.get_stories_by_tag(tag, by_date, page, time_offset_in_secs))
+                    Ok(client.get_stories_by_tag(tag, by_date, page, numeric_filters))
                 }
             }
         },
@@ -80,13 +79,13 @@ pub fn get_story_view_async(
             move |result| {
                 ErrorViewWrapper::new(match result {
                     Ok(stories) => ErrorViewEnum::Ok(story_view::get_story_view(
-                        &get_story_view_desc_by_tag(tag, by_date, page, time_offset_in_secs),
+                        &get_story_view_desc_by_tag(tag),
                         stories,
                         &client,
                         tag,
                         by_date,
                         page,
-                        time_offset_in_secs,
+                        numeric_filters,
                     )),
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
                         &format!(

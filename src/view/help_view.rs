@@ -1,29 +1,32 @@
 use crate::prelude::*;
 
+use std::fmt::Display;
+
 /// HelpView is a View displaying a help dialog with a list of key shortcuts and descriptions
+/// grouped by certain categories.
 pub struct HelpView {
     view: OnEventView<Dialog>,
     // "section description" followed by a vector of ("key", "key description") pairs
-    keys: Vec<(&'static str, Vec<(String, &'static str)>)>,
+    key_groups: Vec<(&'static str, Vec<(String, String)>)>,
 }
 
 impl HelpView {
     pub fn new() -> Self {
         HelpView {
             view: HelpView::construct_help_dialog_event_view(Dialog::new().title("Help Dialog")),
-            keys: vec![],
+            key_groups: vec![],
         }
     }
 
-    fn construct_key_view(key: (String, String), max_key_width: usize) -> impl View {
+    fn construct_key_view(key: String, desc: String, max_key_width: usize) -> impl View {
         let key_string = StyledString::styled(
-            key.0,
+            key,
             ColorStyle::new(
                 PaletteColor::TitlePrimary,
                 get_config_theme().code_block_bg.color,
             ),
         );
-        let desc_string = StyledString::plain(key.1);
+        let desc_string = StyledString::plain(desc);
         LinearLayout::horizontal()
             .child(TextView::new(key_string).fixed_width(max_key_width))
             .child(TextView::new(desc_string))
@@ -35,47 +38,64 @@ impl HelpView {
         })
     }
 
-    fn construct_keys_view(&self) -> impl View {
+    fn construct_keys_view(keys: &Vec<(String, String)>) -> impl View {
+        let max_key_len = match keys.iter().max_by_key(|key| key.0.len()) {
+            None => 0,
+            Some(key) => key.0.len(),
+        };
+
+        PaddedView::lrtb(
+            0,
+            0,
+            0,
+            1,
+            LinearLayout::vertical()
+                .with(|s| {
+                    keys.iter().for_each(|(key, desc)| {
+                        s.add_child(HelpView::construct_key_view(
+                            key.clone(),
+                            desc.clone(),
+                            max_key_len + 1,
+                        ));
+                    });
+                })
+                .fixed_width(64),
+        )
+    }
+
+    fn construct_key_groups_view(&self) -> impl View {
         LinearLayout::vertical()
             .with(|s| {
-                self.keys.iter().for_each(|(desc, keys)| {
+                self.key_groups.iter().for_each(|(group_desc, keys)| {
                     s.add_child(TextView::new(StyledString::styled(
-                        desc.to_string(),
+                        group_desc.to_string(),
                         ColorStyle::from(PaletteColor::TitlePrimary),
                     )));
-                    s.add_child({
-                        let max_key_len = match keys.iter().max_by_key(|key| key.0.len()) {
-                            None => 0,
-                            Some(key) => key.0.len(),
-                        };
-
-                        PaddedView::lrtb(
-                            0,
-                            0,
-                            0,
-                            1,
-                            LinearLayout::vertical()
-                                .with(|s| {
-                                    keys.iter().for_each(|key| {
-                                        s.add_child(HelpView::construct_key_view(
-                                            (key.0.to_string(), key.1.to_string()),
-                                            max_key_len + 1,
-                                        ));
-                                    });
-                                })
-                                .fixed_width(64),
-                        )
-                    });
+                    s.add_child(HelpView::construct_keys_view(keys));
                 });
             })
             .scrollable()
             .max_height(32)
     }
 
-    pub fn keys(mut self, mut keys: Vec<(&'static str, Vec<(String, &'static str)>)>) -> Self {
-        self.keys.append(&mut keys);
-        let key_view = self.construct_keys_view();
-        self.view.get_inner_mut().set_content(key_view);
+    pub fn to_keys<X: Display, Y: Display>(keys: Vec<(X, Y)>) -> Vec<(String, String)> {
+        keys.into_iter()
+            .map(|(key, desc)| (key.to_string(), desc.to_string()))
+            .collect()
+    }
+
+    // add multiple key groups
+    pub fn key_groups<X: Display, Y: Display>(
+        mut self,
+        key_groups: Vec<(&'static str, Vec<(X, Y)>)>,
+    ) -> Self {
+        let mut key_groups: Vec<(&'static str, Vec<(String, String)>)> = key_groups
+            .into_iter()
+            .map(|(group_desc, keys)| (group_desc, Self::to_keys(keys)))
+            .collect();
+        self.key_groups.append(&mut key_groups);
+        let view = self.construct_key_groups_view();
+        self.view.get_inner_mut().set_content(view);
         self
     }
 }
@@ -125,7 +145,7 @@ macro_rules! view_navigation_key_shortcuts {
 
 pub trait HasHelpView {
     fn construct_help_view() -> HelpView {
-        HelpView::new().keys(vec![
+        HelpView::new().key_groups(vec![
             view_navigation_key_shortcuts!(),
             other_key_shortcuts!(),
         ])
@@ -141,80 +161,92 @@ impl HasHelpView for StoryView {
     fn construct_help_view() -> HelpView {
         let story_view_keymap = get_story_view_keymap();
 
-        HelpView::new().keys(vec![
-            (
-                "Navigation",
-                vec![
-                    (
-                        story_view_keymap.next_story.to_string(),
-                        "Focus the next story",
-                    ),
-                    (
-                        story_view_keymap.prev_story.to_string(),
-                        "Focus the previous story",
-                    ),
-                    (
-                        format!("`{{story_id}} {}`", story_view_keymap.goto_story),
-                        "Focus the {story_id}-th story",
-                    ),
-                ],
-            ),
-            (
-                "Paging/Filtering",
-                vec![
-                    (
-                        story_view_keymap.next_page.to_string(),
-                        "Go to the next page",
-                    ),
-                    (
-                        story_view_keymap.prev_page.to_string(),
-                        "Go the previous page",
-                    ),
-                    (
-                        story_view_keymap.toggle_sort_by.to_string(),
-                        "Toggle sort by date/popularity",
-                    ),
-                    (
-                        story_view_keymap.filter_past_day.to_string(),
-                        "Filter stories past day",
-                    ),
-                    (
-                        story_view_keymap.filter_past_week.to_string(),
-                        "Filter stories past week",
-                    ),
-                    (
-                        story_view_keymap.filter_past_month.to_string(),
-                        "Filter stories past month",
-                    ),
-                    (
-                        story_view_keymap.filter_past_year.to_string(),
-                        "Filter stories past year",
-                    ),
-                ],
-            ),
-            (
-                "Open external links",
-                vec![
-                    (
-                        story_view_keymap.open_article_in_browser.to_string(),
-                        "Open in browser the article associated with the focused story",
-                    ),
-                    (
-                        story_view_keymap.open_article_in_article_view.to_string(),
-                        "Open in article view the article associated with the focused story",
-                    ),
-                    (
-                        story_view_keymap.open_story_in_browser.to_string(),
-                        "Open in browser the focused story",
-                    ),
-                ],
-            ),
-            view_navigation_key_shortcuts!((
-                story_view_keymap.goto_story_comment_view.to_string(),
-                "Go to the comment view associated with the focused story"
-            )),
-            other_key_shortcuts!(),
-        ])
+        HelpView::new()
+            .key_groups(vec![
+                (
+                    "Navigation",
+                    vec![
+                        (
+                            story_view_keymap.next_story.to_string(),
+                            "Focus the next story",
+                        ),
+                        (
+                            story_view_keymap.prev_story.to_string(),
+                            "Focus the previous story",
+                        ),
+                        (
+                            format!("`{{story_id}} {}`", story_view_keymap.goto_story),
+                            "Focus the {story_id}-th story",
+                        ),
+                    ],
+                ),
+                (
+                    "Paging/Filtering",
+                    vec![
+                        (
+                            story_view_keymap.next_page.to_string(),
+                            "Go to the next page",
+                        ),
+                        (
+                            story_view_keymap.prev_page.to_string(),
+                            "Go the previous page",
+                        ),
+                        (
+                            story_view_keymap.toggle_sort_by.to_string(),
+                            "Toggle sort by date/popularity",
+                        ),
+                    ],
+                ),
+                (
+                    "Open external links",
+                    vec![
+                        (
+                            story_view_keymap.open_article_in_browser.to_string(),
+                            "Open in browser the article associated with the focused story",
+                        ),
+                        (
+                            story_view_keymap.open_article_in_article_view.to_string(),
+                            "Open in article view the article associated with the focused story",
+                        ),
+                        (
+                            story_view_keymap.open_story_in_browser.to_string(),
+                            "Open in browser the focused story",
+                        ),
+                    ],
+                ),
+            ])
+            .key_groups(vec![(
+                "Custom keymaps",
+                get_custom_keymap()
+                    .custom_view_navigation
+                    .iter()
+                    .map(|keymap| {
+                        (
+                            keymap.key.to_string(),
+                            format!(
+                                "Go to {} view (sort_by: {}, {})",
+                                match keymap.tag.as_str() {
+                                    "front_page" => "front page",
+                                    "story" => "all stories",
+                                    "job" => "jobs",
+                                    "ask_hn" => "ask HN",
+                                    "show_hn" => "show HN",
+                                    _ => panic!("unknown view: {}", keymap.tag),
+                                },
+                                if keymap.by_date { "date" } else { "popularity" },
+                                keymap.numeric_filters.desc()
+                            ),
+                        )
+                    })
+                    .collect(),
+            )])
+            .key_groups(vec![
+                view_navigation_key_shortcuts!((
+                    story_view_keymap.goto_story_comment_view.to_string(),
+                    "Go to the comment view associated with the focused story"
+                )),
+                other_key_shortcuts!(),
+            ])
     }
 }
 
@@ -223,7 +255,7 @@ impl HasHelpView for CommentView {
         let comment_view_keymap = get_comment_view_keymap();
         let story_view_keymap = get_story_view_keymap();
 
-        HelpView::new().keys(vec![
+        HelpView::new().key_groups(vec![
             (
                 "Navigation",
                 vec![
@@ -314,7 +346,7 @@ impl HasHelpView for SearchView {
         let search_view_keymap = get_search_view_keymap();
         let story_view_keymap = get_story_view_keymap();
 
-        HelpView::new().keys(vec![
+        HelpView::new().key_groups(vec![
             (
                 "Switch Mode",
                 vec![
@@ -391,7 +423,7 @@ impl HasHelpView for SearchView {
 impl HasHelpView for ArticleView {
     fn construct_help_view() -> HelpView {
         let article_view_keymap = get_article_view_keymap().clone();
-        HelpView::new().keys(vec![
+        HelpView::new().key_groups(vec![
             (
                 "Navigation",
                 vec![

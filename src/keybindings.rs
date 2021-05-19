@@ -3,8 +3,12 @@ use core::fmt;
 use cursive::event::{self, Event, EventTrigger};
 use serde::{de, Deserialize, Deserializer};
 
-#[derive(Clone, Deserialize)]
+use crate::hn_client;
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct KeyMap {
+    #[serde(default)]
+    pub custom_keymap: CustomKeyMap,
     pub global_keymap: GlobalKeyMap,
     pub story_view_keymap: StoryViewKeyMap,
     pub search_view_keymap: SearchViewKeyMap,
@@ -15,6 +19,7 @@ pub struct KeyMap {
 impl Default for KeyMap {
     fn default() -> Self {
         KeyMap {
+            custom_keymap: CustomKeyMap::default(),
             global_keymap: GlobalKeyMap::default(),
             story_view_keymap: StoryViewKeyMap::default(),
             search_view_keymap: SearchViewKeyMap::default(),
@@ -24,7 +29,28 @@ impl Default for KeyMap {
     }
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
+pub struct CustomViewNavigation {
+    pub key: Key,
+    pub tag: String,
+    pub by_date: bool,
+    pub numeric_filters: hn_client::StoryNumericFilters,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct CustomKeyMap {
+    pub custom_view_navigation: Vec<CustomViewNavigation>,
+}
+
+impl Default for CustomKeyMap {
+    fn default() -> Self {
+        CustomKeyMap {
+            custom_view_navigation: vec![],
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct GlobalKeyMap {
     pub open_help_dialog: Key,
     pub quit: Key,
@@ -58,7 +84,7 @@ impl Default for GlobalKeyMap {
     }
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct StoryViewKeyMap {
     // stories navigation keymaps
     pub next_story: Key,
@@ -69,10 +95,6 @@ pub struct StoryViewKeyMap {
     pub next_page: Key,
     pub prev_page: Key,
     pub toggle_sort_by: Key,
-    pub filter_past_day: Key,
-    pub filter_past_week: Key,
-    pub filter_past_month: Key,
-    pub filter_past_year: Key,
 
     // link opening keymaps
     pub open_article_in_browser: Key,
@@ -92,10 +114,6 @@ impl Default for StoryViewKeyMap {
             next_page: Key::new('n'),
             prev_page: Key::new('p'),
             toggle_sort_by: Key::new('d'),
-            filter_past_day: Key::new('q'),
-            filter_past_week: Key::new('w'),
-            filter_past_month: Key::new('e'),
-            filter_past_year: Key::new('r'),
 
             open_article_in_browser: Key::new('o'),
             open_article_in_article_view: Key::new('O'),
@@ -106,7 +124,7 @@ impl Default for StoryViewKeyMap {
     }
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct SearchViewKeyMap {
     // switch mode keymaps
     pub to_navigation_mode: Key,
@@ -122,7 +140,7 @@ impl Default for SearchViewKeyMap {
     }
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct CommentViewKeyMap {
     // comments navigation keymaps
     pub next_comment: Key,
@@ -170,7 +188,7 @@ impl Default for CommentViewKeyMap {
     }
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct ArticleViewKeyMap {
     pub down: Key,
     pub up: Key,
@@ -213,7 +231,7 @@ impl Default for ArticleViewKeyMap {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Key {
     event: Event,
 }

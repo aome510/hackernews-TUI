@@ -100,10 +100,6 @@ goto_story = "g"
 next_page = "n"
 prev_page = "p"
 toggle_sort_by = "d"
-filter_past_day = "q"
-filter_past_week = "w"
-filter_past_month = "e"
-filter_past_year = "r"
 open_article_in_browser = "o"
 open_article_in_article_view = "O"
 open_story_in_browser = "s"
@@ -144,7 +140,44 @@ link_dialog_focus_next = "j"
 link_dialog_focus_prev = "k"
 toggle_raw_markdown_mode = "T"
 
+# ---------------------
+# custom keymap
+# ---------------------
+
+# "custom_view_navigation" is used to define custom shortcuts
+# to navigate to a `StoryView` with stories filtered by certain conditions.
+# Below is an example of defining two custom shortcuts using "custom_view_navigation".
+#
+# [[keymap.custom_keymap.custom_view_navigation]]
+# key = "M-1"
+# tag = "story"
+# by_date = false # false to sort_by date, true to sort_by popularity
+# [keymap.custom_keymap.custom_view_navigation.numeric_filters]
+# elapsed_days_interval = {start = 0, end = 3} # stories posted between now and 3 days ago
+# points_interval = {start = 10} # stories with points >= 10
+# num_comments_interval = {} # no restriction on the number of comments
+
+# [[keymap.custom_keymap.custom_view_navigation]]
+# key = "M-2"
+# tag = "show_hn"
+# by_date = true
+# [keymap.custom_keymap.custom_view_navigation.numeric_filters]
+# elapsed_days_interval = {}
+# points_interval = {start = 50, end = 200}
+# num_comments_interval = {end = 100}
+
+# possible values for "tag"
+# - "front_page" -> "Story View - Front Page"
+# - "story" -> "Story View - All Stories"
+# - "ask_hn" -> "Story View - Ask HN"
+# - "show_hn" -> "Story View - Show HN"
+# - "job" -> "Story View - Jobs"
+
+
+# --------------------------
 # List of supported keys:
+# --------------------------
+
 # - <char> (any single character)
 # - C-<char> (ctrl-<char>)
 # - M-<char> (alt-<char>)

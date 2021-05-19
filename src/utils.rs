@@ -9,7 +9,7 @@ fn format_plural(amount: u64, time: &str) -> String {
     format!("{} {}{}", amount, time, if amount == 1 { "" } else { "s" })
 }
 
-fn get_offset_time_as_text(offset: u64) -> String {
+fn get_time_offset_in_text(offset: u64) -> String {
     if offset < 60 {
         format_plural(offset, "second")
     } else if offset < 60 * 60 {
@@ -25,6 +25,11 @@ fn get_offset_time_as_text(offset: u64) -> String {
     }
 }
 
+pub fn from_day_offset_to_time_offset_in_secs(day_offset: u32) -> u64 {
+    let day_in_secs: u64 = 24 * 60 * 60;
+    day_in_secs * (day_offset as u64)
+}
+
 /// Calculate the elapsed time and return the result
 /// in an appropriate format depending on the duration
 pub fn get_elapsed_time_as_text(time: u64) -> String {
@@ -33,7 +38,7 @@ pub fn get_elapsed_time_as_text(time: u64) -> String {
         .unwrap();
     let then = Duration::new(time, 0);
     let offset = now.as_secs() - then.as_secs();
-    get_offset_time_as_text(offset)
+    get_time_offset_in_text(offset)
 }
 
 /// A simple URL shortening function that reduces the
@@ -85,14 +90,9 @@ pub fn get_status_bar_with_desc(desc: &str) -> impl View {
 }
 
 /// Construct StoryView based on the filtering tag
-pub fn get_story_view_desc_by_tag(
-    tag: &str,
-    by_date: bool,
-    page: usize,
-    time_offset_in_secs: Option<u64>,
-) -> String {
+pub fn get_story_view_desc_by_tag(tag: &str) -> String {
     format!(
-        "Story View - {} (sort_by: {}, time_range: {}, page: {})",
+        "Story View - {}",
         match tag {
             "front_page" => "Front Page",
             "story" => "All Stories",
@@ -101,13 +101,6 @@ pub fn get_story_view_desc_by_tag(
             "show_hn" => "Show HN",
             _ => panic!("unknown tag: {}", tag),
         },
-        if by_date { "date" } else { "popularity" },
-        match time_offset_in_secs {
-            None => "all time".to_string(),
-            Some(time_offset_in_secs) =>
-                "past ".to_owned() + &get_offset_time_as_text(time_offset_in_secs),
-        },
-        page + 1
     )
 }
 

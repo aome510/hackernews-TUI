@@ -1,5 +1,4 @@
 use super::fn_view_wrapper::*;
-use super::utils::*;
 
 use crate::{impl_view_for_fn_wrapper, prelude::*};
 

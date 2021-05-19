@@ -4,7 +4,6 @@ use cursive_async_view::{AsyncState, AsyncView};
 
 use super::help_view::*;
 use super::text_view;
-use super::utils::*;
 
 use crate::prelude::*;
 

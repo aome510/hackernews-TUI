@@ -3,6 +3,7 @@ pub mod config;
 pub mod hn_client;
 pub mod keybindings;
 pub mod prelude;
+pub mod utils;
 pub mod view;
 
 use clap::*;
@@ -20,40 +21,100 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
     s.set_on_post_event(global_keymap.goto_front_page_view, {
         let client = client.clone();
         move |s| {
-            story_view::add_story_view_layer(s, &client, "front_page", false, 0, None, false);
+            story_view::add_story_view_layer(
+                s,
+                &client,
+                "front_page",
+                false,
+                0,
+                hn_client::StoryNumericFilters::default(),
+                false,
+            );
         }
     });
 
     s.set_on_post_event(global_keymap.goto_all_stories_view, {
         let client = client.clone();
         move |s| {
-            story_view::add_story_view_layer(s, &client, "story", true, 0, None, false);
+            story_view::add_story_view_layer(
+                s,
+                &client,
+                "story",
+                true,
+                0,
+                hn_client::StoryNumericFilters::default(),
+                false,
+            );
         }
     });
 
     s.set_on_post_event(global_keymap.goto_ask_hn_view, {
         let client = client.clone();
         move |s| {
-            story_view::add_story_view_layer(s, &client, "ask_hn", true, 0, None, false);
+            story_view::add_story_view_layer(
+                s,
+                &client,
+                "ask_hn",
+                true,
+                0,
+                hn_client::StoryNumericFilters::default(),
+                false,
+            );
         }
     });
 
     s.set_on_post_event(global_keymap.goto_show_hn_view, {
         let client = client.clone();
         move |s| {
-            story_view::add_story_view_layer(s, &client, "show_hn", true, 0, None, false);
+            story_view::add_story_view_layer(
+                s,
+                &client,
+                "show_hn",
+                true,
+                0,
+                hn_client::StoryNumericFilters::default(),
+                false,
+            );
         }
     });
 
     s.set_on_post_event(global_keymap.goto_jobs_view, {
         let client = client.clone();
         move |s| {
-            story_view::add_story_view_layer(s, &client, "job", true, 0, None, false);
+            story_view::add_story_view_layer(
+                s,
+                &client,
+                "job",
+                true,
+                0,
+                hn_client::StoryNumericFilters::default(),
+                false,
+            );
         }
     });
 
+    // custom navigation shortcuts
+    let custom_keymap = get_custom_keymap();
+    custom_keymap
+        .custom_view_navigation
+        .iter()
+        .for_each(|data| {
+            let client = client.clone();
+            s.set_on_post_event(data.key.clone(), move |s| {
+                story_view::add_story_view_layer(
+                    s,
+                    &client,
+                    &data.tag,
+                    data.by_date,
+                    0,
+                    data.numeric_filters,
+                    true,
+                )
+            });
+        });
+
     // .........................................
-    // end of switching shortcuts for StoryView
+    // end of navigation shortcuts for StoryView
     // .........................................
 
     s.set_on_post_event(global_keymap.goto_previous_view, |s| {
@@ -117,7 +178,15 @@ fn run() {
     let client = hn_client::HNClient::new().unwrap();
     set_up_global_callbacks(&mut s, &client);
 
-    story_view::add_story_view_layer(&mut s, &client, "front_page", false, 0, None, false);
+    story_view::add_story_view_layer(
+        &mut s,
+        &client,
+        "front_page",
+        false,
+        0,
+        hn_client::StoryNumericFilters::default(),
+        false,
+    );
 
     // use buffered_backend to fix the flickering issue
     // when using cursive with crossterm_backend

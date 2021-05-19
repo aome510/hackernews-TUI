@@ -1,7 +1,10 @@
 use rayon::prelude::*;
 use serde::{de, Deserialize, Deserializer};
-use std::time::{Duration, SystemTime};
 use std::{collections::HashMap, sync::Arc, sync::RwLock};
+use std::{
+    fmt::Display,
+    time::{Duration, SystemTime},
+};
 
 use crate::prelude::*;
 
@@ -203,7 +206,7 @@ impl From<StoryResponse> for Story {
 
 /// StoryCache is a cache storing all comments of a HN story.
 /// A story cache will be updated if the number of commments changes.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct StoryCache {
     // num_comments is an approximated number of comments received from HN APIs,
     // it can be different from number of comments in the [comments] field below
@@ -216,6 +219,95 @@ impl StoryCache {
         StoryCache {
             num_comments,
             comments,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default, Deserialize)]
+pub struct FilterInterval<T> {
+    start: Option<T>,
+    end: Option<T>,
+}
+
+impl<T: Display + Copy> FilterInterval<T> {
+    pub fn query(&self, field: &str) -> String {
+        format!(
+            "{}{}",
+            match self.start {
+                Some(x) => format!(",{}>={}", field, x),
+                None => "".to_string(),
+            },
+            match self.end {
+                Some(x) => format!(",{}<{}", field, x),
+                None => "".to_string(),
+            },
+        )
+    }
+
+    pub fn desc(&self, field: &str) -> String {
+        format!(
+            "{}: [{}:{}]",
+            field,
+            match self.start {
+                Some(x) => x.to_string(),
+                None => "".to_string(),
+            },
+            match self.end {
+                Some(x) => x.to_string(),
+                None => "".to_string(),
+            }
+        )
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default, Deserialize)]
+pub struct StoryNumericFilters {
+    elapsed_days_interval: FilterInterval<u32>,
+    points_interval: FilterInterval<u32>,
+    num_comments_interval: FilterInterval<usize>,
+}
+
+impl StoryNumericFilters {
+    fn from_elapsed_days_to_unix_time(elapsed_days: Option<u32>) -> Option<u64> {
+        match elapsed_days {
+            None => None,
+            Some(day_offset) => {
+                let current_time = SystemTime::now()
+                    .duration_since(SystemTime::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs();
+                Some(current_time - from_day_offset_to_time_offset_in_secs(day_offset))
+            }
+        }
+    }
+
+    pub fn desc(&self) -> String {
+        format!(
+            "{}, {}, {}",
+            self.elapsed_days_interval.desc("elapsed_days"),
+            self.points_interval.desc("points"),
+            self.num_comments_interval.desc("num_comments")
+        )
+    }
+
+    pub fn query(&self) -> String {
+        // convert elapsed_days to unix time (in seconds)
+        let time_interval = FilterInterval {
+            end: Self::from_elapsed_days_to_unix_time(self.elapsed_days_interval.start),
+            start: Self::from_elapsed_days_to_unix_time(self.elapsed_days_interval.end),
+        };
+
+        let mut query = format!(
+            "{}{}{}",
+            time_interval.query("created_at_i"),
+            self.points_interval.query("points"),
+            self.num_comments_interval.query("num_comments")
+        );
+        if query.len() > 0 {
+            query.remove(0); // remove trailing ,
+            format!("&numericFilters={}", query)
+        } else {
+            "".to_string()
         }
     }
 }
@@ -368,7 +460,7 @@ impl HNClient {
         tag: &str,
         by_date: bool,
         page: usize,
-        time_offset_in_secs: Option<u64>,
+        numeric_filters: StoryNumericFilters,
     ) -> Result<Vec<Story>> {
         let story_limit = get_config().client.story_limit.get_story_limit_by_tag(tag);
         let request_url = format!(
@@ -378,18 +470,9 @@ impl HNClient {
             tag,
             story_limit,
             page,
-            match time_offset_in_secs {
-                None => "".to_string(),
-                Some(time_offset_in_secs) => {
-                    let curr_time = SystemTime::now()
-                        .duration_since(SystemTime::UNIX_EPOCH)
-                        .unwrap()
-                        .as_secs();
-                    let time_lowerbound = curr_time - time_offset_in_secs;
-                    "&numericFilters=created_at_i>".to_owned() + &time_lowerbound.to_string()
-                }
-            }
+            numeric_filters.query(),
         );
+
         let time = SystemTime::now();
         let response = self
             .client
