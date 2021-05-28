@@ -44,13 +44,13 @@ impl Article {
             return (StyledString::plain(content), vec![]);
         }
 
-        let md_img_re = Regex::new(r"!\[(?s)(?P<desc>.*?)\]\((?P<link>.*?)\)").unwrap();
+        let md_img_re = Regex::new(r"!\[(?P<desc>.*?)\]\((?P<link>.*?)\)").unwrap();
         let mut s = md_img_re
             .replace_all(&self.content, "!\\[${desc}\\]\\(image\\)")
             .to_string();
 
         let md_link_re =
-            Regex::new(r"(?P<prefix_char>[^\\]|^)\[(?s)(?P<desc>.*?)\]\((?P<link>.*?)\)").unwrap();
+            Regex::new(r"(?P<prefix_char>[^\\]|^)\[(?P<desc>.*?)\]\((?P<link>.*?)\)").unwrap();
         let mut styled_s = StyledString::new();
         let mut links: Vec<String> = vec![];
 
