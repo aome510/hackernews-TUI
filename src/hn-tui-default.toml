@@ -53,16 +53,16 @@ job = 15
 # cursive's palette color
 # (more information can be found in https://docs.rs/cursive/0.16.3/cursive/theme/index.html)
 background = "#f6f6ef"
-shadow = "black"
+shadow = "#000000"
 view = "#f6f6ef"
 primary = "#4a4a48"
 secondary = "#a5a5a5"
-tertiary = "white"
-title_primary = "black"
-title_secondary = "yellow"
+tertiary = "#ffffff"
+title_primary = "#000000"
+title_secondary = "#ffff00"
 highlight = "#6c6c6c"
-highlight_inactive = "blue"
-highlight_text = "white"
+highlight_inactive = "#0000ff"
+highlight_text = "#c3bbbb"
 
 # "additional" colors defined by the application
 # "link_text" is a text color for a URL
