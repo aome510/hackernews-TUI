@@ -10,6 +10,24 @@ scroll_offset = 3
 # "url_open_command" is a terminal command used to open url in browser
 url_open_command = "xdg-open"
 
+# "article_parse_command" defines a command to parse a web article's content
+# to a markdown format. The parsed data is then used to render `ArticleView`
+# of the corresponding article.
+#
+# The command must have the following form:
+# [article_parse_command] [article_url] [options...]
+# It should return a JSON string representing the parsed Article data:
+# pub struct Article {
+#     title: String,
+#     url: String,
+#     content: String,
+#     author: Option<String>, // optional
+#     date_published: Option<String>, // optional
+#     word_count: usize, // optional
+# }
+article_parse_command = {command = "mercury-parser", options = ["--format", "markdown"]}
+# article_parse_command = {command = "article_md", options = []}
+
 [story_pooling]
 # "story_pooling" is a feature that allows the application to fetch stories
 # in background and store them in cache memory.
