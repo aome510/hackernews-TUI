@@ -30,7 +30,6 @@ This application is the right tool for you :muscle:
 ### Table of Contents
 
 - [Install](#install)
-  - [Dependencies](#dependencies)
   - [Using Cargo](#using-cargo)
   - [Arch Linux](#arch-linux)
   - [NetBSD](#netbsd)
@@ -44,26 +43,13 @@ This application is the right tool for you :muscle:
     - [Comment View](#comment-view-shortcuts)
     - [Search View](#search-view-shortcuts)
 - [Configuration](#configuration)
+  - [Article Parse Command](#article-parse-command)
   - [User-defined shortcuts](#user-defined-shortcuts)
   - [Custom keymap](#custom-keymap)
 - [Debug](#debug)
 - [Roadmap](#roadmap)
 
 ## Install
-
-### Dependencies
-
-#### Mercury Parser
-
-To enable viewing a web page in reader mode with `Article View`, install [`mercury-parser`](https://github.com/postlight/mercury-parser) globally by running
-
-```shell
-# using yarn
-yarn global add @postlight/mercury-parser
-
-# or using npm
-npm install -g @postlight/mercury-parser
-```
 
 ### Using cargo
 
@@ -107,6 +93,7 @@ Run `yay -S hackernews_tui` to install the application as an AUR package.
 $ cd /usr/pkgsrc/www/hackernews-tui
 # make install
 ```
+
 
 ## Examples
 
@@ -241,6 +228,34 @@ hackernews_tui --example-config > ~/.config/hn-tui.toml
 ```
 
 then modify the config options in `~/.config/hn-tui.toml` based on your preferences.
+
+### Article Parse Command
+
+To enable viewing a web page in reader mode with `Article View`, you must configure the `article_parse_command` field in your configuration file:
+
+``` yaml
+# "article_parse_command" defines a command to parse a web article's content
+# to a markdown format. The parsed data is then used to render `ArticleView`
+# of the corresponding article.
+#
+# The command must have the following form:
+# [article_parse_command] [article_url] [options...]
+# It should return a JSON string representing the parsed Article data:
+# pub struct Article {
+#     title: String,
+#     url: String,
+#     content: String,
+#     author: Option<String>, // optional
+#     date_published: Option<String>, // optional
+#     word_count: usize, // optional
+# }
+article_parse_command = {command = "mercury-parser", options = ["--format", "markdown"]}
+# article_parse_command = {command = "article_md", options = []}
+```
+
+If you don't want to implement an article parser by your own, one way to configure `article_parse_command` is to use [`mercury-parser`](https://github.com/postlight/mercury-parser#installation), a web parser tool that `hackernews_tui` has been using by default since the version `0.6.0`. `mercury-parser` is powerful and stable. However, in some cases, the text content it returns when parsing HTML `code` tags has weird indentation.
+
+Another alternative is [`article-md-cli`](https://github.com/aome510/article-md-cli), a package I wrote for parsing article's content into a markdown format. Under the hood, it uses [mozilla's readability](https://github.com/mozilla/readability), so the parsed text content for the HTML `code` tags look nicer.
 
 ### User-defined shortcuts
 

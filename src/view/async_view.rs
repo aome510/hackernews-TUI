@@ -105,16 +105,18 @@ pub fn get_story_view_async(
 /// Return an async_view wrapping ArticleView with a loading screen when
 /// parsing the Article data
 pub fn get_article_view_async(siv: &mut Cursive, article_url: String) -> impl View {
+    let article_parse_command = get_config().article_parse_command.clone();
     let err_desc = format!(
-        "failed to execute command `mercury-parser --format markdown {}`:\n\
-         Please make sure you have `mercury-parser` installed in your path (https://github.com/aome510/hackernews-TUI#dependencies)",
+        "failed to execute command `{} {} {}`:\n\
+         Please make sure you configure `article_parse_command` as described in (https://github.com/aome510/hackernews-TUI#article-parse-command)",
+        article_parse_command.command,
+        article_parse_command.options.join(" "),
         article_url
     );
     AsyncView::new_with_bg_creator(
         siv,
         {
             let article_url = article_url.clone();
-            let article_parse_command = get_config().article_parse_command.clone();
             move || {
                 Ok(std::process::Command::new(article_parse_command.command)
                     .args(&article_parse_command.options)
