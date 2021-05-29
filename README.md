@@ -94,7 +94,6 @@ $ cd /usr/pkgsrc/www/hackernews-tui
 # make install
 ```
 
-
 ## Examples
 
 ### Demo
@@ -233,7 +232,7 @@ then modify the config options in `~/.config/hn-tui.toml` based on your preferen
 
 To enable viewing a web page in reader mode with `Article View`, you must configure the `article_parse_command` field in your configuration file:
 
-``` yaml
+```yaml
 # "article_parse_command" defines a command to parse a web article's content
 # to a markdown format. The parsed data is then used to render `ArticleView`
 # of the corresponding article.
@@ -253,9 +252,9 @@ article_parse_command = {command = "mercury-parser", options = ["--format", "mar
 # article_parse_command = {command = "article_md", options = []}
 ```
 
-If you don't want to implement an article parser by your own, one way to configure `article_parse_command` is to use [`mercury-parser`](https://github.com/postlight/mercury-parser#installation), a web parser tool that `hackernews_tui` has been using by default since the version `0.6.0`. `mercury-parser` is powerful and stable. However, in some cases, the text content it returns when parsing HTML `code` tags has weird indentation.
+If you don't want to implement an article parser by your own, one way to configure `article_parse_command` is to use [`mercury-parser`](https://github.com/postlight/mercury-parser#installation), a web parser tool that `hackernews_tui` has been using by default since the version `0.6.0`. `mercury-parser` is powerful and stable. However, in some cases, the text content it returns when parsing HTML `code` tags has some weird indentations.
 
-Another alternative is to use [`article_md`](https://github.com/aome510/article-md-cli), a CLI package I wrote for parsing article's content into a markdown format. Under the hood, it uses [mozilla's readability](https://github.com/mozilla/readability), so the parsed text content for the HTML `code` tags look nicer.
+An alternative is to use [`article_md`](https://github.com/aome510/article-md-cli), a CLI tool I wrote for parsing web article's content into a markdown format. Under the hood, it uses [mozilla's readability](https://github.com/mozilla/readability), so the parsed text for HTML `code` tags look nicer.
 
 ### User-defined shortcuts
 

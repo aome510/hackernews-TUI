@@ -15,7 +15,7 @@ url_open_command = "xdg-open"
 # of the corresponding article.
 #
 # The command must have the following form:
-# [article_parse_command] [article_url] [options...]
+# [article_parse_command] [options...] [article_url]
 # It should return a JSON string representing the parsed Article data:
 # pub struct Article {
 #     title: String,
