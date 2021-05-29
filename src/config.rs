@@ -151,16 +151,16 @@ impl Default for Theme {
     fn default() -> Self {
         Theme {
             background: Color::parse("#f6f6ef").unwrap(),
-            shadow: Color::parse("black").unwrap(),
+            shadow: Color::parse("#000000").unwrap(),
             view: Color::parse("#f6f6ef").unwrap(),
             primary: Color::parse("#4a4a48").unwrap(),
             secondary: Color::parse("#a5a5a5").unwrap(),
-            tertiary: Color::parse("white").unwrap(),
-            title_primary: Color::parse("black").unwrap(),
-            title_secondary: Color::parse("yellow").unwrap(),
+            tertiary: Color::parse("#ffffff").unwrap(),
+            title_primary: Color::parse("#000000").unwrap(),
+            title_secondary: Color::parse("#ffff00").unwrap(),
             highlight: Color::parse("#6c6c6c").unwrap(),
-            highlight_inactive: Color::parse("blue").unwrap(),
-            highlight_text: Color::parse("white").unwrap(),
+            highlight_inactive: Color::parse("#0000ff").unwrap(),
+            highlight_text: Color::parse("#c3bbbb").unwrap(),
 
             link_text: Color::parse("#4fbbfd").unwrap(),
             link_id_bg: Color::parse("#ffff00").unwrap(),
