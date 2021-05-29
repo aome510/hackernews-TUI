@@ -259,7 +259,7 @@ Another alternative is to use [`article_md`](https://github.com/aome510/article-
 
 ### User-defined shortcuts
 
-Shortcuts in each `View` are full customizable, for futher information about the supported keys and the corresponding functionalities, please refer to the **user-defined key bindings** sections in the example config file by running `hackernews_tui --example-config`.
+Shortcuts in each `View` are fully customizable, for further information about the supported keys and the corresponding functionalities, please refer to the **user-defined key bindings** sections in the example config file by running `hackernews_tui --example-config`.
 
 ### Custom Keymap
 
