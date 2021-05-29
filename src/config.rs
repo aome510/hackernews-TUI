@@ -12,12 +12,19 @@ pub struct Config {
     pub page_scrolling: bool,
     pub scroll_offset: usize,
     pub url_open_command: String,
+    pub article_parse_command: ArticleParseCommand,
 
     pub story_pooling: StoryPooling,
     pub client: Client,
     pub theme: Theme,
 
     pub keymap: KeyMap,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct ArticleParseCommand {
+    pub command: String,
+    pub options: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -177,6 +184,10 @@ impl Default for Config {
             page_scrolling: true,
             scroll_offset: 3,
             url_open_command: "xdg-open".to_string(),
+            article_parse_command: ArticleParseCommand {
+                command: "mercury-parser".to_string(),
+                options: vec!["--format".to_string(), "markdown".to_string()],
+            },
             story_pooling: StoryPooling {
                 enable: true,
                 delay: 2,
