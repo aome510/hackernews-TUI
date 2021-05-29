@@ -114,10 +114,10 @@ pub fn get_article_view_async(siv: &mut Cursive, article_url: String) -> impl Vi
         siv,
         {
             let article_url = article_url.clone();
+            let article_parse_command = get_config().article_parse_command.clone();
             move || {
-                Ok(std::process::Command::new("mercury-parser")
-                    .arg("--format")
-                    .arg("markdown")
+                Ok(std::process::Command::new(article_parse_command.command)
+                    .args(&article_parse_command.options)
                     .arg(&article_url)
                     .output())
             }

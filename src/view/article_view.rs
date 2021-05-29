@@ -21,6 +21,7 @@ pub struct Article {
     content: String,
     author: Option<String>,
     date_published: Option<String>,
+    #[serde(default)]
     word_count: usize,
 }
 
@@ -34,7 +35,7 @@ impl Article {
     /// parse links from the article's content (in markdown format)
     pub fn parse_link(&self, raw_md: bool) -> (StyledString, Vec<String>) {
         // escape characters in markdown: \ ` * _ { } [ ] ( ) # + - . ! =
-        let md_escape_char_re = Regex::new(r"\\(?P<char>[\\`\*_\{\}\[\]\(\)#\+\-\.!`=])").unwrap();
+        let md_escape_char_re = Regex::new(r"\\(?P<char>[\\`\*_\{\}\[\]\(\)#\+\-\.!=])").unwrap();
 
         // if raw_md is true, don't parse link
         if raw_md {
@@ -60,23 +61,29 @@ impl Article {
                 Some(c) => {
                     let m = c.get(0).unwrap();
                     let prefix_char = c.name("prefix_char").unwrap().as_str();
-                    let link = c.name("link").unwrap().as_str();
-                    let desc = c.name("desc").unwrap().as_str();
+                    let link = md_escape_char_re
+                        .replace_all(c.name("link").unwrap().as_str(), "${char}")
+                        .to_string();
+                    let desc = md_escape_char_re
+                        .replace_all(c.name("desc").unwrap().as_str(), "${char}")
+                        .to_string();
 
-                    let link = if url::Url::parse(link).is_err() {
+                    let link = if url::Url::parse(&link).is_err() {
                         // not an absolute link
-                        url::Url::parse(&self.url)
-                            .unwrap()
-                            .join(link)
-                            .unwrap()
-                            .to_string()
+                        match url::Url::parse(&self.url).unwrap().join(&link) {
+                            Ok(url) => url.to_string(),
+                            Err(err) => {
+                                warn!("{} is not a valid path/url: {:#?}", link, err);
+                                "".to_owned()
+                            }
+                        }
                     } else {
                         link.to_string()
                     };
                     let desc = if desc.len() == 0 {
                         format!("\"{}\"", shorten_url(&link))
                     } else {
-                        md_escape_char_re.replace_all(&desc, "${char}").to_string()
+                        desc
                     };
 
                     let range = m.range();
@@ -101,14 +108,24 @@ impl Article {
                         format!("{} ", desc),
                         Style::from(get_config_theme().link_text.color),
                     );
+
+                    let valid_url = link.len() > 0;
                     styled_s.append_styled(
-                        format!("[{}]", links.len()),
+                        if valid_url {
+                            format!("[{}]", links.len())
+                        } else {
+                            "[X]".to_owned()
+                        },
                         ColorStyle::new(
                             PaletteColor::TitlePrimary,
                             get_config_theme().link_id_bg.color,
                         ),
                     );
-                    links.push(link.to_string());
+
+                    if link.len() > 0 {
+                        // valid url
+                        links.push(link.to_string());
+                    }
                     continue;
                 }
             }
