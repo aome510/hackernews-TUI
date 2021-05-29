@@ -255,7 +255,7 @@ article_parse_command = {command = "mercury-parser", options = ["--format", "mar
 
 If you don't want to implement an article parser by your own, one way to configure `article_parse_command` is to use [`mercury-parser`](https://github.com/postlight/mercury-parser#installation), a web parser tool that `hackernews_tui` has been using by default since the version `0.6.0`. `mercury-parser` is powerful and stable. However, in some cases, the text content it returns when parsing HTML `code` tags has weird indentation.
 
-Another alternative is [`article-md-cli`](https://github.com/aome510/article-md-cli), a package I wrote for parsing article's content into a markdown format. Under the hood, it uses [mozilla's readability](https://github.com/mozilla/readability), so the parsed text content for the HTML `code` tags look nicer.
+Another alternative is to use [`article_md`](https://github.com/aome510/article-md-cli), a CLI package I wrote for parsing article's content into a markdown format. Under the hood, it uses [mozilla's readability](https://github.com/mozilla/readability), so the parsed text content for the HTML `code` tags look nicer.
 
 ### User-defined shortcuts
 
