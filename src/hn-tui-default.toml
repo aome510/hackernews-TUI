@@ -185,7 +185,7 @@ toggle_raw_markdown_mode = "T"
 # num_comments_interval = {end = 100}
 
 # possible values for "tag"
-# - "front_page" -> "Story View - Front Page"
+# - "front_page" -> "Story View - Front Page" (note that "by_date" = true doesn't work for "front_page")
 # - "story" -> "Story View - All Stories"
 # - "ask_hn" -> "Story View - Ask HN"
 # - "show_hn" -> "Story View - Show HN"

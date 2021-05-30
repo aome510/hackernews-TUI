@@ -105,7 +105,11 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
                     s,
                     &client,
                     &data.tag,
-                    data.by_date,
+                    if data.tag == "front_page" {
+                        false
+                    } else {
+                        data.by_date
+                    },
                     0,
                     data.numeric_filters,
                     true,
