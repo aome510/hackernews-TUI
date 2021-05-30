@@ -497,7 +497,7 @@ impl HNClient {
             .into_json::<Vec<u32>>()?;
         if let Ok(elapsed) = time.elapsed() {
             info!(
-                "get front_page stories using {} took {}ms",
+                "get front_page story ids using {} took {}ms",
                 request_url,
                 elapsed.as_millis()
             );
