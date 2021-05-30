@@ -458,7 +458,7 @@ impl HNClient {
     // reorder the front_page stories to follow the same order
     // as in the official Hacker News site.
     // Needs to do this because stories returned by Algolia APIs
-    // are stored by `points`.
+    // are sorted by `points`.
     fn reoder_front_page_stories(&self, stories: Vec<Story>, ids: &[u32]) -> Vec<Story> {
         let mut stories = stories;
         stories.sort_by(|story_x, story_y| {
