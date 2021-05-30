@@ -9,6 +9,7 @@ use std::{
 use crate::prelude::*;
 
 const HN_ALGOLIA_PREFIX: &'static str = "https://hn.algolia.com/api/v1";
+const HN_OFFICIAL_PREFIX: &'static str = "https://hacker-news.firebaseio.com/v0";
 const HN_SEARCH_QUERY_STRING: &'static str =
     "tags=story&restrictSearchableAttributes=title,url&typoTolerance=false";
 pub const HN_HOST_URL: &'static str = "https://news.ycombinator.com";
@@ -454,6 +455,89 @@ impl HNClient {
         Ok(response.parse_into_stories())
     }
 
+    // reorder the front_page stories to follow the same order
+    // as in the official Hacker News site.
+    // Needs to do this because stories returned by Algolia APIs
+    // are stored by `points`.
+    fn reoder_front_page_stories(&self, stories: Vec<Story>, ids: &[u32]) -> Vec<Story> {
+        let mut stories = stories;
+        stories.sort_by(|story_x, story_y| {
+            let story_x_pos = ids
+                .iter()
+                .enumerate()
+                .find(|&(_, story_id)| *story_id == story_x.id)
+                .unwrap()
+                .0;
+            let story_y_pos = ids
+                .iter()
+                .enumerate()
+                .find(|&(_, story_id)| *story_id == story_y.id)
+                .unwrap()
+                .0;
+
+            story_x_pos.cmp(&story_y_pos)
+        });
+        stories
+    }
+
+    // retrieve a list of front_page story ids using HN Official API then
+    // compose a HN Algolia API to retrieve the corresponding stories.
+    fn get_front_page_stories(
+        &self,
+        story_limit: usize,
+        page: usize,
+        numeric_filters: StoryNumericFilters,
+    ) -> Result<Vec<Story>> {
+        let request_url = format!("{}/topstories.json", HN_OFFICIAL_PREFIX);
+        let time = SystemTime::now();
+        let stories = self
+            .client
+            .get(&request_url)
+            .call()?
+            .into_json::<Vec<u32>>()?;
+        if let Ok(elapsed) = time.elapsed() {
+            info!(
+                "get front_page stories using {} took {}ms",
+                request_url,
+                elapsed.as_millis()
+            );
+        }
+
+        let start_id = story_limit * page;
+        if start_id >= stories.len() {
+            return Ok(vec![]);
+        }
+
+        let end_id = std::cmp::min(start_id + story_limit, stories.len());
+        let ids = &stories[start_id..end_id];
+
+        let request_url = format!(
+            "{}/search?tags=story,({})&hitsPerPage={}{}",
+            HN_ALGOLIA_PREFIX,
+            ids.iter().fold("".to_owned(), |tags, story_id| format!(
+                "{}story_{},",
+                tags, story_id
+            )),
+            story_limit,
+            numeric_filters.query(),
+        );
+
+        let response = self
+            .client
+            .get(&request_url)
+            .call()?
+            .into_json::<StoriesResponse>()?;
+        if let Ok(elapsed) = time.elapsed() {
+            info!(
+                "get stories (tag=front_page, by_date=false, page={}) took {}ms",
+                page,
+                elapsed.as_millis()
+            );
+        }
+
+        Ok(self.reoder_front_page_stories(response.parse_into_stories(), ids))
+    }
+
     /// Get a list of stories filtering on a specific tag
     pub fn get_stories_by_tag(
         &self,
@@ -463,6 +547,10 @@ impl HNClient {
         numeric_filters: StoryNumericFilters,
     ) -> Result<Vec<Story>> {
         let story_limit = get_config().client.story_limit.get_story_limit_by_tag(tag);
+
+        if tag == "front_page" {
+            return self.get_front_page_stories(story_limit, page, numeric_filters);
+        }
         let request_url = format!(
             "{}/{}?tags={}&hitsPerPage={}&page={}{}",
             HN_ALGOLIA_PREFIX,
