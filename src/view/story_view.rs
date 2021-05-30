@@ -263,6 +263,10 @@ pub fn get_story_view(
         .on_event(story_view_keymap.toggle_sort_by, {
             let client = client.clone();
             move |s| {
+                // disable "search_by_date" for front_page stories
+                if tag == "front_page" {
+                    return;
+                }
                 add_story_view_layer(s, &client, tag, !by_date, page, numeric_filters, true);
             }
         })

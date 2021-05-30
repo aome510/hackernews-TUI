@@ -214,7 +214,7 @@ impl HasHelpView for StoryView {
                     ),
                     (
                         story_view_keymap.toggle_sort_by.to_string(),
-                        "Toggle sort by date/popularity",
+                        "Toggle sort by date/popularity (only for non `Front Page` views)",
                     ),
                 ],
             ),
