@@ -59,7 +59,7 @@ impl HelpView {
                         ));
                     });
                 })
-                .fixed_width(64),
+                .max_width(128),
         )
     }
 
