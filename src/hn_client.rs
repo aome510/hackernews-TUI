@@ -224,8 +224,8 @@ impl LazyLoadingComments {
         }
     }
 
-    pub fn get_comments(&self) -> Vec<Comment> {
-        self.comments.read().unwrap().clone()
+    pub fn load_all(&self) -> Vec<Comment> {
+        self.comments.write().unwrap().drain(..).collect::<Vec<_>>()
     }
 
     fn retrieve_comments_from_ids(

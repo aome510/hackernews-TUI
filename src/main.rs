@@ -7,7 +7,7 @@ pub mod utils;
 pub mod view;
 
 use clap::*;
-use prelude::{self::*, story_view::add_story_view_layer};
+use prelude::*;
 
 fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
     s.clear_global_callbacks(Event::CtrlChar('c'));

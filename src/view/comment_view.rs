@@ -31,6 +31,7 @@ pub struct CommentView {
     story: hn_client::Story,
     view: ScrollListView,
     comments: Vec<Comment>,
+    lazy_loading_comments: hn_client::LazyLoadingComments,
 
     raw_command: String,
 }
@@ -55,30 +56,44 @@ impl CommentView {
     /// Return a new CommentView given a comment list and the discussed story url
     pub fn new(
         story: hn_client::Story,
-        comments: hn_client::LazyLoadingComments,
+        lazy_loading_comments: hn_client::LazyLoadingComments,
         focus_id: u32,
     ) -> Self {
-        let comments = Self::parse_comments(&comments.get_comments(), 0);
-        let mut view = LinearLayout::vertical().with(|v| {
-            comments.iter().for_each(|comment| {
-                v.add_child(PaddedView::lrtb(
-                    comment.height * 2,
-                    0,
-                    0,
-                    1,
-                    text_view::TextView::new(comment.text.clone()),
-                ));
-            })
-        });
-        if let Some(focus_id) = comments.iter().position(|comment| comment.id == focus_id) {
-            view.set_focus_index(focus_id).unwrap();
-        }
-        CommentView {
+        let mut comment_view = CommentView {
             story,
-            comments,
-            view: view.scrollable(),
+            lazy_loading_comments,
+            comments: vec![],
+            view: LinearLayout::vertical().scrollable(),
             raw_command: String::new(),
+        };
+        comment_view.load_comments();
+        comment_view
+    }
+
+    /// Load all comments stored in the `lazy_loading_comments`
+    /// to the CommentView
+    pub fn load_comments(&mut self) {
+        let comments = self.lazy_loading_comments.load_all();
+        if comments.is_empty() {
+            return;
         }
+
+        let mut comments = Self::parse_comments(&comments, 0);
+        self.lazy_loading_comments.drain(5, false);
+
+        comments.iter().for_each(|comment| {
+            self.add_item(PaddedView::lrtb(
+                comment.height * 2,
+                0,
+                0,
+                1,
+                text_view::TextView::new(comment.text.clone()),
+            ));
+        });
+        self.comments.append(&mut comments);
+
+        // relayout the view based on the last size given to the scroll by `layout`
+        self.layout(self.get_scroller().last_outer_size());
     }
 
     fn decode_html(s: &str) -> String {
@@ -252,6 +267,9 @@ fn get_comment_main_view(
         })
         .on_pre_event_inner(comment_view_keymap.next_comment, |s, _| {
             let id = s.get_focus_index();
+            if id + 1 == s.len() {
+                s.load_comments();
+            }
             s.set_focus_index(id + 1)
         })
         .on_pre_event_inner(comment_view_keymap.next_leq_level_comment, move |s, _| {
@@ -260,9 +278,12 @@ fn get_comment_main_view(
             let (_, right) = heights.split_at(id + 1);
             let offset = right.iter().position(|&h| h <= heights[id]);
             let next_id = match offset {
-                None => id,
+                None => s.len(),
                 Some(offset) => id + offset + 1,
             };
+            if next_id == s.len() {
+                s.load_comments();
+            }
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.prev_leq_level_comment, move |s, _| {
@@ -278,9 +299,12 @@ fn get_comment_main_view(
             let (_, right) = heights.split_at(id + 1);
             let offset = right.iter().position(|&h| h == 0);
             let next_id = match offset {
-                None => id,
+                None => s.len(),
                 Some(offset) => id + offset + 1,
             };
+            if next_id == s.len() {
+                s.load_comments();
+            }
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.prev_top_level_comment, move |s, _| {
@@ -324,14 +348,14 @@ fn get_comment_main_view(
                 Err(_) => None,
             },
         )
-        .on_pre_event_inner(comment_view_keymap.reload_comment_view, move |s, _| {
-            let focus_id = s.comments[s.get_focus_index()].id;
-            Some(EventResult::with_cb({
-                let client = client.clone();
-                let story = s.story.clone();
-                move |s| add_comment_view_layer(s, &client, &story, focus_id, true)
-            }))
-        })
+        // .on_pre_event_inner(comment_view_keymap.reload_comment_view, move |s, _| {
+        //     let focus_id = s.comments[s.get_focus_index()].id;
+        //     Some(EventResult::with_cb({
+        //         let client = client.clone();
+        //         let story = s.story.clone();
+        //         move |s| add_comment_view_layer(s, &client, &story, focus_id, true)
+        //     }))
+        // })
         .on_pre_event_inner(comment_view_keymap.open_comment_in_browser, move |s, _| {
             let id = s.comments[s.get_focus_index()].id;
             let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
