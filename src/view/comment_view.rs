@@ -53,8 +53,12 @@ impl ViewWrapper for CommentView {
 
 impl CommentView {
     /// Return a new CommentView given a comment list and the discussed story url
-    pub fn new(story: hn_client::Story, comments: &Vec<hn_client::Comment>, focus_id: u32) -> Self {
-        let comments = Self::parse_comments(comments, 0);
+    pub fn new(
+        story: hn_client::Story,
+        comments: hn_client::LazyLoadingComments,
+        focus_id: u32,
+    ) -> Self {
+        let comments = Self::parse_comments(&comments.get_comments(), 0);
         let mut view = LinearLayout::vertical().with(|v| {
             comments.iter().for_each(|comment| {
                 v.add_child(PaddedView::lrtb(
@@ -191,7 +195,7 @@ impl CommentView {
 /// The main view of a CommentView is a View without status bar or footer.
 fn get_comment_main_view(
     story: &hn_client::Story,
-    comments: &Vec<hn_client::Comment>,
+    comments: hn_client::LazyLoadingComments,
     client: &hn_client::HNClient,
     focus_id: u32,
 ) -> impl View {
@@ -340,7 +344,7 @@ fn get_comment_main_view(
 /// Return a CommentView given a comment list and the discussed story's url/title
 pub fn get_comment_view(
     story: &hn_client::Story,
-    comments: &Vec<hn_client::Comment>,
+    comments: hn_client::LazyLoadingComments,
     client: &hn_client::HNClient,
     focus_id: u32,
 ) -> impl View {

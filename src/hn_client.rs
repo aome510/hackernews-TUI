@@ -81,6 +81,13 @@ struct StoryResponse {
 }
 
 #[derive(Debug, Deserialize)]
+/// HNStoryResponse represents the story data received from OFFICIAL HN APIs
+struct HNStoryResponse {
+    #[serde(default)]
+    kids: Vec<u32>,
+}
+
+#[derive(Debug, Deserialize)]
 /// CommentResponse represents the comment data received from HN_ALGOLIA APIs
 struct CommentResponse {
     id: u32,
@@ -198,6 +205,73 @@ impl From<StoryResponse> for Story {
             num_comments: s.num_comments,
             time: s.time,
             highlight_result,
+        }
+    }
+}
+
+pub struct LazyLoadingComments {
+    client: HNClient,
+    ids: Vec<u32>,
+    comments: Arc<RwLock<Vec<Comment>>>,
+}
+
+impl LazyLoadingComments {
+    pub fn new(client: HNClient, ids: Vec<u32>) -> Self {
+        LazyLoadingComments {
+            client,
+            ids,
+            comments: Arc::new(RwLock::new(vec![])),
+        }
+    }
+
+    pub fn get_comments(&self) -> Vec<Comment> {
+        self.comments.read().unwrap().clone()
+    }
+
+    fn retrieve_comments_from_ids(
+        client: HNClient,
+        ids: Vec<u32>,
+        comments: &Arc<RwLock<Vec<Comment>>>,
+    ) {
+        type ResultT = Vec<Result<Comment>>;
+
+        let results: ResultT = ids
+            .into_par_iter()
+            .map(|id| {
+                debug!("comment id: {}", id);
+                let response = client.get_item_from_id::<CommentResponse>(id)?;
+                Ok(response.into())
+            })
+            .collect();
+
+        let (oks, errs): (ResultT, ResultT) =
+            results.into_iter().partition(|result| result.is_ok());
+
+        errs.into_iter().for_each(|err| {
+            warn!("failed to get comment: {:#?}", err);
+        });
+
+        let mut comments = comments.write().unwrap();
+        oks.into_iter().for_each(|ok| {
+            comments.push(ok.unwrap());
+        });
+    }
+
+    pub fn drain(&mut self, size: usize, block: bool) {
+        if self.ids.len() == 0 {
+            return;
+        }
+
+        let ids: Vec<_> = self
+            .ids
+            .drain(0..std::cmp::min(self.ids.len(), size))
+            .collect();
+        let client = self.client.clone();
+        if !block {
+            let comments = Arc::clone(&self.comments);
+            std::thread::spawn(move || Self::retrieve_comments_from_ids(client, ids, &comments));
+        } else {
+            Self::retrieve_comments_from_ids(client, ids, &self.comments);
         }
     }
 }
@@ -344,63 +418,113 @@ impl HNClient {
         T: de::DeserializeOwned,
     {
         let request_url = format!("{}/items/{}", HN_ALGOLIA_PREFIX, id);
-        Ok(self.client.get(&request_url).call()?.into_json::<T>()?)
+        let time = SystemTime::now();
+        let item = self.client.get(&request_url).call()?.into_json::<T>()?;
+        if let Ok(elapsed) = time.elapsed() {
+            info!("get item id={} took {}ms", id, elapsed.as_millis());
+        }
+        Ok(item)
     }
 
     /// Get all comments from a story.
     /// A cached result is returned if the number of comments doesn't change.
     /// [reload] is a parameter used when we want to re-determine the number of comments in a story.
-    pub fn get_comments_from_story(&self, story: &Story, reload: bool) -> Result<Vec<Comment>> {
+    pub fn get_comments_from_story(
+        &self,
+        story: &Story,
+        _reload: bool,
+    ) -> Result<LazyLoadingComments> {
         let id = story.id;
-        let story = if reload {
-            self.get_story_from_story_id(id)?
-        } else {
-            story.clone()
-        };
 
-        let num_comments = story.num_comments;
-        let comments = match self.story_caches.read().unwrap().get(&id) {
-            Some(story_cache) if story_cache.num_comments == num_comments => {
-                Some(story_cache.comments.clone())
-            }
-            _ => None,
-        };
+        let request_url = format!("{}/item/{}.json", HN_OFFICIAL_PREFIX, id);
+        let mut ids = self
+            .client
+            .get(&request_url)
+            .call()?
+            .into_json::<HNStoryResponse>()?
+            .kids;
 
-        match comments {
-            None => match self.get_comments_from_story_id(id) {
-                Ok(comments) => {
-                    self.story_caches
-                        .write()
-                        .unwrap()
-                        .insert(id, StoryCache::new(comments.clone(), num_comments));
-                    info!("insert comments of the story (id={}, num_comments={}) into client's story_caches",
-                           id, num_comments);
-                    Ok(comments)
-                }
-                Err(err) => Err(err),
-            },
-            Some(comments) => Ok(comments),
-        }
+        let mut comments = LazyLoadingComments::new(self.clone(), ids);
+        comments.drain(5, true);
+        comments.drain(5, false);
+        Ok(comments)
+        // let story = if reload {
+        //     self.get_story_from_story_id(id)?
+        // } else {
+        //     story.clone()
+        // };
+
+        // let num_comments = story.num_comments;
+        // let comments = match self.story_caches.read().unwrap().get(&id) {
+        //     Some(story_cache) if story_cache.num_comments == num_comments => {
+        //         Some(story_cache.comments.clone())
+        //     }
+        //     _ => None,
+        // };
+
+        // match comments {
+        //     None => match self.get_comments_from_story_id(id) {
+        //         Ok(comments) => {
+        //             self.story_caches
+        //                 .write()
+        //                 .unwrap()
+        //                 .insert(id, StoryCache::new(comments.clone(), num_comments));
+        //             info!("insert comments of the story (id={}, num_comments={}) into client's story_caches",
+        //                    id, num_comments);
+        //             Ok(comments)
+        //         }
+        //         Err(err) => Err(err),
+        //     },
+        //     Some(comments) => Ok(comments),
+        // }
     }
 
     /// Get all comments from a story with a given id
     pub fn get_comments_from_story_id(&self, id: u32) -> Result<Vec<Comment>> {
-        let time = SystemTime::now();
-        let response = self.get_item_from_id::<StoryResponse>(id)?;
-        if let Ok(elapsed) = time.elapsed() {
-            info!(
-                "get comments from story (id={}) took {}ms",
-                id,
-                elapsed.as_millis()
-            );
-        }
+        let request_url = format!("{}/item/{}.json", HN_OFFICIAL_PREFIX, id);
 
-        Ok(response
-            .children
+        let ids = self
+            .client
+            .get(&request_url)
+            .call()?
+            .into_json::<HNStoryResponse>()?
+            .kids;
+
+        type ResultT = Vec<Result<Comment>>;
+
+        let results: ResultT = ids
             .into_par_iter()
-            .filter(|comment| comment.text.is_some() && comment.author.is_some())
-            .map(|comment| comment.into())
-            .collect())
+            .map(|id| {
+                debug!("comment id: {}", id);
+                let response = self.get_item_from_id::<CommentResponse>(id)?;
+                Ok(response.into())
+            })
+            .collect();
+
+        let (oks, errs): (ResultT, ResultT) =
+            results.into_iter().partition(|result| result.is_ok());
+
+        errs.into_iter().for_each(|err| {
+            warn!("failed to get comment: {:#?}", err);
+        });
+
+        Ok(oks.into_iter().map(Result::unwrap).collect())
+        // let time = SystemTime::now();
+        // let response = self.get_item_from_id::<StoryResponse>(id)?;
+        // if let Ok(elapsed) = time.elapsed() {
+        //     info!(
+        //         "get comments from story (id={}) took {}ms",
+        //         id,
+        //         elapsed.as_millis()
+        //     );
+        // }
+
+        // Ok(response
+        //     .children
+        //     .into_par_iter()
+        //     .filter(|comment| comment.text.is_some() && comment.author.is_some())
+        //     .map(|comment| comment.into())
+        //     .collect())
     }
 
     /// Get a story based on its id
