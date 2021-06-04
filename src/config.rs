@@ -15,10 +15,18 @@ pub struct Config {
     pub article_parse_command: ArticleParseCommand,
 
     pub story_pooling: StoryPooling,
+    pub lazy_loading_comments: LazyLoadingComments,
     pub client: Client,
     pub theme: Theme,
 
     pub keymap: KeyMap,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct LazyLoadingComments {
+    pub enable: bool,
+    pub num_comments_init: usize,
+    pub num_comments_after: usize,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -192,6 +200,11 @@ impl Default for Config {
                 enable: true,
                 delay: 2,
                 allows: vec!["front_page".to_string()],
+            },
+            lazy_loading_comments: LazyLoadingComments {
+                enable: true,
+                num_comments_init: 5,
+                num_comments_after: 10,
             },
             client: Client {
                 story_limit: StoryLimit {

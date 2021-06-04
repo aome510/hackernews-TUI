@@ -445,8 +445,9 @@ impl HNClient {
             .kids;
 
         let mut comments = LazyLoadingComments::new(self.clone(), ids);
-        comments.drain(5, true);
-        comments.drain(5, false);
+        let cfg = &(get_config().lazy_loading_comments);
+        comments.drain(cfg.num_comments_init, true);
+        comments.drain(cfg.num_comments_after, false);
         Ok(comments)
         // let story = if reload {
         //     self.get_story_from_story_id(id)?
