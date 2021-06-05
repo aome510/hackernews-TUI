@@ -210,8 +210,8 @@ impl From<StoryResponse> for Story {
 }
 
 /// `LazyLoadingComments` lazily loads comments on demand. It stores
-/// a list of top comment's ids and a comment buffer. On demand, the buffer is
-/// clear and used to load more comments. More comments are then
+/// a list of top comment's ids and a comment buffer. When more comments are needed,
+/// the buffer is clear to load more comments. Additional comments are
 /// requested in background to reset the comment buffer.
 pub struct LazyLoadingComments {
     client: HNClient,

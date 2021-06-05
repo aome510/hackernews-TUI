@@ -29,10 +29,9 @@ article_parse_command = {command = "mercury-parser", options = ["--format", "mar
 # article_parse_command = {command = "article_md", options = []}
 
 [lazy_loading_comments]
-# `lazy_loading_comments` is a feature that loads comments on demand.
-# At first, only `num_comments_init` top comments are requested, and an additional buffer of `num_comments_after`
-# top comments is requested in background. Whenever more comments are needed, the comment buffer
-# is used to load additional comments. After that, a new buffer of `num_comments_after` top comments is created.
+# `lazy_loading_comments` is a feature that lazily loads comments on demand.
+# `num_comments_init` defines the number of top comments initially loaded.
+# `num_comments_after` defines the number of top comments asynchronously loaded in background
 num_comments_init = 5
 num_comments_after = 10
 
