@@ -192,7 +192,6 @@ impl Default for Config {
             },
 
             lazy_loading_comments: LazyLoadingComments {
-                enable: true,
                 num_comments_init: 5,
                 num_comments_after: 10,
             },
