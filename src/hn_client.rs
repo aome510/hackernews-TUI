@@ -81,7 +81,7 @@ struct StoryResponse {
 }
 
 #[derive(Debug, Deserialize)]
-/// HNStoryResponse represents the story data received from OFFICIAL HN APIs
+/// HNStoryResponse represents the story data received from the official HackerNews APIs
 struct HNStoryResponse {
     #[serde(default)]
     kids: Vec<u32>,
@@ -211,7 +211,7 @@ impl From<StoryResponse> for Story {
 
 /// `LazyLoadingComments` lazily loads comments on demand. It stores
 /// a list of top comment's ids and a comment buffer. On demand, the buffer is
-/// clear and used to load more comments. After that, more comments are
+/// clear and used to load more comments. More comments are then
 /// requested in background to reset the comment buffer.
 pub struct LazyLoadingComments {
     client: HNClient,
@@ -228,7 +228,7 @@ impl LazyLoadingComments {
         }
     }
 
-    /// load all available comments in the current comment buffer and clear the buffer
+    /// load all available comments in the current comment buffer then clear the buffer
     pub fn load_all(&self) -> Vec<Comment> {
         self.comments.write().unwrap().drain(..).collect::<Vec<_>>()
     }
@@ -261,9 +261,9 @@ impl LazyLoadingComments {
         });
     }
 
-    /// drains the first `size` comment ids from the queue list,
-    /// then requests comments with the corresponding ids.
-    /// parameter `block` determines whether the retrieving process blocks
+    /// drain the first `size` comment ids from the queue list,
+    /// then request comments with the corresponding ids.
+    /// parameter `block` determines whether the retrieving process should happen in background
     pub fn drain(&mut self, size: usize, block: bool) {
         if self.ids.len() == 0 {
             return;
@@ -446,7 +446,7 @@ impl HNClient {
             Some(pos) => {
                 // move `pos` to the beginning of the list.
                 // using `reverse` twice with `swap_remove` is quite
-                // an inefficient way to do but probably the easiest implementation
+                // an inefficient way to achieve the above but probably the easiest
                 ids.reverse();
                 ids.swap_remove(pos);
                 ids.reverse();
