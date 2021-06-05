@@ -260,7 +260,7 @@ impl LazyLoadingComments {
 
     /// drain first [size] comment ids from the queue list,
     /// retrieve comments with those the corresponding ids,
-    /// [block] param determines whether the retrieving process blocks
+    /// parameter [block] determines whether the retrieving process blocks
     pub fn drain(&mut self, size: usize, block: bool) {
         if self.ids.len() == 0 {
             return;
@@ -425,16 +425,31 @@ impl HNClient {
     }
 
     /// Get all comments from a story.
-    pub fn get_comments_from_story(&self, story: &Story) -> Result<LazyLoadingComments> {
+    pub fn get_comments_from_story(
+        &self,
+        story: &Story,
+        focus_top_comment_id: u32,
+    ) -> Result<LazyLoadingComments> {
         let id = story.id;
 
         let request_url = format!("{}/item/{}.json", HN_OFFICIAL_PREFIX, id);
-        let ids = self
+        let mut ids = self
             .client
             .get(&request_url)
             .call()?
             .into_json::<HNStoryResponse>()?
             .kids;
+        match ids.iter().position(|id| *id == focus_top_comment_id) {
+            Some(pos) => {
+                // move pos to the beginning
+                // using `reverse` twice with `swap_remove` is not really
+                // an inefficient way to do but probably the easiest implementation
+                ids.reverse();
+                ids.swap_remove(pos);
+                ids.reverse();
+            }
+            None => {}
+        };
 
         let mut comments = LazyLoadingComments::new(self.clone(), ids);
 

@@ -156,7 +156,7 @@ pub fn get_story_main_view(
                 let story = s.stories[id].clone();
                 Some(EventResult::with_cb({
                     let client = client.clone();
-                    move |s| comment_view::add_comment_view_layer(s, &client, &story, 0, false)
+                    move |s| comment_view::add_comment_view_layer(s, &client, &story, (0, 0), false)
                 }))
             }
         })

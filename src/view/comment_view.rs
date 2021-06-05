@@ -9,6 +9,7 @@ use crate::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct Comment {
+    top_comment_id: u32,
     id: u32,
     text: StyledString,
     height: usize,
@@ -16,8 +17,15 @@ pub struct Comment {
 }
 
 impl Comment {
-    pub fn new(id: u32, text: StyledString, height: usize, links: Vec<String>) -> Self {
+    pub fn new(
+        top_comment_id: u32,
+        id: u32,
+        text: StyledString,
+        height: usize,
+        links: Vec<String>,
+    ) -> Self {
         Comment {
+            top_comment_id,
             id,
             text,
             height,
@@ -67,6 +75,13 @@ impl CommentView {
             raw_command: String::new(),
         };
         comment_view.load_comments();
+        if let Some(focus_id) = comment_view
+            .comments
+            .iter()
+            .position(|comment| comment.id == focus_id)
+        {
+            comment_view.set_focus_index(focus_id).unwrap();
+        }
         comment_view
     }
 
@@ -78,7 +93,7 @@ impl CommentView {
             return;
         }
 
-        let mut comments = Self::parse_comments(&comments, 0);
+        let mut comments = Self::parse_comments(&comments, 0, 0);
         self.lazy_loading_comments
             .drain(get_config().lazy_loading_comments.num_comments_after, false);
 
@@ -165,7 +180,11 @@ impl CommentView {
     }
 
     /// Parse comments recursively into readable texts with styles and colors
-    fn parse_comments(comments: &Vec<hn_client::Comment>, height: usize) -> Vec<Comment> {
+    fn parse_comments(
+        comments: &Vec<hn_client::Comment>,
+        height: usize,
+        top_comment_id: u32,
+    ) -> Vec<Comment> {
         let paragraph_re = Regex::new(r"<p>(?s)(?P<paragraph>.*?)</p>").unwrap();
         let italic_re = Regex::new(r"<i>(?s)(?P<text>.+?)</i>").unwrap();
         let code_re = Regex::new(r"<pre><code>(?s)(?P<code>.+?)[\n]*</code></pre>").unwrap();
@@ -174,7 +193,13 @@ impl CommentView {
         comments
             .par_iter()
             .flat_map(|comment| {
-                let mut subcomments = Self::parse_comments(&comment.children, height + 1);
+                let top_comment_id = if height == 0 {
+                    comment.id
+                } else {
+                    top_comment_id
+                };
+                let mut subcomments =
+                    Self::parse_comments(&comment.children, height + 1, top_comment_id);
                 let mut comment_string = StyledString::styled(
                     format!(
                         "{} {} ago\n",
@@ -193,7 +218,10 @@ impl CommentView {
                 );
                 comment_string.append(comment_content);
 
-                subcomments.insert(0, Comment::new(comment.id, comment_string, height, links));
+                subcomments.insert(
+                    0,
+                    Comment::new(top_comment_id, comment.id, comment_string, height, links),
+                );
                 subcomments
             })
             .collect()
@@ -349,14 +377,15 @@ fn get_comment_main_view(
                 Err(_) => None,
             },
         )
-        // .on_pre_event_inner(comment_view_keymap.reload_comment_view, move |s, _| {
-        //     let focus_id = s.comments[s.get_focus_index()].id;
-        //     Some(EventResult::with_cb({
-        //         let client = client.clone();
-        //         let story = s.story.clone();
-        //         move |s| add_comment_view_layer(s, &client, &story, focus_id, true)
-        //     }))
-        // })
+        .on_pre_event_inner(comment_view_keymap.reload_comment_view, move |s, _| {
+            let comment = &s.comments[s.get_focus_index()];
+            let focus_id = (comment.top_comment_id, comment.id);
+            Some(EventResult::with_cb({
+                let client = client.clone();
+                let story = s.story.clone();
+                move |s| add_comment_view_layer(s, &client, &story, focus_id, true)
+            }))
+        })
         .on_pre_event_inner(comment_view_keymap.open_comment_in_browser, move |s, _| {
             let id = s.comments[s.get_focus_index()].id;
             let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
@@ -424,7 +453,7 @@ pub fn add_comment_view_layer(
     s: &mut Cursive,
     client: &hn_client::HNClient,
     story: &hn_client::Story,
-    focus_id: u32,
+    focus_id: (u32, u32),
     pop_layer: bool,
 ) {
     let async_view = async_view::get_comment_view_async(s, client, story, focus_id);
