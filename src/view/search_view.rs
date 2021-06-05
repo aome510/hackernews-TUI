@@ -112,9 +112,8 @@ impl SearchView {
 
         // create a loading screen if the comand triggers
         // update_matched_stories is from NavigationMode's commands
-        let mut is_navigation_mode = false;
-        if let SearchViewMode::Navigation = self.mode {
-            is_navigation_mode = true;
+
+        let is_navigation_mode = if let SearchViewMode::Navigation = self.mode {
             cb_sink
                 .send(Box::new(|s| {
                     let loading_view = OnEventView::new(
@@ -126,7 +125,10 @@ impl SearchView {
                     s.add_layer(loading_view);
                 }))
                 .unwrap();
-        }
+            true
+        } else {
+            false
+        };
 
         std::thread::spawn(
             move || match client.get_matched_stories(&query, by_date, page) {
@@ -136,6 +138,8 @@ impl SearchView {
                         query, err
                     );
 
+                    // failed to get matched stories, but we still need
+                    // to remove the loading dialog
                     if *self_query.read().unwrap().0 == query {
                         cb_sink
                             .send(Box::new(move |s| {
@@ -147,12 +151,11 @@ impl SearchView {
                     }
                 }
                 Ok(stories) => {
-                    // if the query used to search for "stories"
-                    // matches the current query, update view and force redrawing
+                    // found matched stories...
+                    // if the search query matches the current query,
+                    // update stories, remove the loading dialog, and force redrawing the view
                     if *self_query.read().unwrap().0 == query {
-                        let mut self_stories = self_stories.write().unwrap();
-
-                        *self_stories = stories;
+                        (*self_stories.write().unwrap()) = stories;
                         self_query.write().unwrap().1 = true;
 
                         cb_sink

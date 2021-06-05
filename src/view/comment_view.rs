@@ -9,6 +9,7 @@ use crate::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct Comment {
+    top_comment_id: u32,
     id: u32,
     text: StyledString,
     height: usize,
@@ -16,8 +17,15 @@ pub struct Comment {
 }
 
 impl Comment {
-    pub fn new(id: u32, text: StyledString, height: usize, links: Vec<String>) -> Self {
+    pub fn new(
+        top_comment_id: u32,
+        id: u32,
+        text: StyledString,
+        height: usize,
+        links: Vec<String>,
+    ) -> Self {
         Comment {
+            top_comment_id,
             id,
             text,
             height,
@@ -31,6 +39,7 @@ pub struct CommentView {
     story: hn_client::Story,
     view: ScrollListView,
     comments: Vec<Comment>,
+    lazy_loading_comments: hn_client::LazyLoadingComments,
 
     raw_command: String,
 }
@@ -53,28 +62,53 @@ impl ViewWrapper for CommentView {
 
 impl CommentView {
     /// Return a new CommentView given a comment list and the discussed story url
-    pub fn new(story: hn_client::Story, comments: &Vec<hn_client::Comment>, focus_id: u32) -> Self {
-        let comments = Self::parse_comments(comments, 0);
-        let mut view = LinearLayout::vertical().with(|v| {
-            comments.iter().for_each(|comment| {
-                v.add_child(PaddedView::lrtb(
-                    comment.height * 2,
-                    0,
-                    0,
-                    1,
-                    text_view::TextView::new(comment.text.clone()),
-                ));
-            })
-        });
-        if let Some(focus_id) = comments.iter().position(|comment| comment.id == focus_id) {
-            view.set_focus_index(focus_id).unwrap();
-        }
-        CommentView {
+    pub fn new(
+        story: hn_client::Story,
+        lazy_loading_comments: hn_client::LazyLoadingComments,
+        focus_id: u32,
+    ) -> Self {
+        let mut comment_view = CommentView {
             story,
-            comments,
-            view: view.scrollable(),
+            lazy_loading_comments,
+            comments: vec![],
+            view: LinearLayout::vertical().scrollable(),
             raw_command: String::new(),
+        };
+        comment_view.load_comments();
+        if let Some(focus_id) = comment_view
+            .comments
+            .iter()
+            .position(|comment| comment.id == focus_id)
+        {
+            comment_view.set_focus_index(focus_id).unwrap();
         }
+        comment_view
+    }
+
+    /// Load all comments stored in the `lazy_loading_comments`'s buffer
+    pub fn load_comments(&mut self) {
+        let comments = self.lazy_loading_comments.load_all();
+        if comments.is_empty() {
+            return;
+        }
+
+        let mut comments = Self::parse_comments(&comments, 0, 0);
+        self.lazy_loading_comments
+            .drain(get_config().lazy_loading_comments.num_comments_after, false);
+
+        comments.iter().for_each(|comment| {
+            self.add_item(PaddedView::lrtb(
+                comment.height * 2,
+                0,
+                0,
+                1,
+                text_view::TextView::new(comment.text.clone()),
+            ));
+        });
+        self.comments.append(&mut comments);
+
+        // relayout the view based on the last size given to the scroll by `layout`
+        self.layout(self.get_scroller().last_outer_size());
     }
 
     fn decode_html(s: &str) -> String {
@@ -145,7 +179,11 @@ impl CommentView {
     }
 
     /// Parse comments recursively into readable texts with styles and colors
-    fn parse_comments(comments: &Vec<hn_client::Comment>, height: usize) -> Vec<Comment> {
+    fn parse_comments(
+        comments: &Vec<hn_client::Comment>,
+        height: usize,
+        top_comment_id: u32,
+    ) -> Vec<Comment> {
         let paragraph_re = Regex::new(r"<p>(?s)(?P<paragraph>.*?)</p>").unwrap();
         let italic_re = Regex::new(r"<i>(?s)(?P<text>.+?)</i>").unwrap();
         let code_re = Regex::new(r"<pre><code>(?s)(?P<code>.+?)[\n]*</code></pre>").unwrap();
@@ -154,7 +192,13 @@ impl CommentView {
         comments
             .par_iter()
             .flat_map(|comment| {
-                let mut subcomments = Self::parse_comments(&comment.children, height + 1);
+                let top_comment_id = if height == 0 {
+                    comment.id
+                } else {
+                    top_comment_id
+                };
+                let mut subcomments =
+                    Self::parse_comments(&comment.children, height + 1, top_comment_id);
                 let mut comment_string = StyledString::styled(
                     format!(
                         "{} {} ago\n",
@@ -173,7 +217,10 @@ impl CommentView {
                 );
                 comment_string.append(comment_content);
 
-                subcomments.insert(0, Comment::new(comment.id, comment_string, height, links));
+                subcomments.insert(
+                    0,
+                    Comment::new(top_comment_id, comment.id, comment_string, height, links),
+                );
                 subcomments
             })
             .collect()
@@ -191,7 +238,7 @@ impl CommentView {
 /// The main view of a CommentView is a View without status bar or footer.
 fn get_comment_main_view(
     story: &hn_client::Story,
-    comments: &Vec<hn_client::Comment>,
+    comments: hn_client::LazyLoadingComments,
     client: &hn_client::HNClient,
     focus_id: u32,
 ) -> impl View {
@@ -248,6 +295,9 @@ fn get_comment_main_view(
         })
         .on_pre_event_inner(comment_view_keymap.next_comment, |s, _| {
             let id = s.get_focus_index();
+            if id + 1 == s.len() {
+                s.load_comments();
+            }
             s.set_focus_index(id + 1)
         })
         .on_pre_event_inner(comment_view_keymap.next_leq_level_comment, move |s, _| {
@@ -256,9 +306,12 @@ fn get_comment_main_view(
             let (_, right) = heights.split_at(id + 1);
             let offset = right.iter().position(|&h| h <= heights[id]);
             let next_id = match offset {
-                None => id,
+                None => s.len(),
                 Some(offset) => id + offset + 1,
             };
+            if next_id == s.len() {
+                s.load_comments();
+            }
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.prev_leq_level_comment, move |s, _| {
@@ -274,9 +327,12 @@ fn get_comment_main_view(
             let (_, right) = heights.split_at(id + 1);
             let offset = right.iter().position(|&h| h == 0);
             let next_id = match offset {
-                None => id,
+                None => s.len(),
                 Some(offset) => id + offset + 1,
             };
+            if next_id == s.len() {
+                s.load_comments();
+            }
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.prev_top_level_comment, move |s, _| {
@@ -321,7 +377,8 @@ fn get_comment_main_view(
             },
         )
         .on_pre_event_inner(comment_view_keymap.reload_comment_view, move |s, _| {
-            let focus_id = s.comments[s.get_focus_index()].id;
+            let comment = &s.comments[s.get_focus_index()];
+            let focus_id = (comment.top_comment_id, comment.id);
             Some(EventResult::with_cb({
                 let client = client.clone();
                 let story = s.story.clone();
@@ -340,7 +397,7 @@ fn get_comment_main_view(
 /// Return a CommentView given a comment list and the discussed story's url/title
 pub fn get_comment_view(
     story: &hn_client::Story,
-    comments: &Vec<hn_client::Comment>,
+    comments: hn_client::LazyLoadingComments,
     client: &hn_client::HNClient,
     focus_id: u32,
 ) -> impl View {
@@ -395,7 +452,7 @@ pub fn add_comment_view_layer(
     s: &mut Cursive,
     client: &hn_client::HNClient,
     story: &hn_client::Story,
-    focus_id: u32,
+    focus_id: (u32, u32),
     pop_layer: bool,
 ) {
     let async_view = async_view::get_comment_view_async(s, client, story, focus_id);

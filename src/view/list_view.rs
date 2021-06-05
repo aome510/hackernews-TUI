@@ -8,6 +8,7 @@ pub trait ScrollableList {
     fn len(&self) -> usize;
     fn get_focus_index(&self) -> usize;
     fn set_focus_index(&mut self, id: usize) -> Option<EventResult>;
+    fn add_item<V: IntoBoxedView + 'static>(&mut self, view: V);
     fn get_scroller(&self) -> &scroll::Core;
     fn get_scroller_mut(&mut self) -> &mut scroll::Core;
     // Move the scroller to the focused area and adjust the scroller
@@ -30,6 +31,7 @@ macro_rules! impl_scrollable_list {
         fn scroll(&mut self, direction: bool) {
             if !get_config().page_scrolling {
                 self.get_inner_mut().scroll_to_important_area();
+                return;
             }
 
             let important_area = self
@@ -81,6 +83,11 @@ macro_rules! impl_scrollable_list {
                 }
                 Err(_) => None,
             }
+        }
+
+        fn add_item<V: IntoBoxedView + 'static>(&mut self, view: V) {
+            let linear_layout = self.get_inner_mut().get_inner_mut();
+            linear_layout.add_child(view);
         }
 
         fn get_scroller_mut(&mut self) -> &mut scroll::Core {

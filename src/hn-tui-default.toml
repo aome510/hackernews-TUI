@@ -28,19 +28,12 @@ url_open_command = "xdg-open"
 article_parse_command = {command = "mercury-parser", options = ["--format", "markdown"]}
 # article_parse_command = {command = "article_md", options = []}
 
-[story_pooling]
-# "story_pooling" is a feature that allows the application to fetch stories
-# in background and store them in cache memory.
-enable = true
-# delay (in seconds) between two story API requests
-delay = 2
-# possible values for allows:
-# - "front_page" -> "Story View - Front Page"
-# - "story" -> "Story View - All Stories"
-# - "ask_hn" -> "Story View - Ask HN"
-# - "show_hn" -> "Story View - Show HN"
-# - "job" -> "Story View - Jobs"
-allows = ["front_page"]
+[lazy_loading_comments]
+# `lazy_loading_comments` is a feature that lazily loads comments on demand.
+# `num_comments_init` defines the number of top comments initially loaded.
+# `num_comments_after` defines the number of top comments asynchronously loaded in background
+num_comments_init = 5
+num_comments_after = 10
 
 [client]
 # "client_timeout" is the application's client timeout (in seconds) when making an API request
