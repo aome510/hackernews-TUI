@@ -225,34 +225,6 @@ pub fn get_story_view(
         .child(construct_footer_view::<StoryView>());
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
-    let story_pooling = &get_config().story_pooling;
-
-    // pooling stories in background
-    if story_pooling.enable {
-        if story_pooling
-            .allows
-            .iter()
-            .any(|allowed_tag| allowed_tag == tag)
-        {
-            let client = client.clone();
-            std::thread::spawn(move || {
-                stories.iter().for_each(|story| {
-                    match client.get_comments_from_story(story, false) {
-                        Err(err) => {
-                            warn!(
-                                "failed to get comments from story (id={}): {:#?}",
-                                story.id, err
-                            );
-                        }
-                        _ => {}
-                    };
-
-                    std::thread::sleep(std::time::Duration::from_secs(story_pooling.delay));
-                });
-            });
-        }
-    }
-
     let story_view_keymap = get_story_view_keymap().clone();
 
     OnEventView::new(view)

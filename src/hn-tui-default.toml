@@ -33,12 +33,6 @@ enable = true
 num_comments_init = 5
 num_comments_after = 10
 
-[story_pooling]
-# "story_pooling" is a feature that allows the application to fetch stories
-# in background and store them in cache memory.
-enable = true
-# delay (in seconds) between two story API requests
-delay = 2
 # possible values for allows:
 # - "front_page" -> "Story View - Front Page"
 # - "story" -> "Story View - All Stories"

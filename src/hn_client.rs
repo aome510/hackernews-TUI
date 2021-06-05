@@ -1,10 +1,10 @@
 use rayon::prelude::*;
 use serde::{de, Deserialize, Deserializer};
-use std::{collections::HashMap, sync::Arc, sync::RwLock};
 use std::{
     fmt::Display,
     time::{Duration, SystemTime},
 };
+use std::{sync::Arc, sync::RwLock};
 
 use crate::prelude::*;
 
@@ -224,6 +224,7 @@ impl LazyLoadingComments {
         }
     }
 
+    /// load all available comments in the current struct and remove them
     pub fn load_all(&self) -> Vec<Comment> {
         self.comments.write().unwrap().drain(..).collect::<Vec<_>>()
     }
@@ -257,6 +258,9 @@ impl LazyLoadingComments {
         });
     }
 
+    /// drain first [size] comment ids from the queue list,
+    /// retrieve comments with those the corresponding ids,
+    /// [block] param determines whether the retrieving process blocks
     pub fn drain(&mut self, size: usize, block: bool) {
         if self.ids.len() == 0 {
             return;
@@ -266,6 +270,7 @@ impl LazyLoadingComments {
             .ids
             .drain(0..std::cmp::min(self.ids.len(), size))
             .collect();
+
         let client = self.client.clone();
         if !block {
             let comments = Arc::clone(&self.comments);
@@ -391,7 +396,6 @@ impl StoryNumericFilters {
 #[derive(Clone)]
 pub struct HNClient {
     client: ureq::Agent,
-    story_caches: Arc<RwLock<HashMap<u32, StoryCache>>>,
 }
 
 impl HNClient {
@@ -402,13 +406,7 @@ impl HNClient {
             client: ureq::AgentBuilder::new()
                 .timeout(Duration::from_secs(timeout))
                 .build(),
-            story_caches: Arc::new(RwLock::new(HashMap::new())),
         })
-    }
-
-    /// Return the story caches stored in the client
-    pub fn get_story_caches(&self) -> &Arc<RwLock<HashMap<u32, StoryCache>>> {
-        &self.story_caches
     }
 
     /// Get data of a HN item based on its id then parse the data
@@ -427,17 +425,11 @@ impl HNClient {
     }
 
     /// Get all comments from a story.
-    /// A cached result is returned if the number of comments doesn't change.
-    /// [reload] is a parameter used when we want to re-determine the number of comments in a story.
-    pub fn get_comments_from_story(
-        &self,
-        story: &Story,
-        _reload: bool,
-    ) -> Result<LazyLoadingComments> {
+    pub fn get_comments_from_story(&self, story: &Story) -> Result<LazyLoadingComments> {
         let id = story.id;
 
         let request_url = format!("{}/item/{}.json", HN_OFFICIAL_PREFIX, id);
-        let mut ids = self
+        let ids = self
             .client
             .get(&request_url)
             .call()?
@@ -445,39 +437,11 @@ impl HNClient {
             .kids;
 
         let mut comments = LazyLoadingComments::new(self.clone(), ids);
+
         let cfg = &(get_config().lazy_loading_comments);
         comments.drain(cfg.num_comments_init, true);
         comments.drain(cfg.num_comments_after, false);
         Ok(comments)
-        // let story = if reload {
-        //     self.get_story_from_story_id(id)?
-        // } else {
-        //     story.clone()
-        // };
-
-        // let num_comments = story.num_comments;
-        // let comments = match self.story_caches.read().unwrap().get(&id) {
-        //     Some(story_cache) if story_cache.num_comments == num_comments => {
-        //         Some(story_cache.comments.clone())
-        //     }
-        //     _ => None,
-        // };
-
-        // match comments {
-        //     None => match self.get_comments_from_story_id(id) {
-        //         Ok(comments) => {
-        //             self.story_caches
-        //                 .write()
-        //                 .unwrap()
-        //                 .insert(id, StoryCache::new(comments.clone(), num_comments));
-        //             info!("insert comments of the story (id={}, num_comments={}) into client's story_caches",
-        //                    id, num_comments);
-        //             Ok(comments)
-        //         }
-        //         Err(err) => Err(err),
-        //     },
-        //     Some(comments) => Ok(comments),
-        // }
     }
 
     /// Get all comments from a story with a given id
@@ -496,7 +460,6 @@ impl HNClient {
         let results: ResultT = ids
             .into_par_iter()
             .map(|id| {
-                debug!("comment id: {}", id);
                 let response = self.get_item_from_id::<CommentResponse>(id)?;
                 Ok(response.into())
             })
@@ -510,22 +473,6 @@ impl HNClient {
         });
 
         Ok(oks.into_iter().map(Result::unwrap).collect())
-        // let time = SystemTime::now();
-        // let response = self.get_item_from_id::<StoryResponse>(id)?;
-        // if let Ok(elapsed) = time.elapsed() {
-        //     info!(
-        //         "get comments from story (id={}) took {}ms",
-        //         id,
-        //         elapsed.as_millis()
-        //     );
-        // }
-
-        // Ok(response
-        //     .children
-        //     .into_par_iter()
-        //     .filter(|comment| comment.text.is_some() && comment.author.is_some())
-        //     .map(|comment| comment.into())
-        //     .collect())
     }
 
     /// Get a story based on its id
