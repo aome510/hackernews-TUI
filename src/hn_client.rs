@@ -209,6 +209,10 @@ impl From<StoryResponse> for Story {
     }
 }
 
+/// `LazyLoadingComments` lazily loads comments on demand. It stores
+/// a list of top comment's ids and a comment buffer. On demand, the buffer is
+/// clear and used to load more comments. After that, more comments are
+/// requested in background to reset the comment buffer.
 pub struct LazyLoadingComments {
     client: HNClient,
     ids: Vec<u32>,
@@ -224,7 +228,7 @@ impl LazyLoadingComments {
         }
     }
 
-    /// load all available comments in the current struct and remove them
+    /// load all available comments in the current comment buffer and clear the buffer
     pub fn load_all(&self) -> Vec<Comment> {
         self.comments.write().unwrap().drain(..).collect::<Vec<_>>()
     }
@@ -239,7 +243,6 @@ impl LazyLoadingComments {
         let results: ResultT = ids
             .into_par_iter()
             .map(|id| {
-                debug!("comment id: {}", id);
                 let response = client.get_item_from_id::<CommentResponse>(id)?;
                 Ok(response.into())
             })
@@ -258,9 +261,9 @@ impl LazyLoadingComments {
         });
     }
 
-    /// drain first [size] comment ids from the queue list,
-    /// retrieve comments with those the corresponding ids,
-    /// parameter [block] determines whether the retrieving process blocks
+    /// drains the first `size` comment ids from the queue list,
+    /// then requests comments with the corresponding ids.
+    /// parameter `block` determines whether the retrieving process blocks
     pub fn drain(&mut self, size: usize, block: bool) {
         if self.ids.len() == 0 {
             return;
@@ -441,8 +444,8 @@ impl HNClient {
             .kids;
         match ids.iter().position(|id| *id == focus_top_comment_id) {
             Some(pos) => {
-                // move pos to the beginning
-                // using `reverse` twice with `swap_remove` is not really
+                // move `pos` to the beginning of the list.
+                // using `reverse` twice with `swap_remove` is quite
                 // an inefficient way to do but probably the easiest implementation
                 ids.reverse();
                 ids.swap_remove(pos);

@@ -25,7 +25,6 @@ pub struct Config {
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct LazyLoadingComments {
-    pub enable: bool,
     pub num_comments_init: usize,
     pub num_comments_after: usize,
 }

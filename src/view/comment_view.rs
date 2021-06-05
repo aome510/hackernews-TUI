@@ -85,8 +85,7 @@ impl CommentView {
         comment_view
     }
 
-    /// Load all comments stored in the `lazy_loading_comments`
-    /// to the CommentView
+    /// Load all comments stored in the `lazy_loading_comments`'s buffer
     pub fn load_comments(&mut self) {
         let comments = self.lazy_loading_comments.load_all();
         if comments.is_empty() {

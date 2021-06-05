@@ -29,17 +29,12 @@ article_parse_command = {command = "mercury-parser", options = ["--format", "mar
 # article_parse_command = {command = "article_md", options = []}
 
 [lazy_loading_comments]
-enable = true
+# `lazy_loading_comments` is a feature that loads comments on demand.
+# At first, only `num_comments_init` top comments are requested, and an additional buffer of [num_comments_after]
+# top comments is requested in background. After that, whenever more comments are needed, the comment buffer
+# is used to load comments. A new buffer of `num_comments_after` top comments are requested in background.
 num_comments_init = 5
 num_comments_after = 10
-
-# possible values for allows:
-# - "front_page" -> "Story View - Front Page"
-# - "story" -> "Story View - All Stories"
-# - "ask_hn" -> "Story View - Ask HN"
-# - "show_hn" -> "Story View - Show HN"
-# - "job" -> "Story View - Jobs"
-allows = ["front_page"]
 
 [client]
 # "client_timeout" is the application's client timeout (in seconds) when making an API request
