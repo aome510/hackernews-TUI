@@ -211,7 +211,7 @@ impl From<StoryResponse> for Story {
 
 /// `LazyLoadingComments` lazily loads comments on demand. It stores
 /// a list of top comment's ids and a comment buffer. When more comments are needed,
-/// the buffer is clear to load more comments. Additional comments are
+/// the buffer is clear to load more comments. Additional comments are then
 /// requested in background to reset the comment buffer.
 pub struct LazyLoadingComments {
     client: HNClient,
@@ -460,37 +460,6 @@ impl HNClient {
         comments.drain(cfg.num_comments_init, true);
         comments.drain(cfg.num_comments_after, false);
         Ok(comments)
-    }
-
-    /// Get all comments from a story with a given id
-    pub fn get_comments_from_story_id(&self, id: u32) -> Result<Vec<Comment>> {
-        let request_url = format!("{}/item/{}.json", HN_OFFICIAL_PREFIX, id);
-
-        let ids = self
-            .client
-            .get(&request_url)
-            .call()?
-            .into_json::<HNStoryResponse>()?
-            .kids;
-
-        type ResultT = Vec<Result<Comment>>;
-
-        let results: ResultT = ids
-            .into_par_iter()
-            .map(|id| {
-                let response = self.get_item_from_id::<CommentResponse>(id)?;
-                Ok(response.into())
-            })
-            .collect();
-
-        let (oks, errs): (ResultT, ResultT) =
-            results.into_iter().partition(|result| result.is_ok());
-
-        errs.into_iter().for_each(|err| {
-            warn!("failed to get comment: {:#?}", err);
-        });
-
-        Ok(oks.into_iter().map(Result::unwrap).collect())
     }
 
     /// Get a story based on its id
