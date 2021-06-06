@@ -83,7 +83,7 @@ impl SearchView {
     fn update_view(&mut self) {
         if self.query.read().unwrap().1 {
             let stories = self.stories.read().unwrap().clone();
-            if stories.len() == 0 {
+            if stories.is_empty() {
                 self.mode = SearchViewMode::Search;
             };
 

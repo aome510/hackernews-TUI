@@ -59,7 +59,7 @@ impl StoryView {
                         .collect();
                     prefix.drain(range);
 
-                    if prefix.len() > 0 {
+                    if !prefix.is_empty() {
                         styled_s.append_styled(&prefix, default_style);
                     }
 
@@ -74,7 +74,7 @@ impl StoryView {
                 }
             };
         }
-        if s.len() > 0 {
+        if !s.is_empty() {
             styled_s.append_styled(s, default_style);
         }
         styled_s
@@ -84,7 +84,7 @@ impl StoryView {
     fn get_story_text(story: &hn_client::Story) -> StyledString {
         let mut story_text =
             Self::get_matched_text(story.highlight_result.title.clone(), ColorStyle::default());
-        if story.url.len() > 0 {
+        if !story.url.is_empty() {
             let url = format!("\n{}", story.highlight_result.url);
             story_text.append(Self::get_matched_text(
                 url,
@@ -123,7 +123,7 @@ pub fn get_story_main_view(
         // number parsing
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
             match *e {
-                Event::Char(c) if '0' <= c && c <= '9' => {
+                Event::Char(c) if ('0'..='9').contains(&c) => {
                     s.raw_command.push(c);
                 }
                 _ => {
@@ -171,7 +171,7 @@ pub fn get_story_main_view(
             move |s, _| {
                 let id = s.get_focus_index();
                 let url = s.stories[id].url.clone();
-                if url.len() > 0 {
+                if !url.is_empty() {
                     Some(EventResult::with_cb({
                         move |s| article_view::add_article_view_layer(s, url.clone())
                     }))
@@ -217,7 +217,7 @@ pub fn get_story_view(
     numeric_filters: hn_client::StoryNumericFilters,
 ) -> impl View {
     let starting_id = get_config().client.story_limit.get_story_limit_by_tag(tag) * page;
-    let main_view = get_story_main_view(stories.clone(), client, starting_id).full_height();
+    let main_view = get_story_main_view(stories, client, starting_id).full_height();
 
     let mut view = LinearLayout::vertical()
         .child(get_status_bar_with_desc(desc))

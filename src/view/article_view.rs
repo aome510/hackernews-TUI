@@ -80,7 +80,7 @@ impl Article {
                     } else {
                         link.to_string()
                     };
-                    let desc = if desc.len() == 0 {
+                    let desc = if desc.is_empty() {
                         format!("\"{}\"", shorten_url(&link))
                     } else {
                         desc
@@ -96,7 +96,7 @@ impl Article {
                     prefix.drain(range);
 
                     prefix += prefix_char;
-                    if prefix.len() > 0 {
+                    if !prefix.is_empty() {
                         styled_s.append_plain(
                             md_escape_char_re
                                 .replace_all(&&prefix, "${char}")
@@ -109,7 +109,7 @@ impl Article {
                         Style::from(get_config_theme().link_text.color),
                     );
 
-                    let valid_url = link.len() > 0;
+                    let valid_url = !link.is_empty();
                     styled_s.append_styled(
                         if valid_url {
                             format!("[{}]", links.len())
@@ -122,7 +122,7 @@ impl Article {
                         ),
                     );
 
-                    if link.len() > 0 {
+                    if !link.is_empty() {
                         // valid url
                         links.push(link.to_string());
                     }
@@ -130,7 +130,7 @@ impl Article {
                 }
             }
         }
-        if s.len() > 0 {
+        if !s.is_empty() {
             styled_s.append_plain(md_escape_char_re.replace_all(&s, "${char}").to_string());
         }
         (styled_s, links)
@@ -152,8 +152,10 @@ impl ArticleView {
 
         let desc = format!(
             "by: {}, date_published: {}, word_count: {}\n\n",
-            article.author.unwrap_or("[unknown]".to_string()),
-            article.date_published.unwrap_or("[unknown]".to_string()),
+            article.author.unwrap_or_else(|| "[unknown]".to_string()),
+            article
+                .date_published
+                .unwrap_or_else(|| "[unknown]".to_string()),
             if article.word_count > 1 {
                 article.word_count.to_string()
             } else {
@@ -192,7 +194,7 @@ impl ArticleView {
 }
 
 /// Construct a help dialog from a list of URLs
-pub fn get_link_dialog(links: &Vec<String>) -> impl View {
+pub fn get_link_dialog(links: &[String]) -> impl View {
     let article_view_keymap = get_article_view_keymap().clone();
 
     let links_view = OnEventView::new(LinearLayout::vertical().with(|v| {
@@ -218,7 +220,7 @@ pub fn get_link_dialog(links: &Vec<String>) -> impl View {
         Some(EventResult::Consumed(None))
     })
     .on_pre_event_inner(article_view_keymap.open_link_in_browser, {
-        let links = links.clone();
+        let links = links.to_owned();
         move |s, _| {
             let focus_id = s.get_focus_index();
             open_url_in_browser(&links[focus_id]);
@@ -226,7 +228,7 @@ pub fn get_link_dialog(links: &Vec<String>) -> impl View {
         }
     })
     .on_pre_event_inner(article_view_keymap.open_link_in_article_view, {
-        let links = links.clone();
+        let links = links.to_owned();
         move |s, _| {
             let focus_id = s.get_focus_index();
             let url = links[focus_id].clone();
@@ -262,7 +264,7 @@ pub fn get_article_main_view(article: Article, raw_md: bool) -> OnEventView<Arti
     OnEventView::new(ArticleView::new(article, raw_md))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
             match *e {
-                Event::Char(c) if '0' <= c && c <= '9' => {
+                Event::Char(c) if ('0'..='9').contains(&c) => {
                     s.raw_command.push(c);
                 }
                 _ => {
@@ -306,7 +308,9 @@ pub fn get_article_main_view(article: Article, raw_md: bool) -> OnEventView<Arti
         .on_pre_event_inner(article_view_keymap.open_link_dialog, |s, _| {
             Some(EventResult::with_cb({
                 let links = s.links.clone();
-                move |s| s.add_layer(get_link_dialog(&links))
+                move |s| {
+                    s.add_layer(get_link_dialog(&links));
+                }
             }))
         })
         .on_pre_event_inner(article_view_keymap.open_link_in_browser, |s, _| {

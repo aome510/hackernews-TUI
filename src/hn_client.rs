@@ -8,11 +8,11 @@ use std::{sync::Arc, sync::RwLock};
 
 use crate::prelude::*;
 
-const HN_ALGOLIA_PREFIX: &'static str = "https://hn.algolia.com/api/v1";
-const HN_OFFICIAL_PREFIX: &'static str = "https://hacker-news.firebaseio.com/v0";
-const HN_SEARCH_QUERY_STRING: &'static str =
+const HN_ALGOLIA_PREFIX: &str = "https://hn.algolia.com/api/v1";
+const HN_OFFICIAL_PREFIX: &str = "https://hacker-news.firebaseio.com/v0";
+const HN_SEARCH_QUERY_STRING: &str =
     "tags=story&restrictSearchableAttributes=title,url&typoTolerance=false";
-pub const HN_HOST_URL: &'static str = "https://news.ycombinator.com";
+pub const HN_HOST_URL: &str = "https://news.ycombinator.com";
 
 // serde helper functions
 
@@ -199,7 +199,7 @@ impl From<StoryResponse> for Story {
         Story {
             title: s.title.unwrap(),
             url: s.url.unwrap_or_default(),
-            author: s.author.unwrap_or(String::from("[deleted]")),
+            author: s.author.unwrap_or_else(|| String::from("[deleted]")),
             id: s.id,
             points: s.points,
             num_comments: s.num_comments,
@@ -265,7 +265,7 @@ impl LazyLoadingComments {
     /// then request comments with the corresponding ids.
     /// parameter `block` determines whether the retrieving process should happen in background
     pub fn drain(&mut self, size: usize, block: bool) {
-        if self.ids.len() == 0 {
+        if self.ids.is_empty() {
             return;
         }
 
@@ -386,7 +386,7 @@ impl StoryNumericFilters {
             self.points_interval.query("points"),
             self.num_comments_interval.query("num_comments")
         );
-        if query.len() > 0 {
+        if !query.is_empty() {
             query.remove(0); // remove trailing ,
             format!("&numericFilters={}", query)
         } else {
@@ -442,16 +442,13 @@ impl HNClient {
             .call()?
             .into_json::<HNStoryResponse>()?
             .kids;
-        match ids.iter().position(|id| *id == focus_top_comment_id) {
-            Some(pos) => {
-                // move `pos` to the beginning of the list.
-                // using `reverse` twice with `swap_remove` is quite
-                // an inefficient way to achieve the above but probably the easiest
-                ids.reverse();
-                ids.swap_remove(pos);
-                ids.reverse();
-            }
-            None => {}
+        if let Some(pos) = ids.iter().position(|id| *id == focus_top_comment_id) {
+            // move `pos` to the beginning of the list.
+            // using `reverse` twice with `swap_remove` is quite
+            // an inefficient way to achieve the above but probably the easiest
+            ids.reverse();
+            ids.swap_remove(pos);
+            ids.reverse();
         };
 
         let mut comments = LazyLoadingComments::new(self.clone(), ids);

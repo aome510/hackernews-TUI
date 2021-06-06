@@ -73,7 +73,7 @@ macro_rules! impl_scrollable_list {
 
         fn set_focus_index(&mut self, id: usize) -> Option<EventResult> {
             let current_id = self.get_focus_index();
-            let direction = if (current_id <= id) { true } else { false };
+            let direction = (current_id <= id);
             let linear_layout = self.get_inner_mut().get_inner_mut();
 
             match linear_layout.set_focus_index(id) {

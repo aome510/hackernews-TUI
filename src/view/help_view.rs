@@ -38,7 +38,7 @@ impl HelpView {
         })
     }
 
-    fn construct_keys_view(keys: &Vec<(String, String)>) -> impl View {
+    fn construct_keys_view(keys: &[(String, String)]) -> impl View {
         let max_key_len = match keys.iter().max_by_key(|key| key.0.len()) {
             None => 0,
             Some(key) => key.0.len(),
@@ -78,7 +78,7 @@ impl HelpView {
             .max_height(32)
     }
 
-    pub fn to_keys<X: Display, Y: Display>(keys: Vec<(X, Y)>) -> Vec<(String, String)> {
+    pub fn process_keys<X: Display, Y: Display>(keys: Vec<(X, Y)>) -> Vec<(String, String)> {
         keys.into_iter()
             .map(|(key, desc)| (key.to_string(), desc.to_string()))
             .collect()
@@ -91,12 +91,18 @@ impl HelpView {
     ) -> Self {
         let mut key_groups: Vec<(&'static str, Vec<(String, String)>)> = key_groups
             .into_iter()
-            .map(|(group_desc, keys)| (group_desc, Self::to_keys(keys)))
+            .map(|(group_desc, keys)| (group_desc, Self::process_keys(keys)))
             .collect();
         self.key_groups.append(&mut key_groups);
         let view = self.construct_key_groups_view();
         self.view.get_inner_mut().set_content(view);
         self
+    }
+}
+
+impl Default for HelpView {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -236,7 +242,7 @@ impl HasHelpView for StoryView {
                 ],
             ),
         ]);
-        if custom_keymaps.len() > 0 {
+        if !custom_keymaps.is_empty() {
             help_view = help_view.key_groups(vec![("Custom keymaps", custom_keymaps)]);
         }
         help_view.key_groups(vec![

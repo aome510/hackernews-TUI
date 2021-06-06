@@ -112,7 +112,7 @@ impl CommentView {
     }
 
     fn decode_html(s: &str) -> String {
-        htmlescape::decode_html(s).unwrap_or(s.to_string())
+        htmlescape::decode_html(s).unwrap_or_else(|_| s.to_string())
     }
 
     /// Parse a comment in HTML text style to markdown text style (with colors)
@@ -152,7 +152,7 @@ impl CommentView {
                         .collect();
                     prefix.drain(range);
 
-                    if prefix.len() > 0 {
+                    if !prefix.is_empty() {
                         styled_s.append_plain(Self::decode_html(&prefix));
                     }
 
@@ -172,7 +172,7 @@ impl CommentView {
                 }
             }
         }
-        if s.len() > 0 {
+        if !s.is_empty() {
             styled_s.append_plain(Self::decode_html(&s));
         }
         (styled_s, links)
@@ -180,7 +180,7 @@ impl CommentView {
 
     /// Parse comments recursively into readable texts with styles and colors
     fn parse_comments(
-        comments: &Vec<hn_client::Comment>,
+        comments: &[hn_client::Comment],
         height: usize,
         top_comment_id: u32,
     ) -> Vec<Comment> {
@@ -254,7 +254,7 @@ fn get_comment_main_view(
     OnEventView::new(CommentView::new(story.clone(), comments, focus_id))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
             match *e {
-                Event::Char(c) if '0' <= c && c <= '9' => {
+                Event::Char(c) if ('0'..='9').contains(&c) => {
                     s.raw_command.push(c);
                 }
                 _ => {
@@ -432,7 +432,7 @@ pub fn get_comment_view(
             {
                 let url = story.url.clone();
                 move |s| {
-                    if url.len() > 0 {
+                    if !url.is_empty() {
                         article_view::add_article_view_layer(s, url.clone())
                     }
                 }

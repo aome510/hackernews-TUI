@@ -106,7 +106,7 @@ pub fn get_story_view_desc_by_tag(tag: &str) -> String {
 
 /// open a given url using a specific command
 pub fn open_url_in_browser(url: &str) {
-    if url.len() == 0 {
+    if url.is_empty() {
         return;
     }
 
