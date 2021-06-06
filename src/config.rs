@@ -219,7 +219,7 @@ static CONFIG: OnceCell<Config> = OnceCell::new();
 pub fn init_config(config: Config) {
     CONFIG.set(config).unwrap_or_else(|_| {
         panic!("failed to set up the application's configurations");
-    })
+    });
 }
 
 pub fn get_config() -> &'static Config {

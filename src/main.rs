@@ -160,6 +160,10 @@ fn run() {
         config_theme.update_theme(theme);
     });
 
+    // setup HN Client
+    let client = hn_client::HNClient::new().unwrap();
+    hn_client::init_client(client);
+
     let client = hn_client::get_client();
     set_up_global_callbacks(&mut s, client);
 

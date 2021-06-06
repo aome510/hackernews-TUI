@@ -640,6 +640,12 @@ impl HNClient {
     }
 }
 
+pub fn init_client(client: HNClient) {
+    HN_CLIENT.set(client).unwrap_or_else(|_| {
+        panic!("failed to set up the application's HackerNews Client");
+    });
+}
+
 pub fn get_client() -> &'static HNClient {
     &HN_CLIENT.get().unwrap()
 }
