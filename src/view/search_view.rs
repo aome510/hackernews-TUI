@@ -104,7 +104,7 @@ impl SearchView {
 
         let cb_sink = self.cb_sink.clone();
 
-        let client = self.client.clone();
+        let client = self.client;
         let query = self.query.read().unwrap().0.clone();
         let by_date = self.by_date;
         let page = self.page;

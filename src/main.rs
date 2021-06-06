@@ -161,10 +161,7 @@ fn run() {
     });
 
     // setup HN Client
-    let client = hn_client::HNClient::new().unwrap();
-    hn_client::init_client(client);
-
-    let client = hn_client::get_client();
+    let client = hn_client::init_client();
     set_up_global_callbacks(&mut s, client);
 
     story_view::add_story_view_layer(
