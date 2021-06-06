@@ -11,15 +11,10 @@ use super::keybindings::*;
 pub struct Config {
     pub page_scrolling: bool,
     pub scroll_offset: usize,
-
     pub url_open_command: String,
     pub article_parse_command: ArticleParseCommand,
-
-    pub lazy_loading_comments: LazyLoadingComments,
-
     pub client: Client,
     pub theme: Theme,
-
     pub keymap: KeyMap,
 }
 
@@ -48,6 +43,7 @@ pub struct StoryLimit {
 #[derive(Debug, Deserialize)]
 pub struct Client {
     pub story_limit: StoryLimit,
+    pub lazy_loading_comments: LazyLoadingComments,
     pub client_timeout: u64,
 }
 
@@ -184,19 +180,16 @@ impl Default for Config {
         Config {
             page_scrolling: true,
             scroll_offset: 3,
-
             url_open_command: "xdg-open".to_string(),
             article_parse_command: ArticleParseCommand {
                 command: "mercury-parser".to_string(),
                 options: vec!["--format".to_string(), "markdown".to_string()],
             },
-
-            lazy_loading_comments: LazyLoadingComments {
-                num_comments_init: 5,
-                num_comments_after: 10,
-            },
-
             client: Client {
+                lazy_loading_comments: LazyLoadingComments {
+                    num_comments_init: 5,
+                    num_comments_after: 10,
+                },
                 story_limit: StoryLimit {
                     search: 10,
                     front_page: 20,
@@ -208,7 +201,6 @@ impl Default for Config {
                 client_timeout: 32,
             },
             theme: Theme::default(),
-
             keymap: KeyMap::default(),
         }
     }

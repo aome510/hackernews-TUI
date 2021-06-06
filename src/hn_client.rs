@@ -454,7 +454,7 @@ impl HNClient {
 
         let mut comments = LazyLoadingComments::new(self.clone(), ids);
 
-        let cfg = &(get_config().lazy_loading_comments);
+        let cfg = &(get_config().client.lazy_loading_comments);
         comments.drain(cfg.num_comments_init, true);
         comments.drain(cfg.num_comments_after, false);
         Ok(comments)
