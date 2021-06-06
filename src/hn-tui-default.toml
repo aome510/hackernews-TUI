@@ -1,22 +1,22 @@
-# "page_scrolling" is a feature that enables page-like behavior when navigating.
-# The application will automatically adjust the View based on the scrolling direction.
+# `page_scrolling` is a feature that enables page-like behavior when scrolling.
+# It is used to automatically adjust the view based on the scrolling direction.
 page_scrolling = true
 
-# "scroll_offset" denotes the scrolling speed.
-# **Note**: this behavior only applies to customizable scrolling shortcuts
+# `scroll_offset` defines the scrolling speed.
+# **Note**: this behavior only applies to scrolling shortcuts
 # defined in the [user-defined key bindings] section
 scroll_offset = 3
 
-# "url_open_command" is a terminal command used to open url in browser
+# `url_open_command` is a terminal command used to open url in browser
 url_open_command = "xdg-open"
 
-# "article_parse_command" defines a command to parse a web article's content
-# to a markdown format. The parsed data is then used to render `ArticleView`
+# `article_parse_command` defines a command to parse a web article's content
+# to a markdown format. The parsed data is then used to render a `ArticleView`
 # of the corresponding article.
 #
 # The command must have the following form:
-# [article_parse_command] [options...] [article_url]
-# It should return a JSON string representing the parsed Article data:
+# `[article_parse_command] [options...] [article_url]`
+# It should return a JSON string representing the parsed `Article` data:
 # pub struct Article {
 #     title: String,
 #     url: String,
@@ -36,12 +36,12 @@ num_comments_init = 5
 num_comments_after = 10
 
 [client]
-# "client_timeout" is the application's client timeout (in seconds) when making an API request
+# `client_timeout` is the application's client timeout (in seconds) when making an API request
 client_timeout = 32
 
 [client.story_limit]
-# "story_limit" stores the number of maximum stories displayed in a page in each View
-# fields of "story_limit"
+# `story_limit` stores the number of maximum stories displayed in a page in each View
+# fields of `story_limit`
 # - "search" -> "Search View"
 # - "front_page" -> "Story View - Front Page"
 # - "story" -> "Story View - All Stories"
@@ -75,12 +75,12 @@ highlight = "#6c6c6c"
 highlight_inactive = "#0000ff"
 highlight_text = "#c3bbbb"
 
-# "additional" colors defined by the application
-# "link_text" is a text color for a URL
-# "link_id" is a background color for `link_id` in CommentView
-# "search_highlight_bg" is a background color for matched search
-# "status_bar_bg" is a background color for the status bar
-# "code_block_bg" is a background color for a code block
+# additional colors defined by the application
+# `link_text` is a text color for a URL
+# `link_id` is a background color for `link_id` in CommentView
+# `search_highlight_bg` is a background color for matched search
+# `status_bar_bg` is a background color for the status bar
+# `code_block_bg` is a background color for a code block
 link_text = "#4fbbfd"
 link_id_bg = "#ffff00"
 search_highlight_bg = "#ffff00"
@@ -155,9 +155,9 @@ toggle_raw_markdown_mode = "T"
 # custom keymap
 # ---------------------
 
-# "custom_view_navigation" is used to define custom shortcuts
+# `custom_view_navigation` is used to define custom shortcuts
 # to navigate to a `StoryView` with stories filtered by certain conditions.
-# Below is an example of defining two custom shortcuts using "custom_view_navigation".
+# Below is an example of defining two custom shortcuts using `custom_view_navigation`.
 #
 # [[keymap.custom_keymap.custom_view_navigation]]
 # key = "M-1"
