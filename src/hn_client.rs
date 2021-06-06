@@ -1,3 +1,4 @@
+use once_cell::sync::OnceCell;
 use rayon::prelude::*;
 use serde::{de, Deserialize, Deserializer};
 use std::{
@@ -13,6 +14,8 @@ const HN_OFFICIAL_PREFIX: &str = "https://hacker-news.firebaseio.com/v0";
 const HN_SEARCH_QUERY_STRING: &str =
     "tags=story&restrictSearchableAttributes=title,url&typoTolerance=false";
 pub const HN_HOST_URL: &str = "https://news.ycombinator.com";
+
+static HN_CLIENT: OnceCell<HNClient> = OnceCell::new();
 
 // serde helper functions
 
@@ -427,15 +430,13 @@ impl HNClient {
         Ok(item)
     }
 
-    /// Get all comments from a story.
+    /// Get all comments from a story with a given id.
     pub fn get_comments_from_story(
         &self,
-        story: &Story,
+        story_id: u32,
         focus_top_comment_id: u32,
     ) -> Result<LazyLoadingComments> {
-        let id = story.id;
-
-        let request_url = format!("{}/item/{}.json", HN_OFFICIAL_PREFIX, id);
+        let request_url = format!("{}/item/{}.json", HN_OFFICIAL_PREFIX, story_id);
         let mut ids = self
             .client
             .get(&request_url)
@@ -635,4 +636,14 @@ impl HNClient {
 
         Ok(response.parse_into_stories())
     }
+}
+
+pub fn init_client(client: HNClient) {
+    HN_CLIENT.set(client).unwrap_or_else(|_| {
+        panic!("failed to set up the application's HackerNews Client");
+    });
+}
+
+pub fn get_client() -> &'static HNClient {
+    &HN_CLIENT.get().unwrap()
 }

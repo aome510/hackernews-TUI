@@ -53,8 +53,8 @@ impl HelpView {
                 .with(|s| {
                     keys.iter().for_each(|(key, desc)| {
                         s.add_child(HelpView::construct_key_view(
-                            key.clone(),
-                            desc.clone(),
+                            key.to_owned(),
+                            desc.to_owned(),
                             max_key_len + 1,
                         ));
                     });

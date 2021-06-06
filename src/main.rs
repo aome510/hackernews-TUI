@@ -9,7 +9,7 @@ pub mod view;
 use clap::*;
 use prelude::*;
 
-fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
+fn set_up_global_callbacks(s: &mut Cursive, client: &'static hn_client::HNClient) {
     s.clear_global_callbacks(Event::CtrlChar('c'));
 
     let global_keymap = get_global_keymap().clone();
@@ -18,79 +18,64 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
     // global shortcuts for switching between different Story Views
     // .............................................................
 
-    s.set_on_post_event(global_keymap.goto_front_page_view, {
-        let client = client.clone();
-        move |s| {
-            story_view::add_story_view_layer(
-                s,
-                &client,
-                "front_page",
-                false,
-                0,
-                hn_client::StoryNumericFilters::default(),
-                false,
-            );
-        }
+    s.set_on_post_event(global_keymap.goto_front_page_view, move |s| {
+        story_view::add_story_view_layer(
+            s,
+            client,
+            "front_page",
+            false,
+            0,
+            hn_client::StoryNumericFilters::default(),
+            false,
+        );
     });
 
-    s.set_on_post_event(global_keymap.goto_all_stories_view, {
-        let client = client.clone();
-        move |s| {
-            story_view::add_story_view_layer(
-                s,
-                &client,
-                "story",
-                true,
-                0,
-                hn_client::StoryNumericFilters::default(),
-                false,
-            );
-        }
+    s.set_on_post_event(global_keymap.goto_all_stories_view, move |s| {
+        story_view::add_story_view_layer(
+            s,
+            client,
+            "story",
+            true,
+            0,
+            hn_client::StoryNumericFilters::default(),
+            false,
+        );
     });
 
-    s.set_on_post_event(global_keymap.goto_ask_hn_view, {
-        let client = client.clone();
-        move |s| {
-            story_view::add_story_view_layer(
-                s,
-                &client,
-                "ask_hn",
-                true,
-                0,
-                hn_client::StoryNumericFilters::default(),
-                false,
-            );
-        }
+    s.set_on_post_event(global_keymap.goto_ask_hn_view, move |s| {
+        story_view::add_story_view_layer(
+            s,
+            client,
+            "ask_hn",
+            true,
+            0,
+            hn_client::StoryNumericFilters::default(),
+            false,
+        );
     });
 
-    s.set_on_post_event(global_keymap.goto_show_hn_view, {
-        let client = client.clone();
-        move |s| {
-            story_view::add_story_view_layer(
-                s,
-                &client,
-                "show_hn",
-                true,
-                0,
-                hn_client::StoryNumericFilters::default(),
-                false,
-            );
-        }
+    s.set_on_post_event(global_keymap.goto_show_hn_view, move |s| {
+        story_view::add_story_view_layer(
+            s,
+            client,
+            "show_hn",
+            true,
+            0,
+            hn_client::StoryNumericFilters::default(),
+            false,
+        );
     });
 
-    s.set_on_post_event(global_keymap.goto_jobs_view, {
-        let client = client.clone();
-        move |s| {
-            story_view::add_story_view_layer(
-                s,
-                &client,
-                "job",
-                true,
-                0,
-                hn_client::StoryNumericFilters::default(),
-                false,
-            );
-        }
+    s.set_on_post_event(global_keymap.goto_jobs_view, move |s| {
+        story_view::add_story_view_layer(
+            s,
+            client,
+            "job",
+            true,
+            0,
+            hn_client::StoryNumericFilters::default(),
+            false,
+        );
     });
 
     // custom navigation shortcuts
@@ -99,11 +84,10 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
         .custom_view_navigation
         .iter()
         .for_each(|data| {
-            let client = client.clone();
             s.set_on_post_event(data.key.clone(), move |s| {
                 story_view::add_story_view_layer(
                     s,
-                    &client,
+                    client,
                     &data.tag,
                     if data.tag == "front_page" {
                         false
@@ -127,11 +111,8 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &hn_client::HNClient) {
         }
     });
 
-    s.set_on_post_event(global_keymap.goto_search_view, {
-        let client = client.clone();
-        move |s| {
-            search_view::add_search_view_layer(s, &client);
-        }
+    s.set_on_post_event(global_keymap.goto_search_view, move |s| {
+        search_view::add_search_view_layer(s, client);
     });
 
     s.set_on_post_event(global_keymap.open_help_dialog, |s| {
@@ -179,12 +160,16 @@ fn run() {
         config_theme.update_theme(theme);
     });
 
+    // setup HN Client
     let client = hn_client::HNClient::new().unwrap();
-    set_up_global_callbacks(&mut s, &client);
+    hn_client::init_client(client);
+
+    let client = hn_client::get_client();
+    set_up_global_callbacks(&mut s, client);
 
     story_view::add_story_view_layer(
         &mut s,
-        &client,
+        client,
         "front_page",
         false,
         0,

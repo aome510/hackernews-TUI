@@ -26,8 +26,8 @@ pub struct Article {
 }
 
 impl Article {
-    pub fn update_url(&mut self, url: String) {
-        self.url = url;
+    pub fn update_url(&mut self, url: &str) {
+        self.url = url.to_owned();
     }
 }
 
@@ -233,7 +233,7 @@ pub fn get_link_dialog(links: &[String]) -> impl View {
             let focus_id = s.get_focus_index();
             let url = links[focus_id].clone();
             Some(EventResult::with_cb({
-                move |s| add_article_view_layer(s, url.clone())
+                move |s| add_article_view_layer(s, &url)
             }))
         }
     })
@@ -333,7 +333,7 @@ pub fn get_article_main_view(article: Article, raw_md: bool) -> OnEventView<Arti
                     if num < s.links.len() {
                         let url = s.links[num].clone();
                         Some(EventResult::with_cb({
-                            move |s| add_article_view_layer(s, url.clone())
+                            move |s| add_article_view_layer(s, &url)
                         }))
                     } else {
                         Some(EventResult::Consumed(None))
@@ -376,7 +376,7 @@ pub fn get_article_view(article: Article, raw_md: bool) -> impl View {
 }
 
 /// Add a ArticleView as a new layer to the main Cursive View
-pub fn add_article_view_layer(s: &mut Cursive, url: String) {
+pub fn add_article_view_layer(s: &mut Cursive, url: &str) {
     let async_view = async_view::get_article_view_async(s, url);
     s.screen_mut().add_transparent_layer(Layer::new(async_view))
 }
