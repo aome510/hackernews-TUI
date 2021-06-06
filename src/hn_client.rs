@@ -430,15 +430,13 @@ impl HNClient {
         Ok(item)
     }
 
-    /// Get all comments from a story.
+    /// Get all comments from a story with a given id.
     pub fn get_comments_from_story(
         &self,
-        story: &Story,
+        story_id: u32,
         focus_top_comment_id: u32,
     ) -> Result<LazyLoadingComments> {
-        let id = story.id;
-
-        let request_url = format!("{}/item/{}.json", HN_OFFICIAL_PREFIX, id);
+        let request_url = format!("{}/item/{}.json", HN_OFFICIAL_PREFIX, story_id);
         let mut ids = self
             .client
             .get(&request_url)

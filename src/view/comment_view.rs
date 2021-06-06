@@ -117,13 +117,13 @@ impl CommentView {
 
     /// Parse a comment in HTML text style to markdown text style (with colors)
     fn parse_single_comment(
-        s: String,
+        s: &str,
         paragraph_re: &Regex,
         italic_re: &Regex,
         code_re: &Regex,
         link_re: &Regex,
     ) -> (StyledString, Vec<String>) {
-        let mut s = paragraph_re.replace_all(&s, "${paragraph}\n\n").to_string();
+        let mut s = paragraph_re.replace_all(s, "${paragraph}\n\n").to_string();
         if s.ends_with("\n\n") {
             s.remove(s.len() - 1);
         }
@@ -209,7 +209,7 @@ impl CommentView {
                 );
 
                 let (comment_content, links) = Self::parse_single_comment(
-                    comment.text.clone(),
+                    &comment.text,
                     &paragraph_re,
                     &italic_re,
                     &code_re,
@@ -366,7 +366,7 @@ fn get_comment_main_view(
                     if num < s.comments[id].links.len() {
                         let url = s.comments[id].links[num].clone();
                         Some(EventResult::with_cb({
-                            move |s| article_view::add_article_view_layer(s, url.clone())
+                            move |s| article_view::add_article_view_layer(s, &url)
                         }))
                     } else {
                         Some(EventResult::Consumed(None))
@@ -429,7 +429,7 @@ pub fn get_comment_view(
                 let url = story.url.clone();
                 move |s| {
                     if !url.is_empty() {
-                        article_view::add_article_view_layer(s, url.clone())
+                        article_view::add_article_view_layer(s, &url)
                     }
                 }
             },

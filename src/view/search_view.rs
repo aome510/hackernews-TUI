@@ -57,7 +57,7 @@ impl SearchView {
     }
 
     fn get_search_view(
-        mode: SearchViewMode,
+        mode: &SearchViewMode,
         query: &str,
         by_date: bool,
         page: usize,
@@ -87,7 +87,7 @@ impl SearchView {
             };
 
             self.view = Self::get_search_view(
-                self.mode.clone(),
+                &self.mode,
                 &self.query.read().unwrap().0,
                 self.by_date,
                 self.page,
@@ -201,7 +201,7 @@ impl SearchView {
     }
 
     pub fn new(client: &'static hn_client::HNClient, cb_sink: CbSink) -> Self {
-        let view = Self::get_search_view(SearchViewMode::Search, "", false, 0, vec![], client);
+        let view = Self::get_search_view(&SearchViewMode::Search, "", false, 0, vec![], client);
         let stories = Arc::new(RwLock::new(vec![]));
         let query = Arc::new(RwLock::new((String::new(), false)));
         SearchView {

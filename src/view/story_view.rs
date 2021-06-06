@@ -169,7 +169,7 @@ pub fn get_story_main_view(
                 let url = s.stories[id].url.clone();
                 if !url.is_empty() {
                     Some(EventResult::with_cb({
-                        move |s| article_view::add_article_view_layer(s, url.clone())
+                        move |s| article_view::add_article_view_layer(s, &url)
                     }))
                 } else {
                     Some(EventResult::Consumed(None))
