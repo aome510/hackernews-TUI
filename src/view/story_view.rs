@@ -111,7 +111,7 @@ impl StoryView {
 /// The main view of a StoryView is a View without status bar or footer.
 pub fn get_story_main_view(
     stories: Vec<hn_client::Story>,
-    client: &hn_client::HNClient,
+    client: &'static hn_client::HNClient,
     starting_id: usize,
 ) -> OnEventView<StoryView> {
     let story_view_keymap = get_story_view_keymap().clone();
@@ -147,18 +147,14 @@ pub fn get_story_main_view(
             let id = s.get_focus_index();
             s.set_focus_index(id + 1)
         })
-        .on_pre_event_inner(story_view_keymap.goto_story_comment_view, {
-            let client = client.clone();
-            move |s, _| {
-                let id = s.get_focus_index();
-                // the story struct hasn't had any comments inside yet,
-                // so it can be cloned without greatly affecting performance
-                let story = s.stories[id].clone();
-                Some(EventResult::with_cb({
-                    let client = client.clone();
-                    move |s| comment_view::add_comment_view_layer(s, &client, &story, (0, 0), false)
-                }))
-            }
+        .on_pre_event_inner(story_view_keymap.goto_story_comment_view, move |s, _| {
+            let id = s.get_focus_index();
+            // the story struct hasn't had any comments inside yet,
+            // so it can be cloned without greatly affecting performance
+            let story = s.stories[id].clone();
+            Some(EventResult::with_cb({
+                move |s| comment_view::add_comment_view_layer(s, client, &story, (0, 0), false)
+            }))
         })
         // open external link shortcuts
         .on_pre_event_inner(story_view_keymap.open_article_in_browser, move |s, _| {
@@ -210,7 +206,7 @@ pub fn get_story_main_view(
 pub fn get_story_view(
     desc: &str,
     stories: Vec<hn_client::Story>,
-    client: &hn_client::HNClient,
+    client: &'static hn_client::HNClient,
     tag: &'static str,
     by_date: bool,
     page: usize,
@@ -232,37 +228,28 @@ pub fn get_story_view(
             s.add_layer(StoryView::construct_help_view())
         })
         // toggle sort_by
-        .on_event(story_view_keymap.toggle_sort_by, {
-            let client = client.clone();
-            move |s| {
-                // disable "search_by_date" for front_page stories
-                if tag == "front_page" {
-                    return;
-                }
-                add_story_view_layer(s, &client, tag, !by_date, page, numeric_filters, true);
+        .on_event(story_view_keymap.toggle_sort_by, move |s| {
+            // disable "search_by_date" for front_page stories
+            if tag == "front_page" {
+                return;
             }
+            add_story_view_layer(s, client, tag, !by_date, page, numeric_filters, true);
         })
         // paging
-        .on_event(story_view_keymap.prev_page, {
-            let client = client.clone();
-            move |s| {
-                if page > 0 {
-                    add_story_view_layer(s, &client, tag, by_date, page - 1, numeric_filters, true);
-                }
+        .on_event(story_view_keymap.prev_page, move |s| {
+            if page > 0 {
+                add_story_view_layer(s, client, tag, by_date, page - 1, numeric_filters, true);
             }
         })
-        .on_event(story_view_keymap.next_page, {
-            let client = client.clone();
-            move |s| {
-                add_story_view_layer(s, &client, tag, by_date, page + 1, numeric_filters, true);
-            }
+        .on_event(story_view_keymap.next_page, move |s| {
+            add_story_view_layer(s, client, tag, by_date, page + 1, numeric_filters, true);
         })
 }
 
 /// Add a StoryView as a new layer to the main Cursive View
 pub fn add_story_view_layer(
     s: &mut Cursive,
-    client: &hn_client::HNClient,
+    client: &'static hn_client::HNClient,
     tag: &'static str,
     by_date: bool,
     page: usize,

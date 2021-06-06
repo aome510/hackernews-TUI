@@ -8,7 +8,7 @@ use cursive_async_view::AsyncView;
 /// with a loading screen when loading data
 pub fn get_comment_view_async(
     siv: &mut Cursive,
-    client: &hn_client::HNClient,
+    client: &'static hn_client::HNClient,
     story: &hn_client::Story,
     focus_id: (u32, u32),
 ) -> impl View {
@@ -17,7 +17,6 @@ pub fn get_comment_view_async(
     AsyncView::new_with_bg_creator(
         siv,
         {
-            let client = client.clone();
             let story = story.clone();
             move || match client.get_comments_from_story(&story, focus_id.0) {
                 Ok(comments) => Ok(Ok(comments)),
@@ -31,12 +30,11 @@ pub fn get_comment_view_async(
             }
         },
         {
-            let client = client.clone();
             let story = story.clone();
             move |result| {
                 ErrorViewWrapper::new(match result {
                     Ok(comments) => ErrorViewEnum::Ok(comment_view::get_comment_view(
-                        &story, comments, &client, focus_id.1,
+                        &story, comments, client, focus_id.1,
                     )),
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
                         &format!("failed to get comments from story (id={}):", id),
@@ -53,7 +51,7 @@ pub fn get_comment_view_async(
 /// Return an async view wrapping StoryView with a loading screen when loading data
 pub fn get_story_view_async(
     siv: &mut Cursive,
-    client: &hn_client::HNClient,
+    client: &'static hn_client::HNClient,
     tag: &'static str,
     by_date: bool,
     page: usize,
@@ -61,41 +59,35 @@ pub fn get_story_view_async(
 ) -> impl View {
     AsyncView::new_with_bg_creator(
         siv,
-        {
-            let client = client.clone();
-            move || match client.get_stories_by_tag(tag, by_date, page, numeric_filters) {
-                Ok(stories) => Ok(Ok(stories)),
-                Err(err) => {
-                    warn!(
-                        "failed to get stories (tag={}, by_date={}, page={}): {:#?}\nRetrying...",
-                        err, tag, by_date, page
-                    );
-                    Ok(client.get_stories_by_tag(tag, by_date, page, numeric_filters))
-                }
+        move || match client.get_stories_by_tag(tag, by_date, page, numeric_filters) {
+            Ok(stories) => Ok(Ok(stories)),
+            Err(err) => {
+                warn!(
+                    "failed to get stories (tag={}, by_date={}, page={}): {:#?}\nRetrying...",
+                    err, tag, by_date, page
+                );
+                Ok(client.get_stories_by_tag(tag, by_date, page, numeric_filters))
             }
         },
-        {
-            let client = client.clone();
-            move |result| {
-                ErrorViewWrapper::new(match result {
-                    Ok(stories) => ErrorViewEnum::Ok(story_view::get_story_view(
-                        &get_story_view_desc_by_tag(tag),
-                        stories,
-                        &client,
-                        tag,
-                        by_date,
-                        page,
-                        numeric_filters,
-                    )),
-                    Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
-                        &format!(
-                            "failed to get stories (tag={}, by_date={}, page={}):",
-                            tag, by_date, page
-                        ),
-                        &err.to_string(),
-                    )),
-                })
-            }
+        move |result| {
+            ErrorViewWrapper::new(match result {
+                Ok(stories) => ErrorViewEnum::Ok(story_view::get_story_view(
+                    &get_story_view_desc_by_tag(tag),
+                    stories,
+                    client,
+                    tag,
+                    by_date,
+                    page,
+                    numeric_filters,
+                )),
+                Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
+                    &format!(
+                        "failed to get stories (tag={}, by_date={}, page={}):",
+                        tag, by_date, page
+                    ),
+                    &err.to_string(),
+                )),
+            })
         },
     )
     .align_center()

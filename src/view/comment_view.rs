@@ -239,10 +239,9 @@ impl CommentView {
 fn get_comment_main_view(
     story: &hn_client::Story,
     comments: hn_client::LazyLoadingComments,
-    client: &hn_client::HNClient,
+    client: &'static hn_client::HNClient,
     focus_id: u32,
 ) -> impl View {
-    let client = client.clone();
     let comment_view_keymap = get_comment_view_keymap().clone();
 
     let is_suffix_key = |c: &Event| -> bool {
@@ -380,9 +379,8 @@ fn get_comment_main_view(
             let comment = &s.comments[s.get_focus_index()];
             let focus_id = (comment.top_comment_id, comment.id);
             Some(EventResult::with_cb({
-                let client = client.clone();
                 let story = s.story.clone();
-                move |s| add_comment_view_layer(s, &client, &story, focus_id, true)
+                move |s| add_comment_view_layer(s, client, &story, focus_id, true)
             }))
         })
         .on_pre_event_inner(comment_view_keymap.open_comment_in_browser, move |s, _| {
@@ -398,14 +396,14 @@ fn get_comment_main_view(
 pub fn get_comment_view(
     story: &hn_client::Story,
     comments: hn_client::LazyLoadingComments,
-    client: &hn_client::HNClient,
+    client: &'static hn_client::HNClient,
     focus_id: u32,
 ) -> impl View {
     let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
     let story_title = match_re.replace_all(&story.title, "${match}");
     let status_bar = get_status_bar_with_desc(&format!("Comment View - {}", story_title));
 
-    let main_view = get_comment_main_view(story, comments, &client, focus_id);
+    let main_view = get_comment_main_view(story, comments, client, focus_id);
 
     let mut view = LinearLayout::vertical()
         .child(status_bar)
@@ -420,11 +418,9 @@ pub fn get_comment_view(
             s.add_layer(CommentView::construct_help_view());
         })
         .on_event(get_story_view_keymap().open_article_in_browser.clone(), {
-            {
-                let url = story.url.clone();
-                move |_| {
-                    open_url_in_browser(&url);
-                }
+            let url = story.url.clone();
+            move |_| {
+                open_url_in_browser(&url);
             }
         })
         .on_event(
@@ -450,7 +446,7 @@ pub fn get_comment_view(
 /// Add a CommentView as a new layer to the main Cursive View
 pub fn add_comment_view_layer(
     s: &mut Cursive,
-    client: &hn_client::HNClient,
+    client: &'static hn_client::HNClient,
     story: &hn_client::Story,
     focus_id: (u32, u32),
     pop_layer: bool,
