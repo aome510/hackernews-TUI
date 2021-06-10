@@ -348,8 +348,11 @@ impl<T: Display + Copy> FilterInterval<T> {
 
 #[derive(Debug, Clone, Copy, Default, Deserialize)]
 pub struct StoryNumericFilters {
+    #[serde(default)]
     elapsed_days_interval: FilterInterval<u32>,
+    #[serde(default)]
     points_interval: FilterInterval<u32>,
+    #[serde(default)]
     num_comments_interval: FilterInterval<usize>,
 }
 
