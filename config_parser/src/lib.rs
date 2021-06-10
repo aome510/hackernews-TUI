@@ -2,6 +2,7 @@ pub trait ConfigParser {
     fn parse(&mut self, value: toml::Value);
 }
 
+#[macro_export]
 macro_rules! config_parser_impl {
     ($($t:ty),+) => {
         $(
