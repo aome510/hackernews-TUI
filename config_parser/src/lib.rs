@@ -1,5 +1,7 @@
+pub use anyhow::Result;
+
 pub trait ConfigParser {
-    fn parse(&mut self, value: toml::Value);
+    fn parse(&mut self, value: toml::Value) -> Result<()>;
 }
 
 pub use config_parser_derive::ConfigParse;
@@ -9,8 +11,9 @@ macro_rules! config_parser_impl {
     ($($t:ty),+) => {
         $(
             impl ConfigParser for $t {
-                fn parse(&mut self, value: toml::Value) {
-                    *self = value.try_into::<$t>().unwrap();
+                fn parse(&mut self, value: toml::Value) -> Result<()> {
+                    *self = value.try_into::<$t>()?;
+                    Ok(())
                 }
             }
         )*
@@ -18,16 +21,28 @@ macro_rules! config_parser_impl {
 }
 
 impl<T: ConfigParser + Default> ConfigParser for Vec<T> {
-    fn parse(&mut self, value: toml::Value) {
+    fn parse(&mut self, value: toml::Value) -> Result<()> {
         if let toml::Value::Array(array) = value {
-            *self = array
+            let result: Result<Vec<_>> = array
                 .into_iter()
                 .map(|e| {
                     let mut v = T::default();
-                    v.parse(e);
-                    v
+                    v.parse(e)?;
+                    Ok(v)
                 })
-                .collect::<Vec<_>>();
+                .collect();
+            match result {
+                Err(err) => Err(err),
+                Ok(value) => {
+                    *self = value;
+                    Ok(())
+                }
+            }
+        } else {
+            Err(anyhow::anyhow!(
+                "config parsing error: expect a TOML::Array, receive {:#?}",
+                value
+            ))
         }
     }
 }

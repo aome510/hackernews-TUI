@@ -1,7 +1,7 @@
-use config_parser_derive::ConfigParser;
+use config_parser::*;
 use serde::Deserialize;
 
-#[derive(ConfigParser, Deserialize, Default, Debug, PartialEq)]
+#[derive(ConfigParse, Deserialize, Default, Debug, PartialEq)]
 struct A {
     pub field_1: String,
     pub field_2: u32,
@@ -10,13 +10,13 @@ struct A {
     pub field_5: C,
 }
 
-#[derive(ConfigParser, Deserialize, Default, Debug, PartialEq)]
+#[derive(ConfigParse, Deserialize, Default, Debug, PartialEq)]
 struct B {
     pub field_1: String,
     pub field_2: String,
 }
 
-#[derive(ConfigParser, Deserialize, Default, Debug, PartialEq)]
+#[derive(ConfigParse, Deserialize, Default, Debug, PartialEq)]
 struct C {
     pub field_1: B,
     pub field_2: bool,
@@ -32,7 +32,7 @@ mod tests {
     fn simple_test() {
         let value = "a = ['b', 'c', 'd']".parse::<toml::Value>().unwrap();
         let mut a: Vec<String> = vec![];
-        a.parse(value["a"].clone());
+        a.parse(value["a"].clone()).unwrap();
         assert!(a.len() == 3);
     }
 
@@ -101,7 +101,7 @@ field_3 = true
             },
         };
 
-        value.parse(toml);
+        value.parse(toml).unwrap();
         assert!(value == expected_value);
     }
 }

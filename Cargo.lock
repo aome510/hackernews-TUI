@@ -126,6 +126,7 @@ dependencies = [
 name = "config_parser"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "config_parser_derive",
  "serde",
  "toml",

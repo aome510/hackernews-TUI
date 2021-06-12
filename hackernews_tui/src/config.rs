@@ -152,7 +152,7 @@ impl Config {
             Ok(config_str) => {
                 let value = toml::from_str::<toml::Value>(&config_str)?;
                 let mut config = Self::default();
-                config.parse(value);
+                config.parse(value)?;
                 Ok(config)
             }
         }
