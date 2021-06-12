@@ -30,16 +30,13 @@ pub fn expand_config_parsers(input: DeriveInput) -> syn::Result<TokenStream> {
         #[automatically_derived]
         impl config_parser::ConfigParser for #st_name {
             fn parse(&mut self, value: toml::Value) {
-                match value {
-                    toml::Value::Table(table) => {
-                       table.into_iter().for_each(|(key, value)| {
-                           match key.as_str() {
-                               #parsers
-                               _ => {}
-                           };
-                       });
-                    }
-                    _ => {}
+                if let(toml::Value::Table(table)) = value {
+                    table.into_iter().for_each(|(key, value)| {
+                        match key.as_str() {
+                            #parsers
+                            _ => {}
+                        };
+                    });
                 }
             }
         }
