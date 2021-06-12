@@ -27,7 +27,7 @@ pub fn expand_config_parsers(input: DeriveInput) -> syn::Result<TokenStream> {
     let st_name = input.ident;
     Ok(quote! {
         #[automatically_derived]
-        impl config_parser::ConfigParser for #st_name {
+        impl config_parser2::ConfigParser for #st_name {
             fn parse(&mut self, value: toml::Value) -> Result<()> {
                 if let toml::Value::Table(table) = value {
                     let result: Result<Vec<_>> = table.into_iter().map(|(key, value)| {

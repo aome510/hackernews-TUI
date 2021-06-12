@@ -7,8 +7,8 @@ license = "MIT"
 description = "A Terminal UI to browse Hacker News"
 repository = "https://github.com/aome510/hackernews-TUI"
 keywords = ["hackernews", "tui"]
-readme = "README.md"
-include = ["src/**/*", "LICENSE", "README.*", "!**/examples/**/*"]
+readme = "../README.md"
+include = ["src/**/*", "LICENSE", "../README.*", "!**/examples/**/*"]
 
 [dependencies]
 cursive = { version = "0.16.3", default-features = false, features = ["crossterm-backend"] }
@@ -32,4 +32,4 @@ clap = "2.33.3"
 dirs-next = "2.0.0"
 url = "2.2.2"
 
-config_parser = { version = "0.1.0", path = "../config_parser" }
+config_parser2 = { version = "0.1.1", path = "../config_parser" }

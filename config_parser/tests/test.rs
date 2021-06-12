@@ -1,4 +1,4 @@
-use config_parser::*;
+use config_parser2::*;
 use serde::Deserialize;
 
 #[derive(ConfigParse, Deserialize, Default, Debug, PartialEq)]
@@ -26,7 +26,7 @@ struct C {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use config_parser::ConfigParser;
+    use config_parser2::ConfigParser;
 
     #[test]
     fn simple_test() {

@@ -123,8 +123,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "config_parser"
-version = "0.1.0"
+name = "config_parser2"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "config_parser_derive",
@@ -134,7 +134,7 @@ dependencies = [
 
 [[package]]
 name = "config_parser_derive"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -450,7 +450,7 @@ version = "0.7.0"
 dependencies = [
  "anyhow",
  "clap",
- "config_parser",
+ "config_parser2",
  "cursive",
  "cursive-aligned-view",
  "cursive-async-view",

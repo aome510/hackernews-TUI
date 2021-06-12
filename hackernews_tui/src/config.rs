@@ -1,5 +1,5 @@
 use anyhow::Result;
-use config_parser::*;
+use config_parser2::*;
 use cursive::theme;
 use log::warn;
 use once_cell::sync::OnceCell;
