@@ -1,11 +1,12 @@
 use core::fmt;
 
+use config_parser::*;
 use cursive::event::{self, Event, EventTrigger};
 use serde::{de, Deserialize, Deserializer};
 
 use crate::hn_client;
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, ConfigParse)]
 pub struct KeyMap {
     #[serde(default)]
     pub custom_keymap: CustomKeyMap,
@@ -42,6 +43,8 @@ pub struct CustomKeyMap {
     pub custom_view_navigation: Vec<CustomViewNavigation>,
 }
 
+config_parser_impl!(CustomKeyMap);
+
 impl Default for CustomKeyMap {
     fn default() -> Self {
         CustomKeyMap {
@@ -50,7 +53,7 @@ impl Default for CustomKeyMap {
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, ConfigParse)]
 pub struct GlobalKeyMap {
     pub open_help_dialog: Key,
     pub quit: Key,
@@ -84,7 +87,7 @@ impl Default for GlobalKeyMap {
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, ConfigParse)]
 pub struct StoryViewKeyMap {
     // stories navigation keymaps
     pub next_story: Key,
@@ -124,7 +127,7 @@ impl Default for StoryViewKeyMap {
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, ConfigParse)]
 pub struct SearchViewKeyMap {
     // switch mode keymaps
     pub to_navigation_mode: Key,
@@ -140,7 +143,7 @@ impl Default for SearchViewKeyMap {
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, ConfigParse)]
 pub struct CommentViewKeyMap {
     // comments navigation keymaps
     pub next_comment: Key,
@@ -188,7 +191,7 @@ impl Default for CommentViewKeyMap {
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, ConfigParse)]
 pub struct ArticleViewKeyMap {
     pub down: Key,
     pub up: Key,
@@ -297,6 +300,8 @@ impl Key {
         Key { event: e.into() }
     }
 }
+
+config_parser_impl!(Key);
 
 impl<'de> de::Deserialize<'de> for Key {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>

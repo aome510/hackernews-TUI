@@ -1,4 +1,5 @@
 use anyhow::Result;
+use config_parser::*;
 use cursive::theme;
 use log::warn;
 use once_cell::sync::OnceCell;
@@ -6,36 +7,31 @@ use serde::{de, Deserialize, Deserializer};
 
 use super::keybindings::*;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ConfigParse)]
 /// Config is a struct storing the application's configurations
 pub struct Config {
     pub page_scrolling: bool,
     pub scroll_offset: usize,
-
     pub url_open_command: String,
     pub article_parse_command: ArticleParseCommand,
-
-    pub lazy_loading_comments: LazyLoadingComments,
-
     pub client: Client,
     pub theme: Theme,
-
     pub keymap: KeyMap,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, ConfigParse)]
 pub struct LazyLoadingComments {
     pub num_comments_init: usize,
     pub num_comments_after: usize,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, ConfigParse)]
 pub struct ArticleParseCommand {
     pub command: String,
     pub options: Vec<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ConfigParse)]
 pub struct StoryLimit {
     pub front_page: usize,
     pub story: usize,
@@ -45,9 +41,10 @@ pub struct StoryLimit {
     pub search: usize,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ConfigParse)]
 pub struct Client {
     pub story_limit: StoryLimit,
+    pub lazy_loading_comments: LazyLoadingComments,
     pub client_timeout: u64,
 }
 
@@ -91,7 +88,9 @@ impl<'de> de::Deserialize<'de> for Color {
     }
 }
 
-#[derive(Debug, Deserialize, Clone)]
+config_parser_impl!(Color);
+
+#[derive(Debug, Deserialize, Clone, ConfigParse)]
 pub struct Theme {
     // cursive's palette colors
     pub background: Color,
@@ -150,7 +149,12 @@ impl Config {
                 );
                 Ok(Self::default())
             }
-            Ok(config_str) => Ok(toml::from_str(&config_str)?),
+            Ok(config_str) => {
+                let value = toml::from_str::<toml::Value>(&config_str)?;
+                let mut config = Self::default();
+                config.parse(value);
+                Ok(config)
+            }
         }
     }
 }
@@ -184,19 +188,16 @@ impl Default for Config {
         Config {
             page_scrolling: true,
             scroll_offset: 3,
-
             url_open_command: "xdg-open".to_string(),
             article_parse_command: ArticleParseCommand {
                 command: "mercury-parser".to_string(),
                 options: vec!["--format".to_string(), "markdown".to_string()],
             },
-
-            lazy_loading_comments: LazyLoadingComments {
-                num_comments_init: 5,
-                num_comments_after: 10,
-            },
-
             client: Client {
+                lazy_loading_comments: LazyLoadingComments {
+                    num_comments_init: 5,
+                    num_comments_after: 10,
+                },
                 story_limit: StoryLimit {
                     search: 10,
                     front_page: 20,
@@ -208,7 +209,6 @@ impl Default for Config {
                 client_timeout: 32,
             },
             theme: Theme::default(),
-
             keymap: KeyMap::default(),
         }
     }

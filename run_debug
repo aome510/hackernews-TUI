@@ -1,3 +1,3 @@
 #!/bin/bash
 
-RUST_LOG=debug RUST_BACKTRACE=1 cargo run -- -c src/hn-tui-default.toml 2> log.txt
+RUST_LOG=debug RUST_BACKTRACE=1 cargo run -p hackernews_tui -- -c hackernews_tui/src/hn-tui-default.toml 2> log.txt

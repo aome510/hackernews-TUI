@@ -1,0 +1,10 @@
+[package]
+name = "config_parser"
+version = "0.1.0"
+authors = ["Thang Pham <phamducthang1234@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+toml = "0.5.8"
+config_parser_derive = { path = "../config_parser_derive" }
+serde = { version = "1.0.126", features = ["derive"] }

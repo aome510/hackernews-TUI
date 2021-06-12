@@ -348,8 +348,11 @@ impl<T: Display + Copy> FilterInterval<T> {
 
 #[derive(Debug, Clone, Copy, Default, Deserialize)]
 pub struct StoryNumericFilters {
+    #[serde(default)]
     elapsed_days_interval: FilterInterval<u32>,
+    #[serde(default)]
     points_interval: FilterInterval<u32>,
+    #[serde(default)]
     num_comments_interval: FilterInterval<usize>,
 }
 
@@ -454,7 +457,7 @@ impl HNClient {
 
         let mut comments = LazyLoadingComments::new(self.clone(), ids);
 
-        let cfg = &(get_config().lazy_loading_comments);
+        let cfg = &(get_config().client.lazy_loading_comments);
         comments.drain(cfg.num_comments_init, true);
         comments.drain(cfg.num_comments_after, false);
         Ok(comments)

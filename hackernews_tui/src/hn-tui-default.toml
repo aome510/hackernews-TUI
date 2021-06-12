@@ -21,23 +21,23 @@ url_open_command = "xdg-open"
 #     title: String,
 #     url: String,
 #     content: String,
-#     author: Option<String>, // optional
-#     date_published: Option<String>, // optional
-#     word_count: usize, // optional
+#     author: Option<String>,
+#     date_published: Option<String>,
+#     word_count: usize,
 # }
 article_parse_command = {command = "mercury-parser", options = ["--format", "markdown"]}
 # article_parse_command = {command = "article_md", options = []}
 
-[lazy_loading_comments]
+[client]
+# `client_timeout` is the application's client timeout (in seconds) when making an API request
+client_timeout = 32
+
+[client.lazy_loading_comments]
 # `lazy_loading_comments` is a feature that lazily loads comments on demand.
 # `num_comments_init` defines the number of top comments initially loaded.
 # `num_comments_after` defines the number of top comments asynchronously loaded in background
 num_comments_init = 5
 num_comments_after = 10
-
-[client]
-# `client_timeout` is the application's client timeout (in seconds) when making an API request
-client_timeout = 32
 
 [client.story_limit]
 # `story_limit` stores the number of maximum stories displayed in a page in each View
@@ -54,7 +54,6 @@ story = 20
 ask_hn = 15
 show_hn = 15
 job = 15
-
 
 # ---------------------------------
 # user-defined theme

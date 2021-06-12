@@ -93,8 +93,10 @@ impl CommentView {
         }
 
         let mut comments = Self::parse_comments(&comments, 0, 0);
-        self.lazy_loading_comments
-            .drain(get_config().lazy_loading_comments.num_comments_after, false);
+        self.lazy_loading_comments.drain(
+            get_config().client.lazy_loading_comments.num_comments_after,
+            false,
+        );
 
         comments.iter().for_each(|comment| {
             self.add_item(PaddedView::lrtb(
