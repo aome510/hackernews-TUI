@@ -1,6 +1,6 @@
 [package]
 name = "hackernews_tui"
-version = "0.6.2"
+version = "0.7.0"
 authors = ["Thang Pham <phamducthang1234@gmail.com>"]
 edition = "2018"
 license = "MIT"
@@ -32,4 +32,4 @@ clap = "2.33.3"
 dirs-next = "2.0.0"
 url = "2.2.2"
 
-config_parser = { path = "../config_parser" }
+config_parser = { version = "0.1.0", path = "../config_parser" }

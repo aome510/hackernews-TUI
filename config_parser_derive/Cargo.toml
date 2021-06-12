@@ -3,6 +3,10 @@ name = "config_parser_derive"
 version = "0.1.0"
 authors = ["Thang Pham <phamducthang1234@gmail.com>"]
 edition = "2018"
+license = "MIT"
+description = "A proc-macro for implementing ConfigParser trait of config_parser library"
+repository = "https://github.com/aome510/hackernews-TUI"
+keywords = ["config", "parser", "toml"]
 
 [lib]
 proc-macro = true
