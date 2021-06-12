@@ -2,7 +2,7 @@
 
 `hackernews_tui` is a Terminal UI to browse Hacker News with fully customizable and vim-like key bindings.
 
-`hackernews_tui` is written in Rust with the help of [Cursive TUI library](https://github.com/gyscos/cursive/). It uses [HN Algolia search APIs](https://hn.algolia.com/api/) to get Hacker News data.
+`hackernews_tui` is written in Rust with the help of [Cursive TUI library](https://github.com/gyscos/cursive/). It uses [HN Algolia search APIs](https://hn.algolia.com/api/) and [HN Official APIs](https://github.com/HackerNews/API) to get Hacker News data.
 
 The application mainly consists of the following views:
 
@@ -224,25 +224,27 @@ For further information about the configuration options, please refer to the exa
 
 To enable viewing a web page in reader mode with `Article View`, you must configure the `article_parse_command` field in your configuration file:
 
-```yaml
-# "article_parse_command" defines a command to parse a web article's content
-# to a markdown format. The parsed data is then used to render `ArticleView`
+````yaml
+# `article_parse_command` defines a command to parse a web article's content
+# to a markdown format. The parsed data is then used to render the `ArticleView`
 # of the corresponding article.
 #
 # The command must have the following form:
-# [article_parse_command] [article_url] [options...]
-# It should return a JSON string representing the parsed Article data:
+# `<article_parse_command> [options...] <article_url>`
+# It should return a JSON string representing the parsed `Article` data:
+# ```
 # pub struct Article {
 #     title: String,
 #     url: String,
 #     content: String,
-#     author: Option<String>, // optional
-#     date_published: Option<String>, // optional
-#     word_count: usize, // optional
+#     author: Option<String>,
+#     date_published: Option<String>,
+#     word_count: usize,
 # }
+# ```
 article_parse_command = {command = "mercury-parser", options = ["--format", "markdown"]}
 # article_parse_command = {command = "article_md", options = []}
-```
+````
 
 If you don't want to implement an article parser by your own, one way to configure `article_parse_command` is to use [`mercury-parser`](https://github.com/postlight/mercury-parser#installation), a web parser tool that `hackernews_tui` has been using by default since the version `0.6.0`. `mercury-parser` is powerful and stable. However, in some cases, the text content it returns when parsing HTML `code` tags has some weird indentations.
 
