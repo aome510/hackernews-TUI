@@ -1,22 +1,25 @@
+# Example configuration file
+
 # `page_scrolling` is a feature that enables page-like behavior when scrolling.
 # It is used to automatically adjust the view based on the scrolling direction.
-page_scrolling = true
+# page_scrolling = true
 
 # `scroll_offset` defines the scrolling speed.
 # **Note**: this behavior only applies to scrolling shortcuts
-# defined in the [user-defined key bindings] section
-scroll_offset = 3
+# defined in the #[defined key bindings] section
+# scroll_offset = 3
 
-# `url_open_command` is a terminal command used to open url in browser
-url_open_command = "xdg-open"
+# `url_open_command` defines a command used to open url in browser
+# url_open_command = "xdg-open"
 
 # `article_parse_command` defines a command to parse a web article's content
-# to a markdown format. The parsed data is then used to render a `ArticleView`
+# to a markdown format. The parsed data is then used to render the `ArticleView`
 # of the corresponding article.
 #
 # The command must have the following form:
-# `[article_parse_command] [options...] [article_url]`
+# `<article_parse_command> [options...] <article_url>`
 # It should return a JSON string representing the parsed `Article` data:
+# ```
 # pub struct Article {
 #     title: String,
 #     url: String,
@@ -25,54 +28,55 @@ url_open_command = "xdg-open"
 #     date_published: Option<String>,
 #     word_count: usize,
 # }
-article_parse_command = {command = "mercury-parser", options = ["--format", "markdown"]}
+# ```
+# article_parse_command = {command = "mercury-parser", options = ["--format", "markdown"]}
 # article_parse_command = {command = "article_md", options = []}
 
-[client]
-# `client_timeout` is the application's client timeout (in seconds) when making an API request
-client_timeout = 32
+#[client]
+# `client_timeout` defines the application's client timeout (in seconds) when making an API request
+# client_timeout = 32
 
-[client.lazy_loading_comments]
+#[client.lazy_loading_comments]
 # `lazy_loading_comments` is a feature that lazily loads comments on demand.
 # `num_comments_init` defines the number of top comments initially loaded.
 # `num_comments_after` defines the number of top comments asynchronously loaded in background
-num_comments_init = 5
-num_comments_after = 10
+# num_comments_init = 5
+# num_comments_after = 10
 
-[client.story_limit]
+#[client.story_limit]
 # `story_limit` stores the number of maximum stories displayed in a page in each View
-# fields of `story_limit`
+# Fields of `story_limit`
 # - "search" -> "Search View"
 # - "front_page" -> "Story View - Front Page"
 # - "story" -> "Story View - All Stories"
 # - "ask_hn" -> "Story View - Ask HN"
 # - "show_hn" -> "Story View - Show HN"
 # - "job" -> "Story View - Jobs"
-search = 10
-front_page = 20
-story = 20
-ask_hn = 15
-show_hn = 15
-job = 15
+# search = 10
+# front_page = 20
+# story = 20
+# ask_hn = 15
+# show_hn = 15
+# job = 15
 
 # ---------------------------------
-# user-defined theme
+# theme
 # ---------------------------------
 
-[theme]
-# cursive's palette color
+#[theme]
+# cursive's palette colors
 # (more information can be found in https://docs.rs/cursive/0.16.3/cursive/theme/index.html)
-background = "#f6f6ef"
-shadow = "#000000"
-view = "#f6f6ef"
-primary = "#4a4a48"
-secondary = "#a5a5a5"
-tertiary = "#ffffff"
-title_primary = "#000000"
-title_secondary = "#ffff00"
-highlight = "#6c6c6c"
-highlight_inactive = "#0000ff"
-highlight_text = "#c3bbbb"
+# background = "#f6f6ef"
+# shadow = "#000000"
+# view = "#f6f6ef"
+# primary = "#4a4a48"
+# secondary = "#a5a5a5"
+# tertiary = "#ffffff"
+# title_primary = "#000000"
+# title_secondary = "#ffff00"
+# highlight = "#6c6c6c"
+# highlight_inactive = "#0000ff"
+# highlight_text = "#c3bbbb"
 
 # additional colors defined by the application
 # `link_text` is a text color for a URL
@@ -80,75 +84,75 @@ highlight_text = "#c3bbbb"
 # `search_highlight_bg` is a background color for matched search
 # `status_bar_bg` is a background color for the status bar
 # `code_block_bg` is a background color for a code block
-link_text = "#4fbbfd"
-link_id_bg = "#ffff00"
-search_highlight_bg = "#ffff00"
-status_bar_bg = "#ff6600"
-code_block_bg = "#c8c8c8"
+# link_text = "#4fbbfd"
+# link_id_bg = "#ffff00"
+# search_highlight_bg = "#ffff00"
+# status_bar_bg = "#ff6600"
+# code_block_bg = "#c8c8c8"
 
 # ---------------------------------
-# user-defined key bindings
+# key bindings
 # ---------------------------------
-# Go to the end of this section to see list of supported keys
+# Go to the end of this section to see list of supported keys.
 
-[keymap.global_keymap]
-open_help_dialog = "?"
-quit = "C-q"
-close_dialog = "esc"
-goto_previous_view = "C-p"
-goto_front_page_view = "C-f"
-goto_search_view = "C-s"
-goto_all_stories_view = "C-z"
-goto_ask_hn_view = "C-x"
-goto_show_hn_view = "C-c"
-goto_jobs_view = "C-v"
+#[keymap.global_keymap]
+# open_help_dialog = "?"
+# quit = "C-q"
+# close_dialog = "esc"
+# goto_previous_view = "C-p"
+# goto_front_page_view = "C-f"
+# goto_search_view = "C-s"
+# goto_all_stories_view = "C-z"
+# goto_ask_hn_view = "C-x"
+# goto_show_hn_view = "C-c"
+# goto_jobs_view = "C-v"
 
-[keymap.story_view_keymap]
-next_story = "j"
-prev_story = "k"
-goto_story = "g"
-next_page = "n"
-prev_page = "p"
-toggle_sort_by = "d"
-open_article_in_browser = "o"
-open_article_in_article_view = "O"
-open_story_in_browser = "s"
-goto_story_comment_view = "enter"
+#[keymap.story_view_keymap]
+# next_story = "j"
+# prev_story = "k"
+# goto_story = "g"
+# next_page = "n"
+# prev_page = "p"
+# toggle_sort_by = "d"
+# open_article_in_browser = "o"
+# open_article_in_article_view = "O"
+# open_story_in_browser = "s"
+# goto_story_comment_view = "enter"
 
-[keymap.search_view_keymap]
-to_navigation_mode = "esc"
-to_search_mode = "i"
+#[keymap.search_view_keymap]
+# to_navigation_mode = "esc"
+# to_search_mode = "i"
 
-[keymap.comment_view_keymap]
-next_comment = "j"
-prev_comment = "k"
-next_top_level_comment = "n"
-prev_top_level_comment = "p"
-next_leq_level_comment = "l"
-prev_leq_level_comment = "h"
-down = "down"
-up = "up"
-page_down = "page_down"
-page_up = "page_up"
-open_comment_in_browser = "c"
-open_link_in_browser = "f"
-open_link_in_article_view = "F"
-reload_comment_view = "r"
+#[keymap.comment_view_keymap]
+# next_comment = "j"
+# prev_comment = "k"
+# next_top_level_comment = "n"
+# prev_top_level_comment = "p"
+# next_leq_level_comment = "l"
+# prev_leq_level_comment = "h"
+# down = "down"
+# up = "up"
+# page_down = "page_down"
+# page_up = "page_up"
+# open_comment_in_browser = "c"
+# open_link_in_browser = "f"
+# open_link_in_article_view = "F"
+# reload_comment_view = "r"
 
-[keymap.article_view_keymap]
-down = "j"
-up = "k"
-page_down = "d"
-page_up = "u"
-top = "t"
-bottom = "b"
-open_article_in_browser = "o"
-open_link_in_browser = "f"
-open_link_in_article_view = "F"
-open_link_dialog = "l"
-link_dialog_focus_next = "j"
-link_dialog_focus_prev = "k"
-toggle_raw_markdown_mode = "T"
+#[keymap.article_view_keymap]
+# down = "j"
+# up = "k"
+# page_down = "d"
+# page_up = "u"
+# top = "t"
+# bottom = "b"
+# open_article_in_browser = "o"
+# open_link_in_browser = "f"
+# open_link_in_article_view = "F"
+# open_link_dialog = "l"
+# link_dialog_focus_next = "j"
+# link_dialog_focus_prev = "k"
+# toggle_raw_markdown_mode = "T"
 
 # ---------------------
 # custom keymap
@@ -157,7 +161,8 @@ toggle_raw_markdown_mode = "T"
 # `custom_view_navigation` is used to define custom shortcuts
 # to navigate to a `StoryView` with stories filtered by certain conditions.
 # Below is an example of defining two custom shortcuts using `custom_view_navigation`.
-#
+# **Note**: `key`, `tag` and `by_date` are required fields when defining a custom view navigation shortcut
+
 # [[keymap.custom_keymap.custom_view_navigation]]
 # key = "M-1"
 # tag = "story"
@@ -176,8 +181,7 @@ toggle_raw_markdown_mode = "T"
 # points_interval = {start = 50, end = 200}
 # num_comments_interval = {end = 100}
 
-# possible values for "tag"
-# - "front_page" -> "Story View - Front Page" (note that "by_date" = true doesn't work for "front_page")
+# possible values for `tag`
 # - "story" -> "Story View - All Stories"
 # - "ask_hn" -> "Story View - Ask HN"
 # - "show_hn" -> "Story View - Show HN"
@@ -187,7 +191,6 @@ toggle_raw_markdown_mode = "T"
 # --------------------------
 # List of supported keys:
 # --------------------------
-
 # - <char> (any single character)
 # - C-<char> (ctrl-<char>)
 # - M-<char> (alt-<char>)

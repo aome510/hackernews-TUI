@@ -250,7 +250,7 @@ An alternative is to use [`article_md`](https://github.com/aome510/article-md-cl
 
 ### User-defined shortcuts
 
-Shortcuts in each `View` are fully customizable. For further information about the supported keys and the commands, please refer to the **user-defined key bindings** sections in the example configuration file by running `hackernews_tui --example-config`.
+Shortcuts in each `View` are fully customizable. For further information about the supported keys and the commands, please refer to the **key bindings** sections in the example configuration file by running `hackernews_tui --example-config`.
 
 ### Custom Keymap
 
