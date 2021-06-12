@@ -210,23 +210,15 @@ Key shortcuts:
 
 ## Configuration
 
-By default, the application will look for `~/.config/hn-tui.toml` as its configuration file.
+By default, the application will look for `~/.config/hn-tui.toml` as the configuration file.
 
-You can specify the path by specifying the `-c` or `--config` argument when running the application:
+You can also specify the path with the `-c` or `--config` option when running the application:
 
 ```shell
 hackernews_tui -c ~/.config/hn-tui.toml
 ```
 
-For further information about the config options, please refer to the example config file by running `hackernews_tui --example-config`.
-
-**Note**: all config options (as included in the example config file) are **required**. You can run
-
-```shell
-hackernews_tui --example-config > ~/.config/hn-tui.toml
-```
-
-then modify the config options in `~/.config/hn-tui.toml` based on your preferences.
+For further information about the configuration options, please refer to the example configuration file by running `hackernews_tui --example-config`.
 
 ### Article Parse Command
 
@@ -258,11 +250,11 @@ An alternative is to use [`article_md`](https://github.com/aome510/article-md-cl
 
 ### User-defined shortcuts
 
-Shortcuts in each `View` are fully customizable, for further information about the supported keys and the corresponding functionalities, please refer to the **user-defined key bindings** sections in the example config file by running `hackernews_tui --example-config`.
+Shortcuts in each `View` are fully customizable. For further information about the supported keys and the commands, please refer to the **user-defined key bindings** sections in the example configuration file by running `hackernews_tui --example-config`.
 
 ### Custom Keymap
 
-It's possible to define a custom shortcut to switch between different kinds of `StoryView` (`front_page`, `show_hn`, `ask_hn`, etc) with stories filtered by HN Algolia's [`numericFilters`](https://hn.algolia.com/api/). An example of defining such a custom shortcut can be found under the **Custom Keymap** section of the example configuration file.
+It's possible to define a custom shortcut to switch between different `StoryView` (`front_page`, `show_hn`, `ask_hn`, etc) with stories filtered by HN Algolia's [`numericFilters`](https://hn.algolia.com/api/). An example of defining such custom shortcuts can be found under the **custom keymap** section of the example configuration file.
 
 ## Debug
 
@@ -279,6 +271,7 @@ to view the application's log in `log.txt` file.
 - [x] make all commands customizable
 - [x] add a `View` to read the linked story in reader mode on the terminal. A list of possible suggestion can be found [here](https://news.ycombinator.com/item?id=26930466)
 - [ ] add commands to navigate parent comments and collapse a comment
+- [x] make all the configuration options optional
 - integrate [HackerNews Official APIs](https://github.com/HackerNews/API) for real-time updating, lazy-loading comments, and sorting stories
   - [x] lazy-loading comments
   - [x] front-page stories like the official site
