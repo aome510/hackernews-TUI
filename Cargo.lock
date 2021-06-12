@@ -450,7 +450,6 @@ dependencies = [
  "anyhow",
  "clap",
  "config_parser",
- "config_parser_derive",
  "cursive",
  "cursive-aligned-view",
  "cursive-async-view",

@@ -1,7 +1,6 @@
 use core::fmt;
 
 use config_parser::*;
-use config_parser_derive::ConfigParse;
 use cursive::event::{self, Event, EventTrigger};
 use serde::{de, Deserialize, Deserializer};
 

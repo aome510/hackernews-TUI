@@ -2,6 +2,8 @@ pub trait ConfigParser {
     fn parse(&mut self, value: toml::Value);
 }
 
+pub use config_parser_derive::ConfigParse;
+
 #[macro_export]
 macro_rules! config_parser_impl {
     ($($t:ty),+) => {

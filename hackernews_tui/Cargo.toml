@@ -33,4 +33,3 @@ dirs-next = "2.0.0"
 url = "2.2.2"
 
 config_parser = { path = "../config_parser" }
-config_parser_derive = { path = "../config_parser_derive" }
