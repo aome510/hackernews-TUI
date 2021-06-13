@@ -288,6 +288,10 @@ impl HasHelpView for CommentView {
                         comment_view_keymap.prev_leq_level_comment.to_string(),
                         "Focus the previous comment at smaller or equal level",
                     ),
+                    (
+                        comment_view_keymap.parent_comment.to_string(),
+                        "Focus the parent comment (if exists)",
+                    ),
                 ],
             ),
             (
@@ -338,10 +342,16 @@ impl HasHelpView for CommentView {
                 ],
             ),
             view_navigation_key_shortcuts!(),
-            other_key_shortcuts!((
-                comment_view_keymap.reload_comment_view.to_string(),
-                "Reload the comment view"
-            )),
+            other_key_shortcuts!(
+                (
+                    comment_view_keymap.reload_comment_view.to_string(),
+                    "Reload the comment view"
+                ),
+                (
+                    comment_view_keymap.toggle_collapse_comment.to_string(),
+                    "Toggle collapsing the focused comment"
+                )
+            ),
         ])
     }
 }

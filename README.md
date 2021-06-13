@@ -181,7 +181,9 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 - `p`: Focus the previous top level comment
 - `l`: Focus the next comment with smaller or equal level
 - `h`: Focus the previous comment with smaller or equal level
+- `u`: Focus the parent comment (if exists)
 - `r`: Reload the comment view.
+- `tab`: Toggle collapsing the focused comment
 - `up`: Scroll up
 - `down`: Scroll down
 - `page_up`: Scroll up half a page
@@ -197,7 +199,7 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 
 In `SearchView`, there are two modes: `Navigation` and `Search`. The default mode is `Search`.
 
-`Search` mode is similar to Vim's Insert mode, in which users can input the query string.
+`Search` mode is similar to Vim's insert mode, in which users can input the query string.
 
 `Navigation` mode allows the `SearchView` to behave like a `StoryView` with all `StoryView` shortcuts enabled.
 
@@ -272,7 +274,7 @@ to view the application's log in `log.txt` file.
 
 - [x] make all commands customizable
 - [x] add a `View` to read the linked story in reader mode on the terminal. A list of possible suggestion can be found [here](https://news.ycombinator.com/item?id=26930466)
-- [ ] add commands to navigate parent comments and collapse a comment
+- [x] add commands to navigate parent comments and collapse a comment
 - [x] make all the configuration options optional
 - integrate [HackerNews Official APIs](https://github.com/HackerNews/API) for real-time updating, lazy-loading comments, and sorting stories
   - [x] lazy-loading comments

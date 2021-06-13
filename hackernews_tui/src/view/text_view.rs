@@ -23,6 +23,14 @@ impl TextView {
         }
     }
 
+    pub fn set_content<S>(&mut self, content: S)
+    where
+        S: Into<utils::markup::StyledString>,
+    {
+        self.content = content.into();
+        self.size_cache = None;
+    }
+
     fn is_size_cache_valid(&self, size: Vec2) -> bool {
         match self.size_cache {
             None => false,

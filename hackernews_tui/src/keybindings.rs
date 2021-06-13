@@ -152,6 +152,7 @@ pub struct CommentViewKeyMap {
     pub prev_top_level_comment: Key,
     pub next_leq_level_comment: Key,
     pub prev_leq_level_comment: Key,
+    pub parent_comment: Key,
 
     // link opening keymaps
     pub open_comment_in_browser: Key,
@@ -164,6 +165,7 @@ pub struct CommentViewKeyMap {
     pub page_down: Key,
     pub page_up: Key,
 
+    pub toggle_collapse_comment: Key,
     pub reload_comment_view: Key,
 }
 
@@ -176,6 +178,7 @@ impl Default for CommentViewKeyMap {
             prev_top_level_comment: Key::new('p'),
             next_leq_level_comment: Key::new('l'),
             prev_leq_level_comment: Key::new('h'),
+            parent_comment: Key::new('u'),
 
             open_comment_in_browser: Key::new('c'),
             open_link_in_browser: Key::new('f'),
@@ -186,6 +189,7 @@ impl Default for CommentViewKeyMap {
             page_up: Key::new(event::Key::PageUp),
             page_down: Key::new(event::Key::PageDown),
 
+            toggle_collapse_comment: Key::new(event::Key::Tab),
             reload_comment_view: Key::new('r'),
         }
     }
