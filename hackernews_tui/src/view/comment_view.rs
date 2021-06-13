@@ -16,6 +16,15 @@ enum CommentState {
     Normal,
 }
 
+impl CommentState {
+    fn visible(&self) -> bool {
+        match self {
+            Self::Collapsed => false,
+            _ => true,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Comment {
     state: CommentState,
@@ -238,10 +247,10 @@ impl CommentView {
 
                 let minimized_comment_string = StyledString::styled(
                     format!(
-                        "{} {} ago ({} comments more)",
+                        "{} {} ago ({} more)",
                         comment.author,
                         get_elapsed_time_as_text(comment.time),
-                        subcomments.len(),
+                        subcomments.len() + 1,
                     ),
                     PaletteColor::Secondary,
                 );
@@ -262,43 +271,62 @@ impl CommentView {
             .collect()
     }
 
-    /// Get the height of each comment in the comment tree
-    pub fn get_heights(&self) -> Vec<usize> {
-        self.comments.iter().map(|comment| comment.height).collect()
+    pub fn find_comment_id_by_max_height(
+        &self,
+        start_id: usize,
+        max_height: usize,
+        direction: bool,
+    ) -> usize {
+        if direction {
+            // ->
+            (start_id + 1..self.len())
+                .find(|&id| self.comments[id].height <= max_height)
+                .unwrap_or_else(|| self.len())
+        } else {
+            // <-
+            (0..start_id)
+                .rfind(|&id| self.comments[id].height <= max_height)
+                .unwrap_or(start_id)
+        }
     }
 
-    pub fn get_comment_component_mut(&mut self, pos: usize) -> &mut CommentComponent {
-        self.get_item_mut(pos)
+    pub fn find_next_visible_comment(&self, start_id: usize, direction: bool) -> usize {
+        if direction {
+            // ->
+            (start_id + 1..self.len())
+                .find(|&id| self.comments[id].state.visible())
+                .unwrap_or_else(|| self.len())
+        } else {
+            // <-
+            (0..start_id)
+                .rfind(|&id| self.comments[id].state.visible())
+                .unwrap_or(start_id)
+        }
+    }
+
+    fn get_comment_component_mut(&mut self, id: usize) -> &mut CommentComponent {
+        self.get_item_mut(id)
             .unwrap()
             .downcast_mut::<CommentComponent>()
             .unwrap()
     }
 
-    fn toggle_collapse_child_comments(&mut self, parent_comment_pos: usize) {
-        let parent_height = self.comments[parent_comment_pos].height;
-        (parent_comment_pos+1..self.len())
-            .fold(false, |acc, i| {
-                if acc {
-                    acc
-                } else if parent_height >= self.comments[i].height {
-                    true
-                } else {
-                    match self.comments[i].state.clone() {
-                        CommentState::Collapsed => {
-                            self.comments[i].state = CommentState::Normal;
-                            self.get_comment_component_mut(i).unhide();
-                        }
-                        CommentState::Normal => {
-                            self.comments[i].state = CommentState::Collapsed;
-                            self.get_comment_component_mut(i).hide();
-                        }
-                        CommentState::PartiallyCollapsed => {
-                            panic!("invalid comment state `PartiallyCollapsed` when calling `toggle_collapse_child_comments`");
-                        }
-                    }
-                    acc
+    fn toggle_collapse_child_comments(&mut self, parent_comment_id: usize) {
+        let parent_height = self.comments[parent_comment_id].height;
+        let end = self.find_comment_id_by_max_height(parent_comment_id, parent_height, true);
+        (parent_comment_id + 1..end).for_each(|i| {
+            match self.comments[i].state {
+                CommentState::Collapsed => {
+                    self.comments[i].state = CommentState::Normal;
+                    self.get_comment_component_mut(i).unhide();
                 }
-            });
+                CommentState::Normal => {
+                    self.comments[i].state = CommentState::Collapsed;
+                    self.get_comment_component_mut(i).hide();
+                }
+                CommentState::PartiallyCollapsed => {} // for partially collapsed comment, keep the initial state
+            }
+        });
     }
 
     pub fn toggle_collapse_focused_comment(&mut self) {
@@ -383,60 +411,39 @@ fn get_comment_main_view(
         })
         // comment navigation shortcuts
         .on_pre_event_inner(comment_view_keymap.prev_comment, |s, _| {
-            let id = s.get_focus_index();
-            if id == 0 {
-                None
-            } else {
-                s.set_focus_index(id - 1)
-            }
+            s.set_focus_index(s.find_next_visible_comment(s.get_focus_index(), false))
         })
         .on_pre_event_inner(comment_view_keymap.next_comment, |s, _| {
-            let id = s.get_focus_index();
-            if id + 1 == s.len() {
+            let next_id = s.find_next_visible_comment(s.get_focus_index(), true);
+            if next_id == s.len() {
                 s.load_comments();
             }
-            s.set_focus_index(id + 1)
+            s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.next_leq_level_comment, move |s, _| {
-            let heights = s.get_heights();
             let id = s.get_focus_index();
-            let (_, right) = heights.split_at(id + 1);
-            let offset = right.iter().position(|&h| h <= heights[id]);
-            let next_id = match offset {
-                None => s.len(),
-                Some(offset) => id + offset + 1,
-            };
+            let next_id = s.find_comment_id_by_max_height(id, s.comments[id].height, true);
             if next_id == s.len() {
                 s.load_comments();
             }
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.prev_leq_level_comment, move |s, _| {
-            let heights = s.get_heights();
             let id = s.get_focus_index();
-            let (left, _) = heights.split_at(id);
-            let next_id = left.iter().rposition(|&h| h <= heights[id]).unwrap_or(id);
+            let next_id = s.find_comment_id_by_max_height(id, s.comments[id].height, false);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.next_top_level_comment, move |s, _| {
-            let heights = s.get_heights();
             let id = s.get_focus_index();
-            let (_, right) = heights.split_at(id + 1);
-            let offset = right.iter().position(|&h| h == 0);
-            let next_id = match offset {
-                None => s.len(),
-                Some(offset) => id + offset + 1,
-            };
+            let next_id = s.find_comment_id_by_max_height(id, 0, true);
             if next_id == s.len() {
                 s.load_comments();
             }
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.prev_top_level_comment, move |s, _| {
-            let heights = s.get_heights();
             let id = s.get_focus_index();
-            let (left, _) = heights.split_at(id);
-            let next_id = left.iter().rposition(|&h| h == 0).unwrap_or(id);
+            let next_id = s.find_comment_id_by_max_height(id, 0, false);
             s.set_focus_index(next_id)
         })
         // open external link shortcuts
@@ -479,7 +486,7 @@ fn get_comment_main_view(
             open_url_in_browser(&url);
             Some(EventResult::Consumed(None))
         })
-        // other functionalitites
+        // other commands
         .on_pre_event_inner(comment_view_keymap.collapse_comment, move |s, _| {
             s.toggle_collapse_focused_comment();
             Some(EventResult::Consumed(None))
