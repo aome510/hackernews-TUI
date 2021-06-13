@@ -21,7 +21,10 @@ pub struct Comment {
     state: CommentState,
     top_comment_id: u32,
     id: u32,
+
     text: StyledString,
+    minimized_text: StyledString,
+
     height: usize,
     links: Vec<String>,
 }
@@ -31,6 +34,7 @@ impl Comment {
         top_comment_id: u32,
         id: u32,
         text: StyledString,
+        minimized_text: StyledString,
         height: usize,
         links: Vec<String>,
     ) -> Self {
@@ -39,6 +43,7 @@ impl Comment {
             top_comment_id,
             id,
             text,
+            minimized_text,
             height,
             links,
         }
@@ -231,9 +236,26 @@ impl CommentView {
                 );
                 comment_string.append(comment_content);
 
+                let minimized_comment_string = StyledString::styled(
+                    format!(
+                        "{} {} ago ({} comments more)",
+                        comment.author,
+                        get_elapsed_time_as_text(comment.time),
+                        subcomments.len(),
+                    ),
+                    PaletteColor::Secondary,
+                );
+
                 subcomments.insert(
                     0,
-                    Comment::new(top_comment_id, comment.id, comment_string, height, links),
+                    Comment::new(
+                        top_comment_id,
+                        comment.id,
+                        comment_string,
+                        minimized_comment_string,
+                        height,
+                        links,
+                    ),
                 );
                 subcomments
             })
@@ -398,20 +420,26 @@ fn get_comment_main_view(
         // other functionalitites
         .on_pre_event_inner(comment_view_keymap.collapse_comment, move |s, _| {
             let id = s.get_focus_index();
-            let state = s.comments[id].state.clone();
+            let comment = s.comments[id].clone();
             let comment_component = s
                 .get_item_mut(id)
                 .unwrap()
                 .downcast_mut::<CommentComponent>()
                 .unwrap();
-            match state {
+            match comment.state {
                 CommentState::Collapsed => {}
                 CommentState::PartiallyCollapsed => {
-                    comment_component.unhide();
+                    comment_component
+                        .get_inner_mut()
+                        .get_inner_mut()
+                        .set_content(comment.text);
                     s.comments[id].state = CommentState::Normal;
                 }
                 CommentState::Normal => {
-                    comment_component.hide();
+                    comment_component
+                        .get_inner_mut()
+                        .get_inner_mut()
+                        .set_content(comment.minimized_text);
                     s.comments[id].state = CommentState::PartiallyCollapsed;
                 }
             };
