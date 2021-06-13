@@ -181,7 +181,9 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 - `p`: Focus the previous top level comment
 - `l`: Focus the next comment with smaller or equal level
 - `h`: Focus the previous comment with smaller or equal level
+- `u`: Focus the parent comment (if exists)
 - `r`: Reload the comment view.
+- `tab`: Toggle collapsing the focused comment
 - `up`: Scroll up
 - `down`: Scroll down
 - `page_up`: Scroll up half a page
