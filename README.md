@@ -199,7 +199,7 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 
 In `SearchView`, there are two modes: `Navigation` and `Search`. The default mode is `Search`.
 
-`Search` mode is similar to Vim's Insert mode, in which users can input the query string.
+`Search` mode is similar to Vim's insert mode, in which users can input the query string.
 
 `Navigation` mode allows the `SearchView` to behave like a `StoryView` with all `StoryView` shortcuts enabled.
 
@@ -280,6 +280,6 @@ to view the application's log in `log.txt` file.
   - [x] lazy-loading comments
   - [x] front-page stories like the official site
   - [ ] real-time updating
-- [ ] snipe-like navigation, inspired by [vim-snipe](https://github.com/yangmillstheory/vim-snipe)
+- [x] snipe-like navigation, inspired by [vim-snipe](https://github.com/yangmillstheory/vim-snipe)
 - [ ] support more themes
 - [ ] add some extra transition effects

@@ -10,6 +10,7 @@ use crate::prelude::*;
 type CommentComponent = HideableView<PaddedView<text_view::TextView>>;
 
 #[derive(Debug, Clone)]
+/// CommentState represents the state of a single comment component
 enum CommentState {
     Collapsed,
     PartiallyCollapsed,
@@ -72,7 +73,7 @@ impl ViewWrapper for CommentView {
 
     fn wrap_layout(&mut self, size: Vec2) {
         // to support focus the last focused comment on reloading,
-        // scroll the the focus element on view initialization
+        // scroll to the focus element during the view initialization
         let is_init = self.get_inner().get_scroller().last_available_size() == Vec2::zero();
 
         self.with_view_mut(|v| v.layout(size));
@@ -242,6 +243,7 @@ impl CommentView {
                 );
                 comment_string.append(comment_content);
 
+                // minimized_comment is used to display collapsed comment
                 let minimized_comment_string = StyledString::styled(
                     format!(
                         "{} {} ago ({} more)",
@@ -268,6 +270,8 @@ impl CommentView {
             .collect()
     }
 
+    /// Return the `id` of the first (`direction` dependent and starting but not including `start_id`)
+    /// comment which has the `height` less than or equal the `max_height`
     pub fn find_comment_id_by_max_height(
         &self,
         start_id: usize,
@@ -287,6 +291,7 @@ impl CommentView {
         }
     }
 
+    /// Return the id of the next visible comment (`direction` dependent and starting but not including `start_id`)
     pub fn find_next_visible_comment(&self, start_id: usize, direction: bool) -> usize {
         if direction {
             // ->
@@ -308,6 +313,8 @@ impl CommentView {
             .unwrap()
     }
 
+    /// Toggle the collapsing state of children of `parent_comment_id` comment.
+    /// **Note**: partially collapsed comment's state is unchanged.
     fn toggle_collapse_child_comments(&mut self, parent_comment_id: usize) {
         let parent_height = self.comments[parent_comment_id].height;
         let end = self.find_comment_id_by_max_height(parent_comment_id, parent_height, true);
@@ -321,11 +328,12 @@ impl CommentView {
                     self.comments[i].state = CommentState::Collapsed;
                     self.get_comment_component_mut(i).hide();
                 }
-                CommentState::PartiallyCollapsed => {} // for partially collapsed comment, keep the initial state
+                CommentState::PartiallyCollapsed => {} // for partially collapsed comment, keep the state unchanged
             }
         });
     }
 
+    /// Toggle the collapsing state of currently focused comment and its children
     pub fn toggle_collapse_focused_comment(&mut self) {
         let id = self.get_focus_index();
         let comment = self.comments[id].clone();
