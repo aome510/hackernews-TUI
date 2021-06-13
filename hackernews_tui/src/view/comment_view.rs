@@ -267,6 +267,68 @@ impl CommentView {
         self.comments.iter().map(|comment| comment.height).collect()
     }
 
+    pub fn get_comment_component_mut(&mut self, pos: usize) -> &mut CommentComponent {
+        self.get_item_mut(pos)
+            .unwrap()
+            .downcast_mut::<CommentComponent>()
+            .unwrap()
+    }
+
+    fn toggle_collapse_child_comments(&mut self, parent_comment_pos: usize) {
+        let parent_height = self.comments[parent_comment_pos].height;
+        (parent_comment_pos+1..self.len())
+            .fold(false, |acc, i| {
+                if acc {
+                    acc
+                } else if parent_height >= self.comments[i].height {
+                    true
+                } else {
+                    match self.comments[i].state.clone() {
+                        CommentState::Collapsed => {
+                            self.comments[i].state = CommentState::Normal;
+                            self.get_comment_component_mut(i).unhide();
+                        }
+                        CommentState::Normal => {
+                            self.comments[i].state = CommentState::Collapsed;
+                            self.get_comment_component_mut(i).hide();
+                        }
+                        CommentState::PartiallyCollapsed => {
+                            panic!("invalid comment state `PartiallyCollapsed` when calling `toggle_collapse_child_comments`");
+                        }
+                    }
+                    acc
+                }
+            });
+    }
+
+    pub fn toggle_collapse_focused_comment(&mut self) {
+        let id = self.get_focus_index();
+        let comment = self.comments[id].clone();
+        match comment.state {
+            CommentState::Collapsed => {
+                panic!(
+                    "invalid comment state `Collapsed` when calling `toggle_collapse_focused_comment`"
+                );
+            }
+            CommentState::PartiallyCollapsed => {
+                self.get_comment_component_mut(id)
+                    .get_inner_mut()
+                    .get_inner_mut()
+                    .set_content(comment.text);
+                self.toggle_collapse_child_comments(id);
+                self.comments[id].state = CommentState::Normal;
+            }
+            CommentState::Normal => {
+                self.get_comment_component_mut(id)
+                    .get_inner_mut()
+                    .get_inner_mut()
+                    .set_content(comment.minimized_text);
+                self.toggle_collapse_child_comments(id);
+                self.comments[id].state = CommentState::PartiallyCollapsed;
+            }
+        };
+    }
+
     inner_getters!(self.view: ScrollListView);
 }
 
@@ -419,30 +481,7 @@ fn get_comment_main_view(
         })
         // other functionalitites
         .on_pre_event_inner(comment_view_keymap.collapse_comment, move |s, _| {
-            let id = s.get_focus_index();
-            let comment = s.comments[id].clone();
-            let comment_component = s
-                .get_item_mut(id)
-                .unwrap()
-                .downcast_mut::<CommentComponent>()
-                .unwrap();
-            match comment.state {
-                CommentState::Collapsed => {}
-                CommentState::PartiallyCollapsed => {
-                    comment_component
-                        .get_inner_mut()
-                        .get_inner_mut()
-                        .set_content(comment.text);
-                    s.comments[id].state = CommentState::Normal;
-                }
-                CommentState::Normal => {
-                    comment_component
-                        .get_inner_mut()
-                        .get_inner_mut()
-                        .set_content(comment.minimized_text);
-                    s.comments[id].state = CommentState::PartiallyCollapsed;
-                }
-            };
+            s.toggle_collapse_focused_comment();
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(comment_view_keymap.reload_comment_view, move |s, _| {
