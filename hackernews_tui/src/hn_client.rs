@@ -448,11 +448,8 @@ impl HNClient {
             .kids;
         if let Some(pos) = ids.iter().position(|id| *id == focus_top_comment_id) {
             // move `pos` to the beginning of the list.
-            // using `reverse` twice with `swap_remove` is quite
-            // an inefficient way to achieve the above but probably the easiest
-            ids.reverse();
-            ids.swap_remove(pos);
-            ids.reverse();
+            ids.remove(pos);
+            ids.insert(0, focus_top_comment_id);
         };
 
         let mut comments = LazyLoadingComments::new(self.clone(), ids);
