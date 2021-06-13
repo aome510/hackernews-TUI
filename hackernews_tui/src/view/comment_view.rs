@@ -443,6 +443,15 @@ fn get_comment_main_view(
             let next_id = s.find_comment_id_by_max_height(id, 0, false);
             s.set_focus_index(next_id)
         })
+        .on_pre_event_inner(comment_view_keymap.parent_comment, move |s, _| {
+            let id = s.get_focus_index();
+            if s.comments[id].height > 0 {
+                let next_id = s.find_comment_id_by_max_height(id, s.comments[id].height - 1, false);
+                s.set_focus_index(next_id)
+            } else {
+                Some(EventResult::Consumed(None))
+            }
+        })
         // open external link shortcuts
         .on_pre_event_inner(comment_view_keymap.open_link_in_browser, |s, _| {
             match s.raw_command.parse::<usize>() {

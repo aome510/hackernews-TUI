@@ -130,6 +130,7 @@
 # prev_top_level_comment = "p"
 # next_leq_level_comment = "l"
 # prev_leq_level_comment = "h"
+# parent_comment = "u"
 # down = "down"
 # up = "up"
 # page_down = "page_down"
