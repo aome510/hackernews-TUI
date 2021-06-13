@@ -274,12 +274,12 @@ to view the application's log in `log.txt` file.
 
 - [x] make all commands customizable
 - [x] add a `View` to read the linked story in reader mode on the terminal. A list of possible suggestion can be found [here](https://news.ycombinator.com/item?id=26930466)
-- [ ] add commands to navigate parent comments and collapse a comment
+- [x] add commands to navigate parent comments and collapse a comment
 - [x] make all the configuration options optional
 - integrate [HackerNews Official APIs](https://github.com/HackerNews/API) for real-time updating, lazy-loading comments, and sorting stories
   - [x] lazy-loading comments
   - [x] front-page stories like the official site
   - [ ] real-time updating
-- [x] snipe-like navigation, inspired by [vim-snipe](https://github.com/yangmillstheory/vim-snipe)
+- [ ] snipe-like navigation, inspired by [vim-snipe](https://github.com/yangmillstheory/vim-snipe)
 - [ ] support more themes
 - [ ] add some extra transition effects
