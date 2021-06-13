@@ -18,10 +18,7 @@ enum CommentState {
 
 impl CommentState {
     fn visible(&self) -> bool {
-        match self {
-            Self::Collapsed => false,
-            _ => true,
-        }
+        !matches!(self, Self::Collapsed)
     }
 }
 
@@ -487,7 +484,7 @@ fn get_comment_main_view(
             Some(EventResult::Consumed(None))
         })
         // other commands
-        .on_pre_event_inner(comment_view_keymap.collapse_comment, move |s, _| {
+        .on_pre_event_inner(comment_view_keymap.toggle_collapse_comment, move |s, _| {
             s.toggle_collapse_focused_comment();
             Some(EventResult::Consumed(None))
         })

@@ -138,6 +138,7 @@
 # open_link_in_browser = "f"
 # open_link_in_article_view = "F"
 # reload_comment_view = "r"
+# toggle_collapse_comment = "tab"
 
 #[keymap.article_view_keymap]
 # down = "j"
