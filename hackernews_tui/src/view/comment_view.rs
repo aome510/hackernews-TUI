@@ -7,8 +7,18 @@ use super::text_view;
 
 use crate::prelude::*;
 
+type CommentComponent = HideableView<PaddedView<text_view::TextView>>;
+
+#[derive(Debug, Clone)]
+enum CommentState {
+    Collapsed,
+    PartiallyCollapsed,
+    Normal,
+}
+
 #[derive(Debug, Clone)]
 pub struct Comment {
+    state: CommentState,
     top_comment_id: u32,
     id: u32,
     text: StyledString,
@@ -25,6 +35,7 @@ impl Comment {
         links: Vec<String>,
     ) -> Self {
         Comment {
+            state: CommentState::Normal,
             top_comment_id,
             id,
             text,
@@ -36,8 +47,9 @@ impl Comment {
 
 /// CommentView is a View displaying a list of comments in a HN story
 pub struct CommentView {
-    story: hn_client::Story,
     view: ScrollListView,
+
+    story: hn_client::Story,
     comments: Vec<Comment>,
     lazy_loading_comments: hn_client::LazyLoadingComments,
 
@@ -99,13 +111,13 @@ impl CommentView {
         );
 
         comments.iter().for_each(|comment| {
-            self.add_item(PaddedView::lrtb(
+            self.add_item(HideableView::new(PaddedView::lrtb(
                 comment.height * 2,
                 0,
                 0,
                 1,
                 text_view::TextView::new(comment.text.clone()),
-            ));
+            )));
         });
         self.comments.append(&mut comments);
 
@@ -377,6 +389,34 @@ fn get_comment_main_view(
                 Err(_) => None,
             },
         )
+        .on_pre_event_inner(comment_view_keymap.open_comment_in_browser, move |s, _| {
+            let id = s.comments[s.get_focus_index()].id;
+            let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
+            open_url_in_browser(&url);
+            Some(EventResult::Consumed(None))
+        })
+        // other functionalitites
+        .on_pre_event_inner(comment_view_keymap.collapse_comment, move |s, _| {
+            let id = s.get_focus_index();
+            let state = s.comments[id].state.clone();
+            let comment_component = s
+                .get_item_mut(id)
+                .unwrap()
+                .downcast_mut::<CommentComponent>()
+                .unwrap();
+            match state {
+                CommentState::Collapsed => {}
+                CommentState::PartiallyCollapsed => {
+                    comment_component.unhide();
+                    s.comments[id].state = CommentState::Normal;
+                }
+                CommentState::Normal => {
+                    comment_component.hide();
+                    s.comments[id].state = CommentState::PartiallyCollapsed;
+                }
+            };
+            Some(EventResult::Consumed(None))
+        })
         .on_pre_event_inner(comment_view_keymap.reload_comment_view, move |s, _| {
             let comment = &s.comments[s.get_focus_index()];
             let focus_id = (comment.top_comment_id, comment.id);
@@ -384,12 +424,6 @@ fn get_comment_main_view(
                 let story = s.story.clone();
                 move |s| add_comment_view_layer(s, client, &story, focus_id, true)
             }))
-        })
-        .on_pre_event_inner(comment_view_keymap.open_comment_in_browser, move |s, _| {
-            let id = s.comments[s.get_focus_index()].id;
-            let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
-            open_url_in_browser(&url);
-            Some(EventResult::Consumed(None))
         })
         .full_height()
 }

@@ -9,6 +9,8 @@ pub trait ScrollableList {
     fn get_focus_index(&self) -> usize;
     fn set_focus_index(&mut self, id: usize) -> Option<EventResult>;
     fn add_item<V: IntoBoxedView + 'static>(&mut self, view: V);
+    fn get_item(&self, id: usize) -> Option<&(dyn View + 'static)>;
+    fn get_item_mut(&mut self, id: usize) -> Option<&mut (dyn View + 'static)>;
     fn get_scroller(&self) -> &scroll::Core;
     fn get_scroller_mut(&mut self) -> &mut scroll::Core;
     // Move the scroller to the focused area and adjust the scroller
@@ -96,6 +98,14 @@ macro_rules! impl_scrollable_list {
 
         fn get_scroller(&self) -> &scroll::Core {
             self.get_inner().get_scroller()
+        }
+
+        fn get_item(&self, id: usize) -> Option<&(dyn View + 'static)> {
+            self.get_inner().get_inner().get_child(id)
+        }
+
+        fn get_item_mut(&mut self, id: usize) -> Option<&mut (dyn View + 'static)> {
+            self.get_inner_mut().get_inner_mut().get_child_mut(id)
         }
     };
 }
