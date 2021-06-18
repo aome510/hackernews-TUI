@@ -129,3 +129,14 @@ pub fn open_url_in_browser(url: &str) {
         },
     );
 }
+
+/// check if a character is supported (if `allow_unicode` config option is disabled)
+/// A character is considered to be supported if it is inside the ascii range or a "quote" character
+pub fn allow_unicode_char(c: &char) -> bool {
+    c.is_ascii()
+        || *c == '\u{b4}'
+        || *c == '\u{2018}'
+        || *c == '\u{2019}'
+        || *c == '\u{201c}'
+        || *c == '\u{201d}'
+}

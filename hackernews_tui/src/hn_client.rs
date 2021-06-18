@@ -172,7 +172,11 @@ impl From<CommentResponse> for Comment {
             .map(|comment| comment.into())
             .collect();
         let text: String = if !get_config().allow_unicode {
-            c.text.unwrap().chars().filter(|c| c.is_ascii()).collect()
+            c.text
+                .unwrap()
+                .chars()
+                .filter(|c| allow_unicode_char(c))
+                .collect()
         } else {
             c.text.unwrap()
         };

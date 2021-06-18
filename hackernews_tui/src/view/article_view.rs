@@ -40,7 +40,10 @@ impl Article {
         let content = if get_config().allow_unicode {
             self.content.clone()
         } else {
-            self.content.chars().filter(|c| c.is_ascii()).collect()
+            self.content
+                .chars()
+                .filter(|c| allow_unicode_char(c))
+                .collect()
         };
 
         // if raw_md is true, don't parse link
