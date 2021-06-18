@@ -1,5 +1,9 @@
 # Example configuration file
 
+# `allow_unicode` allows unicode support
+# (allow to render unicode characters, disable by default in `comment_text` and `article_text`)
+# allow_unicode = false
+
 # `page_scrolling` is a feature that enables page-like behavior when scrolling.
 # It is used to automatically adjust the view based on the scrolling direction.
 # page_scrolling = true

@@ -10,6 +10,7 @@ use super::keybindings::*;
 #[derive(Debug, Deserialize, ConfigParse)]
 /// Config is a struct storing the application's configurations
 pub struct Config {
+    pub allow_unicode: bool,
     pub page_scrolling: bool,
     pub scroll_offset: usize,
     pub url_open_command: String,
@@ -55,10 +56,7 @@ pub struct Color {
 
 impl Color {
     fn parse(s: &str) -> Option<Self> {
-        match theme::Color::parse(s) {
-            None => None,
-            Some(color) => Some(Color { color }),
-        }
+        theme::Color::parse(s).map(|color| Color { color })
     }
 }
 
@@ -186,6 +184,7 @@ impl Default for Theme {
 impl Default for Config {
     fn default() -> Self {
         Config {
+            allow_unicode: false,
             page_scrolling: true,
             scroll_offset: 3,
             url_open_command: "xdg-open".to_string(),

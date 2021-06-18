@@ -171,8 +171,11 @@ impl From<CommentResponse> for Comment {
             .filter(|comment| comment.author.is_some() && comment.text.is_some())
             .map(|comment| comment.into())
             .collect();
-        // remove soft-hyphen
-        let text: String = c.text.unwrap().chars().filter(|c| *c != '\u{ad}').collect();
+        let text: String = if !get_config().allow_unicode {
+            c.text.unwrap().chars().filter(|c| c.is_ascii()).collect()
+        } else {
+            c.text.unwrap()
+        };
         Comment {
             id: c.id,
             story_id: c.story_id,

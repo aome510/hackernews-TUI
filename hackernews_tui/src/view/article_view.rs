@@ -37,17 +37,23 @@ impl Article {
         // escape characters in markdown: \ ` * _ { } [ ] ( ) # + - . ! =
         let md_escape_char_re = Regex::new(r"\\(?P<char>[\\`\*_\{\}\[\]\(\)#\+\-\.!=])").unwrap();
 
+        let content = if get_config().allow_unicode {
+            self.content.clone()
+        } else {
+            self.content.chars().filter(|c| c.is_ascii()).collect()
+        };
+
         // if raw_md is true, don't parse link
         if raw_md {
             let content = md_escape_char_re
-                .replace_all(&self.content, "${char}")
+                .replace_all(&content, "${char}")
                 .to_string();
             return (StyledString::plain(content), vec![]);
         }
 
         let md_img_re = Regex::new(r"!\[(?P<desc>.*?)\]\((?P<link>.*?)\)").unwrap();
         let mut s = md_img_re
-            .replace_all(&self.content, "!\\[${desc}\\]\\(image\\)")
+            .replace_all(&content, "!\\[${desc}\\]\\(image\\)")
             .to_string();
 
         let md_link_re =
