@@ -171,13 +171,15 @@ impl From<CommentResponse> for Comment {
             .filter(|comment| comment.author.is_some() && comment.text.is_some())
             .map(|comment| comment.into())
             .collect();
+        // remove soft-hyphen
+        let text: String = c.text.unwrap().chars().filter(|c| *c != '\u{ad}').collect();
         Comment {
             id: c.id,
             story_id: c.story_id,
             parent_id: c.parent_id,
-            text: c.text.unwrap(),
             author: c.author.unwrap(),
             time: c.time,
+            text,
             children,
         }
     }
