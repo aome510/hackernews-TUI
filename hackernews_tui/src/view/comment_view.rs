@@ -291,9 +291,9 @@ impl CommentView {
         }
     }
 
-    /// Return the id of the next visible comment (`direction` dependent and starting but not including `start_id`)
-    pub fn find_next_visible_comment(&self, start_id: usize, direction: bool) -> usize {
-        if direction {
+    /// Return the id of the next visible comment
+    pub fn find_next_visible_comment(&self, start_id: usize, go_left: bool) -> usize {
+        if go_left {
             // ->
             (start_id + 1..self.len())
                 .find(|&id| self.comments[id].state.visible())
@@ -313,24 +313,38 @@ impl CommentView {
             .unwrap()
     }
 
-    /// Toggle the collapsing state of children of `parent_comment_id` comment.
-    /// **Note**: partially collapsed comment's state is unchanged.
-    fn toggle_collapse_child_comments(&mut self, parent_comment_id: usize) {
-        let parent_height = self.comments[parent_comment_id].height;
-        let end = self.find_comment_id_by_max_height(parent_comment_id, parent_height, true);
-        (parent_comment_id + 1..end).for_each(|i| {
-            match self.comments[i].state {
-                CommentState::Collapsed => {
-                    self.comments[i].state = CommentState::Normal;
-                    self.get_comment_component_mut(i).unhide();
-                }
-                CommentState::Normal => {
-                    self.comments[i].state = CommentState::Collapsed;
-                    self.get_comment_component_mut(i).hide();
-                }
-                CommentState::PartiallyCollapsed => {} // for partially collapsed comment, keep the state unchanged
+    /// Toggle the collapsing state of comments whose height is greater
+    /// than the `min_height`.
+    /// **Note** `PartiallyCollapsed` comment's state is unchanged, only toggle its visibility.
+    /// Also, the state and visibility of such comment's children are unaffected.
+    fn toggle_comment_collapse_state(&mut self, i: usize, min_height: usize) {
+        if i == self.len() || self.comments[i].height <= min_height {
+            return;
+        }
+        match self.comments[i].state {
+            CommentState::Collapsed => {
+                self.comments[i].state = CommentState::Normal;
+                self.get_comment_component_mut(i).unhide();
+                self.toggle_comment_collapse_state(i + 1, min_height)
             }
-        });
+            CommentState::Normal => {
+                self.comments[i].state = CommentState::Collapsed;
+                self.get_comment_component_mut(i).hide();
+                self.toggle_comment_collapse_state(i + 1, min_height)
+            }
+            CommentState::PartiallyCollapsed => {
+                let component = self.get_comment_component_mut(i);
+                if component.is_visible() {
+                    component.hide();
+                } else {
+                    component.unhide();
+                }
+
+                // skip toggling all child comments of the current comment
+                let next_id = self.find_comment_id_by_max_height(i, self.comments[i].height, true);
+                self.toggle_comment_collapse_state(next_id, min_height)
+            }
+        };
     }
 
     /// Toggle the collapsing state of currently focused comment and its children
@@ -348,7 +362,7 @@ impl CommentView {
                     .get_inner_mut()
                     .get_inner_mut()
                     .set_content(comment.text);
-                self.toggle_collapse_child_comments(id);
+                self.toggle_comment_collapse_state(id + 1, self.comments[id].height);
                 self.comments[id].state = CommentState::Normal;
             }
             CommentState::Normal => {
@@ -356,7 +370,7 @@ impl CommentView {
                     .get_inner_mut()
                     .get_inner_mut()
                     .set_content(comment.minimized_text);
-                self.toggle_collapse_child_comments(id);
+                self.toggle_comment_collapse_state(id + 1, self.comments[id].height);
                 self.comments[id].state = CommentState::PartiallyCollapsed;
             }
         };
