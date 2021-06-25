@@ -17,12 +17,6 @@ enum CommentState {
     Normal,
 }
 
-impl CommentState {
-    fn visible(&self) -> bool {
-        !matches!(self, Self::Collapsed)
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct Comment {
     state: CommentState,
@@ -296,14 +290,21 @@ impl CommentView {
         if go_left {
             // ->
             (start_id + 1..self.len())
-                .find(|&id| self.comments[id].state.visible())
+                .find(|&id| self.get_comment_component(id).is_visible())
                 .unwrap_or_else(|| self.len())
         } else {
             // <-
             (0..start_id)
-                .rfind(|&id| self.comments[id].state.visible())
+                .rfind(|&id| self.get_comment_component(id).is_visible())
                 .unwrap_or(start_id)
         }
+    }
+
+    fn get_comment_component(&self, id: usize) -> &CommentComponent {
+        self.get_item(id)
+            .unwrap()
+            .downcast_ref::<CommentComponent>()
+            .unwrap()
     }
 
     fn get_comment_component_mut(&mut self, id: usize) -> &mut CommentComponent {
