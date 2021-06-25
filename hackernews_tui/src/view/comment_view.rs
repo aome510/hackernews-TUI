@@ -1,4 +1,3 @@
-use rayon::prelude::*;
 use regex::Regex;
 
 use super::async_view;
@@ -153,9 +152,8 @@ impl CommentView {
 
         let mut links: Vec<String> = vec![];
         let mut styled_s = StyledString::new();
-        // replace the <a href="${link}">...</a> pattern one-by-one with "${link}".
-        // cannot use replace_all as above because we want to replace the matched pattern
-        // by a StyledString with specific colors.
+        // replace the `<a href="${link}">...</a>` pattern one-by-one with "${link}".
+        // cannot use `replace_all` because we want to replace a match string with a `StyledString`
         loop {
             match link_re.captures(&s.clone()) {
                 None => break,
@@ -210,7 +208,7 @@ impl CommentView {
         let link_re = Regex::new(r#"<a\s+?href="(?P<link>.+?)"(?s).+?</a>"#).unwrap();
 
         comments
-            .par_iter()
+            .iter()
             .flat_map(|comment| {
                 let top_comment_id = if height == 0 {
                     comment.id
