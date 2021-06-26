@@ -1,10 +1,8 @@
-use regex::Regex;
-
 use super::async_view;
 use super::list_view::*;
 use super::text_view;
-
 use crate::prelude::*;
+use regex::Regex;
 
 type CommentComponent = HideableView<PaddedView<text_view::TextView>>;
 

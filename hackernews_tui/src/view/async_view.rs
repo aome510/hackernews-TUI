@@ -1,5 +1,4 @@
 use super::error_view::{self, ErrorViewEnum, ErrorViewWrapper};
-
 use crate::prelude::*;
 use cursive_aligned_view::Alignable;
 use cursive_async_view::AsyncView;

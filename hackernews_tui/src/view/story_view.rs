@@ -1,11 +1,9 @@
-use regex::Regex;
-
 use super::async_view;
 use super::help_view::*;
 use super::list_view::*;
 use super::text_view;
-
 use crate::prelude::*;
+use regex::Regex;
 
 /// StoryView is a View displaying a list stories corresponding
 /// to a particular category (top stories, newest stories, most popular stories, etc).

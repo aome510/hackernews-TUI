@@ -1,11 +1,7 @@
-use std::sync::{Arc, RwLock};
-
-use cursive_async_view::{AsyncState, AsyncView};
-
 use super::help_view::*;
 use super::text_view;
-
 use crate::prelude::*;
+use std::sync::{Arc, RwLock};
 
 #[derive(Clone)]
 pub enum SearchViewMode {
@@ -117,7 +113,9 @@ impl SearchView {
                 .send(Box::new(|s| {
                     let loading_view = OnEventView::new(
                         Dialog::new()
-                            .content(AsyncView::<TextView>::new(s, || AsyncState::Pending))
+                            .content(cursive_async_view::AsyncView::<TextView>::new(s, || {
+                                cursive_async_view::AsyncState::Pending
+                            }))
                             .max_width(32),
                     )
                     .on_event(EventTrigger::from_fn(|_| true), |_| {});
