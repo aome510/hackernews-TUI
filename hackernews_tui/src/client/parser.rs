@@ -109,7 +109,7 @@ pub struct StoriesResponse {
 /// HighlightResult represents matched results when
 /// searching stories matching certain conditions
 #[derive(Debug, Clone)]
-struct HighlightResult {
+pub struct HighlightResult {
     pub title: String,
     pub url: String,
     pub author: String,

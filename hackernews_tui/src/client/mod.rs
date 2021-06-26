@@ -4,6 +4,8 @@ mod parser;
 mod query;
 
 // re-export
+pub use lazy::LazyLoadingComments;
+pub use parser::{Comment, Story};
 pub use query::StoryNumericFilters;
 
 use crate::prelude::*;
