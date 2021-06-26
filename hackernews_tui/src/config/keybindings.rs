@@ -366,3 +366,27 @@ impl<'de> de::Deserialize<'de> for Key {
         }
     }
 }
+
+pub fn get_custom_keymap() -> &'static CustomKeyMap {
+    &super::get_config().keymap.custom_keymap
+}
+
+pub fn get_global_keymap() -> &'static GlobalKeyMap {
+    &super::get_config().keymap.global_keymap
+}
+
+pub fn get_story_view_keymap() -> &'static StoryViewKeyMap {
+    &super::get_config().keymap.story_view_keymap
+}
+
+pub fn get_search_view_keymap() -> &'static SearchViewKeyMap {
+    &super::get_config().keymap.search_view_keymap
+}
+
+pub fn get_comment_view_keymap() -> &'static CommentViewKeyMap {
+    &super::get_config().keymap.comment_view_keymap
+}
+
+pub fn get_article_view_keymap() -> &'static ArticleViewKeyMap {
+    &super::get_config().keymap.article_view_keymap
+}
