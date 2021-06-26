@@ -1,14 +1,11 @@
-use core::fmt;
-
 use config_parser2::*;
 use cursive::event::{self, Event, EventTrigger};
 use serde::{de, Deserialize, Deserializer};
 
-use crate::hn_client;
+use crate::client;
 
 #[derive(Debug, Clone, Deserialize, ConfigParse)]
 pub struct KeyMap {
-    #[serde(default)]
     pub custom_keymap: CustomKeyMap,
     pub global_keymap: GlobalKeyMap,
     pub story_view_keymap: StoryViewKeyMap,
@@ -35,7 +32,7 @@ pub struct CustomViewNavigation {
     pub key: Key,
     pub tag: String,
     pub by_date: bool,
-    pub numeric_filters: hn_client::StoryNumericFilters,
+    pub numeric_filters: client::StoryNumericFilters,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -255,8 +252,8 @@ impl From<Key> for Event {
     }
 }
 
-impl fmt::Display for Key {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Display for Key {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.event {
             Event::Char(c) => write!(f, "{}", c),
             Event::CtrlChar(c) => write!(f, "C-{}", c),
@@ -365,4 +362,28 @@ impl<'de> de::Deserialize<'de> for Key {
             }
         }
     }
+}
+
+pub fn get_custom_keymap() -> &'static CustomKeyMap {
+    &super::get_config().keymap.custom_keymap
+}
+
+pub fn get_global_keymap() -> &'static GlobalKeyMap {
+    &super::get_config().keymap.global_keymap
+}
+
+pub fn get_story_view_keymap() -> &'static StoryViewKeyMap {
+    &super::get_config().keymap.story_view_keymap
+}
+
+pub fn get_search_view_keymap() -> &'static SearchViewKeyMap {
+    &super::get_config().keymap.search_view_keymap
+}
+
+pub fn get_comment_view_keymap() -> &'static CommentViewKeyMap {
+    &super::get_config().keymap.comment_view_keymap
+}
+
+pub fn get_article_view_keymap() -> &'static ArticleViewKeyMap {
+    &super::get_config().keymap.article_view_keymap
 }

@@ -1,7 +1,6 @@
+use crate::prelude::*;
 use std::time::{Duration, SystemTime};
 use substring::*;
-
-use crate::prelude::*;
 
 const MAX_URL_LEN: usize = 50;
 

@@ -1,10 +1,8 @@
-use regex::Regex;
-
 use super::async_view;
 use super::list_view::*;
 use super::text_view;
-
 use crate::prelude::*;
+use regex::Regex;
 
 type CommentComponent = HideableView<PaddedView<text_view::TextView>>;
 
@@ -54,9 +52,9 @@ impl Comment {
 pub struct CommentView {
     view: ScrollListView,
 
-    story: hn_client::Story,
+    story: client::Story,
     comments: Vec<Comment>,
-    lazy_loading_comments: hn_client::LazyLoadingComments,
+    lazy_loading_comments: client::LazyLoadingComments,
 
     raw_command: String,
 }
@@ -80,8 +78,8 @@ impl ViewWrapper for CommentView {
 impl CommentView {
     /// Return a new CommentView given a comment list and the discussed story url
     pub fn new(
-        story: hn_client::Story,
-        lazy_loading_comments: hn_client::LazyLoadingComments,
+        story: client::Story,
+        lazy_loading_comments: client::LazyLoadingComments,
         focus_id: u32,
     ) -> Self {
         let mut comment_view = CommentView {
@@ -198,7 +196,7 @@ impl CommentView {
 
     /// Parse comments recursively into readable texts with styles and colors
     fn parse_comments(
-        comments: &[hn_client::Comment],
+        comments: &[client::Comment],
         height: usize,
         top_comment_id: u32,
     ) -> Vec<Comment> {
@@ -381,9 +379,9 @@ impl CommentView {
 /// Return a main view of a CommentView displaying the comment list.
 /// The main view of a CommentView is a View without status bar or footer.
 fn get_comment_main_view(
-    story: &hn_client::Story,
-    comments: hn_client::LazyLoadingComments,
-    client: &'static hn_client::HNClient,
+    story: &client::Story,
+    comments: client::LazyLoadingComments,
+    client: &'static client::HNClient,
     focus_id: u32,
 ) -> impl View {
     let comment_view_keymap = get_comment_view_keymap().clone();
@@ -509,7 +507,7 @@ fn get_comment_main_view(
         )
         .on_pre_event_inner(comment_view_keymap.open_comment_in_browser, move |s, _| {
             let id = s.comments[s.get_focus_index()].id;
-            let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
+            let url = format!("{}/item?id={}", client::HN_HOST_URL, id);
             open_url_in_browser(&url);
             Some(EventResult::Consumed(None))
         })
@@ -531,9 +529,9 @@ fn get_comment_main_view(
 
 /// Return a CommentView given a comment list and the discussed story's url/title
 pub fn get_comment_view(
-    story: &hn_client::Story,
-    comments: hn_client::LazyLoadingComments,
-    client: &'static hn_client::HNClient,
+    story: &client::Story,
+    comments: client::LazyLoadingComments,
+    client: &'static client::HNClient,
     focus_id: u32,
 ) -> impl View {
     let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
@@ -574,7 +572,7 @@ pub fn get_comment_view(
         .on_event(
             get_story_view_keymap().open_story_in_browser.clone(),
             move |_| {
-                let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
+                let url = format!("{}/item?id={}", client::HN_HOST_URL, id);
                 open_url_in_browser(&url);
             },
         )
@@ -583,8 +581,8 @@ pub fn get_comment_view(
 /// Add a CommentView as a new layer to the main Cursive View
 pub fn add_comment_view_layer(
     s: &mut Cursive,
-    client: &'static hn_client::HNClient,
-    story: &hn_client::Story,
+    client: &'static client::HNClient,
+    story: &client::Story,
     focus_id: (u32, u32),
     pop_layer: bool,
 ) {

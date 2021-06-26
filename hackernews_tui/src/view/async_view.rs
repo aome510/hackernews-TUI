@@ -1,5 +1,4 @@
 use super::error_view::{self, ErrorViewEnum, ErrorViewWrapper};
-
 use crate::prelude::*;
 use cursive_aligned_view::Alignable;
 use cursive_async_view::AsyncView;
@@ -8,8 +7,8 @@ use cursive_async_view::AsyncView;
 /// with a loading screen when loading data
 pub fn get_comment_view_async(
     siv: &mut Cursive,
-    client: &'static hn_client::HNClient,
-    story: &hn_client::Story,
+    client: &'static client::HNClient,
+    story: &client::Story,
     focus_id: (u32, u32),
 ) -> impl View {
     let id = story.id;
@@ -50,11 +49,11 @@ pub fn get_comment_view_async(
 /// Return an async view wrapping StoryView with a loading screen when loading data
 pub fn get_story_view_async(
     siv: &mut Cursive,
-    client: &'static hn_client::HNClient,
+    client: &'static client::HNClient,
     tag: &'static str,
     by_date: bool,
     page: usize,
-    numeric_filters: hn_client::StoryNumericFilters,
+    numeric_filters: client::StoryNumericFilters,
 ) -> impl View {
     AsyncView::new_with_bg_creator(
         siv,

@@ -1,9 +1,7 @@
+use super::{async_view, text_view};
+use crate::prelude::*;
 use regex::Regex;
 use serde::Deserialize;
-
-use super::{async_view, text_view};
-
-use crate::prelude::*;
 
 /// ArticleView is a View used to display the content of a web page in reader mode
 pub struct ArticleView {
