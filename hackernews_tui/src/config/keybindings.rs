@@ -1,14 +1,12 @@
-use core::fmt;
-
 use config_parser2::*;
+use core::fmt;
 use cursive::event::{self, Event, EventTrigger};
 use serde::{de, Deserialize, Deserializer};
 
-use crate::hn_client;
+use crate::client;
 
 #[derive(Debug, Clone, Deserialize, ConfigParse)]
 pub struct KeyMap {
-    #[serde(default)]
     pub custom_keymap: CustomKeyMap,
     pub global_keymap: GlobalKeyMap,
     pub story_view_keymap: StoryViewKeyMap,
@@ -35,7 +33,7 @@ pub struct CustomViewNavigation {
     pub key: Key,
     pub tag: String,
     pub by_date: bool,
-    pub numeric_filters: hn_client::StoryNumericFilters,
+    pub numeric_filters: client::StoryNumericFilters,
 }
 
 #[derive(Debug, Clone, Deserialize)]
