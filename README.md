@@ -1,20 +1,20 @@
 # hackernews-TUI
 
-`hackernews_tui` is a Terminal UI to browse Hacker News with fully customizable and vim-like key bindings.
+`hackernews_tui` is a fast and customizable Terminal UI application for browsing Hacker News on terminal.
 
 `hackernews_tui` is written in Rust with the help of [Cursive TUI library](https://github.com/gyscos/cursive/). It uses [HN Algolia search APIs](https://hn.algolia.com/api/) and [HN Official APIs](https://github.com/HackerNews/API) to get Hacker News data.
 
-The application mainly consists of the following views:
+The application consists of the following views:
 
-- `Story View` displaying a list of HN stories. There are different kinds of `Story View` depending on the `tag` used to filter stories:
-  - `Front Page`: stories on the front-page
+- `Story View` displays a list of HN stories. There are different kinds of `Story View` depending on the `tag` used to filter stories:
+  - `Front Page`: stories on the front page
   - `All Stories`: all stories
-  - `Ask HN`: ask HN stories only
-  - `Show HN`: show HN stories only
-  - `Jobs`: jobs stories only
-- `Article View` displaying the content of a web article in reader mode.
-- `Comment View` displaying a list of comments in a story.
-- `Search View` displaying a search bar and a list of stories matching the search query.
+  - `Ask HN`: ask HN stories
+  - `Show HN`: show HN stories
+  - `Jobs`: jobs stories
+- `Article View` displays the content of a web page in reader mode.
+- `Comment View` displays a list of comments of a story.
+- `Search View` displays a search bar and a list of stories matching the search query.
 
 ### Why hackernews-TUI?
 
@@ -62,18 +62,24 @@ Run `cargo install hackernews_tui` to install the application as a binary.
 Run
 
 ```shell
-# git clone https://github.com/aome510/hackernews-TUI.git
-# cd hackernews-TUI
-# cargo build --release
+git clone https://github.com/aome510/hackernews-TUI.git
+cd hackernews-TUI
+cargo build --release
 ```
 
 to build the application, then run
 
 ```shell
-# ./target/release/hackernews_tui
+./target/release/hackernews_tui
 ```
 
-to run the application
+to run the application. Or
+
+```shell
+ln -sf $PWD/target/release/hackernews_tui /usr/local/bin
+```
+
+to link the executable binary to `/usr/local/bin` folder.
 
 ### Arch Linux
 
@@ -84,7 +90,7 @@ Run `yay -S hackernews_tui` to install the application as an AUR package.
 #### Using the package manager
 
 ```shell
-# pkgin install hackernews-tui
+pkgin install hackernews-tui
 ```
 
 #### Building from source
@@ -244,17 +250,17 @@ To enable viewing a web page in reader mode with `Article View`, you must config
 #     word_count: usize,
 # }
 # ```
-article_parse_command = {command = "mercury-parser", options = ["--format", "markdown"]}
+article_parse_command = {command = "mercury-parser", options = ["--format", "markdown"]} // default value
 # article_parse_command = {command = "article_md", options = []}
 ````
 
 If you don't want to implement an article parser by your own, one way to configure `article_parse_command` is to use [`mercury-parser`](https://github.com/postlight/mercury-parser#installation), a web parser tool that `hackernews_tui` has been using by default since the version `0.6.0`. `mercury-parser` is powerful and stable. However, in some cases, the text content it returns when parsing HTML `code` tags has some weird indentations.
 
-An alternative is to use [`article_md`](https://github.com/aome510/article-md-cli), a CLI tool I wrote for parsing web article's content into a markdown format. Under the hood, it uses [mozilla's readability](https://github.com/mozilla/readability), so the parsed text for HTML `code` tags look nicer.
+An alternative is to use [`article_md`](https://github.com/aome510/article-md-cli), a CLI tool I wrote for parsing web page's content into a markdown text. Under the hood, it uses [mozilla's readability](https://github.com/mozilla/readability), so the parsed text for HTML `code` tags look nicer.
 
 ### User-defined shortcuts
 
-Shortcuts in each `View` are fully customizable. For further information about the supported keys and the commands, please refer to the **key bindings** sections in the example configuration file by running `hackernews_tui --example-config`.
+Shortcuts in each `View` are fully customizable. For further information about the supported keys and the commands, please refer to the **key bindings** section in the example configuration file.
 
 ### Custom Keymap
 
@@ -265,10 +271,16 @@ It's possible to define a custom shortcut to switch between different `StoryView
 Run
 
 ```shell
-RUST_LOG=debug hackernews_tui 2> log.txt
+RUST_LOG=debug RUST_BACKTRACE=1 hackernews_tui 2> log.txt
 ```
 
-to view the application's log in `log.txt` file.
+then run
+
+```shell
+tail -f log.txt
+```
+
+in another terminal to view the application's log in `log.txt` file.
 
 ## Roadmap
 
