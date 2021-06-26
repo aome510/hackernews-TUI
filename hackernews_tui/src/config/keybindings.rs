@@ -1,5 +1,4 @@
 use config_parser2::*;
-use core::fmt;
 use cursive::event::{self, Event, EventTrigger};
 use serde::{de, Deserialize, Deserializer};
 
@@ -253,8 +252,8 @@ impl From<Key> for Event {
     }
 }
 
-impl fmt::Display for Key {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Display for Key {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.event {
             Event::Char(c) => write!(f, "{}", c),
             Event::CtrlChar(c) => write!(f, "C-{}", c),

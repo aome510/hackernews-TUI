@@ -1,6 +1,10 @@
+// modules
 mod lazy;
 mod parser;
 mod query;
+
+// re-export
+pub use query::StoryNumericFilters;
 
 use crate::prelude::*;
 use parser::*;
@@ -11,7 +15,7 @@ const HN_SEARCH_QUERY_STRING: &str =
     "tags=story&restrictSearchableAttributes=title,url&typoTolerance=false";
 pub const HN_HOST_URL: &str = "https://news.ycombinator.com";
 
-static HN_CLIENT: once_cell::sync::OnceCell<HNClient> = once_cell::sync::OnceCell::new();
+static CLIENT: once_cell::sync::OnceCell<HNClient> = once_cell::sync::OnceCell::new();
 
 /// HNClient is a HTTP client to communicate with Hacker News APIs.
 #[derive(Clone)]
@@ -252,8 +256,8 @@ impl HNClient {
 
 pub fn init_client() -> &'static HNClient {
     let client = HNClient::new().unwrap();
-    HN_CLIENT.set(client).unwrap_or_else(|_| {
+    CLIENT.set(client).unwrap_or_else(|_| {
         panic!("failed to set up the application's HackerNews Client");
     });
-    &HN_CLIENT.get().unwrap()
+    &CLIENT.get().unwrap()
 }

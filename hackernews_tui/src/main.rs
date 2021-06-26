@@ -1,7 +1,6 @@
 // modules
+pub mod client;
 pub mod config;
-pub mod hn_client;
-pub mod keybindings;
 pub mod prelude;
 pub mod utils;
 pub mod view;
@@ -18,14 +17,14 @@ macro_rules! set_up_switch_view_shortcut {
                 $tag,
                 false,
                 0,
-                hn_client::StoryNumericFilters::default(),
+                client::StoryNumericFilters::default(),
                 false,
             );
         });
     };
 }
 
-fn set_up_global_callbacks(s: &mut Cursive, client: &'static hn_client::HNClient) {
+fn set_up_global_callbacks(s: &mut Cursive, client: &'static client::HNClient) {
     s.clear_global_callbacks(Event::CtrlChar('c'));
 
     let global_keymap = get_global_keymap().clone();
@@ -107,7 +106,7 @@ fn run() {
     });
 
     // setup HN Client
-    let client = hn_client::init_client();
+    let client = client::init_client();
     set_up_global_callbacks(&mut s, client);
 
     story_view::add_story_view_layer(
@@ -116,7 +115,7 @@ fn run() {
         "front_page",
         false,
         0,
-        hn_client::StoryNumericFilters::default(),
+        client::StoryNumericFilters::default(),
         false,
     );
 

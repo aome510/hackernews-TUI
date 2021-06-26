@@ -11,7 +11,7 @@ use crate::prelude::*;
 /// to a particular category (top stories, newest stories, most popular stories, etc).
 pub struct StoryView {
     view: ScrollListView,
-    pub stories: Vec<hn_client::Story>,
+    pub stories: Vec<client::Story>,
 
     raw_command: String,
 }
@@ -21,7 +21,7 @@ impl ViewWrapper for StoryView {
 }
 
 impl StoryView {
-    pub fn new(stories: Vec<hn_client::Story>, starting_id: usize) -> Self {
+    pub fn new(stories: Vec<client::Story>, starting_id: usize) -> Self {
         let view = LinearLayout::vertical()
             .with(|s| {
                 stories.iter().enumerate().for_each(|(i, story)| {
@@ -81,7 +81,7 @@ impl StoryView {
     }
 
     /// Get the description text summarizing basic information about a story
-    fn get_story_text(story: &hn_client::Story) -> StyledString {
+    fn get_story_text(story: &client::Story) -> StyledString {
         let mut story_text =
             Self::get_matched_text(story.highlight_result.title.clone(), ColorStyle::default());
         if !story.url.is_empty() {
@@ -110,8 +110,8 @@ impl StoryView {
 /// Return a main view of a StoryView displaying the story list.
 /// The main view of a StoryView is a View without status bar or footer.
 pub fn get_story_main_view(
-    stories: Vec<hn_client::Story>,
-    client: &'static hn_client::HNClient,
+    stories: Vec<client::Story>,
+    client: &'static client::HNClient,
     starting_id: usize,
 ) -> OnEventView<StoryView> {
     let story_view_keymap = get_story_view_keymap().clone();
@@ -178,7 +178,7 @@ pub fn get_story_main_view(
         )
         .on_pre_event_inner(story_view_keymap.open_story_in_browser, move |s, _| {
             let id = s.stories[s.get_focus_index()].id;
-            let url = format!("{}/item?id={}", hn_client::HN_HOST_URL, id);
+            let url = format!("{}/item?id={}", client::HN_HOST_URL, id);
             open_url_in_browser(&url);
             Some(EventResult::Consumed(None))
         })
@@ -205,12 +205,12 @@ pub fn get_story_main_view(
 /// Return a StoryView given a story list and the view description
 pub fn get_story_view(
     desc: &str,
-    stories: Vec<hn_client::Story>,
-    client: &'static hn_client::HNClient,
+    stories: Vec<client::Story>,
+    client: &'static client::HNClient,
     tag: &'static str,
     by_date: bool,
     page: usize,
-    numeric_filters: hn_client::StoryNumericFilters,
+    numeric_filters: client::StoryNumericFilters,
 ) -> impl View {
     let starting_id = get_config().client.story_limit.get_story_limit_by_tag(tag) * page;
     let main_view = get_story_main_view(stories, client, starting_id).full_height();
@@ -249,11 +249,11 @@ pub fn get_story_view(
 /// Add a StoryView as a new layer to the main Cursive View
 pub fn add_story_view_layer(
     s: &mut Cursive,
-    client: &'static hn_client::HNClient,
+    client: &'static client::HNClient,
     tag: &'static str,
     by_date: bool,
     page: usize,
-    numeric_filters: hn_client::StoryNumericFilters,
+    numeric_filters: client::StoryNumericFilters,
     pop_layer: bool,
 ) {
     let async_view =

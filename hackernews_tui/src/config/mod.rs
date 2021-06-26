@@ -1,13 +1,13 @@
+// modules
 mod keybindings;
 mod theme;
 
-use anyhow::Result;
+// re-export
+pub use keybindings::*;
+pub use theme::*;
+
 use config_parser2::*;
-use keybindings::KeyMap;
-use log::warn;
-use once_cell::sync::OnceCell;
 use serde::Deserialize;
-use theme::Theme;
 
 #[derive(Debug, Deserialize, ConfigParse)]
 /// Config is a struct storing the application's configurations
@@ -18,19 +18,20 @@ pub struct Config {
     pub url_open_command: String,
     pub article_parse_command: ArticleParseCommand,
     pub client: Client,
-    pub theme: Theme,
-    pub keymap: KeyMap,
+    pub theme: theme::Theme,
+    pub keymap: keybindings::KeyMap,
 }
 
 impl Config {
     // parse config struct from a file
-    pub fn from_config_file(file_path: &str) -> Result<Self> {
+    pub fn from_config_file(file_path: &str) -> anyhow::Result<Self> {
         match std::fs::read_to_string(file_path) {
             // if cannot open the file, use the default configurations
             Err(err) => {
-                warn!(
+                log::warn!(
                     "failed to open {}: {:#?}\n...Use the default configurations instead",
-                    file_path, err
+                    file_path,
+                    err
                 );
                 Ok(Self::default())
             }
@@ -70,8 +71,8 @@ impl Default for Config {
                 },
                 client_timeout: 32,
             },
-            theme: Theme::default(),
-            keymap: KeyMap::default(),
+            theme: theme::Theme::default(),
+            keymap: keybindings::KeyMap::default(),
         }
     }
 }
@@ -82,7 +83,7 @@ pub struct LazyLoadingComments {
     pub num_comments_after: usize,
 }
 
-#[derive(Debug, Deserialize, ConfigParse)]
+#[derive(Debug, Deserialize, ConfigParse, Clone)]
 pub struct ArticleParseCommand {
     pub command: String,
     pub options: Vec<String>,
@@ -118,7 +119,7 @@ pub struct Client {
     pub client_timeout: u64,
 }
 
-static CONFIG: OnceCell<Config> = OnceCell::new();
+static CONFIG: once_cell::sync::OnceCell<Config> = once_cell::sync::OnceCell::new();
 
 pub fn init_config(config: Config) {
     CONFIG.set(config).unwrap_or_else(|_| {

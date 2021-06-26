@@ -1,5 +1,5 @@
+pub use crate::client;
 pub use crate::config::*;
-pub use crate::hn_client;
 pub use crate::utils::*;
 pub use crate::view::{
     article_view::{self, ArticleView},

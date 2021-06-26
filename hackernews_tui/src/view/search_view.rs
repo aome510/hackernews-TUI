@@ -21,19 +21,19 @@ pub struct SearchView {
     // ("query_text", "need_update_view") pair
     query: Arc<RwLock<(String, bool)>>,
 
-    stories: Arc<RwLock<Vec<hn_client::Story>>>,
+    stories: Arc<RwLock<Vec<client::Story>>>,
 
     mode: SearchViewMode,
 
     view: LinearLayout,
-    client: &'static hn_client::HNClient,
+    client: &'static client::HNClient,
     cb_sink: CbSink,
 }
 
 impl SearchView {
     fn get_matched_stories_view(
-        stories: Vec<hn_client::Story>,
-        client: &'static hn_client::HNClient,
+        stories: Vec<client::Story>,
+        client: &'static client::HNClient,
         starting_id: usize,
     ) -> impl View {
         story_view::get_story_main_view(stories, client, starting_id).full_height()
@@ -61,8 +61,8 @@ impl SearchView {
         query: &str,
         by_date: bool,
         page: usize,
-        stories: Vec<hn_client::Story>,
-        client: &'static hn_client::HNClient,
+        stories: Vec<client::Story>,
+        client: &'static client::HNClient,
     ) -> LinearLayout {
         let starting_id = get_config().client.story_limit.search * page;
         let mut view = LinearLayout::vertical()
@@ -200,7 +200,7 @@ impl SearchView {
         }
     }
 
-    pub fn new(client: &'static hn_client::HNClient, cb_sink: CbSink) -> Self {
+    pub fn new(client: &'static client::HNClient, cb_sink: CbSink) -> Self {
         let view = Self::get_search_view(&SearchViewMode::Search, "", false, 0, vec![], client);
         let stories = Arc::new(RwLock::new(vec![]));
         let query = Arc::new(RwLock::new((String::new(), false)));
@@ -247,7 +247,7 @@ impl ViewWrapper for SearchView {
 
 /// Return a main view of a SearchView displaying the matched story list with a search bar.
 /// The main view of a SearchView is a View without status bar or footer.
-fn get_search_main_view(client: &'static hn_client::HNClient, cb_sink: CbSink) -> impl View {
+fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> impl View {
     let story_view_keymap = get_story_view_keymap().clone();
     let search_view_keymap = get_search_view_keymap().clone();
 
@@ -314,7 +314,7 @@ fn get_search_main_view(client: &'static hn_client::HNClient, cb_sink: CbSink) -
 }
 
 /// Return a view representing a SearchView that searches stories with queries
-pub fn get_search_view(client: &'static hn_client::HNClient, cb_sink: CbSink) -> impl View {
+pub fn get_search_view(client: &'static client::HNClient, cb_sink: CbSink) -> impl View {
     let main_view = get_search_main_view(client, cb_sink);
     let mut view = LinearLayout::vertical()
         .child(get_status_bar_with_desc("Search View"))
@@ -328,7 +328,7 @@ pub fn get_search_view(client: &'static hn_client::HNClient, cb_sink: CbSink) ->
 }
 
 /// Add a SearchView as a new layer to the main Cursive View
-pub fn add_search_view_layer(s: &mut Cursive, client: &'static hn_client::HNClient) {
+pub fn add_search_view_layer(s: &mut Cursive, client: &'static client::HNClient) {
     let cb_sink = s.cb_sink().clone();
     s.screen_mut()
         .add_transparent_layer(Layer::new(get_search_view(client, cb_sink)));
