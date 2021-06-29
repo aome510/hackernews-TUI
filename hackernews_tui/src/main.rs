@@ -45,7 +45,17 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &'static client::HNClient) {
         .custom_view_navigation
         .iter()
         .for_each(|data| {
-            set_up_switch_view_shortcut!(data.key.clone(), &data.tag, s, client);
+            s.set_on_post_event(data.key.clone(), move |s| {
+                story_view::add_story_view_layer(
+                    s,
+                    client,
+                    &data.tag,
+                    data.by_date,
+                    0,
+                    data.numeric_filters,
+                    false,
+                );
+            });
         });
 
     // .........................................
