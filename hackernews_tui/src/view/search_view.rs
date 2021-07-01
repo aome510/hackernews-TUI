@@ -26,15 +26,28 @@ impl Query {
     }
 
     fn add_char(&mut self, c: char) {
-        self.text.push(c);
+        self.text.insert(self.cursor, c);
         self.cursor += 1;
         self.needs_update = true;
     }
 
     fn del_char(&mut self) {
-        if !self.text.is_empty() {
-            self.text.pop();
+        if !self.text.is_empty() && self.cursor > 0 {
             self.cursor -= 1;
+            self.text.remove(self.cursor);
+            self.needs_update = true;
+        }
+    }
+
+    fn move_cursor_left(&mut self) {
+        if self.cursor > 0 {
+            self.cursor -= 1;
+            self.needs_update = true;
+        }
+    }
+    fn move_cursor_right(&mut self) {
+        if self.cursor < self.text.len() {
+            self.cursor += 1;
             self.needs_update = true;
         }
     }
@@ -332,6 +345,16 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
                         }
                         Event::Key(Key::Backspace) => {
                             s.del_char();
+                            Some(EventResult::Consumed(None))
+                        }
+                        Event::Key(Key::Left) => {
+                            s.query.write().unwrap().move_cursor_left();
+                            s.update_view();
+                            Some(EventResult::Consumed(None))
+                        }
+                        Event::Key(Key::Right) => {
+                            s.query.write().unwrap().move_cursor_right();
+                            s.update_view();
                             Some(EventResult::Consumed(None))
                         }
                         // ignore all keys that move the focus out of the search bar
