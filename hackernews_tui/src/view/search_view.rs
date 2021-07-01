@@ -9,13 +9,43 @@ pub enum SearchViewMode {
     Search,
 }
 
+#[derive(Clone)]
+struct Query {
+    text: String,
+    cursor: usize,
+    needs_update: bool, // decide if the search view needs to be re-draw
+}
+
+impl Query {
+    fn new() -> Self {
+        Query {
+            text: String::new(),
+            cursor: 0,
+            needs_update: false,
+        }
+    }
+
+    fn add_char(&mut self, c: char) {
+        self.text.push(c);
+        self.cursor += 1;
+        self.needs_update = true;
+    }
+
+    fn del_char(&mut self) {
+        if !self.text.is_empty() {
+            self.text.pop();
+            self.cursor -= 1;
+            self.needs_update = true;
+        }
+    }
+}
+
 /// SearchView is a view displaying a search bar and
 /// a matched story list matching a query string
 pub struct SearchView {
     by_date: bool,
     page: usize,
-    // ("query_text", "need_update_view") pair
-    query: Arc<RwLock<(String, bool)>>,
+    query: Arc<RwLock<Query>>,
 
     stories: Arc<RwLock<Vec<client::Story>>>,
 
@@ -35,7 +65,7 @@ impl SearchView {
         story_view::get_story_main_view(stories, client, starting_id).full_height()
     }
 
-    fn get_query_text_view(query: String, by_date: bool) -> impl View {
+    fn get_query_text_view(query: Query, by_date: bool) -> impl View {
         let desc_view = TextView::new(StyledString::styled(
             format!(
                 "Search (sort_by: {}): ",
@@ -46,9 +76,8 @@ impl SearchView {
                 get_config_theme().search_highlight_bg.color,
             ),
         ));
-        let query = format!("{} ", query);
-        let l = query.chars().count();
-        let query_view = text_view::TextView::new_with_cursor(query, l - 1);
+        let query_view =
+            text_view::TextView::new_with_cursor(format!("{} ", query.text), query.cursor);
         LinearLayout::horizontal()
             .child(desc_view)
             .child(query_view)
@@ -56,7 +85,7 @@ impl SearchView {
 
     fn get_search_view(
         mode: &SearchViewMode,
-        query: &str,
+        query: Query,
         by_date: bool,
         page: usize,
         stories: Vec<client::Story>,
@@ -64,7 +93,7 @@ impl SearchView {
     ) -> LinearLayout {
         let starting_id = get_config().client.story_limit.search * page;
         let mut view = LinearLayout::vertical()
-            .child(Self::get_query_text_view(query.to_string(), by_date))
+            .child(Self::get_query_text_view(query, by_date))
             .child(Self::get_matched_stories_view(stories, client, starting_id));
         match mode {
             SearchViewMode::Search => {
@@ -78,7 +107,7 @@ impl SearchView {
     }
 
     fn update_view(&mut self) {
-        if self.query.read().unwrap().1 {
+        if self.query.read().unwrap().needs_update {
             let stories = self.stories.read().unwrap().clone();
             if stories.is_empty() {
                 self.mode = SearchViewMode::Search;
@@ -86,13 +115,13 @@ impl SearchView {
 
             self.view = Self::get_search_view(
                 &self.mode,
-                &self.query.read().unwrap().0,
+                self.query.read().unwrap().clone(),
                 self.by_date,
                 self.page,
                 stories,
                 self.client,
             );
-            self.query.write().unwrap().1 = false;
+            self.query.write().unwrap().needs_update = false;
         }
     }
 
@@ -103,7 +132,7 @@ impl SearchView {
         let cb_sink = self.cb_sink.clone();
 
         let client = self.client;
-        let query = self.query.read().unwrap().0.clone();
+        let query = self.query.read().unwrap().text.clone();
         let by_date = self.by_date;
         let page = self.page;
 
@@ -139,7 +168,7 @@ impl SearchView {
 
                     // failed to get matched stories, but we still need
                     // to remove the loading dialog
-                    if *self_query.read().unwrap().0 == query {
+                    if *self_query.read().unwrap().text == query {
                         cb_sink
                             .send(Box::new(move |s| {
                                 if is_navigation_mode {
@@ -153,9 +182,9 @@ impl SearchView {
                     // found matched stories...
                     // if the search query matches the current query,
                     // update stories, remove the loading dialog, and force redrawing the view
-                    if *self_query.read().unwrap().0 == query {
+                    if *self_query.read().unwrap().text == query {
                         (*self_stories.write().unwrap()) = stories;
-                        self_query.write().unwrap().1 = true;
+                        self_query.write().unwrap().needs_update = true;
 
                         cb_sink
                             .send(Box::new(move |s| {
@@ -172,15 +201,13 @@ impl SearchView {
 
     pub fn add_char(&mut self, c: char) {
         self.page = 0;
-        self.query.write().unwrap().0.push(c);
-        self.query.write().unwrap().1 = true;
+        self.query.write().unwrap().add_char(c);
         self.update_matched_stories();
     }
 
     pub fn del_char(&mut self) {
         self.page = 0;
-        self.query.write().unwrap().0.pop();
-        self.query.write().unwrap().1 = true;
+        self.query.write().unwrap().del_char();
         self.update_matched_stories();
     }
 
@@ -201,9 +228,16 @@ impl SearchView {
     }
 
     pub fn new(client: &'static client::HNClient, cb_sink: CbSink) -> Self {
-        let view = Self::get_search_view(&SearchViewMode::Search, "", false, 0, vec![], client);
+        let view = Self::get_search_view(
+            &SearchViewMode::Search,
+            Query::new(),
+            false,
+            0,
+            vec![],
+            client,
+        );
         let stories = Arc::new(RwLock::new(vec![]));
-        let query = Arc::new(RwLock::new((String::new(), false)));
+        let query = Arc::new(RwLock::new(Query::new()));
         SearchView {
             by_date: false,
             page: 0,
