@@ -6,6 +6,7 @@ pub struct TextView {
     content: utils::markup::StyledString,
     rows: Vec<lines::spans::Row>,
     width: usize,
+    cursor: Option<usize>,
     size_cache: Option<XY<SizeCache>>,
 }
 
@@ -19,6 +20,7 @@ impl TextView {
             content,
             rows: Vec::new(),
             width: 0,
+            cursor: None,
             size_cache: None,
         }
     }
@@ -52,14 +54,24 @@ impl TextView {
 impl View for TextView {
     fn draw(&self, printer: &Printer) {
         printer.with_selection(printer.focused, |printer| {
+            let mut pos: usize = 0;
             self.rows.iter().enumerate().for_each(|(y, row)| {
                 let mut x: usize = 0;
                 row.resolve(&self.content).iter().for_each(|span| {
-                    let l = span.content.chars().count();
                     printer.with_style(*span.attr, |printer| {
-                        printer.print((x, y), span.content);
+                        span.content.chars().for_each(|c| {
+                            match self.cursor.as_ref() {
+                                Some(cursor_pos) if pos == *cursor_pos => {
+                                    printer.with_effect(Effect::Reverse, |printer| {
+                                        printer.print((x, y), &c.to_string());
+                                    });
+                                }
+                                _ => printer.print((x, y), &c.to_string()),
+                            };
+                            x += 1;
+                            pos += 1;
+                        });
                     });
-                    x += l;
                 });
                 if x < printer.size.x {
                     printer.print_hline((x, y), printer.size.x - x, " ");
