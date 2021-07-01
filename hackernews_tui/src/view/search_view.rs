@@ -36,20 +36,22 @@ impl SearchView {
     }
 
     fn get_query_text_view(query: String, by_date: bool) -> impl View {
-        let mut style_string = StyledString::styled(
+        let desc_view = TextView::new(StyledString::styled(
             format!(
-                "Search (sort_by: {}):",
+                "Search (sort_by: {}): ",
                 if by_date { "date" } else { "popularity" }
             ),
             ColorStyle::new(
                 PaletteColor::TitlePrimary,
                 get_config_theme().search_highlight_bg.color,
             ),
-        );
-        style_string.append_plain(format!(" {}", query));
-        text_view::TextView::new(style_string)
-            .fixed_height(1)
-            .full_width()
+        ));
+        let query = format!("{} ", query);
+        let l = query.chars().count();
+        let query_view = text_view::TextView::new_with_cursor(query, l - 1);
+        LinearLayout::horizontal()
+            .child(desc_view)
+            .child(query_view)
     }
 
     fn get_search_view(
@@ -250,30 +252,6 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
     let search_view_keymap = get_search_view_keymap().clone();
 
     OnEventView::new(SearchView::new(&client, cb_sink))
-        .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
-            match s.mode {
-                SearchViewMode::Navigation => None,
-                SearchViewMode::Search => {
-                    match *e {
-                        Event::Char(c) => {
-                            s.add_char(c);
-                            Some(EventResult::Consumed(None))
-                        }
-                        Event::Key(Key::Backspace) => {
-                            s.del_char();
-                            Some(EventResult::Consumed(None))
-                        }
-                        // ignore all keys that move the focus out of the search bar
-                        Event::Key(Key::Up)
-                        | Event::Key(Key::Down)
-                        | Event::Key(Key::PageUp)
-                        | Event::Key(Key::PageDown)
-                        | Event::Key(Key::Tab) => Some(EventResult::Ignored),
-                        _ => None,
-                    }
-                }
-            }
-        })
         .on_pre_event_inner(search_view_keymap.to_navigation_mode, |s, _| match s.mode {
             SearchViewMode::Navigation => None,
             SearchViewMode::Search => {
@@ -308,6 +286,30 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
                 s.update_page(false);
             }
             Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
+            match s.mode {
+                SearchViewMode::Navigation => None,
+                SearchViewMode::Search => {
+                    match *e {
+                        Event::Char(c) => {
+                            s.add_char(c);
+                            Some(EventResult::Consumed(None))
+                        }
+                        Event::Key(Key::Backspace) => {
+                            s.del_char();
+                            Some(EventResult::Consumed(None))
+                        }
+                        // ignore all keys that move the focus out of the search bar
+                        Event::Key(Key::Up)
+                        | Event::Key(Key::Down)
+                        | Event::Key(Key::PageUp)
+                        | Event::Key(Key::PageDown)
+                        | Event::Key(Key::Tab) => Some(EventResult::Ignored),
+                        _ => None,
+                    }
+                }
+            }
         })
 }
 

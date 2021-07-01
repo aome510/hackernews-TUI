@@ -25,6 +25,20 @@ impl TextView {
         }
     }
 
+    pub fn new_with_cursor<S>(content: S, cursor_pos: usize) -> Self
+    where
+        S: Into<utils::markup::StyledString>,
+    {
+        let content = content.into();
+        TextView {
+            content,
+            rows: Vec::new(),
+            width: 0,
+            cursor: Some(cursor_pos),
+            size_cache: None,
+        }
+    }
+
     pub fn set_content<S>(&mut self, content: S)
     where
         S: Into<utils::markup::StyledString>,
