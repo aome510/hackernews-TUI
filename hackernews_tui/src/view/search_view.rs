@@ -275,22 +275,12 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
     let edit_keymap = get_edit_keymap().clone();
 
     OnEventView::new(SearchView::new(&client, cb_sink))
-        .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
-            match s.mode {
-                SearchViewMode::Navigation => None,
-                SearchViewMode::Search => {
-                    match *e {
-                        Event::Char(c) => s.add_char(c),
-                        // ignore all keys that move the focus out of the search bar
-                        Event::Key(Key::Up)
-                        | Event::Key(Key::Down)
-                        | Event::Key(Key::PageUp)
-                        | Event::Key(Key::PageDown)
-                        | Event::Key(Key::Tab) => Some(EventResult::Ignored),
-                        _ => None,
-                    }
-                }
-            }
+        .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| match s.mode {
+            SearchViewMode::Navigation => None,
+            SearchViewMode::Search => match *e {
+                Event::Char(c) => s.add_char(c),
+                _ => None,
+            },
         })
         .on_pre_event_inner(search_view_keymap.to_navigation_mode, |s, _| match s.mode {
             SearchViewMode::Navigation => None,
