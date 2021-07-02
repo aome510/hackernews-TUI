@@ -1,12 +1,12 @@
+use crate::client;
 use config_parser2::*;
 use cursive::event::{self, Event, EventTrigger};
 use serde::{de, Deserialize, Deserializer};
 
-use crate::client;
-
 #[derive(Debug, Clone, Deserialize, ConfigParse)]
 pub struct KeyMap {
     pub custom_keymap: CustomKeyMap,
+    pub edit_keymap: EditKeyMap,
     pub global_keymap: GlobalKeyMap,
     pub story_view_keymap: StoryViewKeyMap,
     pub search_view_keymap: SearchViewKeyMap,
@@ -18,6 +18,7 @@ impl Default for KeyMap {
     fn default() -> Self {
         KeyMap {
             custom_keymap: CustomKeyMap::default(),
+            edit_keymap: EditKeyMap::default(),
             global_keymap: GlobalKeyMap::default(),
             story_view_keymap: StoryViewKeyMap::default(),
             search_view_keymap: SearchViewKeyMap::default(),
@@ -46,6 +47,27 @@ impl Default for CustomKeyMap {
     fn default() -> Self {
         CustomKeyMap {
             custom_view_navigation: vec![],
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, ConfigParse)]
+pub struct EditKeyMap {
+    pub move_cursor_left: Key,
+    pub move_cursor_right: Key,
+    pub move_cursor_to_begin: Key,
+    pub move_cursor_to_end: Key,
+    pub backward_delete_char: Key,
+}
+
+impl Default for EditKeyMap {
+    fn default() -> Self {
+        EditKeyMap {
+            move_cursor_left: Key::new(event::Key::Left),
+            move_cursor_right: Key::new(event::Key::Right),
+            move_cursor_to_begin: Key::new(event::Key::Home),
+            move_cursor_to_end: Key::new(event::Key::End),
+            backward_delete_char: Key::new(event::Key::Backspace),
         }
     }
 }
@@ -366,6 +388,10 @@ impl<'de> de::Deserialize<'de> for Key {
 
 pub fn get_custom_keymap() -> &'static CustomKeyMap {
     &super::get_config().keymap.custom_keymap
+}
+
+pub fn get_edit_keymap() -> &'static EditKeyMap {
+    &super::get_config().keymap.edit_keymap
 }
 
 pub fn get_global_keymap() -> &'static GlobalKeyMap {

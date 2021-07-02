@@ -174,16 +174,37 @@ impl SearchView {
         );
     }
 
-    pub fn add_char(&mut self, c: char) {
+    pub fn add_char(&mut self, c: char) -> Option<EventResult> {
         self.page = 0;
         self.query.write().unwrap().text_view.add_char(c);
         self.update_matched_stories();
+        Some(EventResult::Consumed(None))
     }
-
-    pub fn del_char(&mut self) {
+    pub fn del_char(&mut self) -> Option<EventResult> {
         self.page = 0;
         self.query.write().unwrap().text_view.del_char();
         self.update_matched_stories();
+        Some(EventResult::Consumed(None))
+    }
+    pub fn move_cursor_left(&mut self) -> Option<EventResult> {
+        self.query.write().unwrap().text_view.move_cursor_left();
+        self.query.write().unwrap().needs_update = true;
+        Some(EventResult::Consumed(None))
+    }
+    pub fn move_cursor_right(&mut self) -> Option<EventResult> {
+        self.query.write().unwrap().text_view.move_cursor_right();
+        self.query.write().unwrap().needs_update = true;
+        Some(EventResult::Consumed(None))
+    }
+    pub fn move_cursor_to_begin(&mut self) -> Option<EventResult> {
+        self.query.write().unwrap().text_view.move_cursor_to_begin();
+        self.query.write().unwrap().needs_update = true;
+        Some(EventResult::Consumed(None))
+    }
+    pub fn move_cursor_to_end(&mut self) -> Option<EventResult> {
+        self.query.write().unwrap().text_view.move_cursor_to_end();
+        self.query.write().unwrap().needs_update = true;
+        Some(EventResult::Consumed(None))
     }
 
     pub fn toggle_by_date(&mut self) {
@@ -191,7 +212,6 @@ impl SearchView {
         self.by_date = !self.by_date;
         self.update_matched_stories();
     }
-
     pub fn update_page(&mut self, next_page: bool) {
         if next_page {
             self.page += 1;
@@ -249,6 +269,7 @@ impl ViewWrapper for SearchView {
 fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> impl View {
     let story_view_keymap = get_story_view_keymap().clone();
     let search_view_keymap = get_search_view_keymap().clone();
+    let edit_keymap = get_edit_keymap().clone();
 
     OnEventView::new(SearchView::new(&client, cb_sink))
         .on_pre_event_inner(search_view_keymap.to_navigation_mode, |s, _| match s.mode {
@@ -287,39 +308,21 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
             }
             Some(EventResult::Consumed(None))
         })
+        .on_pre_event_inner(edit_keymap.backward_delete_char, |s, _| s.del_char())
+        .on_pre_event_inner(edit_keymap.move_cursor_left, |s, _| s.move_cursor_left())
+        .on_pre_event_inner(edit_keymap.move_cursor_right, |s, _| s.move_cursor_right())
+        .on_pre_event_inner(edit_keymap.move_cursor_to_begin, |s, _| {
+            s.move_cursor_to_begin()
+        })
+        .on_pre_event_inner(edit_keymap.move_cursor_to_end, |s, _| {
+            s.move_cursor_to_end()
+        })
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
             match s.mode {
                 SearchViewMode::Navigation => None,
                 SearchViewMode::Search => {
                     match *e {
-                        Event::Char(c) => {
-                            s.add_char(c);
-                            Some(EventResult::Consumed(None))
-                        }
-                        Event::Key(Key::Backspace) => {
-                            s.del_char();
-                            Some(EventResult::Consumed(None))
-                        }
-                        Event::Key(Key::Left) => {
-                            s.query.write().unwrap().text_view.move_cursor_left();
-                            s.query.write().unwrap().needs_update = true;
-                            Some(EventResult::Consumed(None))
-                        }
-                        Event::Key(Key::Right) => {
-                            s.query.write().unwrap().text_view.move_cursor_right();
-                            s.query.write().unwrap().needs_update = true;
-                            Some(EventResult::Consumed(None))
-                        }
-                        Event::Key(Key::Home) => {
-                            s.query.write().unwrap().text_view.move_cursor_to_begin();
-                            s.query.write().unwrap().needs_update = true;
-                            Some(EventResult::Consumed(None))
-                        }
-                        Event::Key(Key::End) => {
-                            s.query.write().unwrap().text_view.move_cursor_to_end();
-                            s.query.write().unwrap().needs_update = true;
-                            Some(EventResult::Consumed(None))
-                        }
+                        Event::Char(c) => s.add_char(c),
                         // ignore all keys that move the focus out of the search bar
                         Event::Key(Key::Up)
                         | Event::Key(Key::Down)
