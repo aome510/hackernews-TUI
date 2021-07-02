@@ -37,6 +37,7 @@ This application is the right tool for you :muscle:
   - [Demo](#demo)
 - [Default Shortcuts](#default-shortcuts)
   - [Global key shortcuts](#global-key-shortcuts)
+  - [Edit key shortcuts](#edit-key-shortcuts)
   - [Key shortcuts for each View](#key-shortcuts-for-each-view)
     - [Story View](#story-view-shortcuts)
     - [Article View](#article-view-shortcuts)
@@ -143,6 +144,16 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 - `C-x`: Go to ask HN view
 - `C-c`: Go to show HN view
 - `C-v`: Go to jobs view
+
+### Edit key shortcuts
+
+**Shortcuts** available in any editable texts.
+
+- `left`: Move cursor to left
+- `right`: Move cursor to right
+- `home`: Move cursor to the begin of line
+- `end`: Move cursor to the end of line
+- `backspace`: Delete backward character
 
 ### Key shortcuts for each `View`
 
