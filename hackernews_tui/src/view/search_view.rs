@@ -64,9 +64,8 @@ impl SearchView {
         let mut view = LinearLayout::horizontal().child(desc_view);
         match self.mode {
             SearchViewMode::Navigation => {
-                debug!("navigation mode");
                 view.add_child(TextView::new(
-                    self.query.read().unwrap().text_view.get_content(),
+                    self.query.read().unwrap().text_view.get_text(),
                 ));
             }
             SearchViewMode::Search => view.add_child(self.query.read().unwrap().text_view.clone()),
@@ -107,7 +106,7 @@ impl SearchView {
         let cb_sink = self.cb_sink.clone();
 
         let client = self.client;
-        let query = self.query.read().unwrap().text_view.get_content();
+        let query = self.query.read().unwrap().text_view.get_text();
         let by_date = self.by_date;
         let page = self.page;
 
@@ -143,7 +142,7 @@ impl SearchView {
 
                     // failed to get matched stories, but we still need
                     // to remove the loading dialog
-                    if *self_query.read().unwrap().text_view.get_content() == query {
+                    if *self_query.read().unwrap().text_view.get_text() == query {
                         cb_sink
                             .send(Box::new(move |s| {
                                 if is_navigation_mode {
@@ -157,7 +156,7 @@ impl SearchView {
                     // found matched stories...
                     // if the search query matches the current query,
                     // update stories, remove the loading dialog, and force redrawing the view
-                    if *self_query.read().unwrap().text_view.get_content() == query {
+                    if *self_query.read().unwrap().text_view.get_text() == query {
                         (*self_stories.write().unwrap()) = stories;
                         self_query.write().unwrap().needs_update = true;
 
