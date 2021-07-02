@@ -1,54 +1,24 @@
 use super::help_view::*;
-use super::text_view;
+use super::text_view::EditableTextView;
 use crate::prelude::*;
 use std::sync::{Arc, RwLock};
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub enum SearchViewMode {
     Navigation,
     Search,
 }
 
-#[derive(Clone)]
 struct Query {
-    text: String,
-    cursor: usize,
+    text_view: EditableTextView,
     needs_update: bool, // decide if the search view needs to be re-draw
 }
 
 impl Query {
     fn new() -> Self {
         Query {
-            text: String::new(),
-            cursor: 0,
+            text_view: EditableTextView::new(),
             needs_update: false,
-        }
-    }
-
-    fn add_char(&mut self, c: char) {
-        self.text.insert(self.cursor, c);
-        self.cursor += 1;
-        self.needs_update = true;
-    }
-
-    fn del_char(&mut self) {
-        if !self.text.is_empty() && self.cursor > 0 {
-            self.cursor -= 1;
-            self.text.remove(self.cursor);
-            self.needs_update = true;
-        }
-    }
-
-    fn move_cursor_left(&mut self) {
-        if self.cursor > 0 {
-            self.cursor -= 1;
-            self.needs_update = true;
-        }
-    }
-    fn move_cursor_right(&mut self) {
-        if self.cursor < self.text.len() {
-            self.cursor += 1;
-            self.needs_update = true;
         }
     }
 }
@@ -70,45 +40,46 @@ pub struct SearchView {
 }
 
 impl SearchView {
-    fn get_matched_stories_view(
-        stories: Vec<client::Story>,
-        client: &'static client::HNClient,
-        starting_id: usize,
-    ) -> impl View {
-        story_view::get_story_main_view(stories, client, starting_id).full_height()
+    fn get_matched_stories_view(&self, starting_id: usize) -> impl View {
+        story_view::get_story_main_view(
+            self.stories.read().unwrap().clone(),
+            self.client,
+            starting_id,
+        )
+        .full_height()
     }
 
-    fn get_query_text_view(query: Query, by_date: bool) -> impl View {
+    fn get_query_view(&self) -> impl View {
         let desc_view = TextView::new(StyledString::styled(
             format!(
                 "Search (sort_by: {}): ",
-                if by_date { "date" } else { "popularity" }
+                if self.by_date { "date" } else { "popularity" }
             ),
             ColorStyle::new(
                 PaletteColor::TitlePrimary,
                 get_config_theme().search_highlight_bg.color,
             ),
         ));
-        let query_view =
-            text_view::TextView::new_with_cursor(format!("{} ", query.text), query.cursor);
-        LinearLayout::horizontal()
-            .child(desc_view)
-            .child(query_view)
+
+        let mut view = LinearLayout::horizontal().child(desc_view);
+        match self.mode {
+            SearchViewMode::Navigation => {
+                debug!("navigation mode");
+                view.add_child(TextView::new(
+                    self.query.read().unwrap().text_view.get_content(),
+                ));
+            }
+            SearchViewMode::Search => view.add_child(self.query.read().unwrap().text_view.clone()),
+        };
+        view
     }
 
-    fn get_search_view(
-        mode: &SearchViewMode,
-        query: Query,
-        by_date: bool,
-        page: usize,
-        stories: Vec<client::Story>,
-        client: &'static client::HNClient,
-    ) -> LinearLayout {
-        let starting_id = get_config().client.story_limit.search * page;
+    fn get_view(&self) -> LinearLayout {
+        let starting_id = get_config().client.story_limit.search * self.page;
         let mut view = LinearLayout::vertical()
-            .child(Self::get_query_text_view(query, by_date))
-            .child(Self::get_matched_stories_view(stories, client, starting_id));
-        match mode {
+            .child(self.get_query_view())
+            .child(self.get_matched_stories_view(starting_id));
+        match self.mode {
             SearchViewMode::Search => {
                 view.set_focus_index(0).unwrap();
             }
@@ -121,19 +92,10 @@ impl SearchView {
 
     fn update_view(&mut self) {
         if self.query.read().unwrap().needs_update {
-            let stories = self.stories.read().unwrap().clone();
-            if stories.is_empty() {
+            if self.stories.read().unwrap().is_empty() {
                 self.mode = SearchViewMode::Search;
             };
-
-            self.view = Self::get_search_view(
-                &self.mode,
-                self.query.read().unwrap().clone(),
-                self.by_date,
-                self.page,
-                stories,
-                self.client,
-            );
+            self.view = self.get_view();
             self.query.write().unwrap().needs_update = false;
         }
     }
@@ -145,7 +107,7 @@ impl SearchView {
         let cb_sink = self.cb_sink.clone();
 
         let client = self.client;
-        let query = self.query.read().unwrap().text.clone();
+        let query = self.query.read().unwrap().text_view.get_content();
         let by_date = self.by_date;
         let page = self.page;
 
@@ -181,7 +143,7 @@ impl SearchView {
 
                     // failed to get matched stories, but we still need
                     // to remove the loading dialog
-                    if *self_query.read().unwrap().text == query {
+                    if *self_query.read().unwrap().text_view.get_content() == query {
                         cb_sink
                             .send(Box::new(move |s| {
                                 if is_navigation_mode {
@@ -195,7 +157,7 @@ impl SearchView {
                     // found matched stories...
                     // if the search query matches the current query,
                     // update stories, remove the loading dialog, and force redrawing the view
-                    if *self_query.read().unwrap().text == query {
+                    if *self_query.read().unwrap().text_view.get_content() == query {
                         (*self_stories.write().unwrap()) = stories;
                         self_query.write().unwrap().needs_update = true;
 
@@ -214,13 +176,13 @@ impl SearchView {
 
     pub fn add_char(&mut self, c: char) {
         self.page = 0;
-        self.query.write().unwrap().add_char(c);
+        self.query.write().unwrap().text_view.add_char(c);
         self.update_matched_stories();
     }
 
     pub fn del_char(&mut self) {
         self.page = 0;
-        self.query.write().unwrap().del_char();
+        self.query.write().unwrap().text_view.del_char();
         self.update_matched_stories();
     }
 
@@ -241,26 +203,20 @@ impl SearchView {
     }
 
     pub fn new(client: &'static client::HNClient, cb_sink: CbSink) -> Self {
-        let view = Self::get_search_view(
-            &SearchViewMode::Search,
-            Query::new(),
-            false,
-            0,
-            vec![],
-            client,
-        );
         let stories = Arc::new(RwLock::new(vec![]));
         let query = Arc::new(RwLock::new(Query::new()));
-        SearchView {
+        let mut search_view = SearchView {
             by_date: false,
             page: 0,
             mode: SearchViewMode::Search,
             client,
             query,
-            view,
+            view: LinearLayout::vertical(),
             stories,
             cb_sink,
-        }
+        };
+        search_view.view = search_view.get_view();
+        search_view
     }
 }
 
@@ -286,10 +242,6 @@ impl ViewWrapper for SearchView {
         self.update_view();
         true
     }
-
-    fn wrap_draw(&self, printer: &Printer) {
-        self.view.draw(printer);
-    }
 }
 
 /// Return a main view of a SearchView displaying the matched story list with a search bar.
@@ -304,6 +256,7 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
             SearchViewMode::Search => {
                 s.mode = SearchViewMode::Navigation;
                 s.view.set_focus_index(1).unwrap_or_else(|_| {});
+                s.query.write().unwrap().needs_update = true;
                 Some(EventResult::Consumed(None))
             }
         })
@@ -348,13 +301,23 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
                             Some(EventResult::Consumed(None))
                         }
                         Event::Key(Key::Left) => {
-                            s.query.write().unwrap().move_cursor_left();
-                            s.update_view();
+                            s.query.write().unwrap().text_view.move_cursor_left();
+                            s.query.write().unwrap().needs_update = true;
                             Some(EventResult::Consumed(None))
                         }
                         Event::Key(Key::Right) => {
-                            s.query.write().unwrap().move_cursor_right();
-                            s.update_view();
+                            s.query.write().unwrap().text_view.move_cursor_right();
+                            s.query.write().unwrap().needs_update = true;
+                            Some(EventResult::Consumed(None))
+                        }
+                        Event::Key(Key::Home) => {
+                            s.query.write().unwrap().text_view.move_cursor_to_begin();
+                            s.query.write().unwrap().needs_update = true;
+                            Some(EventResult::Consumed(None))
+                        }
+                        Event::Key(Key::End) => {
+                            s.query.write().unwrap().text_view.move_cursor_to_end();
+                            s.query.write().unwrap().needs_update = true;
                             Some(EventResult::Consumed(None))
                         }
                         // ignore all keys that move the focus out of the search bar

@@ -108,6 +108,18 @@ impl EditableTextView {
         }
     }
 
+    fn get_text(&self) -> String {
+        format!("{} ", self.text)
+    }
+
+    pub fn clone(&self) -> Self {
+        EditableTextView {
+            view: TextView::new(self.get_text()),
+            text: self.text.clone(),
+            cursor: self.cursor,
+        }
+    }
+
     pub fn get_content(&self) -> String {
         self.text.clone()
     }
@@ -115,14 +127,14 @@ impl EditableTextView {
     pub fn add_char(&mut self, c: char) {
         self.text.insert(self.cursor, c);
         self.cursor += 1;
-        self.view.set_content(format!("{} ", self.text));
+        self.view.set_content(self.get_text());
     }
 
     pub fn del_char(&mut self) {
         if !self.text.is_empty() && self.cursor > 0 {
             self.cursor -= 1;
             self.text.remove(self.cursor);
-            self.view.set_content(format!("{} ", self.text));
+            self.view.set_content(self.get_text());
         }
     }
 
