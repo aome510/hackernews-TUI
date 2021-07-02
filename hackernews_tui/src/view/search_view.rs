@@ -177,12 +177,14 @@ impl SearchView {
     pub fn add_char(&mut self, c: char) -> Option<EventResult> {
         self.page = 0;
         self.query.write().unwrap().text_view.add_char(c);
+        self.query.write().unwrap().needs_update = true;
         self.update_matched_stories();
         Some(EventResult::Consumed(None))
     }
     pub fn del_char(&mut self) -> Option<EventResult> {
         self.page = 0;
         self.query.write().unwrap().text_view.del_char();
+        self.query.write().unwrap().needs_update = true;
         self.update_matched_stories();
         Some(EventResult::Consumed(None))
     }
@@ -207,12 +209,13 @@ impl SearchView {
         Some(EventResult::Consumed(None))
     }
 
-    pub fn toggle_by_date(&mut self) {
+    pub fn toggle_by_date(&mut self) -> Option<EventResult> {
         self.page = 0;
         self.by_date = !self.by_date;
         self.update_matched_stories();
+        Some(EventResult::Consumed(None))
     }
-    pub fn update_page(&mut self, next_page: bool) {
+    pub fn update_page(&mut self, next_page: bool) -> Option<EventResult> {
         if next_page {
             self.page += 1;
             self.update_matched_stories();
@@ -220,6 +223,7 @@ impl SearchView {
             self.page -= 1;
             self.update_matched_stories();
         }
+        Some(EventResult::Consumed(None))
     }
 
     pub fn new(client: &'static client::HNClient, cb_sink: CbSink) -> Self {
@@ -272,6 +276,23 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
     let edit_keymap = get_edit_keymap().clone();
 
     OnEventView::new(SearchView::new(&client, cb_sink))
+        .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
+            match s.mode {
+                SearchViewMode::Navigation => None,
+                SearchViewMode::Search => {
+                    match *e {
+                        Event::Char(c) => s.add_char(c),
+                        // ignore all keys that move the focus out of the search bar
+                        Event::Key(Key::Up)
+                        | Event::Key(Key::Down)
+                        | Event::Key(Key::PageUp)
+                        | Event::Key(Key::PageDown)
+                        | Event::Key(Key::Tab) => Some(EventResult::Ignored),
+                        _ => None,
+                    }
+                }
+            }
+        })
         .on_pre_event_inner(search_view_keymap.to_navigation_mode, |s, _| match s.mode {
             SearchViewMode::Navigation => None,
             SearchViewMode::Search => {
@@ -290,23 +311,17 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
             }
         })
         // paging/filtering while in NavigationMode
-        .on_pre_event_inner(story_view_keymap.toggle_sort_by, |s, _| {
-            if let SearchViewMode::Navigation = s.mode {
-                s.toggle_by_date();
-            }
-            Some(EventResult::Consumed(None))
+        .on_pre_event_inner(story_view_keymap.toggle_sort_by, |s, _| match s.mode {
+            SearchViewMode::Navigation => s.toggle_by_date(),
+            SearchViewMode::Search => None,
         })
-        .on_pre_event_inner(story_view_keymap.next_page, |s, _| {
-            if let SearchViewMode::Navigation = s.mode {
-                s.update_page(true);
-            }
-            Some(EventResult::Consumed(None))
+        .on_pre_event_inner(story_view_keymap.next_page, |s, _| match s.mode {
+            SearchViewMode::Navigation => s.update_page(true),
+            SearchViewMode::Search => None,
         })
-        .on_pre_event_inner(story_view_keymap.prev_page, |s, _| {
-            if let SearchViewMode::Navigation = s.mode {
-                s.update_page(false);
-            }
-            Some(EventResult::Consumed(None))
+        .on_pre_event_inner(story_view_keymap.prev_page, |s, _| match s.mode {
+            SearchViewMode::Navigation => s.update_page(false),
+            SearchViewMode::Search => None,
         })
         .on_pre_event_inner(edit_keymap.backward_delete_char, |s, _| s.del_char())
         .on_pre_event_inner(edit_keymap.move_cursor_left, |s, _| s.move_cursor_left())
@@ -316,23 +331,6 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
         })
         .on_pre_event_inner(edit_keymap.move_cursor_to_end, |s, _| {
             s.move_cursor_to_end()
-        })
-        .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| {
-            match s.mode {
-                SearchViewMode::Navigation => None,
-                SearchViewMode::Search => {
-                    match *e {
-                        Event::Char(c) => s.add_char(c),
-                        // ignore all keys that move the focus out of the search bar
-                        Event::Key(Key::Up)
-                        | Event::Key(Key::Down)
-                        | Event::Key(Key::PageUp)
-                        | Event::Key(Key::PageDown)
-                        | Event::Key(Key::Tab) => Some(EventResult::Ignored),
-                        _ => None,
-                    }
-                }
-            }
         })
 }
 
