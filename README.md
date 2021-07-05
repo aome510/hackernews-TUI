@@ -4,6 +4,8 @@
 
 `hackernews_tui` is written in Rust with the help of [Cursive TUI library](https://github.com/gyscos/cursive/). It uses [HN Algolia search APIs](https://hn.algolia.com/api/) and [HN Official APIs](https://github.com/HackerNews/API) to get Hacker News data.
 
+**Note**: `hackernews-tui` implements a lazy-loading comment functionality which only loads comments **on demand**. That means to load more comments, you should keep focusing the next comment passing the last visible comment until hitting the end when no additional comment is loaded.
+
 The application consists of the following views:
 
 - `Story View` displays a list of HN stories. There are different kinds of `Story View` depending on the `tag` used to filter stories:
@@ -303,6 +305,7 @@ in another terminal to view the application's log in `log.txt` file.
   - [x] lazy-loading comments
   - [x] front-page stories like the official site
   - [ ] real-time updating
-- [ ] snipe-like navigation, inspired by [vim-snipe](https://github.com/yangmillstheory/vim-snipe)
+- [ ] implement smarter lazy-loading comment functionality
 - [ ] support more themes
+- [ ] snipe-like navigation, inspired by [vim-snipe](https://github.com/yangmillstheory/vim-snipe)
 - [ ] add some extra transition effects
