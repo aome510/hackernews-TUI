@@ -296,6 +296,7 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
             SearchViewMode::Navigation => {
                 s.mode = SearchViewMode::Search;
                 s.view.set_focus_index(0).unwrap_or_else(|_| {});
+                s.query.write().unwrap().needs_update = true;
                 Some(EventResult::Consumed(None))
             }
         })
