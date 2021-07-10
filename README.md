@@ -33,6 +33,8 @@ This application is the right tool for you :muscle:
 
 - [Install](#install)
   - [Using Cargo](#using-cargo)
+  - [Docker Image](#docker-image)
+  - [Building](#building)
   - [Arch Linux](#arch-linux)
   - [NetBSD](#netbsd)
 - [Examples](#examples)
@@ -60,11 +62,27 @@ This application is the right tool for you :muscle:
 
 Run `cargo install hackernews_tui` to install the application as a binary.
 
-#### Build from the `master` branch
+### Docker image
+
+You can download the binary image of the latest build from the `master` branch by running
+
+```
+# docker pull aome510/hackernews_tui:latest
+```
+
+then run
+
+```
+# docker run -it aome510/hackernews_tui:latest
+```
+
+to run the application.
+
+#### Building
 
 Run
 
-```shell
+```
 git clone https://github.com/aome510/hackernews-TUI.git
 cd hackernews-TUI
 cargo build --release
@@ -72,13 +90,13 @@ cargo build --release
 
 to build the application, then run
 
-```shell
+```
 ./target/release/hackernews_tui
 ```
 
 to run the application. Or
 
-```shell
+```
 ln -sf $PWD/target/release/hackernews_tui /usr/local/bin
 ```
 
@@ -92,13 +110,13 @@ Run `yay -S hackernews_tui` to install the application as an AUR package.
 
 #### Using the package manager
 
-```shell
+```
 pkgin install hackernews-tui
 ```
 
 #### Building from source
 
-```shell
+```
 $ cd /usr/pkgsrc/www/hackernews-tui
 # make install
 ```
@@ -235,7 +253,7 @@ By default, the application will look for `~/.config/hn-tui.toml` as the configu
 
 You can also specify the path with the `-c` or `--config` option when running the application:
 
-```shell
+```
 hackernews_tui -c ~/.config/hn-tui.toml
 ```
 
@@ -283,13 +301,13 @@ It's possible to define a custom shortcut to switch between different `StoryView
 
 Run
 
-```shell
+```
 RUST_LOG=debug RUST_BACKTRACE=1 hackernews_tui 2> log.txt
 ```
 
 then run
 
-```shell
+```
 tail -f log.txt
 ```
 
