@@ -1,4 +1,4 @@
-name: 1. Rust
+name: Rust
 
 on: [push, pull_request]
 
