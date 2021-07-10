@@ -31,9 +31,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.41"
+version = "1.0.42"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15af2628f6890fe2609a3b91bef4c83450512802e59489f9c1cb1fa5df064a61"
+checksum = "595d3cfa7a60d4555cb5067b99f07142a08ea778de5cf993f7b75c7d8fabc486"
 
 [[package]]
 name = "array-macro"
@@ -256,9 +256,9 @@ dependencies = [
 
 [[package]]
 name = "cursive-aligned-view"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "69a64a05a72b75144e0e673fc020c4d2b9467b9df1879bdc48d2c6b494c2c083"
+checksum = "780db2149dfaeea1fdfcafadf06f6bafc03d99107d01059633fbeb0bd068fe38"
 dependencies = [
  "cursive_core",
 ]
