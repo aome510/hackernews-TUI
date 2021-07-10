@@ -79,7 +79,7 @@ then run
 to run the application. You can also use your local [configuration file](#configuration) when running the image by running
 
 ```
-docker run -v ${CONFIG_FILE_PATH}:/app/hn-tui.toml -it aome510/hackernews_tui:latest
+# docker run -v ${CONFIG_FILE_PATH}:/app/hn-tui.toml -it aome510/hackernews_tui:latest
 ```
 
 with `${CONFIG_FILE_PATH}` is your local configuration file path.
