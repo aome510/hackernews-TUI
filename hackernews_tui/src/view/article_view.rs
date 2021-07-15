@@ -30,19 +30,21 @@ impl Article {
 }
 
 impl Article {
+    fn get_content(&self) -> String {
+        let content = self.content.replace("\t", "    ");
+        if get_config().allow_unicode {
+            content
+        } else {
+            content.chars().filter(|c| allow_unicode_char(c)).collect()
+        }
+    }
+
     /// parse links from the article's content (in markdown format)
     pub fn parse_link(&self, raw_md: bool) -> (StyledString, Vec<String>) {
         // escape characters in markdown: \ ` * _ { } [ ] ( ) # + - . ! =
         let md_escape_char_re = Regex::new(r"\\(?P<char>[\\`\*_\{\}\[\]\(\)#\+\-\.!=])").unwrap();
 
-        let content = if get_config().allow_unicode {
-            self.content.clone()
-        } else {
-            self.content
-                .chars()
-                .filter(|c| allow_unicode_char(c))
-                .collect()
-        };
+        let content = self.get_content();
 
         // if raw_md is true, don't parse link
         if raw_md {
