@@ -12,7 +12,9 @@ struct A {
 
 #[derive(ConfigParse, Deserialize, Default, Debug, PartialEq)]
 struct B {
+    #[serde(default)]
     pub field_1: String,
+    #[serde(default)]
     pub field_2: String,
 }
 
