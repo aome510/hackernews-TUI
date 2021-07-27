@@ -20,17 +20,14 @@ macro_rules! config_parser_impl {
     };
 }
 
-impl<T: ConfigParser + Default> ConfigParser for Vec<T> {
+impl<'de, T> ConfigParser for Vec<T>
+where
+    T: serde::de::Deserialize<'de>,
+{
     fn parse(&mut self, value: toml::Value) -> Result<()> {
         if let toml::Value::Array(array) = value {
-            let result: Result<Vec<_>> = array
-                .into_iter()
-                .map(|e| {
-                    let mut v = T::default();
-                    v.parse(e)?;
-                    Ok(v)
-                })
-                .collect();
+            let result: Result<Vec<_>> =
+                array.into_iter().map(|e| Ok(e.try_into::<T>()?)).collect();
             match result {
                 Err(err) => Err(err),
                 Ok(value) => {
