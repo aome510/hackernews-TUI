@@ -341,8 +341,8 @@ impl<'de> de::Deserialize<'de> for Key {
         if chars.len() == 1 {
             // a single character
             Ok(Key::new(chars[0]))
-        } else if chars.len() > 2 && chars[1] == '-' {
-            // M-<c> for alt-<c> and C-<c> for ctrl-C
+        } else if chars.len() == 3 && chars[1] == '-' {
+            // M-<c> for alt-<c> and C-<c> for ctrl-<c>
             match chars[0] {
                 'C' => Ok(Key::new(Event::CtrlChar(chars[2]))),
                 'M' => Ok(Key::new(Event::AltChar(chars[2]))),
