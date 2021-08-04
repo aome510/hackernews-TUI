@@ -261,5 +261,5 @@ pub fn init_client() -> &'static HNClient {
     CLIENT.set(client).unwrap_or_else(|_| {
         panic!("failed to set up the application's HackerNews Client");
     });
-    &CLIENT.get().unwrap()
+    CLIENT.get().unwrap()
 }

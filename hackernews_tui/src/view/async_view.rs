@@ -143,7 +143,7 @@ pub fn get_article_view_async(siv: &mut Cursive, article_url: &str) -> impl View
                         }
                     }
                     Err(err) => {
-                        ErrorViewEnum::Err(error_view::get_error_view(&&err_desc, &err.to_string()))
+                        ErrorViewEnum::Err(error_view::get_error_view(&err_desc, &err.to_string()))
                     }
                 })
             }

@@ -274,7 +274,7 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
     let search_view_keymap = get_search_view_keymap().clone();
     let edit_keymap = get_edit_keymap().clone();
 
-    OnEventView::new(SearchView::new(&client, cb_sink))
+    OnEventView::new(SearchView::new(client, cb_sink))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| match s.mode {
             SearchViewMode::Navigation => None,
             SearchViewMode::Search => match *e {

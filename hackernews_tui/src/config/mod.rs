@@ -128,5 +128,5 @@ pub fn init_config(config: Config) {
 }
 
 pub fn get_config() -> &'static Config {
-    &CONFIG.get().unwrap()
+    CONFIG.get().unwrap()
 }

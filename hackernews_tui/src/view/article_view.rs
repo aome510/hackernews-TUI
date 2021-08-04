@@ -108,7 +108,7 @@ impl Article {
                     if !prefix.is_empty() {
                         styled_s.append_plain(
                             md_escape_char_re
-                                .replace_all(&&prefix, "${char}")
+                                .replace_all(&prefix, "${char}")
                                 .to_string(),
                         );
                     }
