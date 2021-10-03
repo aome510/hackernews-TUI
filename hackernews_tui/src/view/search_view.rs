@@ -272,14 +272,29 @@ impl ViewWrapper for SearchView {
 fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> impl View {
     let story_view_keymap = get_story_view_keymap().clone();
     let search_view_keymap = get_search_view_keymap().clone();
-    let edit_keymap = get_edit_keymap().clone();
 
     OnEventView::new(SearchView::new(client, cb_sink))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| match s.mode {
             SearchViewMode::Navigation => None,
             SearchViewMode::Search => match *e {
                 Event::Char(c) => s.add_char(c),
-                _ => None,
+                _ => {
+                    // handle editing shortcuts when in the search mode
+                    let edit_keymap = get_edit_keymap().clone();
+                    if *e == edit_keymap.backward_delete_char.into() {
+                        s.del_char()
+                    } else if *e == edit_keymap.move_cursor_left.into() {
+                        s.move_cursor_left()
+                    } else if *e == edit_keymap.move_cursor_right.into() {
+                        s.move_cursor_right()
+                    } else if *e == edit_keymap.move_cursor_to_begin.into() {
+                        s.move_cursor_to_begin()
+                    } else if *e == edit_keymap.move_cursor_to_end.into() {
+                        s.move_cursor_to_end()
+                    } else {
+                        None
+                    }
+                }
             },
         })
         .on_pre_event_inner(search_view_keymap.to_navigation_mode, |s, _| match s.mode {
@@ -312,15 +327,6 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
         .on_pre_event_inner(story_view_keymap.prev_page, |s, _| match s.mode {
             SearchViewMode::Navigation => s.update_page(false),
             SearchViewMode::Search => None,
-        })
-        .on_pre_event_inner(edit_keymap.backward_delete_char, |s, _| s.del_char())
-        .on_pre_event_inner(edit_keymap.move_cursor_left, |s, _| s.move_cursor_left())
-        .on_pre_event_inner(edit_keymap.move_cursor_right, |s, _| s.move_cursor_right())
-        .on_pre_event_inner(edit_keymap.move_cursor_to_begin, |s, _| {
-            s.move_cursor_to_begin()
-        })
-        .on_pre_event_inner(edit_keymap.move_cursor_to_end, |s, _| {
-            s.move_cursor_to_end()
         })
 }
 
