@@ -1,7 +1,2 @@
 [workspace]
 members = ["hackernews_tui", "config_parser", "config_parser_derive"]
-
-[profile.release]
-lto = true
-codegen-units = 1
-panic = "abort"
