@@ -123,8 +123,8 @@ pub fn load_config(config_file_path: Option<&str>) {
         None => Config::default(),
         Some(config_file_path) => match Config::from_config_file(&config_file_path) {
             Err(err) => {
-                log::error!(
-                    "failed to load configurations from the file {}: {:#?} \
+                tracing::error!(
+                    "failed to load configurations from the file {}: {} \
                      \n...Use the default configurations instead",
                     config_file_path,
                     err

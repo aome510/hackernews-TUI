@@ -102,9 +102,8 @@ fn run() {
         false,
     );
 
-    // use buffered_backend to fix the flickering issue
-    // when using cursive with crossterm_backend
-    // (https://github.com/gyscos/Cursive/issues/142)
+    // use `cursive_buffered_backend` to fix the flickering issue
+    // when using `cursive` with `crossterm_backend` (https://github.com/gyscos/Cursive/issues/142)
     let crossterm_backend = backends::crossterm::Backend::init().unwrap();
     let buffered_backend = Box::new(cursive_buffered_backend::BufferedBackend::new(
         crossterm_backend,
@@ -114,11 +113,32 @@ fn run() {
     app.run();
 }
 
-fn main() {
-    env_logger::init();
+/// initialize application logging
+fn init_logging(log_file_path: Option<&str>) {
+    if std::env::var("RUST_LOG").is_err() {
+        std::env::set_var("RUST_LOG", "info")
+    }
+    // if no log file path is specified, use the default value (`$HOME/.cache/hn-tui.log`)
+    let log_file_path = match log_file_path {
+        Some(path) => path.into(),
+        None => dirs_next::home_dir()
+            .expect("failed to get user's cache directory")
+            .join(".cache")
+            .join("hn-tui.log"),
+    };
+    let log_file = std::fs::File::create(log_file_path).unwrap_or_else(|err| {
+        panic!("failed to create application's log file: {}", err);
+    });
+    tracing_subscriber::fmt::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .with_ansi(false)
+        .with_writer(std::sync::Mutex::new(log_file))
+        .init();
+}
 
+fn main() {
     // parse command line arguments
-    let matches = App::new("hackernews-tui")
+    let args = App::new("hackernews-tui")
         .version("0.7.3")
         .author("Thang Pham <phamducthang1234@gmail>")
         .arg(
@@ -126,11 +146,20 @@ fn main() {
                 .short("c")
                 .long("config")
                 .value_name("FILE")
-                .help("Path to the application's config file (default: ~/.config/hn-tui.toml)")
+                .help("Path to the application's config file (default: $HOME/.config/hn-tui.toml)")
+                .next_line_help(true),
+        )
+        .arg(
+            Arg::with_name("log")
+                .short("l")
+                .long("log")
+                .value_name("FILE")
+                .help("Path to the application's log file (default: $HOME/.cache/hn-tui.log)")
                 .next_line_help(true),
         )
         .get_matches();
 
-    load_config(matches.value_of("config"));
+    init_logging(args.value_of("log"));
+    load_config(args.value_of("config"));
     run();
 }
