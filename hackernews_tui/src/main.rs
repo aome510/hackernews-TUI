@@ -156,17 +156,8 @@ fn main() {
                 .help("Path to the application's config file (default: ~/.config/hn-tui.toml)")
                 .next_line_help(true),
         )
-        .arg(
-            Arg::with_name("example-config")
-                .long("example-config")
-                .help("Prints the example configurations"),
-        )
         .get_matches();
 
-    if matches.is_present("example-config") {
-        println!("{}", include_str!("hn-tui-default.toml"));
-    } else {
-        load_config(matches.value_of("config"));
-        run();
-    }
+    load_config(matches.value_of("config"));
+    run();
 }
