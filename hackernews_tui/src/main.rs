@@ -40,8 +40,7 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &'static client::HNClient) {
     set_up_switch_view_shortcut!(global_keymap.goto_jobs_view, "job", s, client);
 
     // custom navigation shortcuts
-    let custom_keymap = get_custom_keymap();
-    custom_keymap
+    get_custom_keymap()
         .custom_view_navigation
         .iter()
         .for_each(|data| {
@@ -58,9 +57,9 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &'static client::HNClient) {
             });
         });
 
-    // .........................................
-    // end of navigation shortcuts for StoryView
-    // .........................................
+    // ............................................
+    // end of navigation shortcuts for Story Views
+    // ............................................
 
     s.set_on_post_event(global_keymap.goto_previous_view, |s| {
         if s.screen_mut().len() > 1 {
@@ -83,7 +82,7 @@ fn run() {
     let mut s = cursive::default();
 
     // update cursive's default theme
-    let config_theme = get_config().theme.clone();
+    let config_theme = &get_config().theme;
     s.update_theme(|theme| {
         config_theme.update_theme(theme);
     });
@@ -92,6 +91,7 @@ fn run() {
     let client = client::init_client();
     set_up_global_callbacks(&mut s, client);
 
+    // render `front_page` story view as the application's default view
     story_view::add_story_view_layer(
         &mut s,
         client,
@@ -118,6 +118,7 @@ fn init_logging(log_file_path: Option<&str>) {
     if std::env::var("RUST_LOG").is_err() {
         std::env::set_var("RUST_LOG", "info")
     }
+
     // if no log file path is specified, use the default value (`$HOME/.cache/hn-tui.log`)
     let log_file_path = match log_file_path {
         Some(path) => path.into(),
@@ -129,6 +130,7 @@ fn init_logging(log_file_path: Option<&str>) {
     let log_file = std::fs::File::create(log_file_path).unwrap_or_else(|err| {
         panic!("failed to create application's log file: {}", err);
     });
+
     tracing_subscriber::fmt::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .with_ansi(false)
