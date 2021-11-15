@@ -1,15 +1,14 @@
 // modules
-mod lazy;
 mod parser;
 mod query;
 
 // re-export
-pub use lazy::LazyLoadingComments;
 pub use parser::{Comment, Story};
 pub use query::StoryNumericFilters;
 
 use crate::prelude::*;
 use parser::*;
+use rayon::prelude::*;
 
 const HN_ALGOLIA_PREFIX: &str = "https://hn.algolia.com/api/v1";
 const HN_OFFICIAL_PREFIX: &str = "https://hacker-news.firebaseio.com/v0";
@@ -50,9 +49,11 @@ impl HNClient {
         }
         Ok(item)
     }
-
-    /// Get all comments from a story with a given id.
-    pub fn get_comments_from_story(&self, story_id: u32) -> Result<lazy::LazyLoadingComments> {
+    /// Lazily load a story's comments
+    pub fn lazy_load_story_comments(
+        &self,
+        story_id: u32,
+    ) -> Result<crossbeam_channel::Receiver<Comment>> {
         let request_url = format!("{}/item/{}.json", HN_OFFICIAL_PREFIX, story_id);
         let ids = self
             .client
@@ -61,12 +62,52 @@ impl HNClient {
             .into_json::<HNStoryResponse>()?
             .kids;
 
-        let mut comments = lazy::LazyLoadingComments::new(self.clone(), ids);
+        let (sender, receiver) = crossbeam_channel::bounded(32);
+        let client = self.clone();
+        std::thread::spawn(move || {
+            Self::load_comments(client, sender, ids, 5);
+        });
+        Ok(receiver)
+    }
 
-        let cfg = &(get_config().client.lazy_loading_comments);
-        comments.drain(cfg.num_comments_init, true);
-        comments.drain(cfg.num_comments_after, false);
-        Ok(comments)
+    /// Load comments given a list of comment IDs.
+    /// The function recursively retrieves at most `size` comments each time.
+    fn load_comments(
+        client: HNClient,
+        sender: crossbeam_channel::Sender<Comment>,
+        ids: Vec<u32>,
+        size: usize,
+    ) {
+        let size = std::cmp::min(ids.len(), size);
+        if size == 0 {
+            return;
+        }
+
+        let comments = ids
+            .drain(0..size)
+            .collect::<Vec<_>>()
+            .into_par_iter()
+            .map(|id| {
+                let response = match client.get_item_from_id::<CommentResponse>(id) {
+                    Ok(response) => Some(response),
+                    Err(err) => {
+                        warn!("failed to get comment with id={}: {}", id, err);
+                        None
+                    }
+                }?;
+                let comment: Comment = response.into();
+                Some(comment)
+            })
+            .flatten()
+            .collect::<Vec<_>>();
+
+        for comment in comments {
+            sender.send(comment).unwrap_or_else(|err| {
+                warn!("failed to load comment: {}", err);
+            });
+        }
+
+        Self::load_comments(client, sender, ids, size);
     }
 
     /// Get a story based on its id

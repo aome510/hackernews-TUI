@@ -15,14 +15,14 @@ pub fn get_comment_view_async(
     AsyncView::new_with_bg_creator(
         siv,
         {
-            move || match client.get_comments_from_story(id) {
-                Ok(comments) => Ok(Ok(comments)),
+            move || match client.lazy_load_story_comments(id) {
+                Ok(receiver) => Ok(Ok(receiver)),
                 Err(err) => {
                     warn!(
                         "failed to get comments from story (id={}): {:#?}\nRetrying...",
                         id, err
                     );
-                    Ok(client.get_comments_from_story(id))
+                    Ok(client.lazy_load_story_comments(id))
                 }
             }
         },
@@ -30,8 +30,8 @@ pub fn get_comment_view_async(
             let story = story.clone();
             move |result| {
                 ErrorViewWrapper::new(match result {
-                    Ok(comments) => {
-                        ErrorViewEnum::Ok(comment_view::get_comment_view(&story, comments))
+                    Ok(receiver) => {
+                        ErrorViewEnum::Ok(comment_view::get_comment_view(&story, receiver))
                     }
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
                         &format!("failed to get comments from story (id={}):", id),

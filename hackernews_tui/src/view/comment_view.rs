@@ -1,7 +1,10 @@
+use std::sync::Arc;
+
 use super::async_view;
 use super::list_view::*;
 use super::text_view;
 use crate::prelude::*;
+use parking_lot::RwLock;
 use regex::Regex;
 
 type CommentComponent = HideableView<PaddedView<text_view::TextView>>;
@@ -51,8 +54,7 @@ impl Comment {
 /// CommentView is a View displaying a list of comments in a HN story
 pub struct CommentView {
     view: ScrollListView,
-    comments: Vec<Comment>,
-    lazy_loading_comments: client::LazyLoadingComments,
+    comments: Arc<RwLock<Vec<Comment>>>,
 
     raw_command: String,
 }
@@ -75,43 +77,13 @@ impl ViewWrapper for CommentView {
 
 impl CommentView {
     /// Return a new CommentView given a comment list and the discussed story url
-    pub fn new(lazy_loading_comments: client::LazyLoadingComments) -> Self {
-        let mut comment_view = CommentView {
-            lazy_loading_comments,
-            comments: vec![],
+    pub fn new(receiver: crossbeam_channel::Receiver<client::Comment>) -> Self {
+        let comment_view = CommentView {
+            comments: Arc::new(RwLock::new(vec![])),
             view: LinearLayout::vertical().scrollable(),
             raw_command: String::new(),
         };
-        comment_view.load_comments();
         comment_view
-    }
-
-    /// Load all comments stored in the `lazy_loading_comments`'s buffer
-    pub fn load_comments(&mut self) {
-        let comments = self.lazy_loading_comments.load_all();
-        if comments.is_empty() {
-            return;
-        }
-
-        let mut comments = Self::parse_comments(&comments, 0, 0);
-        self.lazy_loading_comments.drain(
-            get_config().client.lazy_loading_comments.num_comments_after,
-            false,
-        );
-
-        comments.iter().for_each(|comment| {
-            self.add_item(HideableView::new(PaddedView::lrtb(
-                comment.height * 2,
-                0,
-                0,
-                1,
-                text_view::TextView::new(comment.text.clone()),
-            )));
-        });
-        self.comments.append(&mut comments);
-
-        // relayout the view based on the last size given to the scroll by `layout`
-        self.layout(self.get_scroller().last_outer_size());
     }
 
     fn decode_html(s: &str) -> String {
@@ -364,7 +336,7 @@ impl CommentView {
 
 /// Return a main view of a CommentView displaying the comment list.
 /// The main view of a CommentView is a View without status bar or footer.
-fn get_comment_main_view(comments: client::LazyLoadingComments) -> impl View {
+fn get_comment_main_view(receiver: crossbeam_channel::Receiver<Comment>) -> impl View {
     let comment_view_keymap = get_comment_view_keymap().clone();
 
     let is_suffix_key = |c: &Event| -> bool {
@@ -373,7 +345,7 @@ fn get_comment_main_view(comments: client::LazyLoadingComments) -> impl View {
             || *c == comment_view_keymap.open_link_in_article_view.into()
     };
 
-    OnEventView::new(CommentView::new(comments))
+    OnEventView::new(CommentView::new(receiver))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
             match *e {
                 Event::Char(c) if ('0'..='9').contains(&c) => {
@@ -412,17 +384,11 @@ fn get_comment_main_view(comments: client::LazyLoadingComments) -> impl View {
         })
         .on_pre_event_inner(comment_view_keymap.next_comment, |s, _| {
             let next_id = s.find_next_visible_comment(s.get_focus_index(), true);
-            if next_id == s.len() {
-                s.load_comments();
-            }
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.next_leq_level_comment, move |s, _| {
             let id = s.get_focus_index();
             let next_id = s.find_comment_id_by_max_height(id, s.comments[id].height, true);
-            if next_id == s.len() {
-                s.load_comments();
-            }
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.prev_leq_level_comment, move |s, _| {
@@ -433,9 +399,6 @@ fn get_comment_main_view(comments: client::LazyLoadingComments) -> impl View {
         .on_pre_event_inner(comment_view_keymap.next_top_level_comment, move |s, _| {
             let id = s.get_focus_index();
             let next_id = s.find_comment_id_by_max_height(id, 0, true);
-            if next_id == s.len() {
-                s.load_comments();
-            }
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.prev_top_level_comment, move |s, _| {
@@ -501,12 +464,16 @@ fn get_comment_main_view(comments: client::LazyLoadingComments) -> impl View {
 }
 
 /// Return a CommentView given a comment list and the discussed story's url/title
-pub fn get_comment_view(story: &client::Story, comments: client::LazyLoadingComments) -> impl View {
+pub fn get_comment_view(
+    story: &client::Story,
+    receiver: crossbeam_channel::Receiver<Comment>,
+) -> impl View {
     let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
     let story_title = match_re.replace_all(&story.title, "${match}");
+
     let status_bar = get_status_bar_with_desc(&format!("Comment View - {}", story_title));
 
-    let main_view = get_comment_main_view(comments);
+    let main_view = get_comment_main_view(receiver);
 
     let mut view = LinearLayout::vertical()
         .child(status_bar)
