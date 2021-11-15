@@ -51,8 +51,6 @@ impl Comment {
 /// CommentView is a View displaying a list of comments in a HN story
 pub struct CommentView {
     view: ScrollListView,
-
-    story: client::Story,
     comments: Vec<Comment>,
     lazy_loading_comments: client::LazyLoadingComments,
 
@@ -77,26 +75,14 @@ impl ViewWrapper for CommentView {
 
 impl CommentView {
     /// Return a new CommentView given a comment list and the discussed story url
-    pub fn new(
-        story: client::Story,
-        lazy_loading_comments: client::LazyLoadingComments,
-        focus_id: u32,
-    ) -> Self {
+    pub fn new(lazy_loading_comments: client::LazyLoadingComments) -> Self {
         let mut comment_view = CommentView {
-            story,
             lazy_loading_comments,
             comments: vec![],
             view: LinearLayout::vertical().scrollable(),
             raw_command: String::new(),
         };
         comment_view.load_comments();
-        if let Some(focus_id) = comment_view
-            .comments
-            .iter()
-            .position(|comment| comment.id == focus_id)
-        {
-            comment_view.set_focus_index(focus_id).unwrap();
-        }
         comment_view
     }
 
@@ -378,12 +364,7 @@ impl CommentView {
 
 /// Return a main view of a CommentView displaying the comment list.
 /// The main view of a CommentView is a View without status bar or footer.
-fn get_comment_main_view(
-    story: &client::Story,
-    comments: client::LazyLoadingComments,
-    client: &'static client::HNClient,
-    focus_id: u32,
-) -> impl View {
+fn get_comment_main_view(comments: client::LazyLoadingComments) -> impl View {
     let comment_view_keymap = get_comment_view_keymap().clone();
 
     let is_suffix_key = |c: &Event| -> bool {
@@ -392,7 +373,7 @@ fn get_comment_main_view(
             || *c == comment_view_keymap.open_link_in_article_view.into()
     };
 
-    OnEventView::new(CommentView::new(story.clone(), comments, focus_id))
+    OnEventView::new(CommentView::new(comments))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
             match *e {
                 Event::Char(c) if ('0'..='9').contains(&c) => {
@@ -516,29 +497,16 @@ fn get_comment_main_view(
             s.toggle_collapse_focused_comment();
             Some(EventResult::Consumed(None))
         })
-        .on_pre_event_inner(comment_view_keymap.reload_comment_view, move |s, _| {
-            let comment = &s.comments[s.get_focus_index()];
-            let focus_id = (comment.top_comment_id, comment.id);
-            Some(EventResult::with_cb({
-                let story = s.story.clone();
-                move |s| add_comment_view_layer(s, client, &story, focus_id, true)
-            }))
-        })
         .full_height()
 }
 
 /// Return a CommentView given a comment list and the discussed story's url/title
-pub fn get_comment_view(
-    story: &client::Story,
-    comments: client::LazyLoadingComments,
-    client: &'static client::HNClient,
-    focus_id: u32,
-) -> impl View {
+pub fn get_comment_view(story: &client::Story, comments: client::LazyLoadingComments) -> impl View {
     let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
     let story_title = match_re.replace_all(&story.title, "${match}");
     let status_bar = get_status_bar_with_desc(&format!("Comment View - {}", story_title));
 
-    let main_view = get_comment_main_view(story, comments, client, focus_id);
+    let main_view = get_comment_main_view(comments);
 
     let mut view = LinearLayout::vertical()
         .child(status_bar)
@@ -583,10 +551,9 @@ pub fn add_comment_view_layer(
     s: &mut Cursive,
     client: &'static client::HNClient,
     story: &client::Story,
-    focus_id: (u32, u32),
     pop_layer: bool,
 ) {
-    let async_view = async_view::get_comment_view_async(s, client, story, focus_id);
+    let async_view = async_view::get_comment_view_async(s, client, story);
     if pop_layer {
         s.pop_layer();
     }

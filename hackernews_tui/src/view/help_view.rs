@@ -342,16 +342,10 @@ impl HasHelpView for CommentView {
                 ],
             ),
             view_navigation_key_shortcuts!(),
-            other_key_shortcuts!(
-                (
-                    comment_view_keymap.reload_comment_view.to_string(),
-                    "Reload the comment view"
-                ),
-                (
-                    comment_view_keymap.toggle_collapse_comment.to_string(),
-                    "Toggle collapsing the focused comment"
-                )
-            ),
+            other_key_shortcuts!((
+                comment_view_keymap.toggle_collapse_comment.to_string(),
+                "Toggle collapsing the focused comment"
+            )),
         ])
     }
 }

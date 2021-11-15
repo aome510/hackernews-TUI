@@ -151,7 +151,7 @@ pub fn get_story_main_view(
             // so it can be cloned without greatly affecting performance
             let story = s.stories[id].clone();
             Some(EventResult::with_cb({
-                move |s| comment_view::add_comment_view_layer(s, client, &story, (0, 0), false)
+                move |s| comment_view::add_comment_view_layer(s, client, &story, false)
             }))
         })
         // open external link shortcuts

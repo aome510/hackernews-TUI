@@ -9,21 +9,20 @@ pub fn get_comment_view_async(
     siv: &mut Cursive,
     client: &'static client::HNClient,
     story: &client::Story,
-    focus_id: (u32, u32),
 ) -> impl View {
     let id = story.id;
 
     AsyncView::new_with_bg_creator(
         siv,
         {
-            move || match client.get_comments_from_story(id, focus_id.0) {
+            move || match client.get_comments_from_story(id) {
                 Ok(comments) => Ok(Ok(comments)),
                 Err(err) => {
                     warn!(
                         "failed to get comments from story (id={}): {:#?}\nRetrying...",
                         id, err
                     );
-                    Ok(client.get_comments_from_story(id, focus_id.0))
+                    Ok(client.get_comments_from_story(id))
                 }
             }
         },
@@ -31,9 +30,9 @@ pub fn get_comment_view_async(
             let story = story.clone();
             move |result| {
                 ErrorViewWrapper::new(match result {
-                    Ok(comments) => ErrorViewEnum::Ok(comment_view::get_comment_view(
-                        &story, comments, client, focus_id.1,
-                    )),
+                    Ok(comments) => {
+                        ErrorViewEnum::Ok(comment_view::get_comment_view(&story, comments))
+                    }
                     Err(err) => ErrorViewEnum::Err(error_view::get_error_view(
                         &format!("failed to get comments from story (id={}):", id),
                         &err.to_string(),

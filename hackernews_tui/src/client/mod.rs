@@ -52,23 +52,14 @@ impl HNClient {
     }
 
     /// Get all comments from a story with a given id.
-    pub fn get_comments_from_story(
-        &self,
-        story_id: u32,
-        focus_top_comment_id: u32,
-    ) -> Result<lazy::LazyLoadingComments> {
+    pub fn get_comments_from_story(&self, story_id: u32) -> Result<lazy::LazyLoadingComments> {
         let request_url = format!("{}/item/{}.json", HN_OFFICIAL_PREFIX, story_id);
-        let mut ids = self
+        let ids = self
             .client
             .get(&request_url)
             .call()?
             .into_json::<HNStoryResponse>()?
             .kids;
-        if let Some(pos) = ids.iter().position(|id| *id == focus_top_comment_id) {
-            // move `pos` to the beginning of the list.
-            ids.remove(pos);
-            ids.insert(0, focus_top_comment_id);
-        };
 
         let mut comments = lazy::LazyLoadingComments::new(self.clone(), ids);
 
