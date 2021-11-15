@@ -23,25 +23,13 @@ pub struct Config {
 }
 
 impl Config {
-    // parse config struct from a file
+    /// parse config from a file
     pub fn from_config_file(file_path: &str) -> anyhow::Result<Self> {
-        match std::fs::read_to_string(file_path) {
-            // if cannot open the file, use the default configurations
-            Err(err) => {
-                log::warn!(
-                    "failed to open {}: {:#?}\n...Use the default configurations instead",
-                    file_path,
-                    err
-                );
-                Ok(Self::default())
-            }
-            Ok(config_str) => {
-                let value = toml::from_str::<toml::Value>(&config_str)?;
-                let mut config = Self::default();
-                config.parse(value)?;
-                Ok(config)
-            }
-        }
+        let config_str = std::fs::read_to_string(file_path)?;
+        let value = toml::from_str::<toml::Value>(&config_str)?;
+        let mut config = Self::default();
+        config.parse(value)?;
+        Ok(config)
     }
 }
 
@@ -121,7 +109,36 @@ pub struct Client {
 
 static CONFIG: once_cell::sync::OnceCell<Config> = once_cell::sync::OnceCell::new();
 
-pub fn init_config(config: Config) {
+/// loads the configuration options from a config file.
+/// If failed to find/process the file, loads the default options.
+pub fn load_config(config_file_path: Option<&str>) {
+    // if no config file is specified, use the default value ($HOME/.config/hn-tui.toml)
+    let config_file_path = if let Some(path) = config_file_path {
+        Some(path.to_string())
+    } else {
+        dirs_next::home_dir().map(|path| format!("{}/.config/hn-tui.toml", path.to_str().unwrap()))
+    };
+
+    let config = match config_file_path {
+        None => Config::default(),
+        Some(config_file_path) => match Config::from_config_file(&config_file_path) {
+            Err(err) => {
+                log::error!(
+                    "failed to load configurations from the file {}: {:#?} \
+                     \n...Use the default configurations instead",
+                    config_file_path,
+                    err
+                );
+                Config::default()
+            }
+            Ok(config) => config,
+        },
+    };
+
+    init_config(config);
+}
+
+fn init_config(config: Config) {
     CONFIG.set(config).unwrap_or_else(|_| {
         panic!("failed to set up the application's configurations");
     });

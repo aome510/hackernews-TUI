@@ -79,33 +79,6 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &'static client::HNClient) {
     s.set_on_post_event(global_keymap.quit, |s| s.quit());
 }
 
-fn load_config(config_file_path: Option<&str>) {
-    // if no config file is specified, use the default value
-    // at $HOME/.config/hn-tui.toml
-    let config_file_path = if let Some(path) = config_file_path {
-        Some(path.to_string())
-    } else {
-        dirs_next::home_dir().map(|path| format!("{}/.config/hn-tui.toml", path.to_str().unwrap()))
-    };
-
-    let config = match config_file_path {
-        None => config::Config::default(),
-        Some(config_file_path) => match config::Config::from_config_file(&config_file_path) {
-            Err(err) => {
-                error!(
-                    "failed to load the application config from the file {}: {:#?} \
-                     \n...Use the default configurations instead",
-                    config_file_path, err
-                );
-                config::Config::default()
-            }
-            Ok(config) => config,
-        },
-    };
-
-    init_config(config);
-}
-
 fn run() {
     let mut s = cursive::default();
 
