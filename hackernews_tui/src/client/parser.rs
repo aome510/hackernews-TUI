@@ -1,5 +1,15 @@
-use crate::{config, utils};
+use crate::prelude::*;
+use lazy_static::lazy_static;
+use regex::Regex;
 use serde::{de, Deserialize, Deserializer};
+
+lazy_static! {
+    static ref PARAGRAPH_RE: Regex = Regex::new(r"<p>(?s)(?P<paragraph>.*?)</p>").unwrap();
+    static ref ITALIC_RE: Regex = Regex::new(r"<i>(?s)(?P<text>.+?)</i>").unwrap();
+    static ref CODE_RE: Regex =
+        Regex::new(r"<pre><code>(?s)(?P<code>.+?)[\n]*</code></pre>").unwrap();
+    static ref LINK_RE: Regex = Regex::new(r#"<a\s+?href="(?P<link>.+?)"(?s).+?</a>"#).unwrap();
+}
 
 // serde helper functions
 
@@ -131,13 +141,20 @@ pub struct Story {
 /// Comment represents a Hacker News comment
 #[derive(Debug, Clone)]
 pub struct Comment {
-    pub id: u32,
-    pub story_id: u32,
-    pub parent_id: u32,
-    pub text: String,
-    pub author: String,
-    pub time: u64,
-    pub children: Vec<Comment>,
+    id: u32,
+    height: usize,
+    state: CommentState,
+    text: StyledString,
+    minimized_text: StyledString,
+    links: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+/// CommentState represents the state of a single comment component
+enum CommentState {
+    Collapsed,
+    PartiallyCollapsed,
+    Normal,
 }
 
 impl From<StoriesResponse> for Vec<Story> {
@@ -147,35 +164,6 @@ impl From<StoriesResponse> for Vec<Story> {
             .filter(|story| story.highlight_result.is_some() && story.title.is_some())
             .map(|story| story.into())
             .collect()
-    }
-}
-
-impl From<CommentResponse> for Comment {
-    fn from(c: CommentResponse) -> Self {
-        let children = c
-            .children
-            .into_iter()
-            .filter(|comment| comment.author.is_some() && comment.text.is_some())
-            .map(|comment| comment.into())
-            .collect();
-        let text: String = if !config::get_config().allow_unicode {
-            c.text
-                .unwrap()
-                .chars()
-                .filter(|c| utils::allow_unicode_char(c))
-                .collect()
-        } else {
-            c.text.unwrap()
-        };
-        Comment {
-            id: c.id,
-            story_id: c.story_id,
-            parent_id: c.parent_id,
-            author: c.author.unwrap(),
-            time: c.time,
-            text,
-            children,
-        }
     }
 }
 
@@ -206,4 +194,101 @@ impl From<StoryResponse> for Story {
             highlight_result,
         }
     }
+}
+
+impl From<CommentResponse> for Vec<Comment> {
+    fn from(c: CommentResponse) -> Self {
+        let mut children = c
+            .children
+            .into_iter()
+            .filter(|comment| comment.author.is_some() && comment.text.is_some())
+            .flat_map(Into::<Vec<Comment>>::into)
+            .collect::<Vec<_>>();
+
+        let minimized_text = StyledString::styled(
+            format!(
+                "{} {} ago ({} more)",
+                c.author.unwrap_or_default(),
+                get_elapsed_time_as_text(c.time),
+                children.len() + 1,
+            ),
+            PaletteColor::Secondary,
+        );
+        let (text, links) = parse_raw_html_comment_text(&c.text.unwrap_or_default());
+        let comment = Comment {
+            id: c.id,
+            height: 0,
+            state: CommentState::Normal,
+            text,
+            minimized_text,
+            links,
+        };
+
+        let mut comments = vec![comment];
+        comments.append(&mut children);
+        comments
+    }
+}
+
+/// Decode a HTML encoded string
+fn decode_html(s: &str) -> String {
+    htmlescape::decode_html(s).unwrap_or_else(|_| s.to_string())
+}
+
+/// Parse a raw HTML comment text into a markdown text with colors.
+/// The function returns the parsed text and a vector of links in the comment.
+///
+/// Links inside the parsed text are colored.
+fn parse_raw_html_comment_text(s: &str) -> (StyledString, Vec<String>) {
+    // insert newlines as a separator between paragraphs
+    let mut s = PARAGRAPH_RE.replace_all(s, "${paragraph}\n\n").to_string();
+
+    s = ITALIC_RE.replace_all(&s, "*${text}*").to_string();
+    s = CODE_RE.replace_all(&s, "```\n${code}\n```").to_string();
+
+    // parse links in the comment, color them in the parsed text as well
+    let mut links: Vec<String> = vec![];
+    let mut styled_s = StyledString::new();
+    // replace the `<a href="${link}">...</a>` pattern one-by-one with "${link}".
+    // cannot use `replace_all` because we want to replace a matched string with a `StyledString` (not a raw string)
+    loop {
+        match LINK_RE.captures(&s.clone()) {
+            None => break,
+            Some(c) => {
+                let m = c.get(0).unwrap();
+                let link = decode_html(c.name("link").unwrap().as_str());
+
+                let range = m.range();
+                let mut prefix: String = s
+                    .drain(std::ops::Range {
+                        start: 0,
+                        end: m.end(),
+                    })
+                    .collect();
+                prefix.drain(range);
+
+                if !prefix.is_empty() {
+                    styled_s.append_plain(decode_html(&prefix));
+                }
+
+                styled_s.append_styled(
+                    format!("\"{}\" ", shorten_url(&link)),
+                    Style::from(get_config_theme().link_text.color),
+                );
+                styled_s.append_styled(
+                    format!("[{}]", links.len()),
+                    ColorStyle::new(
+                        PaletteColor::TitlePrimary,
+                        get_config_theme().link_id_bg.color,
+                    ),
+                );
+                links.push(link);
+                continue;
+            }
+        }
+    }
+    if !s.is_empty() {
+        styled_s.append_plain(decode_html(&s));
+    }
+    (styled_s, links)
 }

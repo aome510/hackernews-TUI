@@ -456,6 +456,7 @@ dependencies = [
  "cursive_buffered_backend",
  "dirs-next",
  "htmlescape",
+ "lazy_static",
  "log",
  "once_cell",
  "parking_lot",
