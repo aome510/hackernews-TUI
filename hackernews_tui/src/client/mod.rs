@@ -66,11 +66,14 @@ impl HNClient {
         let client = self.clone();
 
         // loads first 5 comments to ensure the corresponding `CommentView` has data to render
-        Self::load_comments(&client, &sender, &mut ids, 5);
+        Self::load_comments(&client, &sender, &mut ids, 5)?;
         std::thread::spawn(move || {
             let sleep_dur = std::time::Duration::from_millis(1000);
             while !ids.is_empty() {
-                Self::load_comments(&client, &sender, &mut ids, 5);
+                if let Err(err) = Self::load_comments(&client, &sender, &mut ids, 5) {
+                    warn!("encountered an error when loading comments: {}", err);
+                    break;
+                }
                 std::thread::sleep(sleep_dur);
             }
         });
@@ -78,27 +81,34 @@ impl HNClient {
     }
 
     /// Load the first `size` comments from a list of comment IDs.
-    fn load_comments(client: &HNClient, sender: &CommentSender, ids: &mut Vec<u32>, size: usize) {
+    fn load_comments(
+        client: &HNClient,
+        sender: &CommentSender,
+        ids: &mut Vec<u32>,
+        size: usize,
+    ) -> Result<()> {
         let size = std::cmp::min(ids.len(), size);
         if size == 0 {
-            return;
+            return Ok(());
         }
 
         ids.drain(0..size)
             .collect::<Vec<_>>()
             .into_par_iter()
-            .for_each(|id| {
+            .map(|id| {
                 match client.get_item_from_id::<CommentResponse>(id) {
                     Ok(response) => {
-                        sender.send(response.into()).unwrap_or_else(|err| {
-                            format!("failed to send comments: {}", err);
-                        });
+                        sender.send(response.into())?;
                     }
                     Err(err) => {
                         warn!("failed to get comment with id={}: {}", id, err);
                     }
                 };
-            });
+                Ok(())
+            })
+            .collect::<Result<_>>()?;
+
+        Ok(())
     }
 
     /// Get a story based on its id
