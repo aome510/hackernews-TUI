@@ -1,13 +1,4 @@
-pub use crate::client;
-pub use crate::config::*;
-pub use crate::utils::*;
-pub use crate::view::{
-    article_view::{self, ArticleView},
-    comment_view::{self, CommentView},
-    help_view::*,
-    search_view::{self, SearchView},
-    story_view::{self, StoryView},
-};
+pub use crate::{client, config, utils};
 pub use anyhow::{Error, Result};
 pub use cursive::{
     direction::*,
@@ -20,4 +11,4 @@ pub use cursive::{
     views::*,
     *,
 };
-pub use log::{debug, error, info, warn};
+pub use tracing::{debug, error, info, warn};

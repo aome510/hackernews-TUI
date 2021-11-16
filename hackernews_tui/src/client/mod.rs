@@ -1,15 +1,14 @@
 // modules
-mod lazy;
 mod parser;
 mod query;
 
 // re-export
-pub use lazy::LazyLoadingComments;
-pub use parser::{Comment, Story};
+pub use parser::{Comment, CommentState, Story};
 pub use query::StoryNumericFilters;
 
 use crate::prelude::*;
 use parser::*;
+use rayon::prelude::*;
 
 const HN_ALGOLIA_PREFIX: &str = "https://hn.algolia.com/api/v1";
 const HN_OFFICIAL_PREFIX: &str = "https://hacker-news.firebaseio.com/v0";
@@ -18,6 +17,9 @@ const HN_SEARCH_QUERY_STRING: &str =
 pub const HN_HOST_URL: &str = "https://news.ycombinator.com";
 
 static CLIENT: once_cell::sync::OnceCell<HNClient> = once_cell::sync::OnceCell::new();
+
+pub type CommentSender = crossbeam_channel::Sender<Vec<Comment>>;
+pub type CommentReceiver = crossbeam_channel::Receiver<Vec<Comment>>;
 
 /// HNClient is a HTTP client to communicate with Hacker News APIs.
 #[derive(Clone)]
@@ -28,7 +30,7 @@ pub struct HNClient {
 impl HNClient {
     /// Create a new Hacker News Client
     pub fn new() -> Result<HNClient> {
-        let timeout = get_config().client.client_timeout;
+        let timeout = config::get_config().client.client_timeout;
         Ok(HNClient {
             client: ureq::AgentBuilder::new()
                 .timeout(std::time::Duration::from_secs(timeout))
@@ -50,13 +52,8 @@ impl HNClient {
         }
         Ok(item)
     }
-
-    /// Get all comments from a story with a given id.
-    pub fn get_comments_from_story(
-        &self,
-        story_id: u32,
-        focus_top_comment_id: u32,
-    ) -> Result<lazy::LazyLoadingComments> {
+    /// Lazily load a story's comments
+    pub fn lazy_load_story_comments(&self, story_id: u32) -> Result<CommentReceiver> {
         let request_url = format!("{}/item/{}.json", HN_OFFICIAL_PREFIX, story_id);
         let mut ids = self
             .client
@@ -64,18 +61,44 @@ impl HNClient {
             .call()?
             .into_json::<HNStoryResponse>()?
             .kids;
-        if let Some(pos) = ids.iter().position(|id| *id == focus_top_comment_id) {
-            // move `pos` to the beginning of the list.
-            ids.remove(pos);
-            ids.insert(0, focus_top_comment_id);
-        };
 
-        let mut comments = lazy::LazyLoadingComments::new(self.clone(), ids);
+        let (sender, receiver) = crossbeam_channel::bounded(32);
+        let client = self.clone();
 
-        let cfg = &(get_config().client.lazy_loading_comments);
-        comments.drain(cfg.num_comments_init, true);
-        comments.drain(cfg.num_comments_after, false);
-        Ok(comments)
+        // loads first 5 comments to ensure the corresponding `CommentView` has data to render
+        Self::load_comments(&client, &sender, &mut ids, 5);
+        std::thread::spawn(move || {
+            let sleep_dur = std::time::Duration::from_millis(1000);
+            while !ids.is_empty() {
+                Self::load_comments(&client, &sender, &mut ids, 5);
+                std::thread::sleep(sleep_dur);
+            }
+        });
+        Ok(receiver)
+    }
+
+    /// Load the first `size` comments from a list of comment IDs.
+    fn load_comments(client: &HNClient, sender: &CommentSender, ids: &mut Vec<u32>, size: usize) {
+        let size = std::cmp::min(ids.len(), size);
+        if size == 0 {
+            return;
+        }
+
+        ids.drain(0..size)
+            .collect::<Vec<_>>()
+            .into_par_iter()
+            .for_each(|id| {
+                match client.get_item_from_id::<CommentResponse>(id) {
+                    Ok(response) => {
+                        sender.send(response.into()).unwrap_or_else(|err| {
+                            format!("failed to send comments: {}", err);
+                        });
+                    }
+                    Err(err) => {
+                        warn!("failed to get comment with id={}: {}", id, err);
+                    }
+                };
+            });
     }
 
     /// Get a story based on its id
@@ -102,7 +125,7 @@ impl HNClient {
         by_date: bool,
         page: usize,
     ) -> Result<Vec<Story>> {
-        let search_story_limit = get_config().client.story_limit.search;
+        let search_story_limit = config::get_config().client.story_limit.search;
         let request_url = format!(
             "{}/{}?{}&hitsPerPage={}&page={}",
             HN_ALGOLIA_PREFIX,
@@ -221,7 +244,10 @@ impl HNClient {
         page: usize,
         numeric_filters: query::StoryNumericFilters,
     ) -> Result<Vec<Story>> {
-        let story_limit = get_config().client.story_limit.get_story_limit_by_tag(tag);
+        let story_limit = config::get_config()
+            .client
+            .story_limit
+            .get_story_limit_by_tag(tag);
 
         if tag == "front_page" {
             return self.get_front_page_stories(story_limit, page, numeric_filters);

@@ -1,4 +1,5 @@
 use super::fn_view_wrapper::*;
+use super::help_view;
 use crate::{impl_view_for_fn_wrapper, prelude::*};
 
 /// Return an ErrorView given an error
@@ -12,9 +13,9 @@ pub fn get_error_view(err_desc: &str, err_output: &str) -> impl View {
     .full_height();
 
     LinearLayout::vertical()
-        .child(get_status_bar_with_desc("Error View"))
+        .child(utils::get_status_bar_with_desc("Error View"))
         .child(main_view)
-        .child(construct_footer_view::<DefaultHelpView>())
+        .child(utils::construct_footer_view::<help_view::DefaultHelpView>())
 }
 
 /// An enum representing a normal View or an error View

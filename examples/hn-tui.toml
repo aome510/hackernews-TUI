@@ -1,9 +1,5 @@
 # Example configuration file
 
-# `allow_unicode` allows unicode support
-# (allow to render unicode characters, disable by default in `comment_text` and `article_text`)
-# allow_unicode = false
-
 # `page_scrolling` is a feature that enables page-like behavior when scrolling.
 # It is used to automatically adjust the view based on the scrolling direction.
 # page_scrolling = true
@@ -39,13 +35,6 @@
 #[client]
 # `client_timeout` defines the application's client timeout (in seconds) when making an API request
 # client_timeout = 32
-
-#[client.lazy_loading_comments]
-# `lazy_loading_comments` is a feature that lazily loads comments on demand.
-# `num_comments_init` defines the number of top comments initially loaded.
-# `num_comments_after` defines the number of top comments asynchronously loaded in background
-# num_comments_init = 5
-# num_comments_after = 10
 
 #[client.story_limit]
 # `story_limit` stores the number of maximum stories displayed in a page in each View
@@ -149,7 +138,6 @@
 # open_comment_in_browser = "c"
 # open_link_in_browser = "f"
 # open_link_in_article_view = "F"
-# reload_comment_view = "r"
 # toggle_collapse_comment = "tab"
 
 #[keymap.article_view_keymap]

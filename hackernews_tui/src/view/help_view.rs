@@ -2,6 +2,8 @@ use crate::prelude::*;
 
 use std::fmt::Display;
 
+use super::{article_view, comment_view, search_view, story_view};
+
 /// HelpView is a View displaying a help dialog with a list of key shortcuts and descriptions
 /// grouped by certain categories.
 pub struct HelpView {
@@ -23,7 +25,7 @@ impl HelpView {
             key,
             ColorStyle::new(
                 PaletteColor::TitlePrimary,
-                get_config_theme().code_block_bg.color,
+                config::get_config_theme().code_block_bg.color,
             ),
         );
         let desc_string = StyledString::plain(desc);
@@ -33,7 +35,7 @@ impl HelpView {
     }
 
     fn construct_help_dialog_event_view(view: Dialog) -> OnEventView<Dialog> {
-        OnEventView::new(view).on_event(get_global_keymap().close_dialog.clone(), |s| {
+        OnEventView::new(view).on_event(config::get_global_keymap().close_dialog.clone(), |s| {
             s.pop_layer();
         })
     }
@@ -119,9 +121,9 @@ macro_rules! other_key_shortcuts {
                 $(
                     ($k, $d),
                 )*
-                (get_global_keymap().open_help_dialog.to_string(), "Open the help dialog"),
-                (get_global_keymap().quit.to_string(), "Quit the application"),
-                (get_global_keymap().close_dialog.to_string(), "Close a dialog"),
+                (config::get_global_keymap().open_help_dialog.to_string(), "Open the help dialog"),
+                (config::get_global_keymap().quit.to_string(), "Quit the application"),
+                (config::get_global_keymap().close_dialog.to_string(), "Close a dialog"),
             ],
         )
     };
@@ -136,13 +138,13 @@ macro_rules! view_navigation_key_shortcuts {
                 $(
                     ($k, $d),
                 )*
-                    (get_global_keymap().goto_previous_view.to_string(), "Go to the previous view"),
-                    (get_global_keymap().goto_front_page_view.to_string(), "Go to front page view"),
-                    (get_global_keymap().goto_search_view.to_string(), "Go to search view"),
-                    (get_global_keymap().goto_all_stories_view.to_string(), "Go to all stories view"),
-                    (get_global_keymap().goto_ask_hn_view.to_string(), "Go to ask HN view"),
-                    (get_global_keymap().goto_show_hn_view.to_string(), "Go to show HN view"),
-                    (get_global_keymap().goto_jobs_view.to_string(), "Go to jobs view"),
+                    (config::get_global_keymap().goto_previous_view.to_string(), "Go to the previous view"),
+                    (config::get_global_keymap().goto_front_page_view.to_string(), "Go to front page view"),
+                    (config::get_global_keymap().goto_search_view.to_string(), "Go to search view"),
+                    (config::get_global_keymap().goto_all_stories_view.to_string(), "Go to all stories view"),
+                    (config::get_global_keymap().goto_ask_hn_view.to_string(), "Go to ask HN view"),
+                    (config::get_global_keymap().goto_show_hn_view.to_string(), "Go to show HN view"),
+                    (config::get_global_keymap().goto_jobs_view.to_string(), "Go to jobs view"),
             ],
 
         )
@@ -163,10 +165,10 @@ pub struct DefaultHelpView {}
 
 impl HasHelpView for DefaultHelpView {}
 
-impl HasHelpView for StoryView {
+impl HasHelpView for story_view::StoryView {
     fn construct_help_view() -> HelpView {
-        let story_view_keymap = get_story_view_keymap();
-        let custom_keymaps: Vec<(String, String)> = get_custom_keymap()
+        let story_view_keymap = config::get_story_view_keymap();
+        let custom_keymaps: Vec<(String, String)> = config::get_custom_keymap()
             .custom_view_navigation
             .iter()
             .map(|keymap| {
@@ -255,10 +257,10 @@ impl HasHelpView for StoryView {
     }
 }
 
-impl HasHelpView for CommentView {
+impl HasHelpView for comment_view::CommentView {
     fn construct_help_view() -> HelpView {
-        let comment_view_keymap = get_comment_view_keymap();
-        let story_view_keymap = get_story_view_keymap();
+        let comment_view_keymap = config::get_comment_view_keymap();
+        let story_view_keymap = config::get_story_view_keymap();
 
         HelpView::new().key_groups(vec![
             (
@@ -342,24 +344,18 @@ impl HasHelpView for CommentView {
                 ],
             ),
             view_navigation_key_shortcuts!(),
-            other_key_shortcuts!(
-                (
-                    comment_view_keymap.reload_comment_view.to_string(),
-                    "Reload the comment view"
-                ),
-                (
-                    comment_view_keymap.toggle_collapse_comment.to_string(),
-                    "Toggle collapsing the focused comment"
-                )
-            ),
+            other_key_shortcuts!((
+                comment_view_keymap.toggle_collapse_comment.to_string(),
+                "Toggle collapsing the focused comment"
+            )),
         ])
     }
 }
 
-impl HasHelpView for SearchView {
+impl HasHelpView for search_view::SearchView {
     fn construct_help_view() -> HelpView {
-        let search_view_keymap = get_search_view_keymap();
-        let story_view_keymap = get_story_view_keymap();
+        let search_view_keymap = config::get_search_view_keymap();
+        let story_view_keymap = config::get_story_view_keymap();
 
         HelpView::new().key_groups(vec![
             (
@@ -435,9 +431,9 @@ impl HasHelpView for SearchView {
     }
 }
 
-impl HasHelpView for ArticleView {
+impl HasHelpView for article_view::ArticleView {
     fn construct_help_view() -> HelpView {
-        let article_view_keymap = get_article_view_keymap().clone();
+        let article_view_keymap = config::get_article_view_keymap().clone();
         HelpView::new().key_groups(vec![
             (
                 "Navigation",

@@ -1,4 +1,5 @@
 use super::help_view::*;
+use super::story_view;
 use super::text_view::EditableTextView;
 use crate::prelude::*;
 use std::sync::{Arc, RwLock};
@@ -57,7 +58,7 @@ impl SearchView {
             ),
             ColorStyle::new(
                 PaletteColor::TitlePrimary,
-                get_config_theme().search_highlight_bg.color,
+                config::get_config_theme().search_highlight_bg.color,
             ),
         ));
 
@@ -74,7 +75,7 @@ impl SearchView {
     }
 
     fn get_view(&self) -> LinearLayout {
-        let starting_id = get_config().client.story_limit.search * self.page;
+        let starting_id = config::get_config().client.story_limit.search * self.page;
         let mut view = LinearLayout::vertical()
             .child(self.get_query_view())
             .child(self.get_matched_stories_view(starting_id));
@@ -136,7 +137,7 @@ impl SearchView {
             move || match client.get_matched_stories(&query, by_date, page) {
                 Err(err) => {
                     warn!(
-                        "failed to get stories matching the query '{}': {:#?}",
+                        "failed to get stories matching the query '{}': {}",
                         query, err
                     );
 
@@ -270,8 +271,8 @@ impl ViewWrapper for SearchView {
 /// Return a main view of a SearchView displaying the matched story list with a search bar.
 /// The main view of a SearchView is a View without status bar or footer.
 fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> impl View {
-    let story_view_keymap = get_story_view_keymap().clone();
-    let search_view_keymap = get_search_view_keymap().clone();
+    let story_view_keymap = config::get_story_view_keymap().clone();
+    let search_view_keymap = config::get_search_view_keymap().clone();
 
     OnEventView::new(SearchView::new(client, cb_sink))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| match s.mode {
@@ -280,7 +281,7 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
                 Event::Char(c) => s.add_char(c),
                 _ => {
                     // handle editing shortcuts when in the search mode
-                    let edit_keymap = get_edit_keymap().clone();
+                    let edit_keymap = config::get_edit_keymap().clone();
                     if *e == edit_keymap.backward_delete_char.into() {
                         s.del_char()
                     } else if *e == edit_keymap.move_cursor_left.into() {
@@ -334,12 +335,12 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
 pub fn get_search_view(client: &'static client::HNClient, cb_sink: CbSink) -> impl View {
     let main_view = get_search_main_view(client, cb_sink);
     let mut view = LinearLayout::vertical()
-        .child(get_status_bar_with_desc("Search View"))
+        .child(utils::get_status_bar_with_desc("Search View"))
         .child(main_view)
-        .child(construct_footer_view::<SearchView>());
+        .child(utils::construct_footer_view::<SearchView>());
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
-    OnEventView::new(view).on_event(get_global_keymap().open_help_dialog.clone(), |s| {
+    OnEventView::new(view).on_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
         s.add_layer(SearchView::construct_help_view());
     })
 }

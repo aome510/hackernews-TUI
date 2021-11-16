@@ -37,7 +37,7 @@ where
             }
         } else {
             Err(anyhow::anyhow!(
-                "config parsing error: expect a TOML::Array, receive {:#?}",
+                "config parsing error: expect a TOML::Array, receive {:?}",
                 value
             ))
         }

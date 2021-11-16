@@ -185,7 +185,6 @@ pub struct CommentViewKeyMap {
     pub page_up: Key,
 
     pub toggle_collapse_comment: Key,
-    pub reload_comment_view: Key,
 }
 
 impl Default for CommentViewKeyMap {
@@ -209,7 +208,6 @@ impl Default for CommentViewKeyMap {
             page_down: Key::new(event::Key::PageDown),
 
             toggle_collapse_comment: Key::new(event::Key::Tab),
-            reload_comment_view: Key::new('r'),
         }
     }
 }

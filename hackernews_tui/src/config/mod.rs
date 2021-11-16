@@ -12,7 +12,6 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize, ConfigParse)]
 /// Config is a struct storing the application's configurations
 pub struct Config {
-    pub allow_unicode: bool,
     pub page_scrolling: bool,
     pub scroll_offset: usize,
     pub url_open_command: String,
@@ -23,32 +22,19 @@ pub struct Config {
 }
 
 impl Config {
-    // parse config struct from a file
+    /// parse config from a file
     pub fn from_config_file(file_path: &str) -> anyhow::Result<Self> {
-        match std::fs::read_to_string(file_path) {
-            // if cannot open the file, use the default configurations
-            Err(err) => {
-                log::warn!(
-                    "failed to open {}: {:#?}\n...Use the default configurations instead",
-                    file_path,
-                    err
-                );
-                Ok(Self::default())
-            }
-            Ok(config_str) => {
-                let value = toml::from_str::<toml::Value>(&config_str)?;
-                let mut config = Self::default();
-                config.parse(value)?;
-                Ok(config)
-            }
-        }
+        let config_str = std::fs::read_to_string(file_path)?;
+        let value = toml::from_str::<toml::Value>(&config_str)?;
+        let mut config = Self::default();
+        config.parse(value)?;
+        Ok(config)
     }
 }
 
 impl Default for Config {
     fn default() -> Self {
         Config {
-            allow_unicode: false,
             page_scrolling: true,
             scroll_offset: 3,
             url_open_command: "xdg-open".to_string(),
@@ -57,10 +43,6 @@ impl Default for Config {
                 options: vec!["--format".to_string(), "markdown".to_string()],
             },
             client: Client {
-                lazy_loading_comments: LazyLoadingComments {
-                    num_comments_init: 5,
-                    num_comments_after: 10,
-                },
                 story_limit: StoryLimit {
                     search: 10,
                     front_page: 20,
@@ -75,12 +57,6 @@ impl Default for Config {
             keymap: keybindings::KeyMap::default(),
         }
     }
-}
-
-#[derive(Debug, Deserialize, ConfigParse)]
-pub struct LazyLoadingComments {
-    pub num_comments_init: usize,
-    pub num_comments_after: usize,
 }
 
 #[derive(Debug, Deserialize, ConfigParse, Clone)]
@@ -115,13 +91,41 @@ impl StoryLimit {
 #[derive(Debug, Deserialize, ConfigParse)]
 pub struct Client {
     pub story_limit: StoryLimit,
-    pub lazy_loading_comments: LazyLoadingComments,
     pub client_timeout: u64,
 }
 
 static CONFIG: once_cell::sync::OnceCell<Config> = once_cell::sync::OnceCell::new();
 
-pub fn init_config(config: Config) {
+/// loads the configuration options from a config file.
+/// If failed to find/process the file, loads the default options.
+pub fn load_config(config_file_path: Option<&str>) {
+    // if no config file is specified, use the default value ($HOME/.config/hn-tui.toml)
+    let config_file_path = if let Some(path) = config_file_path {
+        Some(path.to_string())
+    } else {
+        dirs_next::home_dir().map(|path| format!("{}/.config/hn-tui.toml", path.to_str().unwrap()))
+    };
+
+    let config = match config_file_path {
+        None => Config::default(),
+        Some(config_file_path) => match Config::from_config_file(&config_file_path) {
+            Err(err) => {
+                tracing::error!(
+                    "failed to load configurations from the file {}: {} \
+                     \n...Use the default configurations instead",
+                    config_file_path,
+                    err
+                );
+                Config::default()
+            }
+            Ok(config) => config,
+        },
+    };
+
+    init_config(config);
+}
+
+fn init_config(config: Config) {
     CONFIG.set(config).unwrap_or_else(|_| {
         panic!("failed to set up the application's configurations");
     });
