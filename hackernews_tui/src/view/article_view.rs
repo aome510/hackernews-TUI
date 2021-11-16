@@ -1,3 +1,4 @@
+use super::help_view::HasHelpView;
 use super::{async_view, text_view};
 use crate::prelude::*;
 use regex::Regex;
@@ -31,12 +32,7 @@ impl Article {
 
 impl Article {
     fn get_content(&self) -> String {
-        let content = self.content.replace("\t", "    ");
-        if get_config().allow_unicode {
-            content
-        } else {
-            content.chars().filter(|c| allow_unicode_char(c)).collect()
-        }
+        self.content.replace("\t", "    ")
     }
 
     /// parse links from the article's content (in markdown format)
@@ -90,7 +86,7 @@ impl Article {
                         link.to_string()
                     };
                     let desc = if desc.is_empty() {
-                        format!("\"{}\"", shorten_url(&link))
+                        format!("\"{}\"", utils::shorten_url(&link))
                     } else {
                         desc
                     };
@@ -115,7 +111,7 @@ impl Article {
 
                     styled_s.append_styled(
                         format!("{} ", desc),
-                        Style::from(get_config_theme().link_text.color),
+                        Style::from(config::get_config_theme().link_text.color),
                     );
 
                     let valid_url = !link.is_empty();
@@ -127,7 +123,7 @@ impl Article {
                         },
                         ColorStyle::new(
                             PaletteColor::TitlePrimary,
-                            get_config_theme().link_id_bg.color,
+                            config::get_config_theme().link_id_bg.color,
                         ),
                     );
 
@@ -204,14 +200,14 @@ impl ArticleView {
 
 /// Construct a help dialog from a list of URLs
 pub fn get_link_dialog(links: &[String]) -> impl View {
-    let article_view_keymap = get_article_view_keymap().clone();
+    let article_view_keymap = config::get_article_view_keymap().clone();
 
     let links_view = OnEventView::new(LinearLayout::vertical().with(|v| {
         links.iter().enumerate().for_each(|(id, link)| {
             let mut link_styled_string = StyledString::plain(format!("{}. ", id));
             link_styled_string.append_styled(
-                shorten_url(link),
-                ColorStyle::front(get_config_theme().link_text.color),
+                utils::shorten_url(link),
+                ColorStyle::front(config::get_config_theme().link_text.color),
             );
             v.add_child(text_view::TextView::new(link_styled_string));
         })
@@ -232,7 +228,7 @@ pub fn get_link_dialog(links: &[String]) -> impl View {
         let links = links.to_owned();
         move |s, _| {
             let focus_id = s.get_focus_index();
-            open_url_in_browser(&links[focus_id]);
+            utils::open_url_in_browser(&links[focus_id]);
             Some(EventResult::Consumed(None))
         }
     })
@@ -249,10 +245,10 @@ pub fn get_link_dialog(links: &[String]) -> impl View {
     .scrollable();
 
     OnEventView::new(Dialog::around(links_view).title("Link Dialog"))
-        .on_event(get_global_keymap().close_dialog.clone(), |s| {
+        .on_event(config::get_global_keymap().close_dialog.clone(), |s| {
             s.pop_layer();
         })
-        .on_event(get_global_keymap().open_help_dialog.clone(), |s| {
+        .on_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
             s.add_layer(ArticleView::construct_help_view())
         })
         .max_height(32)
@@ -262,10 +258,10 @@ pub fn get_link_dialog(links: &[String]) -> impl View {
 /// Return a main view of a ArticleView displaying an article in reader mode.
 /// The main view of a ArticleView is a View without status bar or footer.
 pub fn get_article_main_view(article: Article, raw_md: bool) -> OnEventView<ArticleView> {
-    let article_view_keymap = get_article_view_keymap().clone();
+    let article_view_keymap = config::get_article_view_keymap().clone();
 
     let is_suffix_key = |c: &Event| -> bool {
-        let article_view_keymap = get_article_view_keymap().clone();
+        let article_view_keymap = config::get_article_view_keymap().clone();
         *c == article_view_keymap.open_link_in_browser.into()
             || *c == article_view_keymap.open_link_in_article_view.into()
     };
@@ -287,13 +283,13 @@ pub fn get_article_main_view(article: Article, raw_md: bool) -> OnEventView<Arti
         .on_pre_event_inner(article_view_keymap.down, |s, _| {
             s.get_inner_mut()
                 .get_scroller_mut()
-                .scroll_down(get_config().scroll_offset);
+                .scroll_down(config::get_config().scroll_offset);
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(article_view_keymap.up, |s, _| {
             s.get_inner_mut()
                 .get_scroller_mut()
-                .scroll_up(get_config().scroll_offset);
+                .scroll_up(config::get_config().scroll_offset);
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(article_view_keymap.page_down, |s, _| {
@@ -327,7 +323,7 @@ pub fn get_article_main_view(article: Article, raw_md: bool) -> OnEventView<Arti
                 Ok(num) => {
                     s.raw_command.clear();
                     if num < s.links.len() {
-                        open_url_in_browser(&s.links[num]);
+                        utils::open_url_in_browser(&s.links[num]);
                     }
                     Some(EventResult::Consumed(None))
                 }
@@ -358,18 +354,18 @@ pub fn get_article_view(article: Article, raw_md: bool) -> impl View {
     let desc = format!("Article View - {}", article.title);
     let main_view = get_article_main_view(article.clone(), raw_md).full_height();
     let mut view = LinearLayout::vertical()
-        .child(get_status_bar_with_desc(&desc))
+        .child(utils::get_status_bar_with_desc(&desc))
         .child(main_view)
-        .child(construct_footer_view::<ArticleView>());
+        .child(utils::construct_footer_view::<ArticleView>());
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
-    let article_view_keymap = get_article_view_keymap().clone();
+    let article_view_keymap = config::get_article_view_keymap().clone();
 
     OnEventView::new(view)
         .on_event(article_view_keymap.open_article_in_browser, {
             let url = article.url.clone();
             move |_| {
-                open_url_in_browser(&url);
+                utils::open_url_in_browser(&url);
             }
         })
         .on_event(article_view_keymap.toggle_raw_markdown_mode, {
@@ -379,7 +375,7 @@ pub fn get_article_view(article: Article, raw_md: bool) -> impl View {
                 s.screen_mut().add_transparent_layer(Layer::new(view))
             }
         })
-        .on_event(get_global_keymap().open_help_dialog.clone(), |s| {
+        .on_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
             s.add_layer(ArticleView::construct_help_view())
         })
 }

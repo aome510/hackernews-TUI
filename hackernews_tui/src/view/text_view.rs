@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 /// TextView is a View displaying a text
 pub struct TextView {
-    content: utils::markup::StyledString,
+    content: StyledString,
     rows: Vec<lines::spans::Row>,
     width: usize,
     size_cache: Option<XY<SizeCache>>,
@@ -18,7 +18,7 @@ pub struct EditableTextView {
 impl TextView {
     pub fn new<S>(content: S) -> Self
     where
-        S: Into<utils::markup::StyledString>,
+        S: Into<StyledString>,
     {
         let content = content.into();
         TextView {
@@ -31,7 +31,7 @@ impl TextView {
 
     pub fn set_content<S>(&mut self, content: S)
     where
-        S: Into<utils::markup::StyledString>,
+        S: Into<StyledString>,
     {
         self.content = content.into();
         self.size_cache = None;

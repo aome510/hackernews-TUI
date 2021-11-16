@@ -212,7 +212,7 @@ impl From<CommentResponse> for Vec<Comment> {
         let base_desc = format!(
             "{} {} ago",
             c.author.unwrap_or_default(),
-            get_elapsed_time_as_text(c.time),
+            utils::get_elapsed_time_as_text(c.time),
         );
         let (text, links) =
             parse_raw_html_comment(&c.text.unwrap_or_default(), &format!("{}\n", base_desc));
@@ -284,14 +284,14 @@ fn parse_raw_html_comment(text: &str, desc: &str) -> (StyledString, Vec<String>)
                 }
 
                 styled_s.append_styled(
-                    format!("\"{}\" ", shorten_url(&link)),
-                    Style::from(get_config_theme().link_text.color),
+                    format!("\"{}\" ", utils::shorten_url(&link)),
+                    Style::from(config::get_config_theme().link_text.color),
                 );
                 styled_s.append_styled(
                     format!("[{}]", links.len()),
                     ColorStyle::new(
                         PaletteColor::TitlePrimary,
-                        get_config_theme().link_id_bg.color,
+                        config::get_config_theme().link_id_bg.color,
                     ),
                 );
                 links.push(link);

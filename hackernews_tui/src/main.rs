@@ -7,11 +7,12 @@ pub mod view;
 
 use clap::*;
 use prelude::*;
+use view::help_view::HasHelpView;
 
 macro_rules! set_up_switch_view_shortcut {
     ($key:expr,$tag:expr,$s:expr,$client:expr) => {
         $s.set_on_post_event($key, move |s| {
-            story_view::add_story_view_layer(
+            view::story_view::add_story_view_layer(
                 s,
                 $client,
                 $tag,
@@ -27,7 +28,7 @@ macro_rules! set_up_switch_view_shortcut {
 fn set_up_global_callbacks(s: &mut Cursive, client: &'static client::HNClient) {
     s.clear_global_callbacks(Event::CtrlChar('c'));
 
-    let global_keymap = get_global_keymap().clone();
+    let global_keymap = config::get_global_keymap().clone();
 
     // .............................................................
     // global shortcuts for switching between different Story Views
@@ -40,12 +41,12 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &'static client::HNClient) {
     set_up_switch_view_shortcut!(global_keymap.goto_jobs_view, "job", s, client);
 
     // custom navigation shortcuts
-    get_custom_keymap()
+    config::get_custom_keymap()
         .custom_view_navigation
         .iter()
         .for_each(|data| {
             s.set_on_post_event(data.key.clone(), move |s| {
-                story_view::add_story_view_layer(
+                view::story_view::add_story_view_layer(
                     s,
                     client,
                     &data.tag,
@@ -68,11 +69,11 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &'static client::HNClient) {
     });
 
     s.set_on_post_event(global_keymap.goto_search_view, move |s| {
-        search_view::add_search_view_layer(s, client);
+        view::search_view::add_search_view_layer(s, client);
     });
 
     s.set_on_post_event(global_keymap.open_help_dialog, |s| {
-        s.add_layer(DefaultHelpView::construct_help_view())
+        s.add_layer(view::help_view::DefaultHelpView::construct_help_view())
     });
 
     s.set_on_post_event(global_keymap.quit, |s| s.quit());
@@ -82,7 +83,7 @@ fn run() {
     let mut s = cursive::default();
 
     // update cursive's default theme
-    let config_theme = &get_config().theme;
+    let config_theme = &config::get_config().theme;
     s.update_theme(|theme| {
         config_theme.update_theme(theme);
     });
@@ -92,7 +93,7 @@ fn run() {
     set_up_global_callbacks(&mut s, client);
 
     // render `front_page` story view as the application's default view
-    story_view::add_story_view_layer(
+    view::story_view::add_story_view_layer(
         &mut s,
         client,
         "front_page",
@@ -162,6 +163,6 @@ fn main() {
         .get_matches();
 
     init_logging(args.value_of("log"));
-    load_config(args.value_of("config"));
+    config::load_config(args.value_of("config"));
     run();
 }

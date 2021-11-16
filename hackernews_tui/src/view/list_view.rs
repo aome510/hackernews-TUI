@@ -1,5 +1,7 @@
 use crate::prelude::*;
 
+use super::{comment_view, story_view};
+
 pub type ScrollListView = ScrollView<LinearLayout>;
 
 /// ScrollableList is a trait that implements basic methods
@@ -31,7 +33,7 @@ macro_rules! impl_scrollable_list {
         }
 
         fn scroll(&mut self, direction: bool) {
-            if !get_config().page_scrolling {
+            if !config::get_config().page_scrolling {
                 self.get_inner_mut().scroll_to_important_area();
                 return;
             }
@@ -105,10 +107,10 @@ macro_rules! impl_scrollable_list {
     };
 }
 
-impl ScrollableList for StoryView {
+impl ScrollableList for story_view::StoryView {
     impl_scrollable_list!();
 }
 
-impl ScrollableList for CommentView {
+impl ScrollableList for comment_view::CommentView {
     impl_scrollable_list!();
 }

@@ -30,7 +30,7 @@ pub struct HNClient {
 impl HNClient {
     /// Create a new Hacker News Client
     pub fn new() -> Result<HNClient> {
-        let timeout = get_config().client.client_timeout;
+        let timeout = config::get_config().client.client_timeout;
         Ok(HNClient {
             client: ureq::AgentBuilder::new()
                 .timeout(std::time::Duration::from_secs(timeout))
@@ -125,7 +125,7 @@ impl HNClient {
         by_date: bool,
         page: usize,
     ) -> Result<Vec<Story>> {
-        let search_story_limit = get_config().client.story_limit.search;
+        let search_story_limit = config::get_config().client.story_limit.search;
         let request_url = format!(
             "{}/{}?{}&hitsPerPage={}&page={}",
             HN_ALGOLIA_PREFIX,
@@ -244,7 +244,10 @@ impl HNClient {
         page: usize,
         numeric_filters: query::StoryNumericFilters,
     ) -> Result<Vec<Story>> {
-        let story_limit = get_config().client.story_limit.get_story_limit_by_tag(tag);
+        let story_limit = config::get_config()
+            .client
+            .story_limit
+            .get_story_limit_by_tag(tag);
 
         if tag == "front_page" {
             return self.get_front_page_stories(story_limit, page, numeric_filters);

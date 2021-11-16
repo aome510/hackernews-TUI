@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use crate::view;
 use std::time::{Duration, SystemTime};
 use substring::*;
 
@@ -52,7 +53,7 @@ pub fn shorten_url(url: &str) -> String {
 }
 
 /// Construct a simple footer view
-pub fn construct_footer_view<T: HasHelpView>() -> impl View {
+pub fn construct_footer_view<T: view::help_view::HasHelpView>() -> impl View {
     LinearLayout::horizontal()
         .child(
             TextView::new(StyledString::styled(
@@ -65,7 +66,7 @@ pub fn construct_footer_view<T: HasHelpView>() -> impl View {
         .child(
             LinearLayout::horizontal()
                 .child(Button::new_raw(
-                    format!("[{}: help] ", get_global_keymap().open_help_dialog),
+                    format!("[{}: help] ", config::get_global_keymap().open_help_dialog),
                     |s| s.add_layer(T::construct_help_view()),
                 ))
                 .child(Button::new_raw("[quit] ", |s| s.quit())),
@@ -79,12 +80,12 @@ pub fn get_status_bar_with_desc(desc: &str) -> impl View {
             desc,
             ColorStyle::new(
                 PaletteColor::TitlePrimary,
-                get_config_theme().status_bar_bg.color,
+                config::get_config_theme().status_bar_bg.color,
             ),
         ))
         .h_align(align::HAlign::Center)
         .full_width(),
-        ColorStyle::back(get_config_theme().status_bar_bg.color),
+        ColorStyle::back(config::get_config_theme().status_bar_bg.color),
     )
 }
 
@@ -110,7 +111,7 @@ pub fn open_url_in_browser(url: &str) {
     }
 
     let url = url.to_string();
-    let command = get_config().url_open_command.clone();
+    let command = config::get_config().url_open_command.clone();
     std::thread::spawn(
         move || match std::process::Command::new(&command).arg(&url).output() {
             Err(err) => warn!("failed to execute command `{} {}`: {:?}", command, url, err),
@@ -126,15 +127,4 @@ pub fn open_url_in_browser(url: &str) {
             }
         },
     );
-}
-
-/// check if a character is supported (if `allow_unicode` config option is disabled)
-/// A character is considered to be supported if it is inside the ascii range or a "quote" character
-pub fn allow_unicode_char(c: &char) -> bool {
-    c.is_ascii()
-        || *c == '\u{b4}'
-        || *c == '\u{2018}'
-        || *c == '\u{2019}'
-        || *c == '\u{201c}'
-        || *c == '\u{201d}'
 }

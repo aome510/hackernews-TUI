@@ -1,6 +1,7 @@
-use super::async_view;
+use super::help_view::HasHelpView;
 use super::list_view::*;
 use super::text_view;
+use super::{article_view, async_view};
 use crate::prelude::*;
 
 type CommentComponent = HideableView<PaddedView<text_view::TextView>>;
@@ -31,6 +32,8 @@ impl CommentView {
         view
     }
 
+    /// Check the `CommentReceiver` channel if there are new comments loaded
+    /// then update the internal comment data accordingly.
     pub fn try_update_comments(&mut self) {
         let mut new_comments = vec![];
         while !self.receiver.is_empty() {
@@ -176,10 +179,10 @@ impl CommentView {
 /// Return a main view of a CommentView displaying the comment list.
 /// The main view of a CommentView is a View without status bar or footer.
 fn get_comment_main_view(receiver: client::CommentReceiver) -> impl View {
-    let comment_view_keymap = get_comment_view_keymap().clone();
+    let comment_view_keymap = config::get_comment_view_keymap().clone();
 
     let is_suffix_key = |c: &Event| -> bool {
-        let comment_view_keymap = get_comment_view_keymap().clone();
+        let comment_view_keymap = config::get_comment_view_keymap().clone();
         *c == comment_view_keymap.open_link_in_browser.into()
             || *c == comment_view_keymap.open_link_in_article_view.into()
     };
@@ -202,11 +205,13 @@ fn get_comment_main_view(receiver: client::CommentReceiver) -> impl View {
         })
         // scrolling shortcuts
         .on_pre_event_inner(comment_view_keymap.up, |s, _| {
-            s.get_scroller_mut().scroll_up(get_config().scroll_offset);
+            s.get_scroller_mut()
+                .scroll_up(config::get_config().scroll_offset);
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(comment_view_keymap.down, |s, _| {
-            s.get_scroller_mut().scroll_down(get_config().scroll_offset);
+            s.get_scroller_mut()
+                .scroll_down(config::get_config().scroll_offset);
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(comment_view_keymap.page_up, |s, _| {
@@ -263,7 +268,7 @@ fn get_comment_main_view(receiver: client::CommentReceiver) -> impl View {
                     s.raw_command.clear();
                     let id = s.get_focus_index();
                     if num < s.comments[id].links.len() {
-                        open_url_in_browser(&s.comments[id].links[num]);
+                        utils::open_url_in_browser(&s.comments[id].links[num]);
                         Some(EventResult::Consumed(None))
                     } else {
                         Some(EventResult::Consumed(None))
@@ -293,7 +298,7 @@ fn get_comment_main_view(receiver: client::CommentReceiver) -> impl View {
         .on_pre_event_inner(comment_view_keymap.open_comment_in_browser, move |s, _| {
             let id = s.comments[s.get_focus_index()].id;
             let url = format!("{}/item?id={}", client::HN_HOST_URL, id);
-            open_url_in_browser(&url);
+            utils::open_url_in_browser(&url);
             Some(EventResult::Consumed(None))
         })
         // other commands
@@ -310,30 +315,37 @@ pub fn get_comment_view(story: &client::Story, receiver: client::CommentReceiver
     let match_re = regex::Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
     let story_title = match_re.replace_all(&story.title, "${match}");
 
-    let status_bar = get_status_bar_with_desc(&format!("Comment View - {}", story_title));
+    let status_bar = utils::get_status_bar_with_desc(&format!("Comment View - {}", story_title));
 
     let main_view = get_comment_main_view(receiver);
 
     let mut view = LinearLayout::vertical()
         .child(status_bar)
         .child(main_view)
-        .child(construct_footer_view::<CommentView>());
+        .child(utils::construct_footer_view::<CommentView>());
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
     let id = story.id;
 
     OnEventView::new(view)
-        .on_event(get_global_keymap().open_help_dialog.clone(), |s| {
+        .on_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
             s.add_layer(CommentView::construct_help_view());
         })
-        .on_event(get_story_view_keymap().open_article_in_browser.clone(), {
-            let url = story.url.clone();
-            move |_| {
-                open_url_in_browser(&url);
-            }
-        })
         .on_event(
-            get_story_view_keymap().open_article_in_article_view.clone(),
+            config::get_story_view_keymap()
+                .open_article_in_browser
+                .clone(),
+            {
+                let url = story.url.clone();
+                move |_| {
+                    utils::open_url_in_browser(&url);
+                }
+            },
+        )
+        .on_event(
+            config::get_story_view_keymap()
+                .open_article_in_article_view
+                .clone(),
             {
                 let url = story.url.clone();
                 move |s| {
@@ -344,10 +356,12 @@ pub fn get_comment_view(story: &client::Story, receiver: client::CommentReceiver
             },
         )
         .on_event(
-            get_story_view_keymap().open_story_in_browser.clone(),
+            config::get_story_view_keymap()
+                .open_story_in_browser
+                .clone(),
             move |_| {
                 let url = format!("{}/item?id={}", client::HN_HOST_URL, id);
-                open_url_in_browser(&url);
+                utils::open_url_in_browser(&url);
             },
         )
 }

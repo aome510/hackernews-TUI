@@ -1,5 +1,7 @@
+use super::article_view;
 use super::async_view;
-use super::help_view::*;
+use super::comment_view;
+use super::help_view::HasHelpView;
 use super::list_view::*;
 use super::text_view;
 use crate::prelude::*;
@@ -65,7 +67,7 @@ impl StoryView {
                         matched_text,
                         ColorStyle::new(
                             PaletteColor::TitlePrimary,
-                            get_config_theme().search_highlight_bg.color,
+                            config::get_config_theme().search_highlight_bg.color,
                         ),
                     );
                     continue;
@@ -86,7 +88,7 @@ impl StoryView {
             let url = format!("\n{}", story.highlight_result.url);
             story_text.append(Self::get_matched_text(
                 url,
-                ColorStyle::front(get_config_theme().link_text.color),
+                ColorStyle::front(config::get_config_theme().link_text.color),
             ));
         }
         story_text.append_styled(
@@ -94,7 +96,7 @@ impl StoryView {
                 "\n{} points | by {} | {} ago | {} comments",
                 story.points,
                 story.author,
-                get_elapsed_time_as_text(story.time),
+                utils::get_elapsed_time_as_text(story.time),
                 story.num_comments,
             ),
             ColorStyle::from(PaletteColor::Secondary),
@@ -112,10 +114,10 @@ pub fn get_story_main_view(
     client: &'static client::HNClient,
     starting_id: usize,
 ) -> OnEventView<StoryView> {
-    let story_view_keymap = get_story_view_keymap().clone();
+    let story_view_keymap = config::get_story_view_keymap().clone();
 
     let is_suffix_key =
-        |c: &Event| -> bool { *c == get_story_view_keymap().goto_story.clone().into() };
+        |c: &Event| -> bool { *c == config::get_story_view_keymap().goto_story.clone().into() };
 
     OnEventView::new(StoryView::new(stories, starting_id))
         // number parsing
@@ -157,7 +159,7 @@ pub fn get_story_main_view(
         // open external link shortcuts
         .on_pre_event_inner(story_view_keymap.open_article_in_browser, move |s, _| {
             let id = s.get_focus_index();
-            open_url_in_browser(&s.stories[id].url);
+            utils::open_url_in_browser(&s.stories[id].url);
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(
@@ -177,7 +179,7 @@ pub fn get_story_main_view(
         .on_pre_event_inner(story_view_keymap.open_story_in_browser, move |s, _| {
             let id = s.stories[s.get_focus_index()].id;
             let url = format!("{}/item?id={}", client::HN_HOST_URL, id);
-            open_url_in_browser(&url);
+            utils::open_url_in_browser(&url);
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(story_view_keymap.goto_story, move |s, _| {
@@ -210,19 +212,23 @@ pub fn get_story_view(
     page: usize,
     numeric_filters: client::StoryNumericFilters,
 ) -> impl View {
-    let starting_id = get_config().client.story_limit.get_story_limit_by_tag(tag) * page;
+    let starting_id = config::get_config()
+        .client
+        .story_limit
+        .get_story_limit_by_tag(tag)
+        * page;
     let main_view = get_story_main_view(stories, client, starting_id).full_height();
 
     let mut view = LinearLayout::vertical()
-        .child(get_status_bar_with_desc(desc))
+        .child(utils::get_status_bar_with_desc(desc))
         .child(main_view)
-        .child(construct_footer_view::<StoryView>());
+        .child(utils::construct_footer_view::<StoryView>());
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
-    let story_view_keymap = get_story_view_keymap().clone();
+    let story_view_keymap = config::get_story_view_keymap().clone();
 
     OnEventView::new(view)
-        .on_pre_event(get_global_keymap().open_help_dialog.clone(), |s| {
+        .on_pre_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
             s.add_layer(StoryView::construct_help_view())
         })
         // toggle sort_by

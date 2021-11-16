@@ -58,7 +58,7 @@ impl StoryNumericFilters {
                     .duration_since(std::time::SystemTime::UNIX_EPOCH)
                     .unwrap()
                     .as_secs();
-                Some(current_time - from_day_offset_to_time_offset_in_secs(day_offset))
+                Some(current_time - utils::from_day_offset_to_time_offset_in_secs(day_offset))
             }
         }
     }

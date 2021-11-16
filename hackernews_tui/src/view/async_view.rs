@@ -1,5 +1,6 @@
 use super::error_view::{self, ErrorViewEnum, ErrorViewWrapper};
-use crate::prelude::*;
+use super::{article_view, comment_view, story_view};
+use crate::{client, prelude::*, utils};
 use cursive_aligned_view::Alignable;
 use cursive_async_view::AsyncView;
 
@@ -69,7 +70,7 @@ pub fn get_story_view_async(
         move |result| {
             ErrorViewWrapper::new(match result {
                 Ok(stories) => ErrorViewEnum::Ok(story_view::get_story_view(
-                    &get_story_view_desc_by_tag(tag),
+                    &utils::get_story_view_desc_by_tag(tag),
                     stories,
                     client,
                     tag,
@@ -94,7 +95,7 @@ pub fn get_story_view_async(
 /// Return an async_view wrapping ArticleView with a loading screen when
 /// parsing the Article data
 pub fn get_article_view_async(siv: &mut Cursive, article_url: &str) -> impl View {
-    let article_parse_command = get_config().article_parse_command.clone();
+    let article_parse_command = config::get_config().article_parse_command.clone();
     let err_desc = format!(
         "failed to execute command `{} {} {}`:\n\
          Please make sure you configure `article_parse_command` as described in (https://github.com/aome510/hackernews-TUI#article-parse-command)",
