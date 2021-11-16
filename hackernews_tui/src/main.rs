@@ -115,19 +115,19 @@ fn run() {
 }
 
 /// initialize application logging
-fn init_logging(log_file_path: Option<&str>) {
+fn init_logging(log_folder_path: Option<&str>) {
     if std::env::var("RUST_LOG").is_err() {
         std::env::set_var("RUST_LOG", "info")
     }
 
     // if no log file path is specified, use the default value (`$HOME/.cache/hn-tui.log`)
-    let log_file_path = match log_file_path {
+    let log_file_path = match log_folder_path {
         Some(path) => path.into(),
         None => dirs_next::home_dir()
-            .expect("failed to get user's cache directory")
-            .join(".cache")
-            .join("hn-tui.log"),
-    };
+            .expect("failed to get user's home directory")
+            .join(".cache"),
+    }
+    .join("hn-tui.log");
     let log_file = std::fs::File::create(log_file_path).unwrap_or_else(|err| {
         panic!("failed to create application's log file: {}", err);
     });
@@ -156,8 +156,8 @@ fn main() {
             Arg::with_name("log")
                 .short("l")
                 .long("log")
-                .value_name("FILE")
-                .help("Path to the application's log file (default: $HOME/.cache/hn-tui.log)")
+                .value_name("FOLDER")
+                .help("Path to a folder to store application's logs (default: $HOME/.cache)")
                 .next_line_help(true),
         )
         .get_matches();
