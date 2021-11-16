@@ -12,7 +12,6 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize, ConfigParse)]
 /// Config is a struct storing the application's configurations
 pub struct Config {
-    pub allow_unicode: bool,
     pub page_scrolling: bool,
     pub scroll_offset: usize,
     pub url_open_command: String,
@@ -36,7 +35,6 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            allow_unicode: false,
             page_scrolling: true,
             scroll_offset: 3,
             url_open_command: "xdg-open".to_string(),
@@ -45,10 +43,6 @@ impl Default for Config {
                 options: vec!["--format".to_string(), "markdown".to_string()],
             },
             client: Client {
-                lazy_loading_comments: LazyLoadingComments {
-                    num_comments_init: 5,
-                    num_comments_after: 10,
-                },
                 story_limit: StoryLimit {
                     search: 10,
                     front_page: 20,
@@ -63,12 +57,6 @@ impl Default for Config {
             keymap: keybindings::KeyMap::default(),
         }
     }
-}
-
-#[derive(Debug, Deserialize, ConfigParse)]
-pub struct LazyLoadingComments {
-    pub num_comments_init: usize,
-    pub num_comments_after: usize,
 }
 
 #[derive(Debug, Deserialize, ConfigParse, Clone)]
@@ -103,7 +91,6 @@ impl StoryLimit {
 #[derive(Debug, Deserialize, ConfigParse)]
 pub struct Client {
     pub story_limit: StoryLimit,
-    pub lazy_loading_comments: LazyLoadingComments,
     pub client_timeout: u64,
 }
 

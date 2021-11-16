@@ -4,6 +4,7 @@ use regex::Regex;
 use serde::{de, Deserialize, Deserializer};
 
 lazy_static! {
+    static ref MATCH_RE: Regex = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
     static ref PARAGRAPH_RE: Regex = Regex::new(r"<p>(?s)(?P<paragraph>.*?)</p>").unwrap();
     static ref ITALIC_RE: Regex = Regex::new(r"<i>(?s)(?P<text>.+?)</i>").unwrap();
     static ref CODE_RE: Regex =
@@ -184,7 +185,9 @@ impl From<StoryResponse> for Story {
             },
         };
         Story {
-            title: s.title.unwrap(),
+            title: MATCH_RE
+                .replace_all(&s.title.unwrap(), "${match}")
+                .to_string(),
             url: s.url.unwrap_or_default(),
             author: s.author.unwrap_or_else(|| String::from("[deleted]")),
             id: s.id,

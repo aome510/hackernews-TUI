@@ -311,11 +311,7 @@ fn get_comment_main_view(receiver: client::CommentReceiver) -> impl View {
 
 /// Return a CommentView given a comment list and the discussed story's url/title
 pub fn get_comment_view(story: &client::Story, receiver: client::CommentReceiver) -> impl View {
-    // TODO story parsing codes should be placed inside `client/parser.rs`
-    let match_re = regex::Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
-    let story_title = match_re.replace_all(&story.title, "${match}");
-
-    let status_bar = utils::get_status_bar_with_desc(&format!("Comment View - {}", story_title));
+    let status_bar = utils::get_status_bar_with_desc(&format!("Comment View - {}", story.title));
 
     let main_view = get_comment_main_view(receiver);
 

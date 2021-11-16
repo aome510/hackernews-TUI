@@ -43,6 +43,7 @@ impl StoryView {
     fn get_matched_text(mut s: String, default_style: ColorStyle) -> StyledString {
         let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
         let mut styled_s = StyledString::new();
+
         loop {
             match match_re.captures(&s.clone()) {
                 None => break,
