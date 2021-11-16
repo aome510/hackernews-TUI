@@ -1,30 +1,27 @@
 # hackernews-TUI
 
-`hackernews_tui` is a fast and customizable Terminal UI application for browsing Hacker News on terminal.
+`hackernews_tui` is a fast and customizable Terminal UI application for browsing Hacker News on the terminal.
 
-`hackernews_tui` is written in Rust with the help of [Cursive TUI library](https://github.com/gyscos/cursive/). It uses [HN Algolia search APIs](https://hn.algolia.com/api/) and [HN Official APIs](https://github.com/HackerNews/API) to get Hacker News data.
-
-**Note**: `hackernews-tui` implements a lazy-loading comment functionality which only loads comments **on demand**. That means to load more comments, you should keep focusing the next comment passing the last visible comment until hitting the end when no additional comment is loaded.
+`hackernews_tui` is written in Rust with the help of [Cursive TUI library](https://github.com/gyscos/cursive/). It uses [HN Algolia APIs](https://hn.algolia.com/api/) and [HN Official APIs](https://github.com/HackerNews/API) to get Hacker News data.
 
 The application consists of the following views:
 
-- `Story View` displays a list of HN stories. There are different kinds of `Story View` depending on the `tag` used to filter stories:
+- `Story View` displays stories. There are different kinds of `Story View` depending on the `tag` used to filter stories:
   - `Front Page`: stories on the front page
   - `All Stories`: all stories
   - `Ask HN`: ask HN stories
   - `Show HN`: show HN stories
   - `Jobs`: jobs stories
-- `Article View` displays the content of a web page in reader mode.
-- `Comment View` displays a list of comments of a story.
-- `Search View` displays a search bar and a list of stories matching the search query.
+- `Article View` displays the content of an article/web page in reader mode.
+- `Comment View` displays a story's comments.
+- `Search View` displays a search bar and stories matching the search query.
 
 ### Why hackernews-TUI?
 
 If you are either
 
 - a Hacker News reader
-- a computer nerd who likes doing things on terminal
-- a vim key-bindings fanboy
+- a computer nerd who likes doing things on the terminal
 - a person who prefers navigating using the keyboard over a mouse
 
 This application is the right tool for you :muscle:
@@ -51,7 +48,7 @@ This application is the right tool for you :muscle:
   - [Article Parse Command](#article-parse-command)
   - [User-defined shortcuts](#user-defined-shortcuts)
   - [Custom keymap](#custom-keymap)
-- [Debug](#debug)
+- [Logging](#logging)
 - [Roadmap](#roadmap)
 
 ## Install
@@ -254,9 +251,7 @@ Key shortcuts:
 
 ## Configuration
 
-By default, the application will look for `~/.config/hn-tui.toml` as the configuration file.
-
-You can also specify the path with the `-c` or `--config` option when running the application:
+By default, `hackernews-tui` will look for `~/.config/hn-tui.toml` as the configuration file, which can be configured by specifying the path with the `-c` or `--config` option when running the application:
 
 ```
 hackernews_tui -c ~/.config/hn-tui.toml
@@ -302,21 +297,9 @@ Shortcuts in each `View` are fully customizable. For further information about t
 
 It's possible to define a custom shortcut to switch between different `StoryView` (`front_page`, `show_hn`, `ask_hn`, etc) with stories filtered by HN Algolia's [`numericFilters`](https://hn.algolia.com/api/). An example of defining such custom shortcuts can be found under the **custom keymap** section of the example configuration file.
 
-## Debug
+## Logging
 
-Run
-
-```
-RUST_LOG=debug RUST_BACKTRACE=1 hackernews_tui 2> log.txt
-```
-
-then run
-
-```
-tail -f log.txt
-```
-
-in another terminal to view the application's log in `log.txt` file.
+`hackernews-tui` uses `RUST_LOG` environment variable to define the application's [logging level](https://docs.rs/log/0.4.14/log/enum.Level.html) (default to be `INFO`). The application stores logs inside the `$HOME/.cache/hn-tui.log` file, which can be configured by specifying the `-l <FILE>` or `--log <FILE>` option.
 
 ## Roadmap
 
@@ -328,7 +311,7 @@ in another terminal to view the application's log in `log.txt` file.
   - [x] lazy-loading comments
   - [x] front-page stories like the official site
   - [ ] real-time updating
-- [ ] implement smarter lazy-loading comment functionality
+- [x] implement smarter lazy-loading comment functionality
 - [ ] support more themes
 - [ ] snipe-like navigation, inspired by [vim-snipe](https://github.com/yangmillstheory/vim-snipe)
 - [ ] add some extra transition effects

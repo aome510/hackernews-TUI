@@ -10,7 +10,7 @@
 # scroll_offset = 3
 
 # `url_open_command` defines a command used to open url in browser
-# url_open_command = "xdg-open"
+# url_open_command = "open"
 
 # `article_parse_command` defines a command to parse a web article's content
 # to a markdown format. The parsed data is then used to render the `ArticleView`
