@@ -137,7 +137,7 @@ impl SearchView {
             move || match client.get_matched_stories(&query, by_date, page) {
                 Err(err) => {
                     warn!(
-                        "failed to get stories matching the query '{}': {:#?}",
+                        "failed to get stories matching the query '{}': {}",
                         query, err
                     );
 

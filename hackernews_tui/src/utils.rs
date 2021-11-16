@@ -114,11 +114,11 @@ pub fn open_url_in_browser(url: &str) {
     let command = config::get_config().url_open_command.clone();
     std::thread::spawn(
         move || match std::process::Command::new(&command).arg(&url).output() {
-            Err(err) => warn!("failed to execute command `{} {}`: {:?}", command, url, err),
+            Err(err) => warn!("failed to execute command `{} {}`: {}", command, url, err),
             Ok(output) => {
                 if !output.status.success() {
                     warn!(
-                        "failed to execute command `{} {}`: {:?}",
+                        "failed to execute command `{} {}`: {}",
                         command,
                         url,
                         std::str::from_utf8(&output.stderr).unwrap(),

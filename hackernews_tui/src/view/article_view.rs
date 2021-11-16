@@ -78,7 +78,7 @@ impl Article {
                         match url::Url::parse(&self.url).unwrap().join(&link) {
                             Ok(url) => url.to_string(),
                             Err(err) => {
-                                warn!("{} is not a valid path/url: {:#?}", link, err);
+                                warn!("{} is not a valid path/url: {}", link, err);
                                 "".to_owned()
                             }
                         }
