@@ -1,47 +1,60 @@
-use std::sync::Arc;
-
 use super::async_view;
 use super::list_view::*;
 use super::text_view;
 use crate::prelude::*;
-use parking_lot::RwLock;
-use regex::Regex;
 
 type CommentComponent = HideableView<PaddedView<text_view::TextView>>;
 
 /// CommentView is a View displaying a list of comments in a HN story
 pub struct CommentView {
     view: ScrollListView,
-    comments: Arc<RwLock<Vec<client::Comment>>>,
+    comments: Vec<client::Comment>,
+    receiver: client::CommentReceiver,
 
     raw_command: String,
 }
 
 impl ViewWrapper for CommentView {
     wrap_impl!(self.view: ScrollListView);
-
-    fn wrap_layout(&mut self, size: Vec2) {
-        // to support focus the last focused comment on reloading,
-        // scroll to the focus element during the view initialization
-        let is_init = self.get_inner().get_scroller().last_available_size() == Vec2::zero();
-
-        self.with_view_mut(|v| v.layout(size));
-
-        if is_init {
-            self.scroll(true)
-        }
-    }
 }
 
 impl CommentView {
     /// Return a new CommentView given a comment list and the discussed story url
-    pub fn new(receiver: crossbeam_channel::Receiver<client::Comment>) -> Self {
-        let comment_view = CommentView {
-            comments: Arc::new(RwLock::new(vec![])),
+    pub fn new(receiver: client::CommentReceiver) -> Self {
+        let mut view = CommentView {
+            comments: vec![],
             view: LinearLayout::vertical().scrollable(),
             raw_command: String::new(),
+            receiver,
         };
-        comment_view
+        view.try_update_comments();
+        view
+    }
+
+    pub fn try_update_comments(&mut self) {
+        let mut new_comments = vec![];
+        while !self.receiver.is_empty() {
+            if let Ok(mut comments) = self.receiver.try_recv() {
+                new_comments.append(&mut comments);
+            }
+        }
+
+        if new_comments.is_empty() {
+            return;
+        }
+
+        new_comments.iter().for_each(|comment| {
+            self.add_item(HideableView::new(PaddedView::lrtb(
+                comment.height * 2,
+                0,
+                0,
+                1,
+                text_view::TextView::new(comment.text.clone()),
+            )));
+        });
+        self.comments.append(&mut new_comments);
+
+        self.layout(self.get_scroller().last_outer_size())
     }
 
     /// Return the `id` of the first (`direction` dependent and starting but not including `start_id`)
@@ -103,17 +116,17 @@ impl CommentView {
             return;
         }
         match self.comments[i].state {
-            CommentState::Collapsed => {
-                self.comments[i].state = CommentState::Normal;
+            client::CommentState::Collapsed => {
+                self.comments[i].state = client::CommentState::Normal;
                 self.get_comment_component_mut(i).unhide();
                 self.toggle_comment_collapse_state(i + 1, min_height)
             }
-            CommentState::Normal => {
-                self.comments[i].state = CommentState::Collapsed;
+            client::CommentState::Normal => {
+                self.comments[i].state = client::CommentState::Collapsed;
                 self.get_comment_component_mut(i).hide();
                 self.toggle_comment_collapse_state(i + 1, min_height)
             }
-            CommentState::PartiallyCollapsed => {
+            client::CommentState::PartiallyCollapsed => {
                 let component = self.get_comment_component_mut(i);
                 if component.is_visible() {
                     component.hide();
@@ -133,26 +146,26 @@ impl CommentView {
         let id = self.get_focus_index();
         let comment = self.comments[id].clone();
         match comment.state {
-            CommentState::Collapsed => {
+            client::CommentState::Collapsed => {
                 panic!(
                     "invalid comment state `Collapsed` when calling `toggle_collapse_focused_comment`"
                 );
             }
-            CommentState::PartiallyCollapsed => {
+            client::CommentState::PartiallyCollapsed => {
                 self.get_comment_component_mut(id)
                     .get_inner_mut()
                     .get_inner_mut()
                     .set_content(comment.text);
                 self.toggle_comment_collapse_state(id + 1, self.comments[id].height);
-                self.comments[id].state = CommentState::Normal;
+                self.comments[id].state = client::CommentState::Normal;
             }
-            CommentState::Normal => {
+            client::CommentState::Normal => {
                 self.get_comment_component_mut(id)
                     .get_inner_mut()
                     .get_inner_mut()
                     .set_content(comment.minimized_text);
                 self.toggle_comment_collapse_state(id + 1, self.comments[id].height);
-                self.comments[id].state = CommentState::PartiallyCollapsed;
+                self.comments[id].state = client::CommentState::PartiallyCollapsed;
             }
         };
     }
@@ -162,7 +175,7 @@ impl CommentView {
 
 /// Return a main view of a CommentView displaying the comment list.
 /// The main view of a CommentView is a View without status bar or footer.
-fn get_comment_main_view(receiver: crossbeam_channel::Receiver<Comment>) -> impl View {
+fn get_comment_main_view(receiver: client::CommentReceiver) -> impl View {
     let comment_view_keymap = get_comment_view_keymap().clone();
 
     let is_suffix_key = |c: &Event| -> bool {
@@ -173,6 +186,8 @@ fn get_comment_main_view(receiver: crossbeam_channel::Receiver<Comment>) -> impl
 
     OnEventView::new(CommentView::new(receiver))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
+            s.try_update_comments();
+
             match *e {
                 Event::Char(c) if ('0'..='9').contains(&c) => {
                     s.raw_command.push(c);
@@ -290,11 +305,9 @@ fn get_comment_main_view(receiver: crossbeam_channel::Receiver<Comment>) -> impl
 }
 
 /// Return a CommentView given a comment list and the discussed story's url/title
-pub fn get_comment_view(
-    story: &client::Story,
-    receiver: crossbeam_channel::Receiver<Comment>,
-) -> impl View {
-    let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
+pub fn get_comment_view(story: &client::Story, receiver: client::CommentReceiver) -> impl View {
+    // TODO story parsing codes should be placed inside `client/parser.rs`
+    let match_re = regex::Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
     let story_title = match_re.replace_all(&story.title, "${match}");
 
     let status_bar = get_status_bar_with_desc(&format!("Comment View - {}", story_title));

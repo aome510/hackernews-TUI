@@ -141,17 +141,17 @@ pub struct Story {
 /// Comment represents a Hacker News comment
 #[derive(Debug, Clone)]
 pub struct Comment {
-    id: u32,
-    height: usize,
-    state: CommentState,
-    text: StyledString,
-    minimized_text: StyledString,
-    links: Vec<String>,
+    pub id: u32,
+    pub height: usize,
+    pub state: CommentState,
+    pub text: StyledString,
+    pub minimized_text: StyledString,
+    pub links: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
 /// CommentState represents the state of a single comment component
-enum CommentState {
+pub enum CommentState {
     Collapsed,
     PartiallyCollapsed,
     Normal,
@@ -203,24 +203,29 @@ impl From<CommentResponse> for Vec<Comment> {
             .into_iter()
             .filter(|comment| comment.author.is_some() && comment.text.is_some())
             .flat_map(Into::<Vec<Comment>>::into)
+            .map(|mut c| {
+                c.height += 1; // update the height of every children comments
+                c
+            })
             .collect::<Vec<_>>();
 
-        let minimized_text = StyledString::styled(
-            format!(
-                "{} {} ago ({} more)",
-                c.author.unwrap_or_default(),
-                get_elapsed_time_as_text(c.time),
-                children.len() + 1,
-            ),
-            PaletteColor::Secondary,
+        let base_desc = format!(
+            "{} {} ago",
+            c.author.unwrap_or_default(),
+            get_elapsed_time_as_text(c.time),
         );
-        let (text, links) = parse_raw_html_comment_text(&c.text.unwrap_or_default());
+        let (text, links) =
+            parse_raw_html_comment(&c.text.unwrap_or_default(), &format!("{}\n", base_desc));
+
         let comment = Comment {
             id: c.id,
             height: 0,
             state: CommentState::Normal,
             text,
-            minimized_text,
+            minimized_text: StyledString::styled(
+                format!("{} ({} more)", base_desc, children.len() + 1,),
+                PaletteColor::Secondary,
+            ),
             links,
         };
 
@@ -239,16 +244,23 @@ fn decode_html(s: &str) -> String {
 /// The function returns the parsed text and a vector of links in the comment.
 ///
 /// Links inside the parsed text are colored.
-fn parse_raw_html_comment_text(s: &str) -> (StyledString, Vec<String>) {
+fn parse_raw_html_comment(text: &str, desc: &str) -> (StyledString, Vec<String>) {
     // insert newlines as a separator between paragraphs
-    let mut s = PARAGRAPH_RE.replace_all(s, "${paragraph}\n\n").to_string();
+    let mut s = PARAGRAPH_RE
+        .replace_all(text, "${paragraph}\n\n")
+        .to_string();
+    // we already have bottom margin between two consecutive comments,
+    // so no need to add an additional newline at the end of a comment.
+    if s.ends_with("\n\n") {
+        s.remove(s.len() - 1);
+    }
 
     s = ITALIC_RE.replace_all(&s, "*${text}*").to_string();
     s = CODE_RE.replace_all(&s, "```\n${code}\n```").to_string();
 
     // parse links in the comment, color them in the parsed text as well
     let mut links: Vec<String> = vec![];
-    let mut styled_s = StyledString::new();
+    let mut styled_s = StyledString::styled(desc, PaletteColor::Secondary);
     // replace the `<a href="${link}">...</a>` pattern one-by-one with "${link}".
     // cannot use `replace_all` because we want to replace a matched string with a `StyledString` (not a raw string)
     loop {

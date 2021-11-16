@@ -3,7 +3,7 @@ mod parser;
 mod query;
 
 // re-export
-pub use parser::{Comment, Story};
+pub use parser::{Comment, CommentState, Story};
 pub use query::StoryNumericFilters;
 
 use crate::prelude::*;
@@ -17,6 +17,9 @@ const HN_SEARCH_QUERY_STRING: &str =
 pub const HN_HOST_URL: &str = "https://news.ycombinator.com";
 
 static CLIENT: once_cell::sync::OnceCell<HNClient> = once_cell::sync::OnceCell::new();
+
+pub type CommentSender = crossbeam_channel::Sender<Vec<Comment>>;
+pub type CommentReceiver = crossbeam_channel::Receiver<Vec<Comment>>;
 
 /// HNClient is a HTTP client to communicate with Hacker News APIs.
 #[derive(Clone)]
@@ -50,12 +53,9 @@ impl HNClient {
         Ok(item)
     }
     /// Lazily load a story's comments
-    pub fn lazy_load_story_comments(
-        &self,
-        story_id: u32,
-    ) -> Result<crossbeam_channel::Receiver<Comment>> {
+    pub fn lazy_load_story_comments(&self, story_id: u32) -> Result<CommentReceiver> {
         let request_url = format!("{}/item/{}.json", HN_OFFICIAL_PREFIX, story_id);
-        let ids = self
+        let mut ids = self
             .client
             .get(&request_url)
             .call()?
@@ -64,50 +64,41 @@ impl HNClient {
 
         let (sender, receiver) = crossbeam_channel::bounded(32);
         let client = self.clone();
+
+        // loads first 5 comments to ensure the corresponding `CommentView` has data to render
+        Self::load_comments(&client, &sender, &mut ids, 5);
         std::thread::spawn(move || {
-            Self::load_comments(client, sender, ids, 5);
+            let sleep_dur = std::time::Duration::from_millis(1000);
+            while !ids.is_empty() {
+                Self::load_comments(&client, &sender, &mut ids, 5);
+                std::thread::sleep(sleep_dur);
+            }
         });
         Ok(receiver)
     }
 
-    /// Load comments given a list of comment IDs.
-    /// The function recursively retrieves at most `size` comments each time.
-    fn load_comments(
-        client: HNClient,
-        sender: crossbeam_channel::Sender<Comment>,
-        ids: Vec<u32>,
-        size: usize,
-    ) {
+    /// Load the first `size` comments from a list of comment IDs.
+    fn load_comments(client: &HNClient, sender: &CommentSender, ids: &mut Vec<u32>, size: usize) {
         let size = std::cmp::min(ids.len(), size);
         if size == 0 {
             return;
         }
 
-        let comments = ids
-            .drain(0..size)
+        ids.drain(0..size)
             .collect::<Vec<_>>()
             .into_par_iter()
-            .map(|id| {
-                let response = match client.get_item_from_id::<CommentResponse>(id) {
-                    Ok(response) => Some(response),
+            .for_each(|id| {
+                match client.get_item_from_id::<CommentResponse>(id) {
+                    Ok(response) => {
+                        sender.send(response.into()).unwrap_or_else(|err| {
+                            format!("failed to send comments: {}", err);
+                        });
+                    }
                     Err(err) => {
                         warn!("failed to get comment with id={}: {}", id, err);
-                        None
                     }
-                }?;
-                let comment: Comment = response.into();
-                Some(comment)
-            })
-            .flatten()
-            .collect::<Vec<_>>();
-
-        for comment in comments {
-            sender.send(comment).unwrap_or_else(|err| {
-                warn!("failed to load comment: {}", err);
+                };
             });
-        }
-
-        Self::load_comments(client, sender, ids, size);
     }
 
     /// Get a story based on its id
