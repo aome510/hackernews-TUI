@@ -459,7 +459,6 @@ dependencies = [
  "lazy_static",
  "log",
  "once_cell",
- "parking_lot",
  "rayon",
  "regex",
  "serde",
