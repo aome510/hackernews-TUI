@@ -3,7 +3,7 @@ use config_parser2::*;
 use cursive::event::{self, Event, EventTrigger};
 use serde::{de, Deserialize, Deserializer};
 
-#[derive(Debug, Clone, Deserialize, ConfigParse)]
+#[derive(Default, Debug, Clone, Deserialize, ConfigParse)]
 pub struct KeyMap {
     pub custom_keymap: CustomKeyMap,
     pub edit_keymap: EditKeyMap,
@@ -14,20 +14,6 @@ pub struct KeyMap {
     pub article_view_keymap: ArticleViewKeyMap,
 }
 
-impl Default for KeyMap {
-    fn default() -> Self {
-        KeyMap {
-            custom_keymap: CustomKeyMap::default(),
-            edit_keymap: EditKeyMap::default(),
-            global_keymap: GlobalKeyMap::default(),
-            story_view_keymap: StoryViewKeyMap::default(),
-            search_view_keymap: SearchViewKeyMap::default(),
-            comment_view_keymap: CommentViewKeyMap::default(),
-            article_view_keymap: ArticleViewKeyMap::default(),
-        }
-    }
-}
-
 #[derive(Debug, Clone, Deserialize)]
 pub struct CustomViewNavigation {
     pub key: Key,
@@ -36,20 +22,12 @@ pub struct CustomViewNavigation {
     pub numeric_filters: client::StoryNumericFilters,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 pub struct CustomKeyMap {
     pub custom_view_navigation: Vec<CustomViewNavigation>,
 }
 
 config_parser_impl!(CustomKeyMap);
-
-impl Default for CustomKeyMap {
-    fn default() -> Self {
-        CustomKeyMap {
-            custom_view_navigation: vec![],
-        }
-    }
-}
 
 #[derive(Debug, Clone, Deserialize, ConfigParse)]
 pub struct EditKeyMap {

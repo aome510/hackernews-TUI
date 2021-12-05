@@ -37,8 +37,6 @@ where
 #[serde(rename_all(deserialize = "camelCase"))]
 struct MatchResult {
     value: String,
-    #[serde(default)]
-    matched_words: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -55,9 +53,6 @@ pub struct StoryResponse {
     #[serde(rename(deserialize = "objectID"))]
     #[serde(deserialize_with = "parse_id")]
     id: u32,
-
-    #[serde(default)]
-    children: Vec<CommentResponse>,
 
     title: Option<String>,
     author: Option<String>,
@@ -89,12 +84,6 @@ pub struct HNStoryResponse {
 /// CommentResponse represents the comment data received from HN_ALGOLIA APIs
 pub struct CommentResponse {
     id: u32,
-    #[serde(default)]
-    #[serde(deserialize_with = "parse_null_default")]
-    parent_id: u32,
-    #[serde(default)]
-    #[serde(deserialize_with = "parse_null_default")]
-    story_id: u32,
 
     #[serde(default)]
     children: Vec<CommentResponse>,
@@ -174,7 +163,7 @@ impl From<StoryResponse> for Story {
         // and its title field is not none,
         let highlight_result_raw = s.highlight_result.unwrap();
         let highlight_result = HighlightResult {
-            title: highlight_result_raw.title.unwrap().value,
+            title: decode_html(&highlight_result_raw.title.unwrap().value),
             url: match highlight_result_raw.url {
                 None => String::new(),
                 Some(url) => url.value,
