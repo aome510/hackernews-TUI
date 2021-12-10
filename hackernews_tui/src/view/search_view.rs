@@ -1,7 +1,7 @@
 use super::{help_view::*, story_view, text_view::EditableTextView};
 use crate::prelude::*;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum SearchViewMode {
     Navigation,
     Search,
@@ -9,6 +9,8 @@ pub enum SearchViewMode {
 
 pub struct MatchedStories {
     pub query: String,
+    pub page: usize,
+    pub by_date: bool,
     pub stories: Vec<client::Story>,
 }
 
@@ -24,7 +26,6 @@ pub struct SearchView {
     receiver: std::sync::mpsc::Receiver<MatchedStories>,
 
     client: &'static client::HNClient,
-    // TODO: add back loading widget for search box?
     cb_sink: CbSink,
 }
 
@@ -33,7 +34,18 @@ impl SearchView {
         let (sender, receiver) = std::sync::mpsc::channel();
 
         let view = LinearLayout::vertical()
-            .child(EditableTextView::new())
+            .child(
+                // construct a search bar view consisting of a description and an editable search text views
+                LinearLayout::horizontal()
+                    .child(TextView::new(StyledString::styled(
+                        "Search: ",
+                        ColorStyle::new(
+                            PaletteColor::TitlePrimary,
+                            config::get_config_theme().search_highlight_bg.color,
+                        ),
+                    )))
+                    .child(EditableTextView::new()),
+            )
             .child(story_view::get_story_main_view(vec![], client, 0).full_height());
 
         Self {
@@ -48,14 +60,16 @@ impl SearchView {
         }
     }
 
-    pub fn get_search_bar_view_mut(&mut self) -> Option<&mut EditableTextView> {
+    pub fn get_search_text_view_mut(&mut self) -> Option<&mut EditableTextView> {
         self.view
             .get_child_mut(0)?
+            .downcast_mut::<LinearLayout>()?
+            .get_child_mut(1)?
             .downcast_mut::<EditableTextView>()
     }
 
     pub fn retrieve_matched_stories(&mut self) {
-        let query = match self.get_search_bar_view_mut() {
+        let query = match self.get_search_text_view_mut() {
             None => return,
             Some(view) => view.get_text(),
         };
@@ -71,7 +85,14 @@ impl SearchView {
         std::thread::spawn(
             move || match client.get_matched_stories(&query, by_date, page) {
                 Ok(stories) => {
-                    sender.send(MatchedStories { query, stories }).unwrap();
+                    sender
+                        .send(MatchedStories {
+                            query,
+                            stories,
+                            by_date,
+                            page,
+                        })
+                        .unwrap();
                     // send a dummy callback to `cb_sink`
                     cb_sink.send(Box::new(move |_| {})).unwrap();
                 }
@@ -83,12 +104,15 @@ impl SearchView {
     }
 
     pub fn try_update_view(&mut self) {
-        let query = match self.get_search_bar_view_mut() {
+        let query = match self.get_search_text_view_mut() {
             None => return,
             Some(view) => view.get_text(),
         };
         while let Ok(matched_stories) = self.receiver.try_recv() {
-            if query == matched_stories.query {
+            if query == matched_stories.query
+                && self.page == matched_stories.page
+                && self.by_date == matched_stories.by_date
+            {
                 self.update_stories_view(matched_stories.stories);
             }
         }
@@ -100,6 +124,15 @@ impl SearchView {
         self.view.add_child(
             story_view::get_story_main_view(stories, self.client, starting_id).full_height(),
         );
+        // the old Story View is deleted hence losing the current focus,
+        // we need to place the focus back to the new Story View
+        if self.mode == SearchViewMode::Navigation {
+            self.view.set_focus_index(1).unwrap_or_else(|_| {
+                // no Story View to focus on, or no stories to display,
+                // change back to Search mode
+                self.mode = SearchViewMode::Search;
+            });
+        }
     }
 }
 
@@ -115,17 +148,18 @@ impl ViewWrapper for SearchView {
 /// Return a main view of a SearchView displaying the matched story list with a search bar.
 /// The main view of a SearchView is a View without status bar or footer.
 fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> impl View {
-    // let story_view_keymap = config::get_story_view_keymap().clone();
+    let story_view_keymap = config::get_story_view_keymap().clone();
     let search_view_keymap = config::get_search_view_keymap().clone();
 
     OnEventView::new(SearchView::new(client, cb_sink))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| match s.mode {
             SearchViewMode::Navigation => None,
             SearchViewMode::Search => {
-                let view = s.get_search_bar_view_mut()?;
+                let view = s.get_search_text_view_mut()?;
                 match *e {
                     Event::Char(c) => {
                         view.add_char(c);
+                        s.page = 0;
                         s.retrieve_matched_stories();
                     }
                     _ => {
@@ -133,6 +167,7 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
                         let edit_keymap = config::get_edit_keymap().clone();
                         if *e == edit_keymap.backward_delete_char.into() {
                             view.del_char();
+                            s.page = 0;
                             s.retrieve_matched_stories();
                         } else if *e == edit_keymap.move_cursor_left.into() {
                             view.move_cursor_left();
@@ -153,33 +188,49 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
         .on_pre_event_inner(search_view_keymap.to_navigation_mode, |s, _| match s.mode {
             SearchViewMode::Navigation => None,
             SearchViewMode::Search => {
-                s.mode = SearchViewMode::Navigation;
-                s.view.set_focus_index(1).unwrap_or_else(|_| {});
+                if s.view.set_focus_index(1).is_ok() {
+                    s.mode = SearchViewMode::Navigation;
+                }
                 Some(EventResult::Consumed(None))
             }
         })
         .on_pre_event_inner(search_view_keymap.to_search_mode, |s, _| match s.mode {
             SearchViewMode::Search => None,
             SearchViewMode::Navigation => {
-                s.mode = SearchViewMode::Search;
-                s.view.set_focus_index(0).unwrap_or_else(|_| {});
+                if s.view.set_focus_index(0).is_ok() {
+                    s.mode = SearchViewMode::Search;
+                }
                 Some(EventResult::Consumed(None))
             }
         })
-    // paging/filtering while in NavigationMode
-    // TODO: implement page/filtering
-    // .on_pre_event_inner(story_view_keymap.toggle_sort_by, |s, _| match s.mode {
-    //     SearchViewMode::Navigation => s.toggle_by_date(),
-    //     SearchViewMode::Search => Some(EventResult::Ignored),
-    // })
-    // .on_pre_event_inner(story_view_keymap.next_page, |s, _| match s.mode {
-    //     SearchViewMode::Navigation => s.update_page(true),
-    //     SearchViewMode::Search => Some(EventResult::Ignored),
-    // })
-    // .on_pre_event_inner(story_view_keymap.prev_page, |s, _| match s.mode {
-    //     SearchViewMode::Navigation => s.update_page(false),
-    //     SearchViewMode::Search => Some(EventResult::Ignored),
-    // })
+        // paging/filtering while in NavigationMode
+        .on_pre_event_inner(story_view_keymap.toggle_sort_by, |s, _| match s.mode {
+            SearchViewMode::Navigation => {
+                s.page = 0;
+                s.by_date = !s.by_date;
+                s.retrieve_matched_stories();
+                Some(EventResult::Consumed(None))
+            }
+            SearchViewMode::Search => Some(EventResult::Ignored),
+        })
+        .on_pre_event_inner(story_view_keymap.next_page, |s, _| match s.mode {
+            SearchViewMode::Navigation => {
+                s.page += 1;
+                s.retrieve_matched_stories();
+                Some(EventResult::Consumed(None))
+            }
+            SearchViewMode::Search => Some(EventResult::Ignored),
+        })
+        .on_pre_event_inner(story_view_keymap.prev_page, |s, _| match s.mode {
+            SearchViewMode::Navigation => {
+                if s.page > 0 {
+                    s.page -= 1;
+                    s.retrieve_matched_stories();
+                }
+                Some(EventResult::Consumed(None))
+            }
+            SearchViewMode::Search => Some(EventResult::Ignored),
+        })
 }
 
 /// Return a view representing a SearchView that searches stories with queries
