@@ -293,7 +293,7 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
                     } else if *e == edit_keymap.move_cursor_to_end.into() {
                         s.move_cursor_to_end()
                     } else {
-                        None
+                        Some(EventResult::Ignored)
                     }
                 }
             },
@@ -319,15 +319,15 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
         // paging/filtering while in NavigationMode
         .on_pre_event_inner(story_view_keymap.toggle_sort_by, |s, _| match s.mode {
             SearchViewMode::Navigation => s.toggle_by_date(),
-            SearchViewMode::Search => None,
+            SearchViewMode::Search => Some(EventResult::Ignored),
         })
         .on_pre_event_inner(story_view_keymap.next_page, |s, _| match s.mode {
             SearchViewMode::Navigation => s.update_page(true),
-            SearchViewMode::Search => None,
+            SearchViewMode::Search => Some(EventResult::Ignored),
         })
         .on_pre_event_inner(story_view_keymap.prev_page, |s, _| match s.mode {
             SearchViewMode::Navigation => s.update_page(false),
-            SearchViewMode::Search => None,
+            SearchViewMode::Search => Some(EventResult::Ignored),
         })
 }
 
