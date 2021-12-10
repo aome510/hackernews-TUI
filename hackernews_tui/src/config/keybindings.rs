@@ -1,6 +1,6 @@
 use crate::client;
 use config_parser2::*;
-use cursive::event::{self, Event, EventTrigger};
+use cursive::event;
 use serde::{de, Deserialize, Deserializer};
 
 #[derive(Default, Debug, Clone, Deserialize, ConfigParse)]
@@ -70,16 +70,16 @@ impl Default for GlobalKeyMap {
     fn default() -> Self {
         GlobalKeyMap {
             open_help_dialog: Key::new('?'),
-            quit: Key::new(Event::CtrlChar('q')),
+            quit: Key::new(event::Event::CtrlChar('q')),
             close_dialog: Key::new(event::Key::Esc),
 
-            goto_previous_view: Key::new(Event::CtrlChar('p')),
-            goto_front_page_view: Key::new(Event::CtrlChar('f')),
-            goto_search_view: Key::new(Event::CtrlChar('s')),
-            goto_all_stories_view: Key::new(Event::CtrlChar('z')),
-            goto_ask_hn_view: Key::new(Event::CtrlChar('x')),
-            goto_show_hn_view: Key::new(Event::CtrlChar('c')),
-            goto_jobs_view: Key::new(Event::CtrlChar('v')),
+            goto_previous_view: Key::new(event::Event::CtrlChar('p')),
+            goto_front_page_view: Key::new(event::Event::CtrlChar('f')),
+            goto_search_view: Key::new(event::Event::CtrlChar('s')),
+            goto_all_stories_view: Key::new(event::Event::CtrlChar('z')),
+            goto_ask_hn_view: Key::new(event::Event::CtrlChar('x')),
+            goto_show_hn_view: Key::new(event::Event::CtrlChar('c')),
+            goto_jobs_view: Key::new(event::Event::CtrlChar('v')),
         }
     }
 }
@@ -235,16 +235,16 @@ impl Default for ArticleViewKeyMap {
 
 #[derive(Debug, Clone)]
 pub struct Key {
-    event: Event,
+    event: event::Event,
 }
 
-impl From<Key> for EventTrigger {
+impl From<Key> for event::EventTrigger {
     fn from(k: Key) -> Self {
         k.event.into()
     }
 }
 
-impl From<Key> for Event {
+impl From<Key> for event::Event {
     fn from(k: Key) -> Self {
         k.event
     }
@@ -253,10 +253,10 @@ impl From<Key> for Event {
 impl std::fmt::Display for Key {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.event {
-            Event::Char(c) => write!(f, "{}", c),
-            Event::CtrlChar(c) => write!(f, "C-{}", c),
-            Event::AltChar(c) => write!(f, "M-{}", c),
-            Event::Key(k) => match k {
+            event::Event::Char(c) => write!(f, "{}", c),
+            event::Event::CtrlChar(c) => write!(f, "C-{}", c),
+            event::Event::AltChar(c) => write!(f, "M-{}", c),
+            event::Event::Key(k) => match k {
                 event::Key::Enter => write!(f, "enter"),
                 event::Key::Tab => write!(f, "tab"),
                 event::Key::Backspace => write!(f, "backspace"),
@@ -295,7 +295,7 @@ impl std::fmt::Display for Key {
 }
 
 impl Key {
-    pub fn new<T: Into<Event>>(e: T) -> Self {
+    pub fn new<T: Into<event::Event>>(e: T) -> Self {
         Key { event: e.into() }
     }
 }
@@ -309,56 +309,62 @@ impl<'de> de::Deserialize<'de> for Key {
     {
         let s = String::deserialize(deserializer)?;
         let err = Err(de::Error::custom(format!(
-            "failed to parse key: unknown key {}",
+            "failed to parse key: unknown/invalid key {}",
             s
         )));
 
         let chars: Vec<char> = s.chars().collect();
-        if chars.len() == 1 {
-            // a single character
-            Ok(Key::new(chars[0]))
-        } else if chars.len() == 3 && chars[1] == '-' {
-            // M-<c> for alt-<c> and C-<c> for ctrl-<c>
-            match chars[0] {
-                'C' => Ok(Key::new(Event::CtrlChar(chars[2]))),
-                'M' => Ok(Key::new(Event::AltChar(chars[2]))),
-                _ => err,
+        let key = {
+            if chars.len() == 1 {
+                // a single character
+                Key::new(chars[0])
+            } else if chars.len() == 3 && chars[1] == '-' {
+                // M-<c> for alt-<c> and C-<c> for ctrl-<c>, with <c> denotes a single character
+                match chars[0] {
+                    'C' => Key::new(event::Event::CtrlChar(chars[2])),
+                    'M' => Key::new(event::Event::AltChar(chars[2])),
+                    _ => return err,
+                }
+            } else {
+                let key = match s.as_str() {
+                    "enter" => event::Key::Enter,
+                    "tab" => event::Key::Tab,
+                    "backspace" => event::Key::Backspace,
+                    "esc" => event::Key::Esc,
+
+                    "left" => event::Key::Left,
+                    "right" => event::Key::Right,
+                    "up" => event::Key::Up,
+                    "down" => event::Key::Down,
+
+                    "ins" => event::Key::Ins,
+                    "del" => event::Key::Del,
+                    "home" => event::Key::Home,
+                    "end" => event::Key::End,
+                    "page_up" => event::Key::PageUp,
+                    "page_down" => event::Key::PageDown,
+
+                    "f1" => event::Key::F1,
+                    "f2" => event::Key::F2,
+                    "f3" => event::Key::F3,
+                    "f4" => event::Key::F4,
+                    "f5" => event::Key::F5,
+                    "f6" => event::Key::F6,
+                    "f7" => event::Key::F7,
+                    "f8" => event::Key::F8,
+                    "f9" => event::Key::F9,
+                    "f10" => event::Key::F10,
+                    "f11" => event::Key::F11,
+                    "f12" => event::Key::F12,
+
+                    _ => return err,
+                };
+
+                Key::new(key)
             }
-        } else {
-            match s.as_str() {
-                "enter" => Ok(Key::new(event::Key::Enter)),
-                "tab" => Ok(Key::new(event::Key::Tab)),
-                "backspace" => Ok(Key::new(event::Key::Backspace)),
-                "esc" => Ok(Key::new(event::Key::Esc)),
+        };
 
-                "left" => Ok(Key::new(event::Key::Left)),
-                "right" => Ok(Key::new(event::Key::Right)),
-                "up" => Ok(Key::new(event::Key::Up)),
-                "down" => Ok(Key::new(event::Key::Down)),
-
-                "ins" => Ok(Key::new(event::Key::Ins)),
-                "del" => Ok(Key::new(event::Key::Del)),
-                "home" => Ok(Key::new(event::Key::Home)),
-                "end" => Ok(Key::new(event::Key::End)),
-                "page_up" => Ok(Key::new(event::Key::PageUp)),
-                "page_down" => Ok(Key::new(event::Key::PageDown)),
-
-                "f1" => Ok(Key::new(event::Key::F1)),
-                "f2" => Ok(Key::new(event::Key::F2)),
-                "f3" => Ok(Key::new(event::Key::F3)),
-                "f4" => Ok(Key::new(event::Key::F4)),
-                "f5" => Ok(Key::new(event::Key::F5)),
-                "f6" => Ok(Key::new(event::Key::F6)),
-                "f7" => Ok(Key::new(event::Key::F7)),
-                "f8" => Ok(Key::new(event::Key::F8)),
-                "f9" => Ok(Key::new(event::Key::F9)),
-                "f10" => Ok(Key::new(event::Key::F10)),
-                "f11" => Ok(Key::new(event::Key::F11)),
-                "f12" => Ok(Key::new(event::Key::F12)),
-
-                _ => err,
-            }
-        }
+        Ok(key)
     }
 }
 
