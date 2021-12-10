@@ -59,7 +59,6 @@ impl SearchView {
             None => return,
             Some(view) => view.get_text(),
         };
-        info!("retrieve matched stories for {}", query);
         let sender = self.sender.clone();
         let client = self.client.clone();
         let by_date = self.by_date;
@@ -88,9 +87,7 @@ impl SearchView {
             None => return,
             Some(view) => view.get_text(),
         };
-        info!("current query: {}", query);
         while let Ok(matched_stories) = self.receiver.try_recv() {
-            info!("got match stories for {}", matched_stories.query);
             if query == matched_stories.query {
                 self.update_stories_view(matched_stories.stories);
             }
@@ -110,7 +107,6 @@ impl ViewWrapper for SearchView {
     wrap_impl!(self.view: LinearLayout);
 
     fn wrap_layout(&mut self, size: Vec2) {
-        info!("`wrap_layout` is called...");
         self.try_update_view();
         self.view.layout(size);
     }
@@ -126,7 +122,6 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), |s, e| match s.mode {
             SearchViewMode::Navigation => None,
             SearchViewMode::Search => {
-                info!("received an event when in search mode...");
                 let view = s.get_search_bar_view_mut()?;
                 match *e {
                     Event::Char(c) => {
