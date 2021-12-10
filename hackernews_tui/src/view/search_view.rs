@@ -1,4 +1,4 @@
-use super::{help_view::*, story_view::StoryView, text_view::EditableTextView};
+use super::{help_view::*, story_view, text_view::EditableTextView};
 use crate::prelude::*;
 
 #[derive(Copy, Clone)]
@@ -34,7 +34,7 @@ impl SearchView {
 
         let view = LinearLayout::vertical()
             .child(EditableTextView::new())
-            .child(StoryView::new(vec![], 0).full_height());
+            .child(story_view::get_story_main_view(vec![], client, 0).full_height());
 
         Self {
             mode: SearchViewMode::Search,
@@ -100,8 +100,9 @@ impl SearchView {
     fn update_stories_view(&mut self, stories: Vec<client::Story>) {
         self.view.remove_child(1);
         let starting_id = config::get_config().client.story_limit.search * self.page;
-        self.view
-            .add_child(StoryView::new(stories, starting_id).full_height());
+        self.view.add_child(
+            story_view::get_story_main_view(stories, self.client, starting_id).full_height(),
+        );
     }
 }
 
