@@ -156,6 +156,12 @@ impl EditableTextView {
     }
 }
 
+impl Default for EditableTextView {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ViewWrapper for EditableTextView {
     wrap_impl!(self.view: TextView);
 
@@ -167,7 +173,7 @@ impl ViewWrapper for EditableTextView {
                 row.resolve(&self.view.content).iter().for_each(|span| {
                     printer.with_style(*span.attr, |printer| {
                         span.content.chars().for_each(|c| {
-                            if pos == self.cursor {
+                            if pos == self.cursor && printer.focused {
                                 printer.with_effect(Effect::Reverse, |printer| {
                                     printer.print((x, y), &c.to_string());
                                 });

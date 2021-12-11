@@ -153,9 +153,10 @@ impl HNClient {
             .into_json::<StoriesResponse>()?;
         if let Ok(elapsed) = time.elapsed() {
             info!(
-                "get matched stories with query {} (by_date={}) took {}ms",
+                "get matched stories with query {} (by_date={}, page={}) took {}ms",
                 query,
                 by_date,
+                page,
                 elapsed.as_millis()
             );
         }
