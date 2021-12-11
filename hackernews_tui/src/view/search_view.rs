@@ -30,6 +30,7 @@ pub struct SearchView {
 }
 
 impl SearchView {
+    /// constructs new `SearchView`
     pub fn new(client: &'static client::HNClient, cb_sink: CbSink) -> Self {
         let (sender, receiver) = std::sync::mpsc::channel();
 
@@ -68,6 +69,9 @@ impl SearchView {
             .downcast_mut::<EditableTextView>()
     }
 
+    /// retrieves stories matching the current query by making an external (API) request
+    ///
+    /// To ensure this function not blocking, message passing with channels is used.
     pub fn retrieve_matched_stories(&mut self) {
         let query = match self.get_search_text_view_mut() {
             None => return,
@@ -97,18 +101,24 @@ impl SearchView {
                     cb_sink.send(Box::new(move |_| {})).unwrap();
                 }
                 Err(err) => {
-                    warn!("failed to get matched stories (query={}): {}", query, err);
+                    warn!(
+                        "failed to get matched stories (query={}, by_date={}, page={}): {}",
+                        query, by_date, page, err
+                    );
                 }
             },
         );
     }
 
+    /// tries to update the Story View representing matched stories based on
+    /// the results from previous query requests
     pub fn try_update_view(&mut self) {
         let query = match self.get_search_text_view_mut() {
             None => return,
             Some(view) => view.get_text(),
         };
         while let Ok(matched_stories) = self.receiver.try_recv() {
+            // got a `matched_stories` result but only care about the one matching current state
             if query == matched_stories.query
                 && self.page == matched_stories.page
                 && self.by_date == matched_stories.by_date
@@ -118,6 +128,7 @@ impl SearchView {
         }
     }
 
+    /// updates the Story View with new matched stories
     fn update_stories_view(&mut self, stories: Vec<client::Story>) {
         self.view.remove_child(1);
         let starting_id = config::get_config().client.story_limit.search * self.page;
