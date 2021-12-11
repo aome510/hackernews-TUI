@@ -2,12 +2,12 @@ use super::{help_view::*, story_view, text_view::EditableTextView};
 use crate::prelude::*;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum SearchViewMode {
+enum SearchViewMode {
     Navigation,
     Search,
 }
 
-pub struct MatchedStories {
+struct MatchedStories {
     pub query: String,
     pub page: usize,
     pub by_date: bool,
