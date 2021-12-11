@@ -1,12 +1,17 @@
 name: Rust
 
-on: [push, pull_request]
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: main
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   test:
+    if: github.event.pull_request.draft != true
     name: Test
     runs-on: ubuntu-latest
     steps:
@@ -21,6 +26,7 @@ jobs:
           command: test
 
   fmt:
+    if: github.event.pull_request.draft != true
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
@@ -36,6 +42,7 @@ jobs:
           args: --all -- --check
 
   clippy:
+    if: github.event.pull_request.draft != true
     name: Clippy
     runs-on: ubuntu-latest
     steps:
