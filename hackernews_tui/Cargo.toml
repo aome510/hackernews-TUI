@@ -35,4 +35,3 @@ url = "2.2.2"
 config_parser2 = { version = "0.1.2", path = "../config_parser" }
 crossbeam-channel = "0.5.1"
 lazy_static = "1.4.0"
-parking_lot = "0.11.2"
