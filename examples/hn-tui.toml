@@ -4,11 +4,6 @@
 # It is used to automatically adjust the view based on the scrolling direction.
 # page_scrolling = true
 
-# `scroll_offset` defines the scrolling speed.
-# **Note**: this behavior only applies to scrolling shortcuts
-# defined in the #[defined key bindings] section
-# scroll_offset = 3
-
 # `url_open_command` defines a command used to open url in browser
 # url_open_command = "open"
 

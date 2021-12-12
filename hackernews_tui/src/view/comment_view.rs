@@ -205,13 +205,11 @@ fn get_comment_main_view(receiver: client::CommentReceiver) -> impl View {
         })
         // scrolling shortcuts
         .on_pre_event_inner(comment_view_keymap.up, |s, _| {
-            s.get_scroller_mut()
-                .scroll_up(config::get_config().scroll_offset);
+            s.get_scroller_mut().scroll_up(3);
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(comment_view_keymap.down, |s, _| {
-            s.get_scroller_mut()
-                .scroll_down(config::get_config().scroll_offset);
+            s.get_scroller_mut().scroll_down(3);
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(comment_view_keymap.page_up, |s, _| {

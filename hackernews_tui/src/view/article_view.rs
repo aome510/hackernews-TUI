@@ -281,15 +281,11 @@ pub fn get_article_main_view(article: Article, raw_md: bool) -> OnEventView<Arti
             None
         })
         .on_pre_event_inner(article_view_keymap.down, |s, _| {
-            s.get_inner_mut()
-                .get_scroller_mut()
-                .scroll_down(config::get_config().scroll_offset);
+            s.get_inner_mut().get_scroller_mut().scroll_down(3);
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(article_view_keymap.up, |s, _| {
-            s.get_inner_mut()
-                .get_scroller_mut()
-                .scroll_up(config::get_config().scroll_offset);
+            s.get_inner_mut().get_scroller_mut().scroll_up(3);
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(article_view_keymap.page_down, |s, _| {
