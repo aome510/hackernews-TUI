@@ -19,4 +19,5 @@ RUN cargo build --release --bin hackernews_tui
 FROM scratch
 WORKDIR app
 COPY --from=builder /app/target/release/hackernews_tui .
-CMD ["./hackernews_tui", "-l", "."]
+COPY ./examples/hn-tui.toml ./hn-tui.toml
+CMD ["./hackernews_tui", "-l", ".", "-c", "./hn-tui.toml"]
