@@ -12,14 +12,13 @@
 # `url_open_command` defines a command used to open url in browser
 # url_open_command = "open"
 
-# `article_parse_command` defines a command to parse a web article's content
-# to a markdown format. The parsed data is then used to render the `ArticleView`
-# of the corresponding article.
+# `article_parse_command` defines a command to parse a web article's content.
+# The parsed data is then used to render an `ArticleView` of the article.
 #
 # The command must have the following form:
 # `<article_parse_command> [options...] <article_url>`
 # It should return a JSON string representing the parsed `Article` data:
-# ```
+# ```rust
 # pub struct Article {
 #     title: String,
 #     url: String,
@@ -161,8 +160,15 @@
 
 # `custom_view_navigation` is used to define custom shortcuts
 # to navigate to a `StoryView` with stories filtered by certain conditions.
-# Below is an example of defining two custom shortcuts using `custom_view_navigation`.
 # **Note**: `key`, `tag` and `by_date` are required fields when defining a custom view navigation shortcut
+
+# possible values for `tag`
+# - "story" -> "Story View - All Stories"
+# - "ask_hn" -> "Story View - Ask HN"
+# - "show_hn" -> "Story View - Show HN"
+# - "job" -> "Story View - Jobs"
+
+# Below is an example of defining two custom shortcuts using `custom_view_navigation`.
 
 # [[keymap.custom_keymap.custom_view_navigation]]
 # key = "M-1"
@@ -181,13 +187,6 @@
 # elapsed_days_interval = {}
 # points_interval = {start = 50, end = 200}
 # num_comments_interval = {end = 100}
-
-# possible values for `tag`
-# - "story" -> "Story View - All Stories"
-# - "ask_hn" -> "Story View - Ask HN"
-# - "show_hn" -> "Story View - Show HN"
-# - "job" -> "Story View - Jobs"
-
 
 # --------------------------
 # List of supported keys:
