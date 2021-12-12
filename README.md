@@ -4,18 +4,6 @@
 
 `hackernews_tui` is written in Rust with the help of [Cursive TUI library](https://github.com/gyscos/cursive/). It uses [HN Algolia APIs](https://hn.algolia.com/api/) and [HN Official APIs](https://github.com/HackerNews/API) to get Hacker News data.
 
-The application consists of the following views:
-
-- `Story View` displays stories. There are different kinds of `Story View` depending on the `tag` used to filter stories:
-  - `Front Page`: stories on the front page
-  - `All Stories`: all stories
-  - `Ask HN`: ask HN stories
-  - `Show HN`: show HN stories
-  - `Jobs`: jobs stories
-- `Article View` displays the content of an article/web page in reader mode.
-- `Comment View` displays a story's comments.
-- `Search View` displays a search bar and stories matching the search query.
-
 ### Why hackernews-TUI?
 
 If you are either
@@ -170,7 +158,7 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 
 ### Edit key shortcuts
 
-**Shortcuts** available in any editable texts.
+**Shortcuts** only available in an editable text.
 
 - `left`: Move cursor to left
 - `right`: Move cursor to right
@@ -240,14 +228,12 @@ In `SearchView`, there are two modes: `Navigation` and `Search`. The default mod
 
 `Search` mode is similar to Vim's insert mode, in which users can input the query string.
 
-`Navigation` mode allows the `SearchView` to behave like a `StoryView` with all `StoryView` shortcuts enabled.
+`Navigation` mode allows the `SearchView` to behave like a `StoryView` with a subset of `StoryView` shortcuts enabled.
 
 Key shortcuts:
 
 - `i`: Enter `Search` mode from `Navigation` mode
 - `<esc>`: Enter `Navigation` mode from `Search` mode
-
-`Navigation` mode also supports a subset of `StoryView`'s key shortcuts.
 
 ## Configuration
 
@@ -257,7 +243,7 @@ By default, `hackernews-tui` will look for `~/.config/hn-tui.toml` as the config
 hackernews_tui -c ~/.config/hn-tui.toml
 ```
 
-For further information about the configuration options, please refer to the example configuration file by running `hackernews_tui --example-config`.
+For further information about the configuration options, please refer to the [example configuration file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml)
 
 ### Article Parse Command
 
@@ -291,11 +277,11 @@ An alternative is to use [`article_md`](https://github.com/aome510/article-md-cl
 
 ### User-defined shortcuts
 
-Shortcuts in each `View` are fully customizable. For further information about the supported keys and the commands, please refer to the **key bindings** section in the example configuration file.
+Shortcuts in each `View` are fully customizable. For further information about the supported keys and the commands, please refer to the **key bindings** section in the [example configuration file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml).
 
 ### Custom Keymap
 
-It's possible to define a custom shortcut to switch between different `StoryView` (`front_page`, `show_hn`, `ask_hn`, etc) with stories filtered by HN Algolia's [`numericFilters`](https://hn.algolia.com/api/). An example of defining such custom shortcuts can be found under the **custom keymap** section of the example configuration file.
+It's possible to define a custom shortcut to switch between different `StoryView` (`front_page`, `show_hn`, `ask_hn`, etc) with stories filtered by HN Algolia's [`numericFilters` filter option](https://hn.algolia.com/api/). An example of defining such custom shortcuts can be found under the **custom keymap** section of the [example configuration file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml).
 
 ## Logging
 
