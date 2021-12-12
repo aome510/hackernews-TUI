@@ -13,7 +13,6 @@ use serde::Deserialize;
 /// Config is a struct storing the application's configurations
 pub struct Config {
     pub page_scrolling: bool,
-    pub scroll_offset: usize,
     pub url_open_command: String,
     pub article_parse_command: ArticleParseCommand,
     pub client: Client,
@@ -36,7 +35,6 @@ impl Default for Config {
     fn default() -> Self {
         Config {
             page_scrolling: true,
-            scroll_offset: 3,
             url_open_command: "open".to_string(),
             article_parse_command: ArticleParseCommand {
                 command: "mercury-parser".to_string(),
