@@ -298,6 +298,13 @@ It's possible to define a custom shortcut to switch between different `StoryView
   - [x] front-page stories like the official site
   - [ ] real-time updating
 - [x] implement smarter lazy-loading comment functionality
-- [ ] support more themes
-- [ ] snipe-like navigation, inspired by [vim-snipe](https://github.com/yangmillstheory/vim-snipe)
+- add crediential support to allow
+  - [ ] upvote/downvote
+  - [ ] add comment
+  - [ ] post
+- improve the keybinding handler
+  - [ ] allow to bind multiple keys to a single command
+  - [ ] add prefix key support (emacs-like key chaining - `C-x C-c ...`)
+- [ ] support more themes, make it easier to create a theme from known colorscheme
 - [ ] add some extra transition effects
+- [ ] snipe-like navigation, inspired by [vim-snipe](https://github.com/yangmillstheory/vim-snipe)
