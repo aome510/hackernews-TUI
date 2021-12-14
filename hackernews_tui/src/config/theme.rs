@@ -1,12 +1,13 @@
+use config_parser2::*;
 use serde::{de, Deserialize, Deserializer};
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, ConfigParse)]
 pub struct Theme {
     pub palette: Palette,
     pub component_style: ComponentStyle,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, ConfigParse)]
 pub struct Palette {
     pub background: Color,
     pub foreground: Color,
@@ -32,11 +33,13 @@ pub struct Palette {
     pub bright_yellow: Color,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, ConfigParse)]
 pub struct ComponentStyle {}
 
 #[derive(Clone, Debug)]
 pub struct Color(cursive::theme::Color);
+
+config_parser_impl!(Color);
 
 impl<'de> Deserialize<'de> for Color {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -49,4 +52,8 @@ impl<'de> Deserialize<'de> for Color {
             Some(color) => Ok(Color(color)),
         }
     }
+}
+
+pub fn get_config_theme() -> &'static Theme {
+    &super::get_config().theme
 }
