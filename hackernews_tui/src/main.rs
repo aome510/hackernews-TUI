@@ -147,7 +147,7 @@ fn init_logging(log_folder_path: Option<&str>) {
 fn main() {
     // parse command line arguments
     let args = App::new("hackernews-tui")
-        .version("0.8.0")
+        .version("0.8.1")
         .author("Thang Pham <phamducthang1234@gmail>")
         .arg(
             Arg::with_name("config")
