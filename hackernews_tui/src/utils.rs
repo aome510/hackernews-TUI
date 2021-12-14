@@ -73,19 +73,14 @@ pub fn construct_footer_view<T: view::help_view::HasHelpView>() -> impl View {
         )
 }
 
-/// Construct a status bar given a description text
-pub fn get_status_bar_with_desc(desc: &str) -> impl View {
+/// Construct a view's title bar
+pub fn construct_view_title_bar(desc: &str) -> impl View {
+    let style = config::get_config_theme().component_style.title_bar.into();
     Layer::with_color(
-        TextView::new(StyledString::styled(
-            desc,
-            ColorStyle::new(
-                PaletteColor::TitlePrimary,
-                config::get_config_theme().status_bar_bg.color,
-            ),
-        ))
-        .h_align(align::HAlign::Center)
-        .full_width(),
-        ColorStyle::back(config::get_config_theme().status_bar_bg.color),
+        TextView::new(StyledString::styled(desc, style))
+            .h_align(align::HAlign::Center)
+            .full_width(),
+        style,
     )
 }
 

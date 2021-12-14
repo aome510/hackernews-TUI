@@ -111,24 +111,15 @@ impl Article {
 
                     styled_s.append_styled(
                         format!("{} ", desc),
-                        Style::from(config::get_config_theme().link_text.color),
-                    );
-
-                    let valid_url = !link.is_empty();
-                    styled_s.append_styled(
-                        if valid_url {
-                            format!("[{}]", links.len())
-                        } else {
-                            "[X]".to_owned()
-                        },
-                        ColorStyle::new(
-                            PaletteColor::TitlePrimary,
-                            config::get_config_theme().link_id_bg.color,
-                        ),
+                        config::get_config_theme().component_style.link,
                     );
 
                     if !link.is_empty() {
-                        // valid url
+                        // a valid link
+                        styled_s.append_styled(
+                            format!("[{}]", links.len()),
+                            config::get_config_theme().component_style.link_id,
+                        );
                         links.push(link.to_string());
                     }
                     continue;
@@ -207,7 +198,7 @@ pub fn get_link_dialog(links: &[String]) -> impl View {
             let mut link_styled_string = StyledString::plain(format!("{}. ", id));
             link_styled_string.append_styled(
                 utils::shorten_url(link),
-                ColorStyle::front(config::get_config_theme().link_text.color),
+                config::get_config_theme().component_style.link,
             );
             v.add_child(text_view::TextView::new(link_styled_string));
         })
@@ -350,7 +341,7 @@ pub fn get_article_view(article: Article, raw_md: bool) -> impl View {
     let desc = format!("Article View - {}", article.title);
     let main_view = get_article_main_view(article.clone(), raw_md).full_height();
     let mut view = LinearLayout::vertical()
-        .child(utils::get_status_bar_with_desc(&desc))
+        .child(utils::construct_view_title_bar(&desc))
         .child(main_view)
         .child(utils::construct_footer_view::<ArticleView>());
     view.set_focus_index(1).unwrap_or_else(|_| {});

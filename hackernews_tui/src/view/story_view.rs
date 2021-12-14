@@ -66,10 +66,7 @@ impl StoryView {
 
                     styled_s.append_styled(
                         matched_text,
-                        ColorStyle::new(
-                            PaletteColor::TitlePrimary,
-                            config::get_config_theme().search_highlight_bg.color,
-                        ),
+                        config::get_config_theme().component_style.matched_highlight,
                     );
                     continue;
                 }
@@ -89,7 +86,7 @@ impl StoryView {
             let url = format!("\n{}", story.highlight_result.url);
             story_text.append(Self::get_matched_text(
                 url,
-                ColorStyle::front(config::get_config_theme().link_text.color),
+                config::get_config_theme().component_style.link.into(),
             ));
         }
         story_text.append_styled(
@@ -221,7 +218,7 @@ pub fn get_story_view(
     let main_view = get_story_main_view(stories, client, starting_id).full_height();
 
     let mut view = LinearLayout::vertical()
-        .child(utils::get_status_bar_with_desc(desc))
+        .child(utils::construct_view_title_bar(desc))
         .child(main_view)
         .child(utils::construct_footer_view::<StoryView>());
     view.set_focus_index(1).unwrap_or_else(|_| {});

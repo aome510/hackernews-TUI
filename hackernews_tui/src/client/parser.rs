@@ -277,14 +277,11 @@ fn parse_raw_html_comment(text: &str, desc: &str) -> (StyledString, Vec<String>)
 
                 styled_s.append_styled(
                     format!("\"{}\" ", utils::shorten_url(&link)),
-                    Style::from(config::get_config_theme().link_text.color),
+                    config::get_config_theme().component_style.link,
                 );
                 styled_s.append_styled(
                     format!("[{}]", links.len()),
-                    ColorStyle::new(
-                        PaletteColor::TitlePrimary,
-                        config::get_config_theme().link_id_bg.color,
-                    ),
+                    config::get_config_theme().component_style.link_id,
                 );
                 links.push(link);
                 continue;
