@@ -120,17 +120,22 @@ fn init_logging(log_folder_path: Option<&str>) {
         std::env::set_var("RUST_LOG", "info")
     }
 
-    // if no log file path is specified, use the default value (`$HOME/.cache/hn-tui.log`)
-    let log_file_path = match log_folder_path {
+    // if no log folder path is specified, use the default value (`$HOME/.cache`)
+    let log_folder_path = match log_folder_path {
         Some(path) => path.into(),
         None => dirs_next::home_dir()
             .expect("failed to get user's home directory")
             .join(".cache"),
+    };
+
+    if !log_folder_path.exists() {
+        std::fs::create_dir_all(&log_folder_path).expect("failed to create a log folder");
     }
-    .join("hn-tui.log");
-    let log_file = std::fs::File::create(log_file_path).unwrap_or_else(|err| {
-        panic!("failed to create application's log file: {}", err);
-    });
+
+    let log_file =
+        std::fs::File::create(log_folder_path.join("hn-tui.log")).unwrap_or_else(|err| {
+            panic!("failed to create application's log file: {}", err);
+        });
 
     tracing_subscriber::fmt::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
