@@ -36,10 +36,13 @@ impl CommentView {
     /// then update the internal comment data accordingly.
     pub fn try_update_comments(&mut self) {
         let mut new_comments = vec![];
-        while !self.receiver.is_empty() {
+        // limit the number of top comments updated each time
+        let mut limit = 5;
+        while !self.receiver.is_empty() && limit > 0 {
             if let Ok(mut comments) = self.receiver.try_recv() {
                 new_comments.append(&mut comments);
             }
+            limit -= 1;
         }
 
         if new_comments.is_empty() {

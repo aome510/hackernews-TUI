@@ -27,6 +27,17 @@ pub struct HNClient {
     client: ureq::Agent,
 }
 
+macro_rules! log {
+    ($e:expr, $desc:expr) => {{
+        let time = std::time::SystemTime::now();
+        let result = $e;
+        if let Ok(elapsed) = time.elapsed() {
+            info!("{} took {}ms", $desc, elapsed.as_millis());
+        }
+        result
+    }};
+}
+
 impl HNClient {
     /// Create a new Hacker News Client
     pub fn new() -> Result<HNClient> {
@@ -45,22 +56,24 @@ impl HNClient {
         T: serde::de::DeserializeOwned,
     {
         let request_url = format!("{}/items/{}", HN_ALGOLIA_PREFIX, id);
-        let time = std::time::SystemTime::now();
-        let item = self.client.get(&request_url).call()?.into_json::<T>()?;
-        if let Ok(elapsed) = time.elapsed() {
-            info!("get item id={} took {}ms", id, elapsed.as_millis());
-        }
+        let item = log!(
+            self.client.get(&request_url).call()?.into_json::<T>()?,
+            format!("get HN item (id={}) using {}", id, request_url)
+        );
         Ok(item)
     }
+
     /// Lazily load a story's comments
     pub fn lazy_load_story_comments(&self, story_id: u32) -> Result<CommentReceiver> {
         let request_url = format!("{}/item/{}.json", HN_OFFICIAL_PREFIX, story_id);
-        let mut ids = self
-            .client
-            .get(&request_url)
-            .call()?
-            .into_json::<HNStoryResponse>()?
-            .kids;
+        let mut ids = log!(
+            self.client
+                .get(&request_url)
+                .call()?
+                .into_json::<HNStoryResponse>()?
+                .kids,
+            format!("get story (id={}) using {}", story_id, request_url)
+        );
 
         let (sender, receiver) = crossbeam_channel::bounded(32);
         let client = self.clone();
@@ -92,21 +105,23 @@ impl HNClient {
             return Ok(());
         }
 
-        ids.drain(0..size)
+        let responses = ids
+            .drain(0..size)
             .collect::<Vec<_>>()
             .into_par_iter()
-            .map(|id| {
-                match client.get_item_from_id::<CommentResponse>(id) {
-                    Ok(response) => {
-                        sender.send(response.into())?;
-                    }
-                    Err(err) => {
-                        warn!("failed to get comment with id={}: {}", id, err);
-                    }
-                };
-                Ok(())
+            .map(|id| match client.get_item_from_id::<CommentResponse>(id) {
+                Ok(response) => Some(response),
+                Err(err) => {
+                    warn!("failed to get comment (id={}): {}", id, err);
+                    None
+                }
             })
-            .collect::<Result<_>>()?;
+            .flatten()
+            .collect::<Vec<_>>();
+
+        for response in responses {
+            sender.send(response.into())?;
+        }
 
         Ok(())
     }
@@ -114,15 +129,13 @@ impl HNClient {
     /// Get a story based on its id
     pub fn get_story_from_story_id(&self, id: u32) -> Result<Story> {
         let request_url = format!("{}/search?tags=story,story_{}", HN_ALGOLIA_PREFIX, id);
-        let time = std::time::SystemTime::now();
-        let response = self
-            .client
-            .get(&request_url)
-            .call()?
-            .into_json::<StoriesResponse>()?;
-        if let Ok(elapsed) = time.elapsed() {
-            info!("get story (id={}) took {}ms", id, elapsed.as_millis());
-        }
+        let response = log!(
+            self.client
+                .get(&request_url)
+                .call()?
+                .into_json::<StoriesResponse>()?,
+            format!("get story (id={}) using {}", id, request_url)
+        );
 
         let stories: Vec<Story> = response.into();
         Ok(stories.first().unwrap().clone())
@@ -144,22 +157,17 @@ impl HNClient {
             search_story_limit,
             page
         );
-        let time = std::time::SystemTime::now();
-        let response = self
-            .client
-            .get(&request_url)
-            .query("query", query)
-            .call()?
-            .into_json::<StoriesResponse>()?;
-        if let Ok(elapsed) = time.elapsed() {
-            info!(
-                "get matched stories with query {} (by_date={}, page={}) took {}ms",
-                query,
-                by_date,
-                page,
-                elapsed.as_millis()
-            );
-        }
+        let response = log!(
+            self.client
+                .get(&request_url)
+                .query("query", query)
+                .call()?
+                .into_json::<StoriesResponse>()?,
+            format!(
+                "get matched stories with query {} (by_date={}, page={}) using {}",
+                query, by_date, page, request_url
+            )
+        );
 
         Ok(response.into())
     }
@@ -198,19 +206,13 @@ impl HNClient {
         numeric_filters: query::StoryNumericFilters,
     ) -> Result<Vec<Story>> {
         let request_url = format!("{}/topstories.json", HN_OFFICIAL_PREFIX);
-        let time = std::time::SystemTime::now();
-        let stories = self
-            .client
-            .get(&request_url)
-            .call()?
-            .into_json::<Vec<u32>>()?;
-        if let Ok(elapsed) = time.elapsed() {
-            info!(
-                "get front_page story ids using {} took {}ms",
-                request_url,
-                elapsed.as_millis()
-            );
-        }
+        let stories = log!(
+            self.client
+                .get(&request_url)
+                .call()?
+                .into_json::<Vec<u32>>()?,
+            format!("get front page stories using {}", request_url)
+        );
 
         let start_id = story_limit * page;
         if start_id >= stories.len() {
@@ -231,18 +233,16 @@ impl HNClient {
             numeric_filters.query(),
         );
 
-        let response = self
-            .client
-            .get(&request_url)
-            .call()?
-            .into_json::<StoriesResponse>()?;
-        if let Ok(elapsed) = time.elapsed() {
-            info!(
-                "get stories (tag=front_page, by_date=false, page={}) took {}ms",
-                page,
-                elapsed.as_millis()
-            );
-        }
+        let response = log!(
+            self.client
+                .get(&request_url)
+                .call()?
+                .into_json::<StoriesResponse>()?,
+            format!(
+                "get stories (tag=front_page, by_date=false, page={}) using {}",
+                page, request_url
+            )
+        );
 
         Ok(self.reoder_front_page_stories(response.into(), ids))
     }
@@ -273,21 +273,20 @@ impl HNClient {
             numeric_filters.query(),
         );
 
-        let time = std::time::SystemTime::now();
-        let response = self
-            .client
-            .get(&request_url)
-            .call()?
-            .into_json::<StoriesResponse>()?;
-        if let Ok(elapsed) = time.elapsed() {
-            info!(
-                "get stories (tag={}, by_date={}, page={}) took {}ms",
+        let response = log!(
+            self.client
+                .get(&request_url)
+                .call()?
+                .into_json::<StoriesResponse>()?,
+            format!(
+                "get stories (tag={}, by_date={}, page={}, numeric_filters={}) using {}",
                 tag,
                 by_date,
                 page,
-                elapsed.as_millis()
-            );
-        }
+                numeric_filters.query(),
+                request_url
+            )
+        );
 
         Ok(response.into())
     }
