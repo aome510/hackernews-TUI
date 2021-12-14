@@ -1,7 +1,7 @@
 use config_parser2::*;
 use serde::{de, Deserialize, Deserializer};
 
-#[derive(Clone, Copy, Debug, Deserialize, ConfigParse)]
+#[derive(Default, Clone, Copy, Debug, Deserialize, ConfigParse)]
 pub struct Theme {
     pub palette: Palette,
     pub component_style: ComponentStyle,
@@ -42,15 +42,84 @@ pub struct ComponentStyle {
     pub code_block: ColorStyle,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, ConfigParse)]
+impl Default for Palette {
+    fn default() -> Self {
+        Self {
+            background: Color::parse("#f6f6ef"),
+            foreground: Color::parse("#4a4a48"),
+            selection_background: Color::parse("#6c6c6c"),
+            selection_foreground: Color::parse("#c3bbbb"),
+
+            black: Color::parse("black"),
+            blue: Color::parse("blue"),
+            cyan: Color::parse("cyan"),
+            green: Color::parse("green"),
+            magenta: Color::parse("magenta"),
+            red: Color::parse("red"),
+            white: Color::parse("white"),
+            yellow: Color::parse("yellow"),
+
+            bright_black: Color::parse("light black"),
+            bright_white: Color::parse("light white"),
+            bright_red: Color::parse("light red"),
+            bright_magenta: Color::parse("light magenta"),
+            bright_green: Color::parse("light green"),
+            bright_cyan: Color::parse("light cyan"),
+            bright_blue: Color::parse("light blue"),
+            bright_yellow: Color::parse("light yellow"),
+        }
+    }
+}
+
+impl Default for ComponentStyle {
+    fn default() -> Self {
+        Self {
+            title_bar: ColorStyle::back(Color::parse("#ff6600")),
+            link: ColorStyle::front(Color::parse("#4fbbfd")),
+            link_id: ColorStyle::back(Color::parse("#ffff00")),
+            matched_highlight: ColorStyle::back(Color::parse("#ffff00")),
+            code_block: ColorStyle::back(Color::parse("#c8c8c8")),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Deserialize)]
 pub struct ColorStyle {
-    front: Color,
-    back: Color,
+    front: Option<Color>,
+    back: Option<Color>,
+}
+
+config_parser_impl!(ColorStyle);
+
+impl ColorStyle {
+    pub fn new(f: Color, b: Color) -> Self {
+        Self {
+            front: Some(f),
+            back: Some(b),
+        }
+    }
+    pub fn front(c: Color) -> Self {
+        Self {
+            front: Some(c),
+            back: None,
+        }
+    }
+    pub fn back(c: Color) -> Self {
+        Self {
+            front: None,
+            back: Some(c),
+        }
+    }
 }
 
 impl From<ColorStyle> for cursive::theme::ColorStyle {
     fn from(c: ColorStyle) -> Self {
-        Self::new(c.front.0, c.back.0)
+        match (c.front, c.back) {
+            (Some(f), Some(b)) => Self::new(f.0, b.0),
+            (Some(f), None) => Self::front(f.0),
+            (None, Some(b)) => Self::back(b.0),
+            (None, None) => Self::inherit_parent(),
+        }
     }
 }
 
@@ -65,15 +134,25 @@ pub struct Color(cursive::theme::Color);
 
 config_parser_impl!(Color);
 
+impl Color {
+    pub fn try_parse(c: &str) -> Option<Self> {
+        cursive::theme::Color::parse(c).map(|c| Color(c))
+    }
+
+    pub fn parse(c: &str) -> Self {
+        Self::try_parse(c).expect(&format!("failed to parse color: {}", c))
+    }
+}
+
 impl<'de> Deserialize<'de> for Color {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        match cursive::theme::Color::parse(&s) {
+        match Self::try_parse(&s) {
             None => Err(de::Error::custom(format!("failed to parse color: {}", s))),
-            Some(color) => Ok(Color(color)),
+            Some(color) => Ok(color),
         }
     }
 }
