@@ -92,21 +92,23 @@ impl HNClient {
             return Ok(());
         }
 
-        ids.drain(0..size)
+        let responses = ids
+            .drain(0..size)
             .collect::<Vec<_>>()
             .into_par_iter()
-            .map(|id| {
-                match client.get_item_from_id::<CommentResponse>(id) {
-                    Ok(response) => {
-                        sender.send(response.into())?;
-                    }
-                    Err(err) => {
-                        warn!("failed to get comment with id={}: {}", id, err);
-                    }
-                };
-                Ok(())
+            .map(|id| match client.get_item_from_id::<CommentResponse>(id) {
+                Ok(response) => Some(response),
+                Err(err) => {
+                    warn!("failed to get comment with id={}: {}", id, err);
+                    None
+                }
             })
-            .collect::<Result<_>>()?;
+            .flatten()
+            .collect::<Vec<_>>();
+
+        for response in responses {
+            sender.send(response.into())?;
+        }
 
         Ok(())
     }
