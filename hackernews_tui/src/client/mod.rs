@@ -58,7 +58,7 @@ impl HNClient {
         let request_url = format!("{}/items/{}", HN_ALGOLIA_PREFIX, id);
         let item = log!(
             self.client.get(&request_url).call()?.into_json::<T>()?,
-            format!("get HN item (id={})", id)
+            format!("get HN item (id={}) using {}", id, request_url)
         );
         Ok(item)
     }
@@ -72,7 +72,7 @@ impl HNClient {
                 .call()?
                 .into_json::<HNStoryResponse>()?
                 .kids,
-            format!("get story (id={})'s comments", story_id)
+            format!("get story (id={}) using {}", story_id, request_url)
         );
 
         let (sender, receiver) = crossbeam_channel::bounded(32);
@@ -112,7 +112,7 @@ impl HNClient {
             .map(|id| match client.get_item_from_id::<CommentResponse>(id) {
                 Ok(response) => Some(response),
                 Err(err) => {
-                    warn!("failed to get comment with id={}: {}", id, err);
+                    warn!("failed to get comment (id={}): {}", id, err);
                     None
                 }
             })
@@ -134,7 +134,7 @@ impl HNClient {
                 .get(&request_url)
                 .call()?
                 .into_json::<StoriesResponse>()?,
-            format!("get story (id={})", id)
+            format!("get story (id={}) using {}", id, request_url)
         );
 
         let stories: Vec<Story> = response.into();
@@ -164,8 +164,8 @@ impl HNClient {
                 .call()?
                 .into_json::<StoriesResponse>()?,
             format!(
-                "get matched stories with query {} (by_date={}, page={})",
-                query, by_date, page,
+                "get matched stories with query {} (by_date={}, page={}) using {}",
+                query, by_date, page, request_url
             )
         );
 
@@ -211,7 +211,7 @@ impl HNClient {
                 .get(&request_url)
                 .call()?
                 .into_json::<Vec<u32>>()?,
-            format!("get front_page story ids using {}", request_url)
+            format!("get front page stories using {}", request_url)
         );
 
         let start_id = story_limit * page;
@@ -238,7 +238,10 @@ impl HNClient {
                 .get(&request_url)
                 .call()?
                 .into_json::<StoriesResponse>()?,
-            format!("get stories (tag=front_page, by_date=false, page={})", page,)
+            format!(
+                "get stories (tag=front_page, by_date=false, page={}) using {}",
+                page, request_url
+            )
         );
 
         Ok(self.reoder_front_page_stories(response.into(), ids))
@@ -276,11 +279,12 @@ impl HNClient {
                 .call()?
                 .into_json::<StoriesResponse>()?,
             format!(
-                "get stories (tag={}, by_date={}, page={}, numeric_filters={})",
+                "get stories (tag={}, by_date={}, page={}, numeric_filters={}) using {}",
                 tag,
                 by_date,
                 page,
                 numeric_filters.query(),
+                request_url
             )
         );
 
