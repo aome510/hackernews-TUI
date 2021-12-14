@@ -139,7 +139,7 @@ List of demo videos:
 
 ## Default Shortcuts
 
-In each `View`, press `?` to see a list of supported keyboard shortcuts and their functionalities:
+In each `View`, press `?` to see a list of supported keyboard shortcuts and their functionalities. Note that the shortcuts are fully [customizable](#user-defined-shortcuts).
 
 ![Example of a Help View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/help_view.png)
 
