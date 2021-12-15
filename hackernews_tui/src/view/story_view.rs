@@ -10,9 +10,9 @@ use regex::Regex;
 /// StoryView is a View displaying a list stories corresponding
 /// to a particular category (top stories, newest stories, most popular stories, etc).
 pub struct StoryView {
-    view: ScrollListView,
     pub stories: Vec<client::Story>,
 
+    view: ScrollListView,
     raw_command: String,
 }
 
@@ -22,11 +22,24 @@ impl ViewWrapper for StoryView {
 
 impl StoryView {
     pub fn new(stories: Vec<client::Story>, starting_id: usize) -> Self {
+        // `max_id_width` is equal to the width of the string representation of `max_id`,
+        // which is the maximum story's id that current story view will display
+        let max_id = starting_id + stories.len() + 1;
+        let mut max_id_width = 0;
+        let mut pw = 1;
+        while pw <= max_id {
+            pw *= 10;
+            max_id_width += 1;
+        }
+
         let view = LinearLayout::vertical()
             .with(|s| {
                 stories.iter().enumerate().for_each(|(i, story)| {
-                    let mut story_text = StyledString::plain(format!("{}. ", starting_id + i + 1));
-                    story_text.append(Self::get_story_text(story));
+                    let mut story_text = StyledString::styled(
+                        format!("{1:>0$}. ", max_id_width, starting_id + i + 1),
+                        config::get_config_theme().component_style.metadata,
+                    );
+                    story_text.append(Self::get_story_text(max_id_width, story));
                     s.add_child(text_view::TextView::new(story_text));
                 })
             })
@@ -79,23 +92,32 @@ impl StoryView {
     }
 
     /// Get the description text summarizing basic information about a story
-    fn get_story_text(story: &client::Story) -> StyledString {
+    fn get_story_text(max_id_width: usize, story: &client::Story) -> StyledString {
         let mut story_text =
             Self::get_matched_text(story.highlight_result.title.clone(), ColorStyle::default());
-        if !story.url.is_empty() {
-            let url = format!("\n{}", story.highlight_result.url);
-            story_text.append(Self::get_matched_text(
-                url,
-                config::get_config_theme().component_style.link.into(),
-            ));
+
+        if let Ok(url) = url::Url::parse(&story.url) {
+            if let Some(domain) = url.domain() {
+                story_text.append_styled(
+                    format!(" ({})", domain),
+                    config::get_config_theme().component_style.link,
+                );
+            }
         }
+
+        story_text.append_plain("\n");
+
         story_text.append_styled(
+            // left-align the story's metadata by `max_id_width+2`
+            // which is the width of the string "{max_story_id}. "
             format!(
-                "\n{} points | by {} | {} ago | {} comments",
+                "{:width$}{} points | by {} | {} ago | {} comments",
+                " ",
                 story.points,
                 story.author,
                 utils::get_elapsed_time_as_text(story.time),
                 story.num_comments,
+                width = max_id_width + 2,
             ),
             config::get_config_theme().component_style.metadata,
         );
