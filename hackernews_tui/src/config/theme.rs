@@ -3,12 +3,22 @@ use cursive::theme::BaseColor;
 use serde::{de, Deserialize, Deserializer};
 
 #[derive(Default, Clone, Copy, Debug, Deserialize, ConfigParse)]
+/// Application's theme, consists of two main parts:
+/// - a terminal color palette - `palette`
+/// - additional component styles - `component_style`
 pub struct Theme {
     pub palette: Palette,
     pub component_style: ComponentStyle,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, ConfigParse)]
+/// Terminal color palette.
+///
+/// This struct defines colors for application's background/foreground,
+/// selection text's background/foreground, and 16 ANSI colors.
+///
+/// The struct structure is compatible with the terminal color schemes as
+/// listed in https://github.com/mbadolato/iTerm2-Color-Schemes.
 pub struct Palette {
     pub background: Color,
     pub foreground: Color,
@@ -35,6 +45,7 @@ pub struct Palette {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, ConfigParse)]
+/// Additional colors/styles for specific components of the application.
 pub struct ComponentStyle {
     pub title_bar: ColorStyle,
     pub link: ColorStyle,
