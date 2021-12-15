@@ -226,32 +226,32 @@ pub fn get_story_main_view(
 
 fn get_story_view_title_bar(tag: &'static str) -> impl View {
     let style = config::get_config_theme().component_style.title_bar.into();
-    let app_name = StyledString::styled(
-        " Hacker News TUI",
+    let mut title = StyledString::styled(
+        "[Y]",
+        Style::from(style)
+            .combine(Style::from(config::get_config_theme().palette.light_white))
+            .combine(Style::from(Effect::Bold)),
+    );
+    title.append_styled(
+        " Hacker News",
         Style::from(style).combine(Style::from(Effect::Bold)),
     );
 
-    let mut tags = StyledString::new();
     for (i, item) in STORY_TAGS.iter().enumerate() {
-        tags.append_styled(" | ", style);
+        title.append_styled(" | ", style);
         if *item == tag {
-            tags.append_styled(
+            title.append_styled(
                 format!("{}.{}", i + 1, item),
                 Style::from(style)
                     .combine(Style::from(config::get_config_theme().palette.light_white)),
             );
         } else {
-            tags.append_styled(format!("{}.{}", i + 1, item), style);
+            title.append_styled(format!("{}.{}", i + 1, item), style);
         }
     }
-    tags.append_styled(" | ", style);
+    title.append_styled(" | ", style);
 
-    Layer::with_color(
-        LinearLayout::horizontal()
-            .child(TextView::new(app_name))
-            .child(TextView::new(tags)),
-        style,
-    )
+    PaddedView::lrtb(0, 0, 0, 1, Layer::with_color(TextView::new(title), style))
 }
 
 /// Return a StoryView given a story list and the view description
