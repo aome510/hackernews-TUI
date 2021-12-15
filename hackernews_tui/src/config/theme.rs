@@ -1,4 +1,5 @@
 use config_parser2::*;
+use cursive::theme::BaseColor;
 use serde::{de, Deserialize, Deserializer};
 
 #[derive(Default, Clone, Copy, Debug, Deserialize, ConfigParse)]
@@ -23,14 +24,14 @@ pub struct Palette {
     pub white: Color,
     pub yellow: Color,
 
-    pub bright_black: Color,
-    pub bright_white: Color,
-    pub bright_red: Color,
-    pub bright_magenta: Color,
-    pub bright_green: Color,
-    pub bright_cyan: Color,
-    pub bright_blue: Color,
-    pub bright_yellow: Color,
+    pub light_black: Color,
+    pub light_white: Color,
+    pub light_red: Color,
+    pub light_magenta: Color,
+    pub light_green: Color,
+    pub light_cyan: Color,
+    pub light_blue: Color,
+    pub light_yellow: Color,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, ConfigParse)]
@@ -51,23 +52,23 @@ impl Default for Palette {
             selection_background: Color::parse("#6c6c6c"),
             selection_foreground: Color::parse("#c3bbbb"),
 
-            black: Color::parse("black"),
-            blue: Color::parse("blue"),
-            cyan: Color::parse("cyan"),
-            green: Color::parse("green"),
-            magenta: Color::parse("magenta"),
-            red: Color::parse("red"),
-            white: Color::parse("white"),
-            yellow: Color::parse("yellow"),
+            black: Color::parse("#000000"),
+            blue: Color::parse("#0000aa"),
+            cyan: Color::parse("#00aaaa"),
+            green: Color::parse("#00aa00"),
+            magenta: Color::parse("#aa00aa"),
+            red: Color::parse("#aa0000"),
+            white: Color::parse("#aaaaaa"),
+            yellow: Color::parse("#aaaa00"),
 
-            bright_black: Color::parse("light black"),
-            bright_white: Color::parse("light white"),
-            bright_red: Color::parse("light red"),
-            bright_magenta: Color::parse("light magenta"),
-            bright_green: Color::parse("light green"),
-            bright_cyan: Color::parse("light cyan"),
-            bright_blue: Color::parse("light blue"),
-            bright_yellow: Color::parse("light yellow"),
+            light_black: Color::parse("#555555"),
+            light_white: Color::parse("#ffffff"),
+            light_red: Color::parse("#ff5555"),
+            light_magenta: Color::parse("#5555ff"),
+            light_green: Color::parse("#55ff55"),
+            light_cyan: Color::parse("#55ffff"),
+            light_blue: Color::parse("#5555ff"),
+            light_yellow: Color::parse("#ffff55"),
         }
     }
 }
@@ -77,8 +78,8 @@ impl Default for ComponentStyle {
         Self {
             title_bar: ColorStyle::back(Color::parse("#ff6600")),
             link: ColorStyle::front(Color::parse("#4fbbfd")),
-            link_id: ColorStyle::back(Color::parse("#ffff00")),
-            matched_highlight: ColorStyle::back(Color::parse("#ffff00")),
+            link_id: ColorStyle::back(Color::parse("light yellow")),
+            matched_highlight: ColorStyle::back(Color::parse("light yellow")),
             code_block: ColorStyle::back(Color::parse("#c8c8c8")),
             metadata: ColorStyle::front(Color::parse("#a5a5a5")),
         }
@@ -117,9 +118,9 @@ impl ColorStyle {
 impl From<ColorStyle> for cursive::theme::ColorStyle {
     fn from(c: ColorStyle) -> Self {
         match (c.front, c.back) {
-            (Some(f), Some(b)) => Self::new(f.0, b.0),
-            (Some(f), None) => Self::front(f.0),
-            (None, Some(b)) => Self::back(b.0),
+            (Some(f), Some(b)) => Self::new(f, b),
+            (Some(f), None) => Self::front(f),
+            (None, Some(b)) => Self::back(b),
             (None, None) => Self::inherit_parent(),
         }
     }
@@ -148,7 +149,41 @@ impl Color {
 
 impl From<Color> for cursive::theme::Color {
     fn from(c: Color) -> Self {
-        c.0
+        // converts from application's color to `cursive::theme::color` will
+        // require to look into the application's pre-defined color palette.
+        //
+        // Under the hood, the application's palette colors are stored as a wrapper
+        // struct of `cursive::theme::color` (`Color`).
+        let palette = &get_config_theme().palette;
+        match c.0 {
+            Self::Dark(c) => match c {
+                BaseColor::Black => palette.black.0,
+                BaseColor::Red => palette.red.0,
+                BaseColor::Green => palette.green.0,
+                BaseColor::Yellow => palette.yellow.0,
+                BaseColor::Blue => palette.blue.0,
+                BaseColor::Magenta => palette.magenta.0,
+                BaseColor::Cyan => palette.cyan.0,
+                BaseColor::White => palette.white.0,
+            },
+            Self::Light(c) => match c {
+                BaseColor::Black => palette.light_black.0,
+                BaseColor::Red => palette.light_red.0,
+                BaseColor::Green => palette.light_green.0,
+                BaseColor::Yellow => palette.light_yellow.0,
+                BaseColor::Blue => palette.light_blue.0,
+                BaseColor::Magenta => palette.light_magenta.0,
+                BaseColor::Cyan => palette.light_cyan.0,
+                BaseColor::White => palette.light_white.0,
+            },
+            _ => c.0,
+        }
+    }
+}
+
+impl From<Color> for cursive::theme::ColorType {
+    fn from(c: Color) -> Self {
+        Self::from(cursive::theme::Color::from(c))
     }
 }
 
