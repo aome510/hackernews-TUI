@@ -25,6 +25,7 @@ pub fn get_comment_view_async(
             })
         }
     })
+    .with_animation_fn(animation)
     .align_center()
     .full_screen()
 }
@@ -61,6 +62,7 @@ pub fn get_story_view_async(
             })
         },
     )
+    .with_animation_fn(animation)
     .align_center()
     .full_screen()
 }
@@ -125,6 +127,61 @@ pub fn get_article_view_async(siv: &mut Cursive, article_url: &str) -> impl View
             }
         },
     )
+    .with_animation_fn(animation)
     .align_center()
     .full_screen()
+}
+
+fn animation(width: usize, _height: usize, frame_idx: usize) -> cursive_async_view::AnimationFrame {
+    let n_frames = 60; // number of frames to complete an animation
+
+    if config::get_config().use_pacman_loading {
+        let factor = (frame_idx as f64) / (n_frames as f64);
+        let x = (factor * width as f64) as usize;
+
+        let content = utils::combine_styled_string(vec![
+            StyledString::plain(repeat_str("- ", x / 2)),
+            StyledString::plain('ᗧ'),
+            StyledString::plain(repeat_str(" o", width.saturating_sub(x + 1) / 2)),
+        ]);
+
+        cursive_async_view::AnimationFrame {
+            content,
+            next_frame_idx: (frame_idx + 1) % n_frames,
+        }
+    } else {
+        // a simple loading screen with colors,
+        // this animation function will swap the background/foreground colors of
+        // the loading bar after completing an animation.
+
+        let symbol = "━";
+        let (foreground, background) = if frame_idx < 60 {
+            (
+                config::Color::new(Color::Dark(BaseColor::Black)),
+                config::Color::new(Color::Dark(BaseColor::White)),
+            )
+        } else {
+            (
+                config::Color::new(Color::Dark(BaseColor::White)),
+                config::Color::new(Color::Dark(BaseColor::Black)),
+            )
+        };
+
+        let factor = ((frame_idx % n_frames) as f64) / (n_frames as f64);
+        let x = (factor * width as f64) as usize;
+
+        let content = utils::combine_styled_string(vec![
+            StyledString::styled(repeat_str(symbol, x), foreground),
+            StyledString::styled(repeat_str(symbol, width - x), background),
+        ]);
+
+        cursive_async_view::AnimationFrame {
+            content,
+            next_frame_idx: (frame_idx + 1) % (2 * n_frames),
+        }
+    }
+}
+
+fn repeat_str<S: Into<String>>(s: S, n: usize) -> String {
+    s.into().repeat(n)
 }
