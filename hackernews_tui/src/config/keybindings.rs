@@ -74,12 +74,12 @@ impl Default for GlobalKeyMap {
             close_dialog: Key::new(event::Key::Esc),
 
             goto_previous_view: Key::new(event::Event::CtrlChar('p')),
-            goto_front_page_view: Key::new(event::Event::CtrlChar('f')),
             goto_search_view: Key::new(event::Event::CtrlChar('s')),
-            goto_all_stories_view: Key::new(event::Event::CtrlChar('z')),
-            goto_ask_hn_view: Key::new(event::Event::CtrlChar('x')),
-            goto_show_hn_view: Key::new(event::Event::CtrlChar('c')),
-            goto_jobs_view: Key::new(event::Event::CtrlChar('v')),
+            goto_front_page_view: Key::new(event::Key::F1),
+            goto_all_stories_view: Key::new(event::Key::F2),
+            goto_ask_hn_view: Key::new(event::Key::F3),
+            goto_show_hn_view: Key::new(event::Key::F4),
+            goto_jobs_view: Key::new(event::Key::F5),
         }
     }
 }
