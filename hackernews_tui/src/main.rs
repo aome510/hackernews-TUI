@@ -82,10 +82,15 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &'static client::HNClient) {
 fn run() {
     let mut s = cursive::default();
 
-    // update cursive's default theme
-    let config_theme = &config::get_config().theme;
-    s.update_theme(|theme| {
-        config_theme.update_theme(theme);
+    let theme = config::get_config_theme();
+    s.update_theme(|t| {
+        t.palette.set_color("view", theme.palette.background.into());
+        t.palette
+            .set_color("primary", theme.palette.foreground.into());
+        t.palette
+            .set_color("highlight", theme.palette.selection_background.into());
+        t.palette
+            .set_color("highlight_text", theme.palette.selection_foreground.into());
     });
 
     // setup HN Client

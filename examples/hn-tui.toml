@@ -51,31 +51,7 @@
 # ---------------------------------
 
 #[theme]
-# cursive's palette colors
-# (more information can be found in https://docs.rs/cursive/0.16.3/cursive/theme/index.html)
-# background = "#f6f6ef"
-# shadow = "#000000"
-# view = "#f6f6ef"
-# primary = "#4a4a48"
-# secondary = "#a5a5a5"
-# tertiary = "#ffffff"
-# title_primary = "#000000"
-# title_secondary = "#ffff00"
-# highlight = "#6c6c6c"
-# highlight_inactive = "#0000ff"
-# highlight_text = "#c3bbbb"
-
-# additional colors defined by the application
-# `link_text` is a text color for a URL
-# `link_id` is a background color for `link_id` in CommentView
-# `search_highlight_bg` is a background color for matched search
-# `status_bar_bg` is a background color for the status bar
-# `code_block_bg` is a background color for a code block
-# link_text = "#4fbbfd"
-# link_id_bg = "#ffff00"
-# search_highlight_bg = "#ffff00"
-# status_bar_bg = "#ff6600"
-# code_block_bg = "#c8c8c8"
+# TODO: add default configuration settings for the application's theme
 
 # ---------------------------------
 # key bindings

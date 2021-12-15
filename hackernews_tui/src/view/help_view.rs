@@ -21,13 +21,8 @@ impl HelpView {
     }
 
     fn construct_key_view(key: String, desc: String, max_key_width: usize) -> impl View {
-        let key_string = StyledString::styled(
-            key,
-            ColorStyle::new(
-                PaletteColor::TitlePrimary,
-                config::get_config_theme().code_block_bg.color,
-            ),
-        );
+        let key_string =
+            StyledString::styled(key, config::get_config_theme().component_style.code_block);
         let desc_string = StyledString::plain(desc);
         LinearLayout::horizontal()
             .child(TextView::new(key_string).fixed_width(max_key_width))
@@ -69,10 +64,7 @@ impl HelpView {
         LinearLayout::vertical()
             .with(|s| {
                 self.key_groups.iter().for_each(|(group_desc, keys)| {
-                    s.add_child(TextView::new(StyledString::styled(
-                        group_desc.to_string(),
-                        ColorStyle::from(PaletteColor::TitlePrimary),
-                    )));
+                    s.add_child(TextView::new(group_desc.to_string()));
                     s.add_child(HelpView::construct_keys_view(keys));
                 });
             })

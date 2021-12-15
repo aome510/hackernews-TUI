@@ -216,7 +216,7 @@ impl From<CommentResponse> for Vec<Comment> {
             text,
             minimized_text: StyledString::styled(
                 format!("{} ({} more)", base_desc, children.len() + 1,),
-                PaletteColor::Secondary,
+                config::get_config_theme().component_style.metadata,
             ),
             links,
         };
@@ -252,7 +252,8 @@ fn parse_raw_html_comment(text: &str, desc: &str) -> (StyledString, Vec<String>)
 
     // parse links in the comment, color them in the parsed text as well
     let mut links: Vec<String> = vec![];
-    let mut styled_s = StyledString::styled(desc, PaletteColor::Secondary);
+    let mut styled_s =
+        StyledString::styled(desc, config::get_config_theme().component_style.metadata);
     // replace the `<a href="${link}">...</a>` pattern one-by-one with "${link}".
     // cannot use `replace_all` because we want to replace a matched string with a `StyledString` (not a raw string)
     loop {
@@ -277,14 +278,11 @@ fn parse_raw_html_comment(text: &str, desc: &str) -> (StyledString, Vec<String>)
 
                 styled_s.append_styled(
                     format!("\"{}\" ", utils::shorten_url(&link)),
-                    Style::from(config::get_config_theme().link_text.color),
+                    config::get_config_theme().component_style.link,
                 );
                 styled_s.append_styled(
                     format!("[{}]", links.len()),
-                    ColorStyle::new(
-                        PaletteColor::TitlePrimary,
-                        config::get_config_theme().link_id_bg.color,
-                    ),
+                    config::get_config_theme().component_style.link_id,
                 );
                 links.push(link);
                 continue;

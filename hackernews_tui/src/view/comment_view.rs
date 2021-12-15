@@ -312,7 +312,7 @@ fn get_comment_main_view(receiver: client::CommentReceiver) -> impl View {
 
 /// Return a CommentView given a comment list and the discussed story's url/title
 pub fn get_comment_view(story: &client::Story, receiver: client::CommentReceiver) -> impl View {
-    let status_bar = utils::get_status_bar_with_desc(&format!("Comment View - {}", story.title));
+    let status_bar = utils::construct_view_title_bar(&format!("Comment View - {}", story.title));
 
     let main_view = get_comment_main_view(receiver);
 

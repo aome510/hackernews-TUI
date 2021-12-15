@@ -13,7 +13,7 @@ pub fn get_error_view(err_desc: &str, err_output: &str) -> impl View {
     .full_height();
 
     LinearLayout::vertical()
-        .child(utils::get_status_bar_with_desc("Error View"))
+        .child(utils::construct_view_title_bar("Error View"))
         .child(main_view)
         .child(utils::construct_footer_view::<help_view::DefaultHelpView>())
 }

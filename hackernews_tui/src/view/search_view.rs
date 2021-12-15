@@ -40,10 +40,7 @@ impl SearchView {
                 LinearLayout::horizontal()
                     .child(TextView::new(StyledString::styled(
                         "Search: ",
-                        ColorStyle::new(
-                            PaletteColor::TitlePrimary,
-                            config::get_config_theme().search_highlight_bg.color,
-                        ),
+                        config::get_config_theme().component_style.matched_highlight,
                     )))
                     .child(EditableTextView::new()),
             )
@@ -248,7 +245,7 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
 pub fn get_search_view(client: &'static client::HNClient, cb_sink: CbSink) -> impl View {
     let main_view = get_search_main_view(client, cb_sink);
     let mut view = LinearLayout::vertical()
-        .child(utils::get_status_bar_with_desc("Search View"))
+        .child(utils::construct_view_title_bar("Search View"))
         .child(main_view)
         .child(utils::construct_footer_view::<SearchView>());
     view.set_focus_index(1).unwrap_or_else(|_| {});
