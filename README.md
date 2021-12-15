@@ -19,7 +19,8 @@ This application is the right tool for you :muscle:
 - [Install](#install)
   - [Using Cargo](#using-cargo)
   - [Docker Image](#docker-image)
-  - [Building](#building)
+  - [Building from source](#building-from-source)
+  - [macOS](#macos)
   - [Arch Linux](#arch-linux)
   - [NetBSD](#netbsd)
 - [Examples](#examples)
@@ -43,9 +44,7 @@ This application is the right tool for you :muscle:
 
 ### Using cargo
 
-#### Install the latest version from [crates.io](https://crates.io/crates/hackernews_tui)
-
-Run `cargo install hackernews_tui` to install the application as a binary.
+Install the latest version from [crates.io](https://crates.io/crates/hackernews_tui) by running `cargo install hackernews_tui`
 
 ### Docker image
 
@@ -69,7 +68,7 @@ to run the application. You can also use your local [configuration file](#config
 
 with `${CONFIG_FILE_PATH}` is your local configuration file path.
 
-#### Building
+#### Building from source
 
 Run
 
@@ -85,13 +84,19 @@ to build the application, then run
 ./target/release/hackernews_tui
 ```
 
-to run the application. Or
+to run the application, or
 
 ```
 ln -sf $PWD/target/release/hackernews_tui /usr/local/bin
 ```
 
 to link the executable binary to `/usr/local/bin` folder.
+
+### macOS
+
+#### Via MacPorts
+
+Run `sudo port install hackernews-tui` to install the application.
 
 ### Arch Linux
 
