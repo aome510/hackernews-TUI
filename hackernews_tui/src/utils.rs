@@ -70,6 +70,14 @@ pub fn construct_footer_view<T: view::help_view::HasHelpView>() -> impl View {
         )
 }
 
+/// Combine multiple styled strings into a single styled string
+pub fn combine_styled_string(strings: Vec<StyledString>) -> StyledString {
+    strings.into_iter().fold(StyledString::new(), |mut acc, s| {
+        acc.append(s);
+        acc
+    })
+}
+
 /// Construct a view's title bar
 pub fn construct_view_title_bar(desc: &str) -> impl View {
     let style = config::get_config_theme().component_style.title_bar.into();

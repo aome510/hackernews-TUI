@@ -59,9 +59,9 @@ impl Default for Palette {
     fn default() -> Self {
         Self {
             background: Color::parse("#f6f6ef"),
-            foreground: Color::parse("#4a4a48"),
-            selection_background: Color::parse("#6c6c6c"),
-            selection_foreground: Color::parse("#c3bbbb"),
+            foreground: Color::parse("#242424"),
+            selection_background: Color::parse("#d8dad6"),
+            selection_foreground: Color::parse("#4a4c4c"),
 
             black: Color::parse("#000000"),
             blue: Color::parse("#0000aa"),
@@ -91,8 +91,8 @@ impl Default for ComponentStyle {
             link: ColorStyle::front(Color::parse("#4fbbfd")),
             link_id: ColorStyle::new(Color::parse("black"), Color::parse("#ffff55")),
             matched_highlight: ColorStyle::new(Color::parse("black"), Color::parse("#ffff55")),
-            code_block: ColorStyle::back(Color::parse("#c8c8c8")),
-            metadata: ColorStyle::front(Color::parse("#a5a5a5")),
+            code_block: ColorStyle::new(Color::parse("black"), Color::parse("#c8c8c8")),
+            metadata: ColorStyle::front(Color::parse("#828282")),
         }
     }
 }

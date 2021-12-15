@@ -66,6 +66,7 @@ impl CommentView {
                     text_view
                         .padding(TextPadding::default().left(StyledPaddingChar::new('▎', c.into())))
                 } else {
+                    // add top padding for top comments
                     let c = config::Color::new(Color::Dark(BaseColor::White));
                     text_view
                         .padding(TextPadding::default().top(StyledPaddingChar::new('▔', c.into())))
