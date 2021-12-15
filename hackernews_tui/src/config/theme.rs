@@ -149,12 +149,22 @@ pub struct Color(cursive::theme::Color);
 config_parser_impl!(Color);
 
 impl Color {
+    pub fn new(c: cursive::theme::Color) -> Self {
+        Self(c)
+    }
+
     pub fn try_parse(c: &str) -> Option<Self> {
         cursive::theme::Color::parse(c).map(Color)
     }
 
     pub fn parse(c: &str) -> Self {
         Self::try_parse(c).unwrap_or_else(|| panic!("failed to parse color: {}", c))
+    }
+}
+
+impl From<u8> for Color {
+    fn from(x: u8) -> Self {
+        Self(cursive::theme::Color::from_256colors(x))
     }
 }
 
