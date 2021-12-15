@@ -87,7 +87,7 @@ impl Default for Palette {
 impl Default for ComponentStyle {
     fn default() -> Self {
         Self {
-            title_bar: ColorStyle::back(Color::parse("#ff6600")),
+            title_bar: ColorStyle::new(Color::parse("black"), Color::parse("#ff6600")),
             link: ColorStyle::front(Color::parse("#4fbbfd")),
             link_id: ColorStyle::back(Color::parse("#ffff55")),
             matched_highlight: ColorStyle::back(Color::parse("#ffff55")),

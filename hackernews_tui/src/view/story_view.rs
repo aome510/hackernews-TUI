@@ -7,6 +7,8 @@ use super::text_view;
 use crate::prelude::*;
 use regex::Regex;
 
+static STORY_TAGS: [&str; 5] = ["front_page", "story", "ask_hn", "show_hn", "job"];
+
 /// StoryView is a View displaying a list stories corresponding
 /// to a particular category (top stories, newest stories, most popular stories, etc).
 pub struct StoryView {
@@ -222,9 +224,38 @@ pub fn get_story_main_view(
         })
 }
 
+fn get_story_view_title_bar(tag: &'static str) -> impl View {
+    let style = config::get_config_theme().component_style.title_bar.into();
+    let app_name = StyledString::styled(
+        " Hacker News TUI",
+        Style::from(style).combine(Style::from(Effect::Bold)),
+    );
+
+    let mut tags = StyledString::new();
+    for (i, item) in STORY_TAGS.iter().enumerate() {
+        tags.append_styled(" | ", style);
+        if *item == tag {
+            tags.append_styled(
+                format!("{}.{}", i + 1, item),
+                Style::from(style)
+                    .combine(Style::from(config::get_config_theme().palette.light_white)),
+            );
+        } else {
+            tags.append_styled(format!("{}.{}", i + 1, item), style);
+        }
+    }
+    tags.append_styled(" | ", style);
+
+    Layer::with_color(
+        LinearLayout::horizontal()
+            .child(TextView::new(app_name))
+            .child(TextView::new(tags)),
+        style,
+    )
+}
+
 /// Return a StoryView given a story list and the view description
 pub fn get_story_view(
-    desc: &str,
     stories: Vec<client::Story>,
     client: &'static client::HNClient,
     tag: &'static str,
@@ -240,7 +271,7 @@ pub fn get_story_view(
     let main_view = get_story_main_view(stories, client, starting_id).full_height();
 
     let mut view = LinearLayout::vertical()
-        .child(utils::construct_view_title_bar(desc))
+        .child(get_story_view_title_bar(tag))
         .child(main_view)
         .child(utils::construct_footer_view::<StoryView>());
     view.set_focus_index(1).unwrap_or_else(|_| {});

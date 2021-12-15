@@ -81,21 +81,6 @@ pub fn construct_view_title_bar(desc: &str) -> impl View {
     )
 }
 
-/// Construct StoryView based on the filtering tag
-pub fn get_story_view_desc_by_tag(tag: &str) -> String {
-    format!(
-        "Story View - {}",
-        match tag {
-            "front_page" => "Front Page",
-            "story" => "All Stories",
-            "job" => "Jobs",
-            "ask_hn" => "Ask HN",
-            "show_hn" => "Show HN",
-            _ => panic!("unknown tag: {}", tag),
-        },
-    )
-}
-
 /// open a given url using a specific command
 pub fn open_url_in_browser(url: &str) {
     if url.is_empty() {
