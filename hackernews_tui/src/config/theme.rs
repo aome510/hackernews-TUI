@@ -40,6 +40,7 @@ pub struct ComponentStyle {
     pub link_id: ColorStyle,
     pub matched_highlight: ColorStyle,
     pub code_block: ColorStyle,
+    pub metadata: ColorStyle,
 }
 
 impl Default for Palette {
@@ -79,6 +80,7 @@ impl Default for ComponentStyle {
             link_id: ColorStyle::back(Color::parse("#ffff00")),
             matched_highlight: ColorStyle::back(Color::parse("#ffff00")),
             code_block: ColorStyle::back(Color::parse("#c8c8c8")),
+            metadata: ColorStyle::front(Color::parse("#a5a5a5")),
         }
     }
 }
@@ -136,11 +138,23 @@ config_parser_impl!(Color);
 
 impl Color {
     pub fn try_parse(c: &str) -> Option<Self> {
-        cursive::theme::Color::parse(c).map(|c| Color(c))
+        cursive::theme::Color::parse(c).map(Color)
     }
 
     pub fn parse(c: &str) -> Self {
-        Self::try_parse(c).expect(&format!("failed to parse color: {}", c))
+        Self::try_parse(c).unwrap_or_else(|| panic!("failed to parse color: {}", c))
+    }
+}
+
+impl From<Color> for cursive::theme::Color {
+    fn from(c: Color) -> Self {
+        c.0
+    }
+}
+
+impl From<Color> for cursive::theme::Style {
+    fn from(c: Color) -> Self {
+        Self::from(cursive::theme::Color::from(c))
     }
 }
 

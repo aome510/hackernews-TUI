@@ -160,18 +160,11 @@ impl ArticleView {
         );
 
         let view = LinearLayout::vertical()
-            .child(
-                TextView::new(StyledString::styled(
-                    title,
-                    ColorStyle::front(PaletteColor::TitlePrimary),
-                ))
-                .center()
-                .full_width(),
-            )
+            .child(TextView::new(title).center().full_width())
             .child(
                 TextView::new(StyledString::styled(
                     desc,
-                    ColorStyle::front(PaletteColor::Secondary),
+                    config::get_config_theme().component_style.metadata,
                 ))
                 .center()
                 .full_width(),

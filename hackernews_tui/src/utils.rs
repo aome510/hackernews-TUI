@@ -56,12 +56,9 @@ pub fn shorten_url(url: &str) -> String {
 pub fn construct_footer_view<T: view::help_view::HasHelpView>() -> impl View {
     LinearLayout::horizontal()
         .child(
-            TextView::new(StyledString::styled(
-                "Hacker News Terminal UI - made by AOME ©",
-                ColorStyle::front(PaletteColor::TitlePrimary),
-            ))
-            .align(align::Align::bot_center())
-            .full_width(),
+            TextView::new("Hacker News Terminal UI - made by AOME ©")
+                .align(align::Align::bot_center())
+                .full_width(),
         )
         .child(
             LinearLayout::horizontal()

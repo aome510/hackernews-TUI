@@ -120,6 +120,8 @@ pub fn load_config(config_file_path: Option<&str>) {
         },
     };
 
+    tracing::info!("application's configurations: {:?}", config);
+
     init_config(config);
 }
 

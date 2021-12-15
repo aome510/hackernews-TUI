@@ -97,7 +97,7 @@ impl StoryView {
                 utils::get_elapsed_time_as_text(story.time),
                 story.num_comments,
             ),
-            ColorStyle::from(PaletteColor::Secondary),
+            config::get_config_theme().component_style.metadata,
         );
         story_text
     }
