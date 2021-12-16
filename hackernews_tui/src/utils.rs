@@ -56,9 +56,12 @@ pub fn shorten_url(url: &str) -> String {
 pub fn construct_footer_view<T: view::help_view::HasHelpView>() -> impl View {
     LinearLayout::horizontal()
         .child(
-            TextView::new("Hacker News Terminal UI - made by AOME ©")
-                .align(align::Align::bot_center())
-                .full_width(),
+            TextView::new(StyledString::styled(
+                "Hacker News Terminal UI - made by AOME ©",
+                Style::from(Effect::Bold),
+            ))
+            .align(align::Align::bot_center())
+            .full_width(),
         )
         .child(
             LinearLayout::horizontal()
@@ -82,9 +85,12 @@ pub fn combine_styled_string(strings: Vec<StyledString>) -> StyledString {
 pub fn construct_view_title_bar(desc: &str) -> impl View {
     let style = config::get_config_theme().component_style.title_bar.into();
     Layer::with_color(
-        TextView::new(StyledString::styled(desc, style))
-            .h_align(align::HAlign::Center)
-            .full_width(),
+        TextView::new(StyledString::styled(
+            desc,
+            Style::from(style).combine(Style::from(Effect::Bold)),
+        ))
+        .h_align(align::HAlign::Center)
+        .full_width(),
         style,
     )
 }
