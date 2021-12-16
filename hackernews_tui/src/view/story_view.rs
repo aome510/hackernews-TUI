@@ -7,12 +7,14 @@ use super::text_view;
 use crate::prelude::*;
 use regex::Regex;
 
+static STORY_TAGS: [&str; 5] = ["front_page", "story", "ask_hn", "show_hn", "job"];
+
 /// StoryView is a View displaying a list stories corresponding
 /// to a particular category (top stories, newest stories, most popular stories, etc).
 pub struct StoryView {
-    view: ScrollListView,
     pub stories: Vec<client::Story>,
 
+    view: ScrollListView,
     raw_command: String,
 }
 
@@ -22,11 +24,24 @@ impl ViewWrapper for StoryView {
 
 impl StoryView {
     pub fn new(stories: Vec<client::Story>, starting_id: usize) -> Self {
+        // `max_id_width` is equal to the width of the string representation of `max_id`,
+        // which is the maximum story's id that current story view will display
+        let max_id = starting_id + stories.len() + 1;
+        let mut max_id_width = 0;
+        let mut pw = 1;
+        while pw <= max_id {
+            pw *= 10;
+            max_id_width += 1;
+        }
+
         let view = LinearLayout::vertical()
             .with(|s| {
                 stories.iter().enumerate().for_each(|(i, story)| {
-                    let mut story_text = StyledString::plain(format!("{}. ", starting_id + i + 1));
-                    story_text.append(Self::get_story_text(story));
+                    let mut story_text = StyledString::styled(
+                        format!("{1:>0$}. ", max_id_width, starting_id + i + 1),
+                        config::get_config_theme().component_style.metadata,
+                    );
+                    story_text.append(Self::get_story_text(max_id_width, story));
                     s.add_child(text_view::TextView::new(story_text));
                 })
             })
@@ -40,7 +55,7 @@ impl StoryView {
 
     /// Return a StyledString representing a matched text in which
     /// matches are highlighted
-    fn get_matched_text(mut s: String, default_style: ColorStyle) -> StyledString {
+    fn get_matched_text(mut s: String) -> StyledString {
         let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
         let mut styled_s = StyledString::new();
 
@@ -61,7 +76,7 @@ impl StoryView {
                     prefix.drain(range);
 
                     if !prefix.is_empty() {
-                        styled_s.append_styled(&prefix, default_style);
+                        styled_s.append_plain(&prefix);
                     }
 
                     styled_s.append_styled(
@@ -73,29 +88,37 @@ impl StoryView {
             };
         }
         if !s.is_empty() {
-            styled_s.append_styled(s, default_style);
+            styled_s.append_plain(s);
         }
         styled_s
     }
 
     /// Get the description text summarizing basic information about a story
-    fn get_story_text(story: &client::Story) -> StyledString {
-        let mut story_text =
-            Self::get_matched_text(story.highlight_result.title.clone(), ColorStyle::default());
-        if !story.url.is_empty() {
-            let url = format!("\n{}", story.highlight_result.url);
-            story_text.append(Self::get_matched_text(
-                url,
-                config::get_config_theme().component_style.link.into(),
-            ));
+    fn get_story_text(max_id_width: usize, story: &client::Story) -> StyledString {
+        let mut story_text = Self::get_matched_text(story.highlight_result.title.clone());
+
+        if let Ok(url) = url::Url::parse(&story.url) {
+            if let Some(domain) = url.domain() {
+                story_text.append_styled(
+                    format!(" ({})", domain),
+                    config::get_config_theme().component_style.link,
+                );
+            }
         }
+
+        story_text.append_plain("\n");
+
         story_text.append_styled(
+            // left-align the story's metadata by `max_id_width+2`
+            // which is the width of the string "{max_story_id}. "
             format!(
-                "\n{} points | by {} | {} ago | {} comments",
+                "{:width$}{} points | by {} | {} ago | {} comments",
+                " ",
                 story.points,
                 story.author,
                 utils::get_elapsed_time_as_text(story.time),
                 story.num_comments,
+                width = max_id_width + 2,
             ),
             config::get_config_theme().component_style.metadata,
         );
@@ -200,9 +223,41 @@ pub fn get_story_main_view(
         })
 }
 
+fn get_story_view_title_bar(tag: &'static str) -> impl View {
+    let style = config::get_config_theme().component_style.title_bar;
+    let mut title = StyledString::styled(
+        "[Y]",
+        Style::from(style).combine(ColorStyle::front(
+            config::get_config_theme().palette.light_white,
+        )),
+    );
+    title.append_styled(" Hacker News", style);
+
+    for (i, item) in STORY_TAGS.iter().enumerate() {
+        title.append_styled(" | ", style);
+        if *item == tag {
+            title.append_styled(
+                format!("{}.{}", i + 1, item),
+                Style::from(style)
+                    .combine(config::get_config_theme().component_style.current_story_tag),
+            );
+        } else {
+            title.append_styled(format!("{}.{}", i + 1, item), style);
+        }
+    }
+    title.append_styled(" | ", style);
+
+    PaddedView::lrtb(
+        0,
+        0,
+        0,
+        1,
+        Layer::with_color(TextView::new(title), style.into()),
+    )
+}
+
 /// Return a StoryView given a story list and the view description
 pub fn get_story_view(
-    desc: &str,
     stories: Vec<client::Story>,
     client: &'static client::HNClient,
     tag: &'static str,
@@ -218,7 +273,7 @@ pub fn get_story_view(
     let main_view = get_story_main_view(stories, client, starting_id).full_height();
 
     let mut view = LinearLayout::vertical()
-        .child(utils::construct_view_title_bar(desc))
+        .child(get_story_view_title_bar(tag))
         .child(main_view)
         .child(utils::construct_footer_view::<StoryView>());
     view.set_focus_index(1).unwrap_or_else(|_| {});

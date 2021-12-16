@@ -56,9 +56,12 @@ pub fn shorten_url(url: &str) -> String {
 pub fn construct_footer_view<T: view::help_view::HasHelpView>() -> impl View {
     LinearLayout::horizontal()
         .child(
-            TextView::new("Hacker News Terminal UI - made by AOME ©")
-                .align(align::Align::bot_center())
-                .full_width(),
+            TextView::new(StyledString::styled(
+                "Hacker News Terminal UI - made by AOME ©",
+                config::get_config_theme().component_style.title,
+            ))
+            .align(align::Align::bot_center())
+            .full_width(),
         )
         .child(
             LinearLayout::horizontal()
@@ -70,29 +73,22 @@ pub fn construct_footer_view<T: view::help_view::HasHelpView>() -> impl View {
         )
 }
 
+/// Combine multiple styled strings into a single styled string
+pub fn combine_styled_strings(strings: Vec<StyledString>) -> StyledString {
+    strings.into_iter().fold(StyledString::new(), |mut acc, s| {
+        acc.append(s);
+        acc
+    })
+}
+
 /// Construct a view's title bar
 pub fn construct_view_title_bar(desc: &str) -> impl View {
-    let style = config::get_config_theme().component_style.title_bar.into();
+    let style = config::get_config_theme().component_style.title_bar;
     Layer::with_color(
         TextView::new(StyledString::styled(desc, style))
             .h_align(align::HAlign::Center)
             .full_width(),
-        style,
-    )
-}
-
-/// Construct StoryView based on the filtering tag
-pub fn get_story_view_desc_by_tag(tag: &str) -> String {
-    format!(
-        "Story View - {}",
-        match tag {
-            "front_page" => "Front Page",
-            "story" => "All Stories",
-            "job" => "Jobs",
-            "ask_hn" => "Ask HN",
-            "show_hn" => "Show HN",
-            _ => panic!("unknown tag: {}", tag),
-        },
+        style.into(),
     )
 }
 

@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
 /// TextView is a View displaying a text
 pub struct TextView {
@@ -6,6 +7,13 @@ pub struct TextView {
     rows: Vec<lines::spans::Row>,
     width: usize,
     size_cache: Option<XY<SizeCache>>,
+    padding: TextPadding,
+}
+
+#[derive(Default)]
+pub struct TextPadding {
+    pub left: Option<StyledPaddingChar>,
+    pub top: Option<StyledPaddingChar>,
 }
 
 /// EditableTextView is a View displaying an editable text with cursor
@@ -14,6 +22,8 @@ pub struct EditableTextView {
     text: String,
     cursor: usize,
 }
+
+pub struct StyledPaddingChar(char, Style);
 
 impl TextView {
     pub fn new<S>(content: S) -> Self
@@ -26,6 +36,15 @@ impl TextView {
             rows: Vec::new(),
             width: 0,
             size_cache: None,
+            padding: TextPadding::default(),
+        }
+    }
+
+    pub fn padding(self, padding: TextPadding) -> Self {
+        Self {
+            padding,
+            size_cache: None,
+            ..self
         }
     }
 
@@ -51,20 +70,40 @@ impl TextView {
 
         self.size_cache = None;
         self.width = size.x;
-        self.rows = lines::spans::LinesIterator::new(&self.content, size.x).collect();
+
+        // a row's width based on the given width from parent view minus the padding's width
+        let row_width = self.width.saturating_sub(self.padding.width());
+        self.rows = lines::spans::LinesIterator::new(&self.content, row_width).collect();
     }
 }
 
 impl View for TextView {
     fn draw(&self, printer: &Printer) {
         printer.with_selection(printer.focused, |printer| {
+            // print the top padding
+            if let Some(ref p) = self.padding.top {
+                printer.with_style(p.1, |printer| {
+                    printer.print_hline((0, 0), printer.size.x, &p.0.to_string());
+                });
+            }
+
             self.rows.iter().enumerate().for_each(|(y, row)| {
+                let y = y + if self.padding.top.is_some() { 1 } else { 0 };
                 let mut x: usize = 0;
+
+                // print the left padding
+                if let Some(ref p) = self.padding.left {
+                    printer.with_style(p.1, |printer| {
+                        printer.print((x, y), &p.0.to_string());
+                        x += p.0.width().unwrap_or_default();
+                    });
+                }
+
+                // print the actual text content
                 row.resolve(&self.content).iter().for_each(|span| {
                     printer.with_style(*span.attr, |printer| {
-                        let l = span.content.chars().count();
                         printer.print((x, y), span.content);
-                        x += l;
+                        x += span.content.width();
                     });
                 });
                 if x < printer.size.x {
@@ -95,7 +134,7 @@ impl View for TextView {
 
     fn required_size(&mut self, size: Vec2) -> Vec2 {
         self.compute_rows(size);
-        Vec2::new(self.width, self.rows.len())
+        Vec2::new(self.width, self.rows.len() + self.padding.height())
     }
 }
 
@@ -190,5 +229,43 @@ impl ViewWrapper for EditableTextView {
                 }
             });
         });
+    }
+}
+
+impl TextPadding {
+    pub fn left(self, l: StyledPaddingChar) -> Self {
+        Self {
+            left: Some(l),
+            ..self
+        }
+    }
+
+    pub fn top(self, l: StyledPaddingChar) -> Self {
+        Self {
+            top: Some(l),
+            ..self
+        }
+    }
+
+    pub fn width(&self) -> usize {
+        self.left.as_ref().map(|p| p.width()).unwrap_or_default()
+    }
+
+    pub fn height(&self) -> usize {
+        if self.top.is_some() {
+            1
+        } else {
+            0
+        }
+    }
+}
+
+impl StyledPaddingChar {
+    pub fn new(c: char, style: Style) -> Self {
+        Self(c, style)
+    }
+
+    pub fn width(&self) -> usize {
+        self.0.width().unwrap_or_default()
     }
 }

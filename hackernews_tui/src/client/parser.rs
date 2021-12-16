@@ -201,23 +201,30 @@ impl From<CommentResponse> for Vec<Comment> {
             })
             .collect::<Vec<_>>();
 
-        let base_desc = format!(
-            "{} {} ago",
-            c.author.unwrap_or_default(),
-            utils::get_elapsed_time_as_text(c.time),
-        );
-        let (text, links) =
-            parse_raw_html_comment(&c.text.unwrap_or_default(), &format!("{}\n", base_desc));
+        let metadata = utils::combine_styled_strings(vec![
+            StyledString::styled(
+                c.author.unwrap_or_default(),
+                config::get_config_theme().component_style.username,
+            ),
+            StyledString::styled(
+                format!(" {} ago ", utils::get_elapsed_time_as_text(c.time)),
+                config::get_config_theme().component_style.metadata,
+            ),
+        ]);
+        let (text, links) = parse_raw_html_comment(&c.text.unwrap_or_default(), metadata.clone());
 
         let comment = Comment {
             id: c.id,
             height: 0,
             state: CommentState::Normal,
             text,
-            minimized_text: StyledString::styled(
-                format!("{} ({} more)", base_desc, children.len() + 1,),
-                config::get_config_theme().component_style.metadata,
-            ),
+            minimized_text: utils::combine_styled_strings(vec![
+                metadata,
+                StyledString::styled(
+                    format!("({} more)", children.len() + 1),
+                    config::get_config_theme().component_style.metadata,
+                ),
+            ]),
             links,
         };
 
@@ -236,7 +243,7 @@ fn decode_html(s: &str) -> String {
 /// The function returns the parsed text and a vector of links in the comment.
 ///
 /// Links inside the parsed text are colored.
-fn parse_raw_html_comment(text: &str, desc: &str) -> (StyledString, Vec<String>) {
+fn parse_raw_html_comment(text: &str, metadata: StyledString) -> (StyledString, Vec<String>) {
     // insert newlines as a separator between paragraphs
     let mut s = PARAGRAPH_RE
         .replace_all(text, "${paragraph}\n\n")
@@ -250,10 +257,12 @@ fn parse_raw_html_comment(text: &str, desc: &str) -> (StyledString, Vec<String>)
     s = ITALIC_RE.replace_all(&s, "*${text}*").to_string();
     s = CODE_RE.replace_all(&s, "```\n${code}\n```").to_string();
 
+    let mut result = metadata;
+    result.append_plain("\n");
+
     // parse links in the comment, color them in the parsed text as well
     let mut links: Vec<String> = vec![];
-    let mut styled_s =
-        StyledString::styled(desc, config::get_config_theme().component_style.metadata);
+
     // replace the `<a href="${link}">...</a>` pattern one-by-one with "${link}".
     // cannot use `replace_all` because we want to replace a matched string with a `StyledString` (not a raw string)
     loop {
@@ -273,14 +282,14 @@ fn parse_raw_html_comment(text: &str, desc: &str) -> (StyledString, Vec<String>)
                 prefix.drain(range);
 
                 if !prefix.is_empty() {
-                    styled_s.append_plain(decode_html(&prefix));
+                    result.append_plain(decode_html(&prefix));
                 }
 
-                styled_s.append_styled(
+                result.append_styled(
                     format!("\"{}\" ", utils::shorten_url(&link)),
                     config::get_config_theme().component_style.link,
                 );
-                styled_s.append_styled(
+                result.append_styled(
                     format!("[{}]", links.len()),
                     config::get_config_theme().component_style.link_id,
                 );
@@ -290,7 +299,7 @@ fn parse_raw_html_comment(text: &str, desc: &str) -> (StyledString, Vec<String>)
         }
     }
     if !s.is_empty() {
-        styled_s.append_plain(decode_html(&s));
+        result.append_plain(decode_html(&s));
     }
-    (styled_s, links)
+    (result, links)
 }

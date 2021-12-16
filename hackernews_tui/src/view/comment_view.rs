@@ -3,6 +3,8 @@ use super::list_view::*;
 use super::text_view;
 use super::{article_view, async_view};
 use crate::prelude::*;
+use crate::view::text_view::StyledPaddingChar;
+use crate::view::text_view::TextPadding;
 
 type CommentComponent = HideableView<PaddedView<text_view::TextView>>;
 
@@ -50,12 +52,25 @@ impl CommentView {
         }
 
         new_comments.iter().for_each(|comment| {
+            let text_view = text_view::TextView::new(comment.text.clone());
             self.add_item(HideableView::new(PaddedView::lrtb(
-                comment.height * 2,
-                0,
+                comment.height * 2 + 1,
+                1,
                 0,
                 1,
-                text_view::TextView::new(comment.text.clone()),
+                if comment.height > 0 {
+                    // get the padding style (color) based on the comment's height
+                    //
+                    // We use base 16 colors to display the comment's padding
+                    let c = config::Color::from((comment.height % 16) as u8);
+                    text_view
+                        .padding(TextPadding::default().left(StyledPaddingChar::new('▎', c.into())))
+                } else {
+                    // add top padding for top comments, use the first color in the 16 base colors
+                    let c = config::Color::from(0);
+                    text_view
+                        .padding(TextPadding::default().top(StyledPaddingChar::new('▔', c.into())))
+                },
             )));
         });
         self.comments.append(&mut new_comments);
