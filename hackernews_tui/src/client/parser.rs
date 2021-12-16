@@ -2,14 +2,27 @@ use crate::prelude::*;
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{de, Deserialize, Deserializer};
+use substring::Substring;
 
 lazy_static! {
+    /// a regex that matches a search match in the response from HN Algolia search API
     static ref MATCH_RE: Regex = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
-    static ref PARAGRAPH_RE: Regex = Regex::new(r"<p>(?s)(?P<paragraph>.*?)</p>").unwrap();
-    static ref ITALIC_RE: Regex = Regex::new(r"<i>(?s)(?P<text>.+?)</i>").unwrap();
-    static ref CODE_RE: Regex =
-        Regex::new(r"<pre><code>(?s)(?P<code>.+?)[\n]*</code></pre>").unwrap();
-    static ref LINK_RE: Regex = Regex::new(r#"<a\s+?href="(?P<link>.+?)"(?s).+?</a>"#).unwrap();
+
+    /// a regex used to parse a HN comment (in HTML format)
+    /// It consists of multiple regex(s) representing different elements
+    static ref COMMENT_RE: Regex = Regex::new(&format!(
+        "({}|{}|{}|{}|{})",
+        // a regex that matches a HTML paragraph
+        r"<p>(?s)(?P<paragraph>[^>].*?)</p>",
+        // a regex that matches a paragraph quote (in markdown format)
+        r"<p>(?s)(?P<quote>>+) *(?P<text>.*?)</p>",
+        // a regex that matches an HTML italic string
+        r"<i>(?s)(?P<italic>.+?)</i>",
+        // a regex that matches a HTML code block
+        r"<pre><code>(?s)(?P<code>.+?)[\n]*</code></pre>",
+        // a regex that matches a HTML link
+        r#"<a\s+?href="(?P<link>.+?)"(?s).+?</a>"#,
+    )).unwrap();
 }
 
 // serde helper functions
@@ -239,67 +252,96 @@ fn decode_html(s: &str) -> String {
     htmlescape::decode_html(s).unwrap_or_else(|_| s.to_string())
 }
 
-/// Parse a raw HTML comment text into a markdown text with colors.
-/// The function returns the parsed text and a vector of links in the comment.
-///
-/// Links inside the parsed text are colored.
+/// Parse a raw HTML comment text into a styled string.
+/// The function also returns a list of links in the comment.
 fn parse_raw_html_comment(text: &str, metadata: StyledString) -> (StyledString, Vec<String>) {
-    // insert newlines as a separator between paragraphs
-    let mut s = PARAGRAPH_RE
-        .replace_all(text, "${paragraph}\n\n")
-        .to_string();
-    // we already have bottom margin between two consecutive comments,
-    // so no need to add an additional newline at the end of a comment.
-    if s.ends_with("\n\n") {
-        s.remove(s.len() - 1);
-    }
+    let text = decode_html(text);
 
-    s = ITALIC_RE.replace_all(&s, "*${text}*").to_string();
-    s = CODE_RE.replace_all(&s, "```\n${code}\n```").to_string();
+    let mut s = utils::combine_styled_strings(vec![metadata, StyledString::plain("\n")]);
+    let (s0, links) = parse(text, Style::default(), 0);
 
-    let mut result = metadata;
-    result.append_plain("\n");
+    s.append(s0);
+    (s, links)
+}
 
-    // parse links in the comment, color them in the parsed text as well
-    let mut links: Vec<String> = vec![];
+/// a helper function for parsing raw HTML comment text that allows
+/// cursively parse sub-elements of the text
+fn parse(text: String, style: Style, begin_link_id: usize) -> (StyledString, Vec<String>) {
+    debug!("parse {}", text);
 
-    // replace the `<a href="${link}">...</a>` pattern one-by-one with "${link}".
-    // cannot use `replace_all` because we want to replace a matched string with a `StyledString` (not a raw string)
-    loop {
-        match LINK_RE.captures(&s.clone()) {
-            None => break,
-            Some(c) => {
-                let m = c.get(0).unwrap();
-                let link = decode_html(c.name("link").unwrap().as_str());
+    let mut curr_pos = 0;
+    let mut s = StyledString::new();
+    let mut links = vec![];
+    // This variable indicates whether we have parsed
+    // the first paragraph of the current text.
+    // It is used to add a break between 2 consecutive paragraphs.
+    let mut seen_first_paragraph = false;
 
-                let range = m.range();
-                let mut prefix: String = s
-                    .drain(std::ops::Range {
-                        start: 0,
-                        end: m.end(),
-                    })
-                    .collect();
-                prefix.drain(range);
-
-                if !prefix.is_empty() {
-                    result.append_plain(decode_html(&prefix));
-                }
-
-                result.append_styled(
-                    format!("\"{}\" ", utils::shorten_url(&link)),
-                    config::get_config_theme().component_style.link,
-                );
-                result.append_styled(
-                    format!("[{}]", links.len()),
-                    config::get_config_theme().component_style.link_id,
-                );
-                links.push(link);
-                continue;
+    for caps in COMMENT_RE.captures_iter(&text) {
+        let mut match_s = StyledString::new();
+        if let (Some(m_quote), Some(m_text)) = (caps.name("quote"), caps.name("text")) {
+            if seen_first_paragraph {
+                match_s.append_styled("\n", style);
+            } else {
+                seen_first_paragraph = true;
             }
+
+            // render quote character `>` as indentation character
+            match_s.append_styled(format!("{:1$}", "▎", m_quote.as_str().len()), style);
+
+            let (sub_s, mut sub_links) = parse(
+                m_text.as_str().to_string(),
+                config::get_config_theme().component_style.quote.into(),
+                links.len(),
+            );
+            match_s.append(sub_s);
+            match_s.append_styled("\n", style);
+            links.append(&mut sub_links);
+        } else if let Some(m) = caps.name("paragraph") {
+            if seen_first_paragraph {
+                match_s.append_styled("\n", style);
+            } else {
+                seen_first_paragraph = true;
+            }
+
+            let (sub_s, mut sub_links) = parse(m.as_str().to_string(), style, links.len());
+            match_s.append(sub_s);
+            match_s.append_styled("\n", style);
+            links.append(&mut sub_links);
+        } else if let Some(m) = caps.name("link") {
+            match_s.append_styled(
+                utils::shorten_url(m.as_str()),
+                style.combine(config::get_config_theme().component_style.link),
+            );
+            links.push(m.as_str().to_string());
+            match_s.append_styled(
+                format!("[{}]", links.len() + begin_link_id),
+                style.combine(config::get_config_theme().component_style.link_id),
+            );
+        } else if let Some(m) = caps.name("code") {
+            match_s.append_styled(
+                m.as_str(),
+                style.combine(
+                    config::get_config_theme()
+                        .component_style
+                        .multiline_code_block,
+                ),
+            );
+        } else if let Some(m) = caps.name("italic") {
+            match_s.append_styled(m.as_str(), Effect::Italic);
         }
+
+        let whole_match = caps.get(0).unwrap();
+        if curr_pos < whole_match.start() {
+            s.append_styled(text.substring(curr_pos, whole_match.start()), style);
+        }
+        curr_pos = whole_match.end();
+
+        s.append(match_s);
     }
-    if !s.is_empty() {
-        result.append_plain(decode_html(&s));
+
+    if curr_pos < text.len() {
+        s.append_styled(text.substring(curr_pos, text.len()), style);
     }
-    (result, links)
+    (s, links)
 }

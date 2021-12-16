@@ -52,7 +52,9 @@ pub struct ComponentStyle {
     pub link: Style,
     pub link_id: Style,
     pub matched_highlight: Style,
-    pub code_block: Style,
+    pub single_code_block: Style,
+    pub multiline_code_block: Style,
+    pub quote: Style,
     pub metadata: Style,
     pub current_story_tag: Style,
     pub username: Style,
@@ -103,9 +105,15 @@ impl Default for ComponentStyle {
             matched_highlight: Style::default()
                 .front(Color::parse("black"))
                 .back(Color::parse("#ffff55")),
-            code_block: Style::default()
+            single_code_block: Style::default()
                 .front(Color::parse("black"))
                 .back(Color::parse("#c8c8c8")),
+            multiline_code_block: Style::default()
+                .front(Color::parse("light black"))
+                .effect(Effect::Bold),
+            quote: Style::default()
+                .front(Color::parse("white"))
+                .effect(Effect::Bold),
             metadata: Style::default().front(Color::parse("#828282")),
             username: Style::default().effect(Effect::Bold),
             loading_bar: Style::default()
