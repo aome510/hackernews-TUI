@@ -55,7 +55,7 @@ impl StoryView {
 
     /// Return a StyledString representing a matched text in which
     /// matches are highlighted
-    fn get_matched_text(mut s: String, default_style: ColorStyle) -> StyledString {
+    fn get_matched_text(mut s: String) -> StyledString {
         let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
         let mut styled_s = StyledString::new();
 
@@ -76,7 +76,7 @@ impl StoryView {
                     prefix.drain(range);
 
                     if !prefix.is_empty() {
-                        styled_s.append_styled(&prefix, default_style);
+                        styled_s.append_plain(&prefix);
                     }
 
                     styled_s.append_styled(
@@ -88,15 +88,14 @@ impl StoryView {
             };
         }
         if !s.is_empty() {
-            styled_s.append_styled(s, default_style);
+            styled_s.append_plain(s);
         }
         styled_s
     }
 
     /// Get the description text summarizing basic information about a story
     fn get_story_text(max_id_width: usize, story: &client::Story) -> StyledString {
-        let mut story_text =
-            Self::get_matched_text(story.highlight_result.title.clone(), ColorStyle::default());
+        let mut story_text = Self::get_matched_text(story.highlight_result.title.clone());
 
         if let Ok(url) = url::Url::parse(&story.url) {
             if let Some(domain) = url.domain() {
@@ -225,17 +224,14 @@ pub fn get_story_main_view(
 }
 
 fn get_story_view_title_bar(tag: &'static str) -> impl View {
-    let style = config::get_config_theme().component_style.title_bar.into();
+    let style = config::get_config_theme().component_style.title_bar;
     let mut title = StyledString::styled(
         "[Y]",
-        Style::from(style)
-            .combine(Style::from(config::get_config_theme().palette.light_white))
-            .combine(Style::from(Effect::Bold)),
+        Style::from(style).combine(ColorStyle::front(
+            config::get_config_theme().palette.light_white,
+        )),
     );
-    title.append_styled(
-        " Hacker News",
-        Style::from(style).combine(Style::from(Effect::Bold)),
-    );
+    title.append_styled(" Hacker News", style);
 
     for (i, item) in STORY_TAGS.iter().enumerate() {
         title.append_styled(" | ", style);
@@ -243,7 +239,7 @@ fn get_story_view_title_bar(tag: &'static str) -> impl View {
             title.append_styled(
                 format!("{}.{}", i + 1, item),
                 Style::from(style)
-                    .combine(Style::from(config::get_config_theme().palette.light_white)),
+                    .combine(config::get_config_theme().component_style.current_story_tag),
             );
         } else {
             title.append_styled(format!("{}.{}", i + 1, item), style);
@@ -251,7 +247,13 @@ fn get_story_view_title_bar(tag: &'static str) -> impl View {
     }
     title.append_styled(" | ", style);
 
-    PaddedView::lrtb(0, 0, 0, 1, Layer::with_color(TextView::new(title), style))
+    PaddedView::lrtb(
+        0,
+        0,
+        0,
+        1,
+        Layer::with_color(TextView::new(title), style.into()),
+    )
 }
 
 /// Return a StoryView given a story list and the view description

@@ -201,8 +201,11 @@ impl From<CommentResponse> for Vec<Comment> {
             })
             .collect::<Vec<_>>();
 
-        let metadata = utils::combine_styled_string(vec![
-            StyledString::styled(c.author.unwrap_or_default(), Style::from(Effect::Bold)),
+        let metadata = utils::combine_styled_strings(vec![
+            StyledString::styled(
+                c.author.unwrap_or_default(),
+                config::get_config_theme().component_style.username,
+            ),
             StyledString::styled(
                 format!(" {} ago ", utils::get_elapsed_time_as_text(c.time)),
                 config::get_config_theme().component_style.metadata,
@@ -215,11 +218,11 @@ impl From<CommentResponse> for Vec<Comment> {
             height: 0,
             state: CommentState::Normal,
             text,
-            minimized_text: utils::combine_styled_string(vec![
+            minimized_text: utils::combine_styled_strings(vec![
                 metadata,
                 StyledString::styled(
                     format!("({} more)", children.len() + 1),
-                    Style::from(Effect::Reverse),
+                    config::get_config_theme().component_style.metadata,
                 ),
             ]),
             links,

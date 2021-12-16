@@ -64,7 +64,10 @@ impl HelpView {
         LinearLayout::vertical()
             .with(|s| {
                 self.key_groups.iter().for_each(|(group_desc, keys)| {
-                    s.add_child(TextView::new(group_desc.to_string()));
+                    s.add_child(TextView::new(StyledString::styled(
+                        *group_desc,
+                        config::get_config_theme().component_style.title,
+                    )));
                     s.add_child(HelpView::construct_keys_view(keys));
                 });
             })

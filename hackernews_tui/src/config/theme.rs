@@ -47,12 +47,16 @@ pub struct Palette {
 #[derive(Clone, Copy, Debug, Deserialize, ConfigParse)]
 /// Additional colors/styles for specific components of the application.
 pub struct ComponentStyle {
-    pub title_bar: ColorStyle,
-    pub link: ColorStyle,
-    pub link_id: ColorStyle,
-    pub matched_highlight: ColorStyle,
-    pub code_block: ColorStyle,
-    pub metadata: ColorStyle,
+    pub title: Style,
+    pub title_bar: Style,
+    pub link: Style,
+    pub link_id: Style,
+    pub matched_highlight: Style,
+    pub code_block: Style,
+    pub metadata: Style,
+    pub current_story_tag: Style,
+    pub username: Style,
+    pub loading_bar: Style,
 }
 
 impl Default for Palette {
@@ -87,47 +91,62 @@ impl Default for Palette {
 impl Default for ComponentStyle {
     fn default() -> Self {
         Self {
-            title_bar: ColorStyle::new(Color::parse("black"), Color::parse("#ff6600")),
-            link: ColorStyle::front(Color::parse("#4fbbfd")),
-            link_id: ColorStyle::new(Color::parse("black"), Color::parse("#ffff55")),
-            matched_highlight: ColorStyle::new(Color::parse("black"), Color::parse("#ffff55")),
-            code_block: ColorStyle::new(Color::parse("black"), Color::parse("#c8c8c8")),
-            metadata: ColorStyle::front(Color::parse("#828282")),
+            title: Style::default().effect(Effect::Bold),
+            title_bar: Style::default()
+                .back(Color::parse("#ff6600"))
+                .effect(Effect::Bold),
+            current_story_tag: Style::default().front(Color::parse("light white")),
+            link: Style::default().front(Color::parse("#4fbbfd")),
+            link_id: Style::default()
+                .front(Color::parse("black"))
+                .back(Color::parse("#ffff55")),
+            matched_highlight: Style::default()
+                .front(Color::parse("black"))
+                .back(Color::parse("#ffff55")),
+            code_block: Style::default()
+                .front(Color::parse("black"))
+                .back(Color::parse("#c8c8c8")),
+            metadata: Style::default().front(Color::parse("#828282")),
+            username: Style::default().effect(Effect::Bold),
+            loading_bar: Style::default()
+                .front(Color::parse("light yellow"))
+                .back(Color::parse("blue")),
         }
     }
 }
 
-#[derive(Clone, Copy, Debug, Deserialize)]
-pub struct ColorStyle {
+#[derive(Default, Clone, Copy, Debug, Deserialize)]
+pub struct Style {
     front: Option<Color>,
     back: Option<Color>,
+    effect: Option<Effect>,
 }
 
-config_parser_impl!(ColorStyle);
+config_parser_impl!(Style);
 
-impl ColorStyle {
-    pub fn new(f: Color, b: Color) -> Self {
-        Self {
-            front: Some(f),
-            back: Some(b),
-        }
-    }
-    pub fn front(c: Color) -> Self {
+impl Style {
+    pub fn front(self, c: Color) -> Self {
         Self {
             front: Some(c),
-            back: None,
+            ..self
         }
     }
-    pub fn back(c: Color) -> Self {
+    pub fn back(self, c: Color) -> Self {
         Self {
-            front: None,
             back: Some(c),
+            ..self
+        }
+    }
+    pub fn effect(self, e: Effect) -> Self {
+        Self {
+            effect: Some(e),
+            ..self
         }
     }
 }
 
-impl From<ColorStyle> for cursive::theme::ColorStyle {
-    fn from(c: ColorStyle) -> Self {
+impl From<Style> for cursive::theme::ColorStyle {
+    fn from(c: Style) -> Self {
         match (c.front, c.back) {
             (Some(f), Some(b)) => Self::new(f, b),
             (Some(f), None) => Self::front(f),
@@ -137,9 +156,13 @@ impl From<ColorStyle> for cursive::theme::ColorStyle {
     }
 }
 
-impl From<ColorStyle> for cursive::theme::Style {
-    fn from(c: ColorStyle) -> Self {
-        Self::from(cursive::theme::ColorStyle::from(c))
+impl From<Style> for cursive::theme::Style {
+    fn from(c: Style) -> Self {
+        let style = Self::from(cursive::theme::ColorStyle::from(c));
+        match c.effect {
+            None => style,
+            Some(e) => style.combine(cursive::theme::Effect::from(e)),
+        }
     }
 }
 
@@ -223,6 +246,33 @@ impl<'de> Deserialize<'de> for Color {
         match Self::try_parse(&s) {
             None => Err(de::Error::custom(format!("failed to parse color: {}", s))),
             Some(color) => Ok(color),
+        }
+    }
+}
+
+// A copy struct of `cursive::theme::Effect` that
+// derives serde::Deserialize
+#[derive(Deserialize, Debug, Clone, Copy)]
+pub enum Effect {
+    Simple,
+    Reverse,
+    Bold,
+    Italic,
+    Strikethrough,
+    Underline,
+    Blink,
+}
+
+impl From<Effect> for cursive::theme::Effect {
+    fn from(e: Effect) -> Self {
+        match e {
+            Effect::Simple => Self::Simple,
+            Effect::Reverse => Self::Reverse,
+            Effect::Bold => Self::Bold,
+            Effect::Italic => Self::Italic,
+            Effect::Strikethrough => Self::Strikethrough,
+            Effect::Underline => Self::Underline,
+            Effect::Blink => Self::Blink,
         }
     }
 }

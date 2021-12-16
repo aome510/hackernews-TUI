@@ -133,16 +133,17 @@ pub fn get_article_view_async(siv: &mut Cursive, article_url: &str) -> impl View
 }
 
 fn animation(width: usize, _height: usize, frame_idx: usize) -> cursive_async_view::AnimationFrame {
-    let n_frames = 60; // number of frames to complete an animation
+    let n_frames = 120; // number of frames to complete an animation
+    let style = ColorStyle::from(config::get_config_theme().component_style.loading_bar);
 
     if config::get_config().use_pacman_loading {
         let factor = (frame_idx as f64) / (n_frames as f64);
         let x = (factor * width as f64) as usize;
 
-        let content = utils::combine_styled_string(vec![
-            StyledString::plain(repeat_str("- ", x / 2)),
-            StyledString::plain('ᗧ'),
-            StyledString::plain(repeat_str(" o", width.saturating_sub(x + 1) / 2)),
+        let content = utils::combine_styled_strings(vec![
+            StyledString::styled(repeat_str("- ", x / 2), style),
+            StyledString::styled('ᗧ', style),
+            StyledString::styled(repeat_str(" o", width.saturating_sub(x + 1) / 2), style),
         ]);
 
         cursive_async_view::AnimationFrame {
@@ -150,34 +151,18 @@ fn animation(width: usize, _height: usize, frame_idx: usize) -> cursive_async_vi
             next_frame_idx: (frame_idx + 1) % n_frames,
         }
     } else {
-        // a simple loading screen with colors,
-        // this animation function will swap the background/foreground colors of
-        // the loading bar after completing an animation.
-
         let symbol = "━";
-        let (foreground, background) = if frame_idx < 60 {
-            (
-                config::Color::new(Color::Dark(BaseColor::Black)),
-                config::Color::new(Color::Dark(BaseColor::White)),
-            )
-        } else {
-            (
-                config::Color::new(Color::Dark(BaseColor::White)),
-                config::Color::new(Color::Dark(BaseColor::Black)),
-            )
-        };
-
-        let factor = ((frame_idx % n_frames) as f64) / (n_frames as f64);
+        let factor = (frame_idx as f64) / (n_frames as f64);
         let x = (factor * width as f64) as usize;
 
-        let content = utils::combine_styled_string(vec![
-            StyledString::styled(repeat_str(symbol, x), foreground),
-            StyledString::styled(repeat_str(symbol, width - x), background),
+        let content = utils::combine_styled_strings(vec![
+            StyledString::styled(repeat_str(symbol, x), style.back),
+            StyledString::styled(repeat_str(symbol, width - x), style.front),
         ]);
 
         cursive_async_view::AnimationFrame {
             content,
-            next_frame_idx: (frame_idx + 1) % (2 * n_frames),
+            next_frame_idx: (frame_idx + 1) % n_frames,
         }
     }
 }

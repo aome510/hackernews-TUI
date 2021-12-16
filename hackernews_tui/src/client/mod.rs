@@ -80,6 +80,8 @@ impl HNClient {
 
         // loads first 5 comments to ensure the corresponding `CommentView` has data to render
         Self::load_comments(&client, &sender, &mut ids, 5)?;
+        // used to test loading bar
+        // std::thread::sleep(std::time::Duration::from_secs(1000));
         std::thread::spawn(move || {
             let sleep_dur = std::time::Duration::from_millis(1000);
             while !ids.is_empty() {
