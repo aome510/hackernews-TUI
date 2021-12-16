@@ -2,7 +2,6 @@ use crate::prelude::*;
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{de, Deserialize, Deserializer};
-use substring::Substring;
 
 lazy_static! {
     /// a regex that matches a search match in the response from HN Algolia search API
@@ -11,7 +10,7 @@ lazy_static! {
     /// a regex used to parse a HN comment (in HTML format)
     /// It consists of multiple regex(s) representing different elements
     static ref COMMENT_RE: Regex = Regex::new(&format!(
-        "({}|{}|{}|{}|{})",
+        "(({})|({})|({})|({})|({}))",
         // a regex that matches a HTML paragraph
         r"<p>(?s)(?P<paragraph>[^>].*?)</p>",
         // a regex that matches a paragraph quote (in markdown format)
@@ -328,12 +327,15 @@ fn parse(text: String, style: Style, begin_link_id: usize) -> (StyledString, Vec
                 ),
             );
         } else if let Some(m) = caps.name("italic") {
-            match_s.append_styled(m.as_str(), Effect::Italic);
+            match_s.append_styled(
+                m.as_str(),
+                style.combine(config::get_config_theme().component_style.italic),
+            );
         }
 
         let whole_match = caps.get(0).unwrap();
         if curr_pos < whole_match.start() {
-            s.append_styled(text.substring(curr_pos, whole_match.start()), style);
+            s.append_styled(&text[curr_pos..whole_match.start()], style);
         }
         curr_pos = whole_match.end();
 
@@ -341,7 +343,7 @@ fn parse(text: String, style: Style, begin_link_id: usize) -> (StyledString, Vec
     }
 
     if curr_pos < text.len() {
-        s.append_styled(text.substring(curr_pos, text.len()), style);
+        s.append_styled(&text[curr_pos..text.len()], style);
     }
     (s, links)
 }
