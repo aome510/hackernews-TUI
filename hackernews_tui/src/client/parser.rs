@@ -10,7 +10,7 @@ lazy_static! {
     /// a regex used to parse a HN comment (in HTML format)
     /// It consists of multiple regex(s) representing different elements
     static ref COMMENT_RE: Regex = Regex::new(&format!(
-        "(({})|({})|({})|({})|({}))",
+        "(({})|({})|({})|({})|({})|({}))",
         // a regex that matches a HTML paragraph
         r"<p>(?s)(?P<paragraph>(|[^>].*?))</p>",
         // a regex that matches a paragraph quote (in markdown format)
@@ -18,7 +18,9 @@ lazy_static! {
         // a regex that matches an HTML italic string
         r"<i>(?s)(?P<italic>.*?)</i>",
         // a regex that matches a HTML code block (multiline)
-        r"<pre><code>(?s)(?P<code>.*?)[\n]*</code></pre>",
+        r"<pre><code>(?s)(?P<multiline_code>.*?)[\n]*</code></pre>",
+        // a regex that matches a single line code block (markdown format)
+        "`(?P<code>[^`]+?)`",
         // a regex that matches a HTML link
         r#"<a\s+?href="(?P<link>.*?)"(?s).+?</a>"#,
     )).unwrap();
@@ -326,7 +328,7 @@ fn parse(text: String, style: Style, begin_link_id: usize) -> (StyledString, Vec
                         style.combine(config::get_config_theme().component_style.link_id),
                     ),
                 ])
-            } else if let Some(m) = caps.name("code") {
+            } else if let Some(m) = caps.name("multiline_code") {
                 StyledString::styled(
                     m.as_str(),
                     style.combine(
@@ -334,6 +336,11 @@ fn parse(text: String, style: Style, begin_link_id: usize) -> (StyledString, Vec
                             .component_style
                             .multiline_code_block,
                     ),
+                )
+            } else if let Some(m) = caps.name("code") {
+                StyledString::styled(
+                    m.as_str(),
+                    style.combine(config::get_config_theme().component_style.single_code_block),
                 )
             } else if let Some(m) = caps.name("italic") {
                 StyledString::styled(
