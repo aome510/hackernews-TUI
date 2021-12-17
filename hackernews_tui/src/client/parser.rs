@@ -47,7 +47,7 @@ where
 
 // API response structs
 
-#[derive(Default, Debug, Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all(deserialize = "camelCase"))]
 struct MatchResult {
     value: String,
@@ -158,38 +158,67 @@ impl From<StoriesResponse> for Vec<Story> {
 
 impl From<StoryResponse> for Story {
     fn from(s: StoryResponse) -> Self {
-        // need to make sure that highlight_result is not none,
-        // and its title field is not none,
-        let highlight_result = s.highlight_result.unwrap();
+        let title = s
+            .highlight_result
+            .unwrap()
+            .title
+            .map(|r| r.value)
+            .unwrap_or_default();
+        let mut parsed_title = StyledString::new();
+
         let title = {
-            // parse a HTML story title that may contain search matches wrapped
-            // inside <em> tags into a styled string
-            let text = highlight_result.title.unwrap_or_default().value;
-            let mut s = StyledString::new();
-            let mut curr_pos = 0;
-
-            for caps in MATCH_RE.captures_iter(&text) {
-                let whole_match = caps.get(0).unwrap();
-                // the part that doesn't match any patterns should be rendered in the default style
-                if curr_pos < whole_match.start() {
-                    s.append_plain(&text[curr_pos..whole_match.start()]);
-                }
-                curr_pos = whole_match.end();
-
-                s.append_styled(
-                    caps.name("match").unwrap().as_str(),
-                    config::get_config_theme().component_style.matched_highlight,
+            // parse title based on the post's category
+            if let Some(title) = title.strip_prefix("Ask HN") {
+                parsed_title
+                    .append_styled("Ask HN", config::get_config_theme().component_style.ask_hn);
+                title
+            } else if let Some(title) = title.strip_prefix("Tell HN") {
+                parsed_title.append_styled(
+                    "Tell HN",
+                    config::get_config_theme().component_style.tell_hn,
                 );
+                title
+            } else if let Some(title) = title.strip_prefix("Show HN") {
+                parsed_title.append_styled(
+                    "Show HN",
+                    config::get_config_theme().component_style.show_hn,
+                );
+                title
+            } else if let Some(title) = title.strip_prefix("Launch HN") {
+                parsed_title.append_styled(
+                    "Launch HN",
+                    config::get_config_theme().component_style.launch_hn,
+                );
+                title
+            } else {
+                &title
             }
-
-            if curr_pos < text.len() {
-                s.append_plain(&text[curr_pos..text.len()]);
-            }
-            s
         };
 
+        // parse a HTML story title that may contain search matches wrapped
+        // inside <em> tags into a styled string
+        let mut curr_pos = 0;
+
+        for caps in MATCH_RE.captures_iter(title) {
+            let whole_match = caps.get(0).unwrap();
+            // the part that doesn't match any patterns should be rendered in the default style
+            if curr_pos < whole_match.start() {
+                parsed_title.append_plain(&title[curr_pos..whole_match.start()]);
+            }
+            curr_pos = whole_match.end();
+
+            parsed_title.append_styled(
+                caps.name("match").unwrap().as_str(),
+                config::get_config_theme().component_style.matched_highlight,
+            );
+        }
+
+        if curr_pos < title.len() {
+            parsed_title.append_plain(&title[curr_pos..title.len()]);
+        }
+
         Story {
-            title,
+            title: parsed_title,
             url: s.url.unwrap_or_default(),
             author: s.author.unwrap_or_else(|| String::from("[deleted]")),
             id: s.id,

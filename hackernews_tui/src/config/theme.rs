@@ -60,6 +60,10 @@ pub struct ComponentStyle {
     pub current_story_tag: Style,
     pub username: Style,
     pub loading_bar: Style,
+    pub ask_hn: Style,
+    pub tell_hn: Style,
+    pub show_hn: Style,
+    pub launch_hn: Style,
 }
 
 impl Default for Palette {
@@ -121,6 +125,18 @@ impl Default for ComponentStyle {
             loading_bar: Style::default()
                 .front(Color::parse("light yellow"))
                 .back(Color::parse("blue")),
+            ask_hn: Style::default()
+                .front(Color::parse("red"))
+                .effect(Effect::Bold),
+            tell_hn: Style::default()
+                .front(Color::parse("yellow"))
+                .effect(Effect::Bold),
+            show_hn: Style::default()
+                .front(Color::parse("blue"))
+                .effect(Effect::Bold),
+            launch_hn: Style::default()
+                .front(Color::parse("green"))
+                .effect(Effect::Bold),
         }
     }
 }
