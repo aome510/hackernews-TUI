@@ -245,10 +245,20 @@ impl HasHelpView for story_view::StoryView {
             help_view = help_view.key_groups(vec![("Custom keymaps", custom_keymaps)]);
         }
         help_view.key_groups(vec![
-            view_navigation_key_shortcuts!((
-                story_view_keymap.goto_story_comment_view.to_string(),
-                "Go to the comment view associated with the focused story"
-            )),
+            view_navigation_key_shortcuts!(
+                (
+                    story_view_keymap.goto_story_comment_view.to_string(),
+                    "Go to the comment view associated with the focused story"
+                ),
+                (
+                    story_view_keymap.next_story_tag.to_string(),
+                    "Go to the next story tag"
+                ),
+                (
+                    story_view_keymap.prev_story_tag.to_string(),
+                    "Go to the previous story tag"
+                )
+            ),
             other_key_shortcuts!(),
         ])
     }
