@@ -12,15 +12,15 @@ lazy_static! {
     static ref COMMENT_RE: Regex = Regex::new(&format!(
         "(({})|({})|({})|({})|({}))",
         // a regex that matches a HTML paragraph
-        r"<p>(?s)(?P<paragraph>[^>].*?)</p>",
+        r"<p>(?s)(?P<paragraph>(|[^>].*?))</p>",
         // a regex that matches a paragraph quote (in markdown format)
         r"<p>(?s)(?P<quote>>[> ]*)(?P<text>.*?)</p>",
         // a regex that matches an HTML italic string
-        r"<i>(?s)(?P<italic>.+?)</i>",
+        r"<i>(?s)(?P<italic>.*?)</i>",
         // a regex that matches a HTML code block
-        r"<pre><code>(?s)(?P<code>.+?)[\n]*</code></pre>",
+        r"<pre><code>(?s)(?P<code>.*?)[\n]*</code></pre>",
         // a regex that matches a HTML link
-        r#"<a\s+?href="(?P<link>.+?)"(?s).+?</a>"#,
+        r#"<a\s+?href="(?P<link>.*?)"(?s).+?</a>"#,
     )).unwrap();
 }
 
@@ -265,6 +265,8 @@ fn parse_raw_html_comment(text: &str, metadata: StyledString) -> (StyledString, 
 
 /// a helper function for parsing comment text that allows recursively parsing sub elements of the text.
 fn parse(text: String, style: Style, begin_link_id: usize) -> (StyledString, Vec<String>) {
+    debug!("parse {}", text);
+
     let mut curr_pos = 0;
     let mut s = StyledString::new();
     let mut links = vec![];
