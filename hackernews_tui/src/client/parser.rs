@@ -14,7 +14,7 @@ lazy_static! {
         // a regex that matches a HTML paragraph
         r"<p>(?s)(?P<paragraph>[^>].*?)</p>",
         // a regex that matches a paragraph quote (in markdown format)
-        r"<p>(?s)(?P<quote>>+) *(?P<text>.*?)</p>",
+        r"<p>(?s)(?P<quote>>[> ]*)(?P<text>.*?)</p>",
         // a regex that matches an HTML italic string
         r"<i>(?s)(?P<italic>.+?)</i>",
         // a regex that matches a HTML code block
@@ -263,77 +263,87 @@ fn parse_raw_html_comment(text: &str, metadata: StyledString) -> (StyledString, 
     (s, links)
 }
 
-/// a helper function for parsing raw HTML comment text that allows
-/// cursively parse sub-elements of the text
+/// a helper function for parsing comment text that allows recursively parsing sub elements of the text.
 fn parse(text: String, style: Style, begin_link_id: usize) -> (StyledString, Vec<String>) {
-    debug!("parse {}", text);
-
     let mut curr_pos = 0;
     let mut s = StyledString::new();
     let mut links = vec![];
-    // This variable indicates whether we have parsed
-    // the first paragraph of the current text.
+
+    // This variable indicates whether we have parsed the first paragraph of the current text.
     // It is used to add a break between 2 consecutive paragraphs.
     let mut seen_first_paragraph = false;
 
     for caps in COMMENT_RE.captures_iter(&text) {
-        let mut match_s = StyledString::new();
-        if let (Some(m_quote), Some(m_text)) = (caps.name("quote"), caps.name("text")) {
-            if seen_first_paragraph {
-                match_s.append_styled("\n", style);
+        let match_s = {
+            if let (Some(m_quote), Some(m_text)) = (caps.name("quote"), caps.name("text")) {
+                if seen_first_paragraph {
+                    s.append_styled("\n", style);
+                } else {
+                    seen_first_paragraph = true;
+                }
+
+                // render quote character `>` as indentation character
+                info!("{}", m_quote.as_str());
+                let quote_s = StyledString::styled(
+                    "▎"
+                        .to_string()
+                        .repeat(m_quote.as_str().matches('>').count()),
+                    style,
+                );
+
+                let (sub_s, mut sub_links) = parse(
+                    m_text.as_str().to_string(),
+                    config::get_config_theme().component_style.quote.into(),
+                    links.len(),
+                );
+                links.append(&mut sub_links);
+
+                utils::combine_styled_strings(vec![quote_s, sub_s, StyledString::plain("\n")])
+            } else if let Some(m) = caps.name("paragraph") {
+                if seen_first_paragraph {
+                    s.append_styled("\n", style);
+                } else {
+                    seen_first_paragraph = true;
+                }
+
+                let (sub_s, mut sub_links) = parse(m.as_str().to_string(), style, links.len());
+                links.append(&mut sub_links);
+
+                utils::combine_styled_strings(vec![sub_s, StyledString::plain("\n")])
+            } else if let Some(m) = caps.name("link") {
+                links.push(m.as_str().to_string());
+
+                utils::combine_styled_strings(vec![
+                    StyledString::styled(
+                        utils::shorten_url(m.as_str()),
+                        style.combine(config::get_config_theme().component_style.link),
+                    ),
+                    StyledString::styled(
+                        format!("[{}]", links.len() + begin_link_id),
+                        style.combine(config::get_config_theme().component_style.link_id),
+                    ),
+                ])
+            } else if let Some(m) = caps.name("code") {
+                StyledString::styled(
+                    m.as_str(),
+                    style.combine(
+                        config::get_config_theme()
+                            .component_style
+                            .multiline_code_block,
+                    ),
+                )
+            } else if let Some(m) = caps.name("italic") {
+                StyledString::styled(
+                    m.as_str(),
+                    style.combine(config::get_config_theme().component_style.italic),
+                )
             } else {
-                seen_first_paragraph = true;
+                unreachable!()
             }
-
-            // render quote character `>` as indentation character
-            match_s.append_styled(format!("{:1$}", "▎", m_quote.as_str().len()), style);
-
-            let (sub_s, mut sub_links) = parse(
-                m_text.as_str().to_string(),
-                config::get_config_theme().component_style.quote.into(),
-                links.len(),
-            );
-            match_s.append(sub_s);
-            match_s.append_styled("\n", style);
-            links.append(&mut sub_links);
-        } else if let Some(m) = caps.name("paragraph") {
-            if seen_first_paragraph {
-                match_s.append_styled("\n", style);
-            } else {
-                seen_first_paragraph = true;
-            }
-
-            let (sub_s, mut sub_links) = parse(m.as_str().to_string(), style, links.len());
-            match_s.append(sub_s);
-            match_s.append_styled("\n", style);
-            links.append(&mut sub_links);
-        } else if let Some(m) = caps.name("link") {
-            match_s.append_styled(
-                utils::shorten_url(m.as_str()),
-                style.combine(config::get_config_theme().component_style.link),
-            );
-            links.push(m.as_str().to_string());
-            match_s.append_styled(
-                format!("[{}]", links.len() + begin_link_id),
-                style.combine(config::get_config_theme().component_style.link_id),
-            );
-        } else if let Some(m) = caps.name("code") {
-            match_s.append_styled(
-                m.as_str(),
-                style.combine(
-                    config::get_config_theme()
-                        .component_style
-                        .multiline_code_block,
-                ),
-            );
-        } else if let Some(m) = caps.name("italic") {
-            match_s.append_styled(
-                m.as_str(),
-                style.combine(config::get_config_theme().component_style.italic),
-            );
-        }
+        };
 
         let whole_match = caps.get(0).unwrap();
+        // the part that doesn't match any patterns should be rendered in the default style
         if curr_pos < whole_match.start() {
             s.append_styled(&text[curr_pos..whole_match.start()], style);
         }
