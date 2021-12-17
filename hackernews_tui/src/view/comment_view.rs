@@ -283,8 +283,8 @@ fn get_comment_main_view(receiver: client::CommentReceiver) -> impl View {
                 Ok(num) => {
                     s.raw_command.clear();
                     let id = s.get_focus_index();
-                    if num < s.comments[id].links.len() {
-                        utils::open_url_in_browser(&s.comments[id].links[num]);
+                    if num > 0 && num <= s.comments[id].links.len() {
+                        utils::open_url_in_browser(&s.comments[id].links[num - 1]);
                         Some(EventResult::Consumed(None))
                     } else {
                         Some(EventResult::Consumed(None))
@@ -299,8 +299,8 @@ fn get_comment_main_view(receiver: client::CommentReceiver) -> impl View {
                 Ok(num) => {
                     s.raw_command.clear();
                     let id = s.get_focus_index();
-                    if num < s.comments[id].links.len() {
-                        let url = s.comments[id].links[num].clone();
+                    if num > 0 && num <= s.comments[id].links.len() {
+                        let url = s.comments[id].links[num - 1].clone();
                         Some(EventResult::with_cb({
                             move |s| article_view::add_article_view_layer(s, &url)
                         }))

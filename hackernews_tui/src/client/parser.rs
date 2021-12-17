@@ -17,7 +17,7 @@ lazy_static! {
         r"<p>(?s)(?P<quote>>[> ]*)(?P<text>.*?)</p>",
         // a regex that matches an HTML italic string
         r"<i>(?s)(?P<italic>.*?)</i>",
-        // a regex that matches a HTML code block
+        // a regex that matches a HTML code block (multiline)
         r"<pre><code>(?s)(?P<code>.*?)[\n]*</code></pre>",
         // a regex that matches a HTML link
         r#"<a\s+?href="(?P<link>.*?)"(?s).+?</a>"#,
@@ -320,6 +320,7 @@ fn parse(text: String, style: Style, begin_link_id: usize) -> (StyledString, Vec
                         utils::shorten_url(m.as_str()),
                         style.combine(config::get_config_theme().component_style.link),
                     ),
+                    StyledString::plain(" "),
                     StyledString::styled(
                         format!("[{}]", links.len() + begin_link_id),
                         style.combine(config::get_config_theme().component_style.link_id),
