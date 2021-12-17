@@ -47,7 +47,7 @@ where
 
 // API response structs
 
-#[derive(Debug, Deserialize)]
+#[derive(Default, Debug, Deserialize)]
 #[serde(rename_all(deserialize = "camelCase"))]
 struct MatchResult {
     value: String,
@@ -56,8 +56,6 @@ struct MatchResult {
 #[derive(Debug, Deserialize)]
 struct HighlightResultResponse {
     title: Option<MatchResult>,
-    url: Option<MatchResult>,
-    author: Option<MatchResult>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -117,32 +115,19 @@ pub struct StoriesResponse {
 
 // parsed structs
 
-// HN client get Story,Comment data by calling HN_ALGOLIA APIs
-// and parsing the result into a corresponding struct
-
-/// HighlightResult represents matched results when
-/// searching stories matching certain conditions
-#[derive(Debug, Clone)]
-pub struct HighlightResult {
-    pub title: String,
-    pub url: String,
-    pub author: String,
-}
-
-/// Story represents a Hacker News story
+/// Story represents a parsed Hacker News story
 #[derive(Debug, Clone)]
 pub struct Story {
     pub id: u32,
-    pub title: String,
+    pub title: StyledString,
     pub url: String,
     pub author: String,
     pub points: u32,
     pub num_comments: usize,
     pub time: u64,
-    pub highlight_result: HighlightResult,
 }
 
-/// Comment represents a Hacker News comment
+/// Comment represents a parsed Hacker News comment
 #[derive(Debug, Clone)]
 pub struct Comment {
     pub id: u32,
@@ -175,29 +160,42 @@ impl From<StoryResponse> for Story {
     fn from(s: StoryResponse) -> Self {
         // need to make sure that highlight_result is not none,
         // and its title field is not none,
-        let highlight_result_raw = s.highlight_result.unwrap();
-        let highlight_result = HighlightResult {
-            title: decode_html(&highlight_result_raw.title.unwrap().value),
-            url: match highlight_result_raw.url {
-                None => String::new(),
-                Some(url) => url.value,
-            },
-            author: match highlight_result_raw.author {
-                None => String::from("[deleted]"),
-                Some(author) => author.value,
-            },
+        let highlight_result = s.highlight_result.unwrap();
+        let title = {
+            // parse a HTML story title that may contain search matches wrapped
+            // inside <em> tags into a styled string
+            let text = highlight_result.title.unwrap_or_default().value;
+            let mut s = StyledString::new();
+            let mut curr_pos = 0;
+
+            for caps in MATCH_RE.captures_iter(&text) {
+                let whole_match = caps.get(0).unwrap();
+                // the part that doesn't match any patterns should be rendered in the default style
+                if curr_pos < whole_match.start() {
+                    s.append_plain(&text[curr_pos..whole_match.start()]);
+                }
+                curr_pos = whole_match.end();
+
+                s.append_styled(
+                    caps.name("match").unwrap().as_str(),
+                    config::get_config_theme().component_style.matched_highlight,
+                );
+            }
+
+            if curr_pos < text.len() {
+                s.append_plain(&text[curr_pos..text.len()]);
+            }
+            s
         };
+
         Story {
-            title: MATCH_RE
-                .replace_all(&s.title.unwrap(), "${match}")
-                .to_string(),
+            title,
             url: s.url.unwrap_or_default(),
             author: s.author.unwrap_or_else(|| String::from("[deleted]")),
             id: s.id,
             points: s.points,
             num_comments: s.num_comments,
             time: s.time,
-            highlight_result,
         }
     }
 }
