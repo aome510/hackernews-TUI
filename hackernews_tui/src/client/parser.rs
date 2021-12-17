@@ -66,7 +66,6 @@ pub struct StoryResponse {
     #[serde(deserialize_with = "parse_id")]
     id: u32,
 
-    title: Option<String>,
     author: Option<String>,
     url: Option<String>,
 
@@ -150,7 +149,7 @@ impl From<StoriesResponse> for Vec<Story> {
     fn from(s: StoriesResponse) -> Vec<Story> {
         s.hits
             .into_iter()
-            .filter(|story| story.highlight_result.is_some() && story.title.is_some())
+            .filter(|story| story.highlight_result.is_some())
             .map(|story| story.into())
             .collect()
     }
@@ -164,6 +163,8 @@ impl From<StoryResponse> for Story {
             .title
             .map(|r| r.value)
             .unwrap_or_default();
+        let title = decode_html(&title);
+
         let mut parsed_title = StyledString::new();
 
         let title = {
