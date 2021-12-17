@@ -237,6 +237,11 @@ pub fn get_story_view(
         .child(utils::construct_footer_view::<StoryView>());
     view.set_focus_index(1).unwrap_or_else(|_| {});
 
+    let current_tag_pos = STORY_TAGS
+        .iter()
+        .position(|t| *t == tag)
+        .unwrap_or_else(|| panic!("unkwnown tag {}", tag));
+
     let story_view_keymap = config::get_story_view_keymap().clone();
 
     OnEventView::new(view)
@@ -250,6 +255,29 @@ pub fn get_story_view(
                 return;
             }
             add_story_view_layer(s, client, tag, !by_date, page, numeric_filters, true);
+        })
+        // story tag navigation
+        .on_event(story_view_keymap.next_story_tag, move |s| {
+            add_story_view_layer(
+                s,
+                client,
+                STORY_TAGS[(current_tag_pos + 1) % STORY_TAGS.len()],
+                by_date,
+                page,
+                numeric_filters,
+                true,
+            );
+        })
+        .on_event(story_view_keymap.prev_story_tag, move |s| {
+            add_story_view_layer(
+                s,
+                client,
+                STORY_TAGS[(current_tag_pos + STORY_TAGS.len() - 1) % STORY_TAGS.len()],
+                by_date,
+                page,
+                numeric_filters,
+                true,
+            );
         })
         // paging
         .on_event(story_view_keymap.prev_page, move |s| {

@@ -86,6 +86,10 @@ impl Default for GlobalKeyMap {
 
 #[derive(Debug, Clone, Deserialize, ConfigParse)]
 pub struct StoryViewKeyMap {
+    // story tags navigation keymaps
+    pub next_story_tag: Key,
+    pub prev_story_tag: Key,
+
     // stories navigation keymaps
     pub next_story: Key,
     pub prev_story: Key,
@@ -107,6 +111,8 @@ pub struct StoryViewKeyMap {
 impl Default for StoryViewKeyMap {
     fn default() -> Self {
         StoryViewKeyMap {
+            next_story_tag: Key::new('l'),
+            prev_story_tag: Key::new('h'),
             next_story: Key::new('j'),
             prev_story: Key::new('k'),
             goto_story: Key::new('g'),
