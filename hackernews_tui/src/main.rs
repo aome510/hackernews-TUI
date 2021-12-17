@@ -16,7 +16,7 @@ macro_rules! set_up_switch_view_shortcut {
                 s,
                 $client,
                 $tag,
-                false,
+                true,
                 0,
                 client::StoryNumericFilters::default(),
                 false,

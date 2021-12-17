@@ -179,12 +179,14 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 - `k`: Focus the previous story
 - `{story_id} g`: Focus the {story_id}-th story
 - `enter`: Go the comment view associated with the focused story
+- `l`: Go to the next story tag
+- `h`: Go to the previous story tag
 - `o`: Open in browser the article associated with the focused story
 - `O`: Open in article view the article associated with the focused story
 - `s`: Open in browser the focused story
 - `n`: Go to the next page
 - `p`: Go the previous page
-- `d`: Toggle sort by date/popularity
+- `d`: Toggle sort by date
 
 #### Article View shortcuts
 

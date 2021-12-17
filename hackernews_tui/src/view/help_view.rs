@@ -172,7 +172,7 @@ impl HasHelpView for story_view::StoryView {
                 (
                     keymap.key.to_string(),
                     format!(
-                        "Go to {} view (sort_by: {}, {})",
+                        "Go to {} view (by_date: {}, {})",
                         match keymap.tag.as_str() {
                             "front_page" => "front page",
                             "story" => "all stories",
@@ -181,7 +181,7 @@ impl HasHelpView for story_view::StoryView {
                             "show_hn" => "show HN",
                             _ => panic!("unknown view: {}", keymap.tag),
                         },
-                        if keymap.by_date { "date" } else { "popularity" },
+                        keymap.by_date,
                         keymap.numeric_filters.desc()
                     ),
                 )
@@ -219,7 +219,7 @@ impl HasHelpView for story_view::StoryView {
                     ),
                     (
                         story_view_keymap.toggle_sort_by.to_string(),
-                        "Toggle sort by date/popularity (only for non `Front Page` views)",
+                        "Toggle sort by date (only for non `Front Page` views)",
                     ),
                 ],
             ),
@@ -245,10 +245,20 @@ impl HasHelpView for story_view::StoryView {
             help_view = help_view.key_groups(vec![("Custom keymaps", custom_keymaps)]);
         }
         help_view.key_groups(vec![
-            view_navigation_key_shortcuts!((
-                story_view_keymap.goto_story_comment_view.to_string(),
-                "Go to the comment view associated with the focused story"
-            )),
+            view_navigation_key_shortcuts!(
+                (
+                    story_view_keymap.goto_story_comment_view.to_string(),
+                    "Go to the comment view associated with the focused story"
+                ),
+                (
+                    story_view_keymap.next_story_tag.to_string(),
+                    "Go to the next story tag"
+                ),
+                (
+                    story_view_keymap.prev_story_tag.to_string(),
+                    "Go to the previous story tag"
+                )
+            ),
             other_key_shortcuts!(),
         ])
     }
@@ -398,7 +408,7 @@ impl HasHelpView for search_view::SearchView {
                     ),
                     (
                         story_view_keymap.toggle_sort_by.to_string(),
-                        "Toggle sort by date/popularity",
+                        "Toggle sort by date",
                     ),
                 ],
             ),
