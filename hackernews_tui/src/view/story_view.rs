@@ -4,6 +4,7 @@ use super::comment_view;
 use super::help_view::HasHelpView;
 use super::list_view::*;
 use super::text_view;
+use crate::client::StoryNumericFilters;
 use crate::prelude::*;
 
 static STORY_TAGS: [&str; 5] = ["front_page", "story", "ask_hn", "show_hn", "job"];
@@ -254,7 +255,7 @@ pub fn get_story_view(
             if tag == "front_page" {
                 return;
             }
-            add_story_view_layer(s, client, tag, !by_date, page, numeric_filters, true);
+            add_story_view_layer(s, client, tag, !by_date, 0, numeric_filters, true);
         })
         // story tag navigation
         .on_event(story_view_keymap.next_story_tag, move |s| {
@@ -262,10 +263,10 @@ pub fn get_story_view(
                 s,
                 client,
                 STORY_TAGS[(current_tag_pos + 1) % STORY_TAGS.len()],
-                by_date,
-                page,
-                numeric_filters,
                 true,
+                0,
+                StoryNumericFilters::default(),
+                false,
             );
         })
         .on_event(story_view_keymap.prev_story_tag, move |s| {
@@ -273,10 +274,10 @@ pub fn get_story_view(
                 s,
                 client,
                 STORY_TAGS[(current_tag_pos + STORY_TAGS.len() - 1) % STORY_TAGS.len()],
-                by_date,
-                page,
-                numeric_filters,
                 true,
+                0,
+                StoryNumericFilters::default(),
+                false,
             );
         })
         // paging

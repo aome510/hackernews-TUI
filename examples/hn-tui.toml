@@ -88,6 +88,8 @@
 # open_article_in_article_view = "O"
 # open_story_in_browser = "s"
 # goto_story_comment_view = "enter"
+# next_story_tag = "l"
+# prev_story_tag = "h"
 
 #[keymap.search_view_keymap]
 # to_navigation_mode = "esc"
@@ -144,7 +146,7 @@
 # [[keymap.custom_keymap.custom_view_navigation]]
 # key = "M-1"
 # tag = "story"
-# by_date = false # true to sort_by date, false to sort_by popularity
+# by_date = false
 # [keymap.custom_keymap.custom_view_navigation.numeric_filters]
 # elapsed_days_interval = {start = 0, end = 3} # stories posted between now and 3 days ago
 # points_interval = {start = 10} # stories with points >= 10
