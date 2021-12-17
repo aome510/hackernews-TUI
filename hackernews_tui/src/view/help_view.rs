@@ -21,8 +21,10 @@ impl HelpView {
     }
 
     fn construct_key_view(key: String, desc: String, max_key_width: usize) -> impl View {
-        let key_string =
-            StyledString::styled(key, config::get_config_theme().component_style.code_block);
+        let key_string = StyledString::styled(
+            key,
+            config::get_config_theme().component_style.single_code_block,
+        );
         let desc_string = StyledString::plain(desc);
         LinearLayout::horizontal()
             .child(TextView::new(key_string).fixed_width(max_key_width))

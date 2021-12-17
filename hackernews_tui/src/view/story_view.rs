@@ -5,7 +5,6 @@ use super::help_view::HasHelpView;
 use super::list_view::*;
 use super::text_view;
 use crate::prelude::*;
-use regex::Regex;
 
 static STORY_TAGS: [&str; 5] = ["front_page", "story", "ask_hn", "show_hn", "job"];
 
@@ -53,49 +52,9 @@ impl StoryView {
         }
     }
 
-    /// Return a StyledString representing a matched text in which
-    /// matches are highlighted
-    fn get_matched_text(mut s: String) -> StyledString {
-        let match_re = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
-        let mut styled_s = StyledString::new();
-
-        loop {
-            match match_re.captures(&s.clone()) {
-                None => break,
-                Some(c) => {
-                    let m = c.get(0).unwrap();
-                    let matched_text = c.name("match").unwrap().as_str();
-
-                    let range = m.range();
-                    let mut prefix: String = s
-                        .drain(std::ops::Range {
-                            start: 0,
-                            end: m.end(),
-                        })
-                        .collect();
-                    prefix.drain(range);
-
-                    if !prefix.is_empty() {
-                        styled_s.append_plain(&prefix);
-                    }
-
-                    styled_s.append_styled(
-                        matched_text,
-                        config::get_config_theme().component_style.matched_highlight,
-                    );
-                    continue;
-                }
-            };
-        }
-        if !s.is_empty() {
-            styled_s.append_plain(s);
-        }
-        styled_s
-    }
-
     /// Get the description text summarizing basic information about a story
     fn get_story_text(max_id_width: usize, story: &client::Story) -> StyledString {
-        let mut story_text = Self::get_matched_text(story.highlight_result.title.clone());
+        let mut story_text = story.title.clone();
 
         if let Ok(url) = url::Url::parse(&story.url) {
             if let Some(domain) = url.domain() {

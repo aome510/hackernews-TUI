@@ -52,11 +52,18 @@ pub struct ComponentStyle {
     pub link: Style,
     pub link_id: Style,
     pub matched_highlight: Style,
-    pub code_block: Style,
+    pub single_code_block: Style,
+    pub multiline_code_block: Style,
+    pub quote: Style,
+    pub italic: Style,
     pub metadata: Style,
     pub current_story_tag: Style,
     pub username: Style,
     pub loading_bar: Style,
+    pub ask_hn: Style,
+    pub tell_hn: Style,
+    pub show_hn: Style,
+    pub launch_hn: Style,
 }
 
 impl Default for Palette {
@@ -103,14 +110,33 @@ impl Default for ComponentStyle {
             matched_highlight: Style::default()
                 .front(Color::parse("black"))
                 .back(Color::parse("#ffff55")),
-            code_block: Style::default()
+            single_code_block: Style::default()
                 .front(Color::parse("black"))
                 .back(Color::parse("#c8c8c8")),
+            multiline_code_block: Style::default()
+                .front(Color::parse("light black"))
+                .effect(Effect::Bold),
+            quote: Style::default()
+                .front(Color::parse("white"))
+                .effect(Effect::Bold),
+            italic: Style::default().effect(Effect::Italic),
             metadata: Style::default().front(Color::parse("#828282")),
             username: Style::default().effect(Effect::Bold),
             loading_bar: Style::default()
                 .front(Color::parse("light yellow"))
                 .back(Color::parse("blue")),
+            ask_hn: Style::default()
+                .front(Color::parse("red"))
+                .effect(Effect::Bold),
+            tell_hn: Style::default()
+                .front(Color::parse("yellow"))
+                .effect(Effect::Bold),
+            show_hn: Style::default()
+                .front(Color::parse("blue"))
+                .effect(Effect::Bold),
+            launch_hn: Style::default()
+                .front(Color::parse("green"))
+                .effect(Effect::Bold),
         }
     }
 }
