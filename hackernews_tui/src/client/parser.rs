@@ -167,7 +167,7 @@ impl From<StoryResponse> for Story {
         let mut parsed_title = StyledString::new();
 
         let title = {
-            // parse title based on the post's category
+            // parse story title based on the post's category
             if let Some(title) = title.strip_prefix("Ask HN") {
                 parsed_title
                     .append_styled("Ask HN", config::get_config_theme().component_style.ask_hn);
@@ -195,10 +195,8 @@ impl From<StoryResponse> for Story {
             }
         };
 
-        // parse a HTML story title that may contain search matches wrapped
-        // inside <em> tags into a styled string
+        // parse story title that may contain search matches wrapped inside `<em>` tags
         let mut curr_pos = 0;
-
         for caps in MATCH_RE.captures_iter(title) {
             let whole_match = caps.get(0).unwrap();
             // the part that doesn't match any patterns should be rendered in the default style
@@ -212,7 +210,6 @@ impl From<StoryResponse> for Story {
                 config::get_config_theme().component_style.matched_highlight,
             );
         }
-
         if curr_pos < title.len() {
             parsed_title.append_plain(&title[curr_pos..title.len()]);
         }
@@ -314,7 +311,6 @@ fn parse(text: String, style: Style, begin_link_id: usize) -> (StyledString, Vec
                 }
 
                 // render quote character `>` as indentation character
-                info!("{}", m_quote.as_str());
                 let quote_s = StyledString::styled(
                     "▎"
                         .to_string()
