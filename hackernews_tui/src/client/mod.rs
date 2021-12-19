@@ -296,8 +296,8 @@ impl HNClient {
     /// gets a web article from a URL
     pub fn get_article(url: &str) -> Result<Article> {
         let article_parse_command = &config::get_config().article_parse_command;
-        let output = std::process::Command::new(article_parse_command.command)
-            .args(article_parse_command.options)
+        let output = std::process::Command::new(&article_parse_command.command)
+            .args(&article_parse_command.options)
             .arg(url)
             .output()?;
 
@@ -314,7 +314,8 @@ impl HNClient {
                 }
             }
         } else {
-            Err(anyhow::anyhow!(std::str::from_utf8(&output.stderr).unwrap()))
+            let stderr = std::str::from_utf8(&output.stderr).unwrap().to_string();
+            Err(anyhow::anyhow!(stderr))
         }
     }
 }
