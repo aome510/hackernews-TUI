@@ -508,10 +508,6 @@ impl HasHelpView for article_view::ArticleView {
                 ],
             ),
             view_navigation_key_shortcuts!(),
-            other_key_shortcuts!((
-                article_view_keymap.toggle_raw_markdown_mode.to_string(),
-                "Toggle raw markdown mode"
-            )),
         ])
     }
 }

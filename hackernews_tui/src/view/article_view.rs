@@ -200,14 +200,6 @@ pub fn get_article_view(article: client::Article) -> impl View {
                 utils::open_url_in_browser(&url);
             }
         })
-        // TODO:
-        // .on_event(article_view_keymap.toggle_raw_markdown_mode, {
-        //     move |s| {
-        //         let view = get_article_view(article.clone());
-        //         s.pop_layer();
-        //         s.screen_mut().add_transparent_layer(Layer::new(view))
-        //     }
-        // })
         .on_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
             s.add_layer(ArticleView::construct_help_view())
         })
