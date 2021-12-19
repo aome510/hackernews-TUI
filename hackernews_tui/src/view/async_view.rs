@@ -82,44 +82,12 @@ pub fn get_article_view_async(siv: &mut Cursive, article_url: &str) -> impl View
         siv,
         {
             let article_url = article_url.to_owned();
-            move || {
-                Ok(std::process::Command::new(article_parse_command.command)
-                    .args(&article_parse_command.options)
-                    .arg(&article_url)
-                    .output())
-            }
+            move || Ok(client::HNClient::get_article(&article_url))
         },
         {
-            let article_url = article_url.to_owned();
-            move |output| {
-                ErrorViewWrapper::new(match output {
-                    Ok(output) => {
-                        if output.status.success() {
-                            match serde_json::from_slice::<article_view::Article>(&output.stdout) {
-                                Ok(mut article) => {
-                                    article.update_url(&article_url);
-                                    ErrorViewEnum::Ok(article_view::get_article_view(
-                                        article, false,
-                                    ))
-                                }
-                                Err(_) => {
-                                    let stdout = std::str::from_utf8(&output.stdout).unwrap();
-                                    warn!(
-                                        "failed to deserialize {} into the `Article` struct:",
-                                        stdout
-                                    );
-                                    ErrorViewEnum::Err(error_view::get_error_view(
-                                        &err_desc, stdout,
-                                    ))
-                                }
-                            }
-                        } else {
-                            ErrorViewEnum::Err(error_view::get_error_view(
-                                &err_desc,
-                                std::str::from_utf8(&output.stderr).unwrap(),
-                            ))
-                        }
-                    }
+            move |result| {
+                ErrorViewWrapper::new(match result {
+                    Ok(article) => ErrorViewEnum::Ok(article_view::ArticleView::new(article)),
                     Err(err) => {
                         ErrorViewEnum::Err(error_view::get_error_view(&err_desc, &err.to_string()))
                     }

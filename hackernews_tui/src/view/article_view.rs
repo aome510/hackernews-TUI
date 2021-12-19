@@ -1,136 +1,13 @@
 use super::help_view::HasHelpView;
 use super::{async_view, text_view};
 use crate::prelude::*;
-use regex::Regex;
-use serde::Deserialize;
 
 /// ArticleView is a View used to display the content of a web page in reader mode
 pub struct ArticleView {
-    links: Vec<String>,
+    article: client::Article,
     view: ScrollView<LinearLayout>,
 
     raw_command: String,
-}
-
-/// Article is a struct representing the data of a web page
-#[derive(Debug, Clone, Deserialize)]
-pub struct Article {
-    title: String,
-    url: String,
-    content: String,
-    author: Option<String>,
-    date_published: Option<String>,
-    #[serde(default)]
-    word_count: usize,
-}
-
-impl Article {
-    pub fn update_url(&mut self, url: &str) {
-        self.url = url.to_owned();
-    }
-}
-
-impl Article {
-    fn get_content(&self) -> String {
-        self.content.replace("\t", "    ")
-    }
-
-    /// parse links from the article's content (in markdown format)
-    pub fn parse_link(&self, raw_md: bool) -> (StyledString, Vec<String>) {
-        // escape characters in markdown: \ ` * _ { } [ ] ( ) # + - . ! =
-        let md_escape_char_re = Regex::new(r"\\(?P<char>[\\`\*_\{\}\[\]\(\)#\+\-\.!=])").unwrap();
-
-        let content = self.get_content();
-
-        // if raw_md is true, don't parse link
-        if raw_md {
-            let content = md_escape_char_re
-                .replace_all(&content, "${char}")
-                .to_string();
-            return (StyledString::plain(content), vec![]);
-        }
-
-        let md_img_re = Regex::new(r"!\[(?P<desc>.*?)\]\((?P<link>.*?)\)").unwrap();
-        let mut s = md_img_re
-            .replace_all(&content, "!\\[${desc}\\]\\(image\\)")
-            .to_string();
-
-        let md_link_re =
-            Regex::new(r"(?P<prefix_char>[^\\]|^)\[(?P<desc>.*?)\]\((?P<link>.*?)\)").unwrap();
-        let mut styled_s = StyledString::new();
-        let mut links: Vec<String> = vec![];
-
-        loop {
-            match md_link_re.captures(&s.clone()) {
-                None => break,
-                Some(c) => {
-                    let m = c.get(0).unwrap();
-                    let prefix_char = c.name("prefix_char").unwrap().as_str();
-                    let link = md_escape_char_re
-                        .replace_all(c.name("link").unwrap().as_str(), "${char}")
-                        .to_string();
-                    let desc = md_escape_char_re
-                        .replace_all(c.name("desc").unwrap().as_str(), "${char}")
-                        .to_string();
-
-                    let link = if url::Url::parse(&link).is_err() {
-                        // not an absolute link
-                        match url::Url::parse(&self.url).unwrap().join(&link) {
-                            Ok(url) => url.to_string(),
-                            Err(err) => {
-                                warn!("{} is not a valid path/url: {}", link, err);
-                                "".to_owned()
-                            }
-                        }
-                    } else {
-                        link.to_string()
-                    };
-                    let desc = if desc.is_empty() {
-                        format!("\"{}\"", utils::shorten_url(&link))
-                    } else {
-                        desc
-                    };
-
-                    let range = m.range();
-                    let mut prefix: String = s
-                        .drain(std::ops::Range {
-                            start: 0,
-                            end: m.end(),
-                        })
-                        .collect();
-                    prefix.drain(range);
-
-                    prefix += prefix_char;
-                    if !prefix.is_empty() {
-                        styled_s.append_plain(
-                            md_escape_char_re
-                                .replace_all(&prefix, "${char}")
-                                .to_string(),
-                        );
-                    }
-
-                    styled_s.append_styled(
-                        format!("{} ", desc),
-                        config::get_config_theme().component_style.link,
-                    );
-
-                    if !link.is_empty() {
-                        // a valid link
-                        styled_s.append_styled(
-                            format!("[{}]", links.len()),
-                            config::get_config_theme().component_style.link_id,
-                        );
-                        links.push(link.to_string());
-                    }
-                    continue;
-                }
-            }
-        }
-        if !s.is_empty() {
-            styled_s.append_plain(md_escape_char_re.replace_all(&s, "${char}").to_string());
-        }
-        (styled_s, links)
-    }
 }
 
 impl ViewWrapper for ArticleView {
@@ -142,39 +19,14 @@ impl ViewWrapper for ArticleView {
 }
 
 impl ArticleView {
-    pub fn new(article: Article, raw_md: bool) -> Self {
-        let (content, links) = article.parse_link(raw_md);
-        let title = article.title + "\n";
+    pub fn new(article: client::Article) -> Self {
+        // TODO: implement article rendering logic here
 
-        let desc = format!(
-            "by: {}, date_published: {}, word_count: {}\n\n",
-            article.author.unwrap_or_else(|| "[unknown]".to_string()),
-            article
-                .date_published
-                .unwrap_or_else(|| "[unknown]".to_string()),
-            if article.word_count > 1 {
-                article.word_count.to_string()
-            } else {
-                "[unknown]".to_string()
-            }
-        );
-
-        let view = LinearLayout::vertical()
-            .child(TextView::new(title).center().full_width())
-            .child(
-                TextView::new(StyledString::styled(
-                    desc,
-                    config::get_config_theme().component_style.metadata,
-                ))
-                .center()
-                .full_width(),
-            )
-            .child(TextView::new(content).full_width())
-            .scrollable();
+        let view = LinearLayout::vertical().scrollable();
 
         ArticleView {
+            article,
             view,
-            links,
             raw_command: "".to_string(),
         }
     }
@@ -241,7 +93,7 @@ pub fn get_link_dialog(links: &[String]) -> impl View {
 
 /// Return a main view of a ArticleView displaying an article in reader mode.
 /// The main view of a ArticleView is a View without status bar or footer.
-pub fn get_article_main_view(article: Article, raw_md: bool) -> OnEventView<ArticleView> {
+pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleView> {
     let article_view_keymap = config::get_article_view_keymap().clone();
 
     let is_suffix_key = |c: &Event| -> bool {
@@ -250,7 +102,7 @@ pub fn get_article_main_view(article: Article, raw_md: bool) -> OnEventView<Arti
             || *c == article_view_keymap.open_link_in_article_view.into()
     };
 
-    OnEventView::new(ArticleView::new(article, raw_md))
+    OnEventView::new(ArticleView::new(article))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
             match *e {
                 Event::Char(c) if ('0'..='9').contains(&c) => {
@@ -292,7 +144,7 @@ pub fn get_article_main_view(article: Article, raw_md: bool) -> OnEventView<Arti
         })
         .on_pre_event_inner(article_view_keymap.open_link_dialog, |s, _| {
             Some(EventResult::with_cb({
-                let links = s.links.clone();
+                let links = s.article.links.clone();
                 move |s| {
                     s.add_layer(get_link_dialog(&links));
                 }
@@ -302,8 +154,8 @@ pub fn get_article_main_view(article: Article, raw_md: bool) -> OnEventView<Arti
             match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    if num < s.links.len() {
-                        utils::open_url_in_browser(&s.links[num]);
+                    if num < s.article.links.len() {
+                        utils::open_url_in_browser(&s.article.links[num]);
                     }
                     Some(EventResult::Consumed(None))
                 }
@@ -315,8 +167,8 @@ pub fn get_article_main_view(article: Article, raw_md: bool) -> OnEventView<Arti
             |s, _| match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    if num < s.links.len() {
-                        let url = s.links[num].clone();
+                    if num < s.article.links.len() {
+                        let url = s.article.links[num].clone();
                         Some(EventResult::with_cb({
                             move |s| add_article_view_layer(s, &url)
                         }))
@@ -330,9 +182,9 @@ pub fn get_article_main_view(article: Article, raw_md: bool) -> OnEventView<Arti
 }
 
 /// Return a ArticleView constructed from a Article struct
-pub fn get_article_view(article: Article, raw_md: bool) -> impl View {
+pub fn get_article_view(article: client::Article) -> impl View {
     let desc = format!("Article View - {}", article.title);
-    let main_view = get_article_main_view(article.clone(), raw_md).full_height();
+    let main_view = get_article_main_view(article.clone()).full_height();
     let mut view = LinearLayout::vertical()
         .child(utils::construct_view_title_bar(&desc))
         .child(main_view)
@@ -348,13 +200,14 @@ pub fn get_article_view(article: Article, raw_md: bool) -> impl View {
                 utils::open_url_in_browser(&url);
             }
         })
-        .on_event(article_view_keymap.toggle_raw_markdown_mode, {
-            move |s| {
-                let view = get_article_view(article.clone(), !raw_md);
-                s.pop_layer();
-                s.screen_mut().add_transparent_layer(Layer::new(view))
-            }
-        })
+        // TODO:
+        // .on_event(article_view_keymap.toggle_raw_markdown_mode, {
+        //     move |s| {
+        //         let view = get_article_view(article.clone());
+        //         s.pop_layer();
+        //         s.screen_mut().add_transparent_layer(Layer::new(view))
+        //     }
+        // })
         .on_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
             s.add_layer(ArticleView::construct_help_view())
         })
