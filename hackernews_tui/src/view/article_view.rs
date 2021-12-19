@@ -22,7 +22,9 @@ impl ArticleView {
     pub fn new(article: client::Article) -> Self {
         // TODO: implement article rendering logic here
 
-        let view = LinearLayout::vertical().scrollable();
+        let view = LinearLayout::vertical()
+            .child(TextView::new(&article.content))
+            .scrollable();
 
         ArticleView {
             article,
@@ -195,9 +197,8 @@ pub fn get_article_view(article: client::Article) -> impl View {
 
     OnEventView::new(view)
         .on_event(article_view_keymap.open_article_in_browser, {
-            let url = article.url.clone();
             move |_| {
-                utils::open_url_in_browser(&url);
+                utils::open_url_in_browser(&article.url);
             }
         })
         .on_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
