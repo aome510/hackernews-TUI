@@ -24,6 +24,20 @@ lazy_static! {
         // a regex that matches a HTML link
         r#"<a\s+?href="(?P<link>.*?)"(?s).+?</a>"#,
     )).unwrap();
+
+    /// a regex that matches a markdown image
+    static ref MD_IMG_RE: Regex = Regex::new(r"!\[(?P<img_desc>.*?)\]\((?P<img_url>.*?)\)").unwrap();
+
+    /// a regex that matches a markdown escaped character
+    static ref MD_ESCAPE_CHAR_RE: Regex = Regex::new(r"\\(?P<char>[\\`\*_\{\}\[\]\(\)#\+\-\.!=])").unwrap();
+
+    /// a regex used to parse an article (in markdown format)
+    /// It consists of multiple regex(s) representing different elements
+    static ref MD_ARTICLE_RE: Regex = Regex::new(&format!(
+        "(({}))",
+        // a regex that matches a markdown link
+        r"\[(?P<link_desc>.*?)\]\((?P<link_url>.*?)\)"
+    )).unwrap();
 }
 
 // serde helper functions
@@ -289,6 +303,78 @@ impl From<CommentResponse> for Vec<Comment> {
     }
 }
 
+impl Article {
+    pub fn parse(&mut self) {
+        // replace a tab character by 4 spaces
+        // because it's possible that the terminal cannot render the tab character
+        self.content = self.content.replace("\t", "    ");
+
+        self.content = MD_IMG_RE
+            .replace_all(&self.content, "${img_desc} \\(image\\)")
+            .to_string();
+
+        let parsed_result = Self::parse_article_text(self.content.clone(), Style::default(), 0);
+
+        self.parsed_content = parsed_result.0;
+        self.links = parsed_result.1;
+    }
+
+    /// unescape a markdown escaped string
+    fn unescape(text: &str) -> String {
+        MD_ESCAPE_CHAR_RE.replace_all(text, "${char}").to_string()
+    }
+
+    fn parse_article_text(
+        text: String,
+        style: Style,
+        begin_link_id: usize,
+    ) -> (StyledString, Vec<String>) {
+        debug!("parse article text: {}", text);
+
+        let mut curr_pos = 0;
+        let mut s = StyledString::new();
+        let mut links = vec![];
+
+        for caps in MD_ARTICLE_RE.captures_iter(&text) {
+            let match_s = {
+                if let (Some(desc), Some(url)) = (caps.name("link_desc"), caps.name("link_url")) {
+                    debug!("desc: {}, url: {}", desc.as_str(), url.as_str());
+
+                    links.push(Self::unescape(desc.as_str()));
+                    utils::combine_styled_strings(vec![
+                        StyledString::styled(
+                            Self::unescape(desc.as_str()),
+                            style.combine(config::get_config_theme().component_style.link),
+                        ),
+                        StyledString::plain(" "),
+                        StyledString::styled(
+                            format!("[{}]", links.len() + begin_link_id),
+                            style.combine(config::get_config_theme().component_style.link_id),
+                        ),
+                    ])
+                } else {
+                    unreachable!()
+                }
+            };
+
+            let whole_match = caps.get(0).unwrap();
+            // the part that doesn't match any patterns should be rendered in the default style
+            if curr_pos < whole_match.start() {
+                s.append_styled(Self::unescape(&text[curr_pos..whole_match.start()]), style);
+            }
+            curr_pos = whole_match.end();
+
+            s.append(match_s);
+        }
+
+        if curr_pos < text.len() {
+            s.append_styled(Self::unescape(&text[curr_pos..text.len()]), style);
+        }
+
+        (s, links)
+    }
+}
+
 /// Decode a HTML encoded string
 fn decode_html(s: &str) -> String {
     htmlescape::decode_html(s).unwrap_or_else(|_| s.to_string())
@@ -297,6 +383,8 @@ fn decode_html(s: &str) -> String {
 /// Parse a raw HTML comment text into a styled string.
 /// The function also returns a list of links in the comment.
 fn parse_raw_html_comment(text: &str, metadata: StyledString) -> (StyledString, Vec<String>) {
+    debug!("parse raw html comment: {}", text);
+
     let text = decode_html(text);
 
     let mut s = utils::combine_styled_strings(vec![metadata, StyledString::plain("\n")]);
@@ -312,7 +400,7 @@ fn parse_comment_text(
     style: Style,
     begin_link_id: usize,
 ) -> (StyledString, Vec<String>) {
-    debug!("parse {}", text);
+    debug!("parse comment text: {}", text);
 
     let mut curr_pos = 0;
     let mut s = StyledString::new();
@@ -412,106 +500,3 @@ fn parse_comment_text(
     }
     (s, links)
 }
-
-// impl Article {
-//     fn get_content(&self) -> String {
-//         self.content.replace("\t", "    ")
-//     }
-
-//     /// parse links from the article's content (in markdown format)
-//     pub fn parse_link(&self, raw_md: bool) -> (StyledString, Vec<String>) {
-//         // escape characters in markdown: \ ` * _ { } [ ] ( ) # + - . ! =
-//         let md_escape_char_re = Regex::new(r"\\(?P<char>[\\`\*_\{\}\[\]\(\)#\+\-\.!=])").unwrap();
-
-//         let content = self.get_content();
-
-//         // if raw_md is true, don't parse link
-//         if raw_md {
-//             let content = md_escape_char_re
-//                 .replace_all(&content, "${char}")
-//                 .to_string();
-//             return (StyledString::plain(content), vec![]);
-//         }
-
-//         let md_img_re = Regex::new(r"!\[(?P<desc>.*?)\]\((?P<link>.*?)\)").unwrap();
-//         let mut s = md_img_re
-//             .replace_all(&content, "!\\[${desc}\\]\\(image\\)")
-//             .to_string();
-
-//         let md_link_re =
-//             Regex::new(r"(?P<prefix_char>[^\\]|^)\[(?P<desc>.*?)\]\((?P<link>.*?)\)").unwrap();
-//         let mut styled_s = StyledString::new();
-//         let mut links: Vec<String> = vec![];
-
-//         loop {
-//             match md_link_re.captures(&s.clone()) {
-//                 None => break,
-//                 Some(c) => {
-//                     let m = c.get(0).unwrap();
-//                     let prefix_char = c.name("prefix_char").unwrap().as_str();
-//                     let link = md_escape_char_re
-//                         .replace_all(c.name("link").unwrap().as_str(), "${char}")
-//                         .to_string();
-//                     let desc = md_escape_char_re
-//                         .replace_all(c.name("desc").unwrap().as_str(), "${char}")
-//                         .to_string();
-
-//                     let link = if url::Url::parse(&link).is_err() {
-//                         // not an absolute link
-//                         match url::Url::parse(&self.url).unwrap().join(&link) {
-//                             Ok(url) => url.to_string(),
-//                             Err(err) => {
-//                                 warn!("{} is not a valid path/url: {}", link, err);
-//                                 "".to_owned()
-//                             }
-//                         }
-//                     } else {
-//                         link.to_string()
-//                     };
-//                     let desc = if desc.is_empty() {
-//                         format!("\"{}\"", utils::shorten_url(&link))
-//                     } else {
-//                         desc
-//                     };
-
-//                     let range = m.range();
-//                     let mut prefix: String = s
-//                         .drain(std::ops::Range {
-//                             start: 0,
-//                             end: m.end(),
-//                         })
-//                         .collect();
-//                     prefix.drain(range);
-
-//                     prefix += prefix_char;
-//                     if !prefix.is_empty() {
-//                         styled_s.append_plain(
-//                             md_escape_char_re
-//                                 .replace_all(&prefix, "${char}")
-//                                 .to_string(),
-//                         );
-//                     }
-
-//                     styled_s.append_styled(
-//                         format!("{} ", desc),
-//                         config::get_config_theme().component_style.link,
-//                     );
-
-//                     if !link.is_empty() {
-//                         // a valid link
-//                         styled_s.append_styled(
-//                             format!("[{}]", links.len()),
-//                             config::get_config_theme().component_style.link_id,
-//                         );
-//                         links.push(link.to_string());
-//                     }
-//                     continue;
-//                 }
-//             }
-//         }
-//         if !s.is_empty() {
-//             styled_s.append_plain(md_escape_char_re.replace_all(&s, "${char}").to_string());
-//         }
-//         (styled_s, links)
-//     }
-// }

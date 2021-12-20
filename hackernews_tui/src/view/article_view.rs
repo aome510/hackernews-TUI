@@ -23,7 +23,7 @@ impl ArticleView {
         // TODO: implement article rendering logic here
 
         let view = LinearLayout::vertical()
-            .child(TextView::new(&article.content))
+            .child(TextView::new(article.parsed_content.clone()))
             .scrollable();
 
         ArticleView {

@@ -305,6 +305,7 @@ impl HNClient {
             match serde_json::from_slice::<Article>(&output.stdout) {
                 Ok(mut article) => {
                     article.url = url.to_string();
+                    article.parse();
                     Ok(article)
                 }
                 Err(err) => {
