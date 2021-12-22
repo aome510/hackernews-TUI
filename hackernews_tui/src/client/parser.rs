@@ -3,6 +3,10 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{de, Deserialize, Deserializer};
 
+use html5ever::tendril::TendrilSink;
+use html5ever::*;
+use markup5ever_rcdom::{Handle, NodeData, RcDom};
+
 lazy_static! {
     /// a regex that matches a search match in the response from HN Algolia search API
     static ref MATCH_RE: Regex = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
@@ -10,7 +14,7 @@ lazy_static! {
     /// a regex used to parse a HN comment (in HTML format)
     /// It consists of multiple regex(s) representing different elements
     static ref COMMENT_RE: Regex = Regex::new(&format!(
-        "(({})|({})|({})|({})|({})|({}))",
+        r"(({})|({})|({})|({})|({})|({}))",
         // a regex that matches a HTML paragraph
         r"<p>(?s)(?P<paragraph>(|[^>].*?))</p>",
         // a regex that matches a paragraph quote (in markdown format)
@@ -20,23 +24,9 @@ lazy_static! {
         // a regex that matches a HTML code block (multiline)
         r"<pre><code>(?s)(?P<multiline_code>.*?)[\n]*</code></pre>",
         // a regex that matches a single line code block (markdown format)
-        "`(?P<code>[^`]+?)`",
+        r"`(?P<code>[^`]+?)`",
         // a regex that matches a HTML link
         r#"<a\s+?href="(?P<link>.*?)"(?s).+?</a>"#,
-    )).unwrap();
-
-    /// a regex that matches a markdown image
-    static ref MD_IMG_RE: Regex = Regex::new(r"!\[(?P<img_desc>.*?)\]\((?P<img_url>.*?)\)").unwrap();
-
-    /// a regex that matches a markdown escaped character
-    static ref MD_ESCAPE_CHAR_RE: Regex = Regex::new(r"\\(?P<char>[\\`\*_\{\}\[\]\(\)#\+\-\.!=])").unwrap();
-
-    /// a regex used to parse an article (in markdown format)
-    /// It consists of multiple regex(s) representing different elements
-    static ref MD_ARTICLE_RE: Regex = Regex::new(&format!(
-        "(({}))",
-        // a regex that matches a markdown link
-        r"\[(?P<link_desc>.*?)\]\((?P<link_url>.*?)\)"
     )).unwrap();
 }
 
@@ -304,92 +294,159 @@ impl From<CommentResponse> for Vec<Comment> {
 }
 
 impl Article {
-    pub fn parse(&mut self) {
+    pub fn parse(&mut self) -> Result<()> {
         // replace a tab character by 4 spaces
         // because it's possible that the terminal cannot render the tab character
         self.content = self.content.replace("\t", "    ");
 
-        self.content = MD_IMG_RE
-            .replace_all(&self.content, "${img_desc} \\(image\\)")
-            .to_string();
+        debug!("article (url={}), content: {}", self.url, self.content);
 
-        let parsed_result = Self::parse_article_text(self.content.clone(), Style::default(), 0);
+        let dom = parse_document(RcDom::default(), Default::default())
+            .from_utf8()
+            .read_from(&mut (self.content.as_bytes()))?;
 
-        self.parsed_content = parsed_result.0;
-        self.links = parsed_result.1;
+        let (s, links) = Self::parse_html(dom.document, Style::default(), 0, false, String::new());
+        self.parsed_content = s;
+        self.links = links;
+        Ok(())
     }
 
-    /// unescape a markdown escaped string
-    fn unescape(text: &str) -> String {
-        MD_ESCAPE_CHAR_RE.replace_all(text, "${char}").to_string()
-    }
-
-    fn parse_article_text(
-        text: String,
-        style: Style,
+    fn parse_html(
+        node: Handle,
+        mut style: Style,
         begin_link_id: usize,
+        mut is_pre: bool,
+        mut prefix: String,
     ) -> (StyledString, Vec<String>) {
-        debug!("parse article text: {}", text);
+        debug!("parse node: {:?}", node);
 
-        let mut curr_pos = 0;
         let mut s = StyledString::new();
+        let mut suffix = StyledString::new();
         let mut links = vec![];
 
-        for caps in MD_ARTICLE_RE.captures_iter(&text) {
-            let match_s = {
-                if let (Some(desc), Some(url)) = (caps.name("link_desc"), caps.name("link_url")) {
-                    debug!("desc: {}, url: {}", desc.as_str(), url.as_str());
-
-                    links.push(Self::unescape(desc.as_str()));
-                    utils::combine_styled_strings(vec![
-                        StyledString::styled(
-                            Self::unescape(desc.as_str()),
-                            style.combine(config::get_config_theme().component_style.link),
-                        ),
-                        StyledString::plain(" "),
-                        StyledString::styled(
-                            format!("[{}]", links.len() + begin_link_id),
-                            style.combine(config::get_config_theme().component_style.link_id),
-                        ),
-                    ])
-                } else if let Some(italic) = caps.name("italic") {
-                    let (sub_s, mut sub_links) = Self::parse_article_text(
-                        italic.as_str().to_string(),
-                        style.combine(config::get_config_theme().component_style.italic),
-                        begin_link_id,
-                    );
-
-                    links.append(&mut sub_links);
-
-                    sub_s
-                } else if let Some(bold) = caps.name("bold") {
-                    let (sub_s, mut sub_links) = Self::parse_article_text(
-                        bold.as_str().to_string(),
-                        style.combine(config::get_config_theme().component_style.bold),
-                        begin_link_id,
-                    );
-
-                    links.append(&mut sub_links);
-
-                    sub_s
+        match &node.data {
+            NodeData::Text { contents } => {
+                let content = contents.borrow().to_string();
+                let text = if is_pre {
+                    // ident `pre` block by 2 ws character
+                    content.trim_matches('\n').to_string().replace("\n", "\n  ")
                 } else {
-                    unreachable!()
-                }
-            };
+                    // for non-pre element, newlines are ignored.
+                    // This is to prevent reader-mode engine to add unneccesary line wraps for each paragraph.
+                    content.replace("\n", "")
+                };
 
-            let whole_match = caps.get(0).unwrap();
-            // the part that doesn't match any patterns should be rendered in the default style
-            if curr_pos < whole_match.start() {
-                s.append_styled(Self::unescape(&text[curr_pos..whole_match.start()]), style);
+                debug!("parse HTML text: {}", text,);
+                suffix.append_styled(decode_html(&text), style);
             }
-            curr_pos = whole_match.end();
+            NodeData::Element {
+                ref name,
+                ref attrs,
+                ..
+            } => {
+                debug!("visit element: name={:?}, attrs: {:?}", name, attrs);
 
-            s.append(match_s);
+                let component_style = &config::get_config_theme().component_style;
+
+                match name.expanded() {
+                    expanded_name!(html "h1")
+                    | expanded_name!(html "h2")
+                    | expanded_name!(html "h3")
+                    | expanded_name!(html "h4")
+                    | expanded_name!(html "h5")
+                    | expanded_name!(html "h6") => {
+                        style = style.combine(component_style.header);
+
+                        s.append_plain("\n\n");
+                    }
+                    expanded_name!(html "br") => {
+                        suffix.append_plain("\n");
+                    }
+                    expanded_name!(html "p") => {
+                        s.append_styled(format!("\n\n{}", prefix), style);
+                    }
+                    expanded_name!(html "code") => {
+                        if !is_pre {
+                            style = style.combine(component_style.single_code_block);
+                        }
+                    }
+                    expanded_name!(html "pre") => {
+                        is_pre = true;
+                        style = style.combine(component_style.multiline_code_block);
+
+                        // ident `pre` block by 2 ws character
+                        s.append_plain("\n\n  ");
+                    }
+                    expanded_name!(html "table") => {
+                        // in the meantime, parsing `table` tag is not supported
+                        s.append_styled("\n\n  (table)", component_style.metadata);
+                        return (s, links);
+                    }
+                    expanded_name!(html "ul") | expanded_name!(html "ol") => {
+                        prefix = format!("{}  ", prefix);
+                    }
+                    expanded_name!(html "li") => {
+                        s.append_styled(format!("\n{}• ", prefix), style);
+                    }
+                    expanded_name!(html "blockquote") => {
+                        prefix = format!("{}▎ ", prefix);
+                        style = style.combine(component_style.quote);
+                    }
+                    expanded_name!(html "img") => {
+                        let img_desc = if let Some(attr) = attrs
+                            .borrow()
+                            .iter()
+                            .find(|&attr| attr.name.expanded() == expanded_name!("", "alt"))
+                        {
+                            attr.value.to_string()
+                        } else {
+                            String::new()
+                        };
+                        s.append_styled(format!("\n  {}", img_desc), style);
+                        s.append_styled(" (image)", component_style.metadata);
+                    }
+                    expanded_name!(html "a") => {
+                        // find `href` attribute of an <a> tag
+                        if let Some(attr) = attrs
+                            .borrow()
+                            .iter()
+                            .find(|&attr| attr.name.expanded() == expanded_name!("", "href"))
+                        {
+                            links.push(attr.value.clone().to_string());
+
+                            suffix.append_styled(" ", style);
+                            suffix.append_styled(
+                                format!("[{}]", links.len() + begin_link_id),
+                                component_style.link_id,
+                            );
+                        }
+                        style = style.combine(component_style.link);
+                    }
+                    expanded_name!(html "strong") => {
+                        style = style.combine(component_style.bold);
+                    }
+                    expanded_name!(html "em") => {
+                        style = style.combine(component_style.italic);
+                    }
+                    _ => {}
+                }
+            }
+            _ => {}
         }
 
-        if curr_pos < text.len() {
-            s.append_styled(Self::unescape(&text[curr_pos..text.len()]), style);
-        }
+        node.children.borrow().iter().for_each(|node| {
+            let (sub_s, mut sub_links) = Self::parse_html(
+                node.clone(),
+                style,
+                begin_link_id + links.len(),
+                is_pre,
+                prefix.clone(),
+            );
+
+            s.append(sub_s);
+            links.append(&mut sub_links);
+        });
+        s.append(suffix);
 
         (s, links)
     }
@@ -397,7 +454,7 @@ impl Article {
 
 /// Decode a HTML encoded string
 fn decode_html(s: &str) -> String {
-    htmlescape::decode_html(s).unwrap_or_else(|_| s.to_string())
+    html_escape::decode_html_entities(s).into()
 }
 
 /// Parse a raw HTML comment text into a styled string.

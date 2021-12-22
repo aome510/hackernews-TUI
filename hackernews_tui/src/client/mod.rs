@@ -305,17 +305,17 @@ impl HNClient {
             match serde_json::from_slice::<Article>(&output.stdout) {
                 Ok(mut article) => {
                     article.url = url.to_string();
-                    article.parse();
+                    article.parse()?;
                     Ok(article)
                 }
                 Err(err) => {
-                    let stdout = std::str::from_utf8(&output.stdout).unwrap();
+                    let stdout = std::str::from_utf8(&output.stdout)?;
                     warn!("failed to deserialize {} into an `Article` struct:", stdout);
                     Err(anyhow::anyhow!(err))
                 }
             }
         } else {
-            let stderr = std::str::from_utf8(&output.stderr).unwrap().to_string();
+            let stderr = std::str::from_utf8(&output.stderr)?.to_string();
             Err(anyhow::anyhow!(stderr))
         }
     }
