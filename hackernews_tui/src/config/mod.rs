@@ -40,7 +40,7 @@ impl Default for Config {
             url_open_command: "open".to_string(),
             article_parse_command: ArticleParseCommand {
                 command: "mercury-parser".to_string(),
-                options: vec!["--format".to_string(), "markdown".to_string()],
+                options: vec![],
             },
             client: Client {
                 story_limit: StoryLimit {
