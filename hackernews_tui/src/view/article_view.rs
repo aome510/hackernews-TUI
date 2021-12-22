@@ -60,7 +60,7 @@ pub fn get_link_dialog(links: &[String]) -> impl View {
 
     let links_view = OnEventView::new(LinearLayout::vertical().with(|v| {
         links.iter().enumerate().for_each(|(id, link)| {
-            let mut link_styled_string = StyledString::plain(format!("{}. ", id));
+            let mut link_styled_string = StyledString::plain(format!("{}. ", id + 1));
             link_styled_string.append_styled(
                 utils::shorten_url(link),
                 config::get_config_theme().component_style.link,
@@ -174,8 +174,8 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
             match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    if num < s.article.links.len() {
-                        utils::open_url_in_browser(&s.article.links[num]);
+                    if num > 0 && num <= s.article.links.len() {
+                        utils::open_url_in_browser(&s.article.links[num - 1]);
                     }
                     Some(EventResult::Consumed(None))
                 }
@@ -187,8 +187,8 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
             |s, _| match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    if num < s.article.links.len() {
-                        let url = s.article.links[num].clone();
+                    if num > 0 && num <= s.article.links.len() {
+                        let url = s.article.links[num - 1].clone();
                         Some(EventResult::with_cb({
                             move |s| add_article_view_layer(s, &url)
                         }))

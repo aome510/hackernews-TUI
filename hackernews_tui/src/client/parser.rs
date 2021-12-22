@@ -11,6 +11,9 @@ lazy_static! {
     /// a regex that matches a search match in the response from HN Algolia search API
     static ref MATCH_RE: Regex = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
 
+    /// a regex that matches whitespace character(s)
+    static ref WS_RE: Regex = Regex::new(r"\s+").unwrap();
+
     /// a regex used to parse a HN comment (in HTML format)
     /// It consists of multiple regex(s) representing different elements
     static ref COMMENT_RE: Regex = Regex::new(&format!(
@@ -307,7 +310,19 @@ impl Article {
 
         let (s, links) = Self::parse_html(dom.document, Style::default(), 0, false, String::new());
         self.parsed_content = s;
-        self.links = links;
+        self.links = links
+            .into_iter()
+            .map(|l| {
+                match url::Url::parse(&l) {
+                    // failed to parse the link, possibly a relative link, (e.g `/a/b`)
+                    Err(_) => match url::Url::parse(&self.url).unwrap().join(&l) {
+                        Ok(url) => url.to_string(),
+                        Err(_) => String::new(),
+                    },
+                    Ok(_) => l,
+                }
+            })
+            .collect();
         Ok(())
     }
 
@@ -318,6 +333,7 @@ impl Article {
         mut is_pre: bool,
         mut prefix: String,
     ) -> (StyledString, Vec<String>) {
+        // TODO: handle parsing <ol>, <table> tags correctly
         debug!("parse node: {:?}", node);
 
         let mut s = StyledString::new();
@@ -331,9 +347,9 @@ impl Article {
                     // ident `pre` block by 2 ws character
                     content.trim_matches('\n').to_string().replace("\n", "\n  ")
                 } else {
-                    // for non-pre element, newlines are ignored.
-                    // This is to prevent reader-mode engine to add unneccesary line wraps for each paragraph.
-                    content.replace("\n", "")
+                    // for non-pre element, consecutive whitespaces are ignored.
+                    // This is to prevent reader-mode engine to add unneccesary line wraps/idents for each paragraph.
+                    WS_RE.replace_all(&content, " ").to_string()
                 };
 
                 debug!("parse HTML text: {}", text,);
