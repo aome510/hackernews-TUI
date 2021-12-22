@@ -352,6 +352,26 @@ impl Article {
                             style.combine(config::get_config_theme().component_style.link_id),
                         ),
                     ])
+                } else if let Some(italic) = caps.name("italic") {
+                    let (sub_s, mut sub_links) = Self::parse_article_text(
+                        italic.as_str().to_string(),
+                        style.combine(config::get_config_theme().component_style.italic),
+                        begin_link_id,
+                    );
+
+                    links.append(&mut sub_links);
+
+                    sub_s
+                } else if let Some(bold) = caps.name("bold") {
+                    let (sub_s, mut sub_links) = Self::parse_article_text(
+                        bold.as_str().to_string(),
+                        style.combine(config::get_config_theme().component_style.bold),
+                        begin_link_id,
+                    );
+
+                    links.append(&mut sub_links);
+
+                    sub_s
                 } else {
                     unreachable!()
                 }

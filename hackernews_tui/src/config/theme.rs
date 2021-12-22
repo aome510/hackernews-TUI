@@ -56,6 +56,7 @@ pub struct ComponentStyle {
     pub multiline_code_block: Style,
     pub quote: Style,
     pub italic: Style,
+    pub bold: Style,
     pub metadata: Style,
     pub current_story_tag: Style,
     pub username: Style,
@@ -120,6 +121,7 @@ impl Default for ComponentStyle {
                 .front(Color::parse("white"))
                 .effect(Effect::Bold),
             italic: Style::default().effect(Effect::Italic),
+            bold: Style::default().effect(Effect::Bold),
             metadata: Style::default().front(Color::parse("#828282")),
             username: Style::default().effect(Effect::Bold),
             loading_bar: Style::default()
