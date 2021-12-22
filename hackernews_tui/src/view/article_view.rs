@@ -20,10 +20,28 @@ impl ViewWrapper for ArticleView {
 
 impl ArticleView {
     pub fn new(article: client::Article) -> Self {
-        // TODO: implement article rendering logic here
+        let component_style = &config::get_config_theme().component_style;
+        let unknown = "[unknown]".to_string();
+        let desc = format!(
+            "by: {}, date_published: {}",
+            article.author.as_ref().unwrap_or(&unknown),
+            article.date_published.as_ref().unwrap_or(&unknown),
+        );
 
         let view = LinearLayout::vertical()
-            .child(TextView::new(article.parsed_content.clone()))
+            .child(TextView::new(&article.title).center().full_width())
+            .child(
+                TextView::new(StyledString::styled(desc, component_style.metadata))
+                    .center()
+                    .full_width(),
+            )
+            .child(PaddedView::lrtb(
+                1,
+                1,
+                0,
+                0,
+                TextView::new(article.parsed_content.clone()),
+            ))
             .scrollable();
 
         ArticleView {
