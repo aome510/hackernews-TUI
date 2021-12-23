@@ -3,7 +3,7 @@ mod parser;
 mod query;
 
 // re-export
-pub use parser::{Comment, CommentState, Story};
+pub use parser::{Article, Comment, CommentState, Story};
 pub use query::StoryNumericFilters;
 
 use crate::prelude::*;
@@ -291,6 +291,33 @@ impl HNClient {
         );
 
         Ok(response.into())
+    }
+
+    /// gets a web article from a URL
+    pub fn get_article(url: &str) -> Result<Article> {
+        let article_parse_command = &config::get_config().article_parse_command;
+        let output = std::process::Command::new(&article_parse_command.command)
+            .args(&article_parse_command.options)
+            .arg(url)
+            .output()?;
+
+        if output.status.success() {
+            match serde_json::from_slice::<Article>(&output.stdout) {
+                Ok(mut article) => {
+                    article.url = url.to_string();
+                    article.parse()?;
+                    Ok(article)
+                }
+                Err(err) => {
+                    let stdout = std::str::from_utf8(&output.stdout)?;
+                    warn!("failed to deserialize {} into an `Article` struct:", stdout);
+                    Err(anyhow::anyhow!(err))
+                }
+            }
+        } else {
+            let stderr = std::str::from_utf8(&output.stderr)?.to_string();
+            Err(anyhow::anyhow!(stderr))
+        }
     }
 }
 

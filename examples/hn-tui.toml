@@ -9,22 +9,9 @@
 
 # `article_parse_command` defines a command to parse a web article's content.
 # The parsed data is then used to render an `ArticleView` of the article.
-#
-# The command must have the following form:
-# `<article_parse_command> [options...] <article_url>`
-# It should return a JSON string representing the parsed `Article` data:
-# ```rust
-# pub struct Article {
-#     title: String,
-#     url: String,
-#     content: String,
-#     author: Option<String>,
-#     date_published: Option<String>,
-#     word_count: usize,
-# }
-# ```
-# article_parse_command = {command = "mercury-parser", options = ["--format", "markdown"]}
-# article_parse_command = {command = "article_md", options = []}
+# TODO: add documentation/requirement for `article_parse_command`
+# article_parse_command = {command = "mercury-parser", options = []}
+# article_parse_command = {command = "article_md", options = ["--format", "html"]}
 
 #[client]
 # `client_timeout` defines the application's client timeout (in seconds) when making an API request
@@ -125,7 +112,6 @@
 # open_link_dialog = "l"
 # link_dialog_focus_next = "j"
 # link_dialog_focus_prev = "k"
-# toggle_raw_markdown_mode = "T"
 
 # ---------------------
 # custom keymap
