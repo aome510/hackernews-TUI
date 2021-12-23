@@ -312,7 +312,7 @@ impl Article {
 
         let mut s = StyledString::new();
         let mut links = vec![];
-        Self::parse_html(
+        Self::parse_dom_node(
             dom.document,
             &mut s,
             &mut links,
@@ -341,10 +341,7 @@ impl Article {
         Ok(())
     }
 
-    /// Parse a HTML text.
-    /// It returns a styled string to decorate the text and a list
-    /// of links inside the text.
-    fn parse_html(
+    fn parse_dom_node(
         node: Handle,
         s: &mut StyledString,
         links: &mut Vec<String>,
@@ -361,11 +358,11 @@ impl Article {
             NodeData::Text { contents } => {
                 let content = contents.borrow().to_string();
                 let text = if is_pre {
-                    // ident `pre` block by 2 whitespaces
+                    // indent `pre` block by 2 whitespaces
                     content.trim_matches('\n').to_string().replace("\n", "\n  ")
                 } else {
                     // for non-pre element, consecutive whitespaces are ignored.
-                    // This is to prevent reader-mode engine from adding unneccesary line wraps/idents in a paragraph.
+                    // This is to prevent reader-mode engine from adding unneccesary line wraps/indents in a paragraph.
                     WS_RE.replace_all(&content, " ").to_string()
                 };
 
@@ -393,13 +390,15 @@ impl Article {
                         s.append_plain("\n\n");
                     }
                     expanded_name!(html "br") => {
-                        suffix.append_plain("\n");
+                        s.append_plain("\n");
                     }
                     expanded_name!(html "p") => {
                         s.append_styled(format!("\n\n{}", prefix), style);
                     }
                     expanded_name!(html "code") => {
                         if !is_pre {
+                            // we don't want to mix the single_code_block and multiline_code_block
+                            // if the multiline code block is inside <pre><code>...</code></pre>
                             style = style.combine(component_style.single_code_block);
                         }
                     }
@@ -407,7 +406,7 @@ impl Article {
                         is_pre = true;
                         style = style.combine(component_style.multiline_code_block);
 
-                        // ident `pre` block by 2 whitespaces
+                        // indent `pre` block by 2 whitespaces
                         s.append_plain("\n\n  ");
                     }
                     expanded_name!(html "table") => {
@@ -471,7 +470,7 @@ impl Article {
         }
 
         node.children.borrow().iter().for_each(|node| {
-            Self::parse_html(node.clone(), s, links, style, is_pre, prefix.clone());
+            Self::parse_dom_node(node.clone(), s, links, style, is_pre, prefix.clone());
         });
         s.append(suffix);
     }
@@ -553,7 +552,7 @@ fn parse_comment_helper(text: String, style: Style, s: &mut StyledString, links:
                 utils::shorten_url(m.as_str()),
                 style.combine(component_style.link),
             );
-            s.append_plain(" ");
+            s.append_styled(" ", style);
             s.append_styled(
                 format!("[{}]", links.len()),
                 style.combine(component_style.link_id),
