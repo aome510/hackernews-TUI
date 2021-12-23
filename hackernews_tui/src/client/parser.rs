@@ -17,7 +17,7 @@ lazy_static! {
     /// a regex used to parse a HN comment (in HTML format)
     /// It consists of multiple regex(s) representing different elements
     static ref COMMENT_RE: Regex = Regex::new(&format!(
-        r"(({})|({})|({})|({})|({})|({}))",
+        "(({})|({})|({})|({})|({})|({}))",
         // a regex that matches a HTML paragraph
         r"<p>(?s)(?P<paragraph>(|[^>].*?))</p>",
         // a regex that matches a paragraph quote (in markdown format)
@@ -154,7 +154,6 @@ pub enum CommentState {
 
 #[derive(Debug, Clone, Deserialize)]
 /// Article represents a web article in a reader mode
-/// with its text content in a markdown format.
 pub struct Article {
     pub title: String,
     pub url: String,
@@ -273,7 +272,7 @@ impl From<CommentResponse> for Vec<Comment> {
                 config::get_config_theme().component_style.metadata,
             ),
         ]);
-        let (text, links) = parse_raw_html_comment(&c.text.unwrap_or_default(), metadata.clone());
+        let (text, links) = parse_comment(&c.text.unwrap_or_default(), metadata.clone());
 
         let comment = Comment {
             id: c.id,
@@ -297,19 +296,34 @@ impl From<CommentResponse> for Vec<Comment> {
 }
 
 impl Article {
+    /// Parse article's content (in HTML) into a styled text depending on
+    /// the application's component styles and the HTML tags
     pub fn parse(&mut self) -> Result<()> {
         // replace a tab character by 4 spaces
-        // because it's possible that the terminal cannot render the tab character
+        // as it's possible that the terminal cannot render the tab character
         self.content = self.content.replace("\t", "    ");
 
         debug!("article (url={}), content: {}", self.url, self.content);
 
+        // parse HTML content into DOM node(s)
         let dom = parse_document(RcDom::default(), Default::default())
             .from_utf8()
             .read_from(&mut (self.content.as_bytes()))?;
 
-        let (s, links) = Self::parse_html(dom.document, Style::default(), 0, false, String::new());
+        let mut s = StyledString::new();
+        let mut links = vec![];
+        Self::parse_html(
+            dom.document,
+            &mut s,
+            &mut links,
+            Style::default(),
+            false,
+            String::new(),
+        );
+
         self.parsed_content = s;
+
+        // process the links inside the article
         self.links = links
             .into_iter()
             .map(|l| {
@@ -323,36 +337,39 @@ impl Article {
                 }
             })
             .collect();
+
         Ok(())
     }
 
+    /// Parse a HTML text.
+    /// It returns a styled string to decorate the text and a list
+    /// of links inside the text.
     fn parse_html(
         node: Handle,
+        s: &mut StyledString,
+        links: &mut Vec<String>,
         mut style: Style,
-        begin_link_id: usize,
         mut is_pre: bool,
         mut prefix: String,
-    ) -> (StyledString, Vec<String>) {
+    ) {
         // TODO: handle parsing <ol>, <table> tags correctly
         debug!("parse node: {:?}", node);
 
-        let mut s = StyledString::new();
         let mut suffix = StyledString::new();
-        let mut links = vec![];
 
         match &node.data {
             NodeData::Text { contents } => {
                 let content = contents.borrow().to_string();
                 let text = if is_pre {
-                    // ident `pre` block by 2 ws character
+                    // ident `pre` block by 2 whitespaces
                     content.trim_matches('\n').to_string().replace("\n", "\n  ")
                 } else {
                     // for non-pre element, consecutive whitespaces are ignored.
-                    // This is to prevent reader-mode engine to add unneccesary line wraps/idents for each paragraph.
+                    // This is to prevent reader-mode engine from adding unneccesary line wraps/idents in a paragraph.
                     WS_RE.replace_all(&content, " ").to_string()
                 };
 
-                debug!("parse HTML text: {}", text,);
+                debug!("visit text: {}", text);
                 suffix.append_styled(decode_html(&text), style);
             }
             NodeData::Element {
@@ -390,15 +407,16 @@ impl Article {
                         is_pre = true;
                         style = style.combine(component_style.multiline_code_block);
 
-                        // ident `pre` block by 2 ws character
+                        // ident `pre` block by 2 whitespaces
                         s.append_plain("\n\n  ");
                     }
                     expanded_name!(html "table") => {
-                        // in the meantime, parsing `table` tag is not supported
+                        // currently, parsing `table` tag is not supported
                         s.append_styled("\n\n  (table)", component_style.metadata);
-                        return (s, links);
+                        return;
                     }
                     expanded_name!(html "ul") | expanded_name!(html "ol") => {
+                        // currently, <ol> tag is treated the same as <ul> tag
                         prefix = format!("{}  ", prefix);
                     }
                     expanded_name!(html "li") => {
@@ -418,6 +436,7 @@ impl Article {
                         } else {
                             String::new()
                         };
+
                         s.append_styled(format!("\n  {}", img_desc), style);
                         s.append_styled(" (image)", component_style.metadata);
                     }
@@ -432,10 +451,11 @@ impl Article {
 
                             suffix.append_styled(" ", style);
                             suffix.append_styled(
-                                format!("[{}]", links.len() + begin_link_id),
+                                format!("[{}]", links.len()),
                                 component_style.link_id,
                             );
                         }
+
                         style = style.combine(component_style.link);
                     }
                     expanded_name!(html "strong") => {
@@ -451,145 +471,106 @@ impl Article {
         }
 
         node.children.borrow().iter().for_each(|node| {
-            let (sub_s, mut sub_links) = Self::parse_html(
-                node.clone(),
-                style,
-                begin_link_id + links.len(),
-                is_pre,
-                prefix.clone(),
-            );
-
-            s.append(sub_s);
-            links.append(&mut sub_links);
+            Self::parse_html(node.clone(), s, links, style, is_pre, prefix.clone());
         });
         s.append(suffix);
-
-        (s, links)
     }
 }
 
-/// Decode a HTML encoded string
+/// decode a HTML encoded string
 fn decode_html(s: &str) -> String {
     html_escape::decode_html_entities(s).into()
 }
 
-/// Parse a raw HTML comment text into a styled string.
-/// The function also returns a list of links in the comment.
-fn parse_raw_html_comment(text: &str, metadata: StyledString) -> (StyledString, Vec<String>) {
-    debug!("parse raw html comment: {}", text);
-
+/// Parse a HTML comment into a styled text.
+/// The fucntion also returns a list of links inside the comment beside the parsed styled text.
+fn parse_comment(text: &str, metadata: StyledString) -> (StyledString, Vec<String>) {
     let text = decode_html(text);
 
     let mut s = utils::combine_styled_strings(vec![metadata, StyledString::plain("\n")]);
-    let (s0, links) = parse_comment_text(text, Style::default(), 0);
+    let mut links = vec![];
+    parse_comment_helper(text, Style::default(), &mut s, &mut links);
 
-    s.append(s0);
     (s, links)
 }
 
-/// a helper function for parsing comment text that allows recursively parsing sub elements of the text.
-fn parse_comment_text(
-    text: String,
-    style: Style,
-    begin_link_id: usize,
-) -> (StyledString, Vec<String>) {
-    debug!("parse comment text: {}", text);
+/// A helper function for parsing comment text that allows recursively parsing sub-elements of the text.
+fn parse_comment_helper(text: String, style: Style, s: &mut StyledString, links: &mut Vec<String>) {
+    debug!("parse comment: {}", text);
 
     let mut curr_pos = 0;
-    let mut s = StyledString::new();
-    let mut links = vec![];
 
     // This variable indicates whether we have parsed the first paragraph of the current text.
     // It is used to add a break between 2 consecutive paragraphs.
     let mut seen_first_paragraph = false;
 
     for caps in COMMENT_RE.captures_iter(&text) {
-        let match_s = {
-            if let (Some(m_quote), Some(m_text)) = (caps.name("quote"), caps.name("text")) {
-                if seen_first_paragraph {
-                    s.append_styled("\n", style);
-                } else {
-                    seen_first_paragraph = true;
-                }
-
-                // render quote character `>` as indentation character
-                let quote_s = StyledString::styled(
-                    "▎"
-                        .to_string()
-                        .repeat(m_quote.as_str().matches('>').count()),
-                    style,
-                );
-
-                let (sub_s, mut sub_links) = parse_comment_text(
-                    m_text.as_str().to_string(),
-                    config::get_config_theme().component_style.quote.into(),
-                    links.len(),
-                );
-                links.append(&mut sub_links);
-
-                utils::combine_styled_strings(vec![quote_s, sub_s, StyledString::plain("\n")])
-            } else if let Some(m) = caps.name("paragraph") {
-                if seen_first_paragraph {
-                    s.append_styled("\n", style);
-                } else {
-                    seen_first_paragraph = true;
-                }
-
-                let (sub_s, mut sub_links) =
-                    parse_comment_text(m.as_str().to_string(), style, links.len());
-                links.append(&mut sub_links);
-
-                utils::combine_styled_strings(vec![sub_s, StyledString::plain("\n")])
-            } else if let Some(m) = caps.name("link") {
-                links.push(m.as_str().to_string());
-
-                utils::combine_styled_strings(vec![
-                    StyledString::styled(
-                        utils::shorten_url(m.as_str()),
-                        style.combine(config::get_config_theme().component_style.link),
-                    ),
-                    StyledString::plain(" "),
-                    StyledString::styled(
-                        format!("[{}]", links.len() + begin_link_id),
-                        style.combine(config::get_config_theme().component_style.link_id),
-                    ),
-                ])
-            } else if let Some(m) = caps.name("multiline_code") {
-                StyledString::styled(
-                    m.as_str(),
-                    style.combine(
-                        config::get_config_theme()
-                            .component_style
-                            .multiline_code_block,
-                    ),
-                )
-            } else if let Some(m) = caps.name("code") {
-                StyledString::styled(
-                    m.as_str(),
-                    style.combine(config::get_config_theme().component_style.single_code_block),
-                )
-            } else if let Some(m) = caps.name("italic") {
-                StyledString::styled(
-                    m.as_str(),
-                    style.combine(config::get_config_theme().component_style.italic),
-                )
-            } else {
-                unreachable!()
-            }
-        };
-
+        // the part that doesn't match any patterns is rendered in the default style
         let whole_match = caps.get(0).unwrap();
-        // the part that doesn't match any patterns should be rendered in the default style
         if curr_pos < whole_match.start() {
             s.append_styled(&text[curr_pos..whole_match.start()], style);
         }
         curr_pos = whole_match.end();
 
-        s.append(match_s);
+        let component_style = &config::get_config_theme().component_style;
+
+        if let (Some(m_quote), Some(m_text)) = (caps.name("quote"), caps.name("text")) {
+            if seen_first_paragraph {
+                s.append_plain("\n");
+            } else {
+                seen_first_paragraph = true;
+            }
+
+            // render quote character `>` as indentation character
+            s.append_styled(
+                "▎"
+                    .to_string()
+                    .repeat(m_quote.as_str().matches('>').count()),
+                style,
+            );
+            parse_comment_helper(
+                m_text.as_str().to_string(),
+                component_style.quote.into(),
+                s,
+                links,
+            );
+
+            s.append_plain("\n");
+        } else if let Some(m) = caps.name("paragraph") {
+            if seen_first_paragraph {
+                s.append_plain("\n");
+            } else {
+                seen_first_paragraph = true;
+            }
+
+            parse_comment_helper(m.as_str().to_string(), style, s, links);
+
+            s.append_plain("\n");
+        } else if let Some(m) = caps.name("link") {
+            links.push(m.as_str().to_string());
+
+            s.append_styled(
+                utils::shorten_url(m.as_str()),
+                style.combine(component_style.link),
+            );
+            s.append_plain(" ");
+            s.append_styled(
+                format!("[{}]", links.len()),
+                style.combine(component_style.link_id),
+            );
+        } else if let Some(m) = caps.name("multiline_code") {
+            s.append_styled(
+                m.as_str(),
+                style.combine(component_style.multiline_code_block),
+            );
+        } else if let Some(m) = caps.name("code") {
+            s.append_styled(m.as_str(), style.combine(component_style.single_code_block));
+        } else if let Some(m) = caps.name("italic") {
+            s.append_styled(m.as_str(), style.combine(component_style.italic));
+        }
     }
 
     if curr_pos < text.len() {
         s.append_styled(&text[curr_pos..text.len()], style);
     }
-    (s, links)
 }
