@@ -39,8 +39,8 @@ impl Default for Config {
             use_pacman_loading: true,
             url_open_command: "open".to_string(),
             article_parse_command: ArticleParseCommand {
-                command: "mercury-parser".to_string(),
-                options: vec![],
+                command: "article_md".to_string(),
+                options: vec!["--format".to_string(), "html".to_string()],
             },
             client: Client {
                 story_limit: StoryLimit {
@@ -59,11 +59,13 @@ impl Default for Config {
     }
 }
 
-#[derive(Debug, Deserialize, ConfigParse, Clone)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct ArticleParseCommand {
     pub command: String,
     pub options: Vec<String>,
 }
+
+config_parser_impl!(ArticleParseCommand);
 
 #[derive(Debug, Deserialize, ConfigParse)]
 pub struct StoryLimit {
