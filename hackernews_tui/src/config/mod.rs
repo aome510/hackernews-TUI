@@ -14,9 +14,9 @@ use serde::Deserialize;
 pub struct Config {
     pub page_scrolling: bool,
     pub use_pacman_loading: bool,
-    pub url_open_command: String,
-    pub article_parse_command: ArticleParseCommand,
     pub client_timeout: u64,
+    pub url_open_command: Command,
+    pub article_parse_command: Command,
 
     pub theme: theme::Theme,
     pub keymap: keybindings::KeyMap,
@@ -38,8 +38,11 @@ impl Default for Config {
         Config {
             page_scrolling: true,
             use_pacman_loading: true,
-            url_open_command: "open".to_string(),
-            article_parse_command: ArticleParseCommand {
+            url_open_command: Command {
+                command: "open".to_string(),
+                options: vec![],
+            },
+            article_parse_command: Command {
                 command: "article_md".to_string(),
                 options: vec!["--format".to_string(), "html".to_string()],
             },
@@ -51,15 +54,18 @@ impl Default for Config {
 }
 
 #[derive(Debug, Deserialize, Clone)]
-pub struct ArticleParseCommand {
+pub struct Command {
     pub command: String,
     pub options: Vec<String>,
 }
 
-config_parser_impl!(ArticleParseCommand);
+config_parser_impl!(Command);
 
-#[derive(Debug, Deserialize, ConfigParse)]
-pub struct Client {}
+impl std::fmt::Display for Command {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{} {}", self.command, self.options.join(" ")))
+    }
+}
 
 static CONFIG: once_cell::sync::OnceCell<Config> = once_cell::sync::OnceCell::new();
 
