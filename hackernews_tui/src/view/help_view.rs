@@ -165,8 +165,8 @@ impl HasHelpView for DefaultHelpView {}
 impl HasHelpView for story_view::StoryView {
     fn construct_help_view() -> HelpView {
         let story_view_keymap = config::get_story_view_keymap();
-        let custom_keymaps: Vec<(String, String)> = config::get_custom_keymap()
-            .custom_view_navigation
+        let custom_keymaps: Vec<(String, String)> = config::get_config()
+            .keymap.custom_keymaps
             .iter()
             .map(|keymap| {
                 (

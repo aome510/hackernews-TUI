@@ -5,26 +5,22 @@ use serde::{de, Deserialize, Deserializer};
 
 #[derive(Default, Debug, Clone, Deserialize, ConfigParse)]
 pub struct KeyMap {
-    pub custom_keymap: CustomKeyMap,
     pub edit_keymap: EditKeyMap,
     pub global_keymap: GlobalKeyMap,
     pub story_view_keymap: StoryViewKeyMap,
     pub search_view_keymap: SearchViewKeyMap,
     pub comment_view_keymap: CommentViewKeyMap,
     pub article_view_keymap: ArticleViewKeyMap,
+
+    pub custom_keymaps: Vec<CustomKeyMap>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct CustomViewNavigation {
+pub struct CustomKeyMap {
     pub key: Key,
     pub tag: String,
     pub by_date: bool,
     pub numeric_filters: client::StoryNumericFilters,
-}
-
-#[derive(Default, Debug, Clone, Deserialize)]
-pub struct CustomKeyMap {
-    pub custom_view_navigation: Vec<CustomViewNavigation>,
 }
 
 config_parser_impl!(CustomKeyMap);
@@ -368,10 +364,6 @@ impl<'de> de::Deserialize<'de> for Key {
 
         Ok(key)
     }
-}
-
-pub fn get_custom_keymap() -> &'static CustomKeyMap {
-    &super::get_config().keymap.custom_keymap
 }
 
 pub fn get_edit_keymap() -> &'static EditKeyMap {
