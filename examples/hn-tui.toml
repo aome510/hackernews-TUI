@@ -96,7 +96,7 @@ link_dialog_focus_prev = "k"
 key = "M-1"
 tag = "story"
 by_date = false
-[keymap.custom_keymaps.custom_keymap.numeric_filters]
+[keymap.custom_keymaps.numeric_filters]
 elapsed_days_interval = {start = 0, end = 3} # stories posted between now and 3 days ago
 points_interval = {start = 10} # stories with points >= 10
 num_comments_interval = {}
@@ -105,7 +105,7 @@ num_comments_interval = {}
 key = "M-2"
 tag = "show_hn"
 by_date = true
-[keymap.custom_keymaps.custom_keymap.numeric_filters]
+[keymap.custom_keymaps.numeric_filters]
 elapsed_days_interval = {}
 points_interval = {start = 50, end = 200}
 num_comments_interval = {end = 100}
