@@ -119,34 +119,27 @@ $ cd /usr/pkgsrc/www/hackernews-tui
 
 ## Examples
 
-### Demo
-
-List of demo videos:
-
-- `hackernews_tui v0.5.0`: demo general usage of `Story View`, `Search View` and `Comment View` can be found [here](https://www.youtube.com/watch?v=AArtVod0b6A)
-- `hackernews_tui v0.6.0-beta`: demo the usage of `Article View` to read a web page in reader mode can be found [here](https://www.youtube.com/watch?v=jIsKZwPi2T8)
-
 ### Story View
 
-![Example of a Story View - Front Page](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/story_view.png)
+![Example of a Story View](https://user-images.githubusercontent.com/40011582/147393397-71991e48-cba6-4f89-9d28-cafbc0143c42.png)
 
 ### Article View
 
-![Example of a Story View - Front Page](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/article_view.png)
+![Example of an Article View](https://user-images.githubusercontent.com/40011582/147393483-06b57c07-3fa3-49ec-b238-a2d67905610d.png)
 
 ### Search View
 
-![Example of a Search View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/story_search_view.png)
+![Example of a Search View](https://user-images.githubusercontent.com/40011582/147393493-41d52d9f-65cd-4f63-bf76-c11d9bea1f49.png)
 
 ### Comment View
 
-![Example of a Comment View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/comment_view.png)
+![Example of a Comment View](https://user-images.githubusercontent.com/40011582/147393459-641dd6c3-3564-472c-83cd-e1865339c861.png)
 
 ## Default Shortcuts
 
 In each `View`, press `?` to see a list of supported keyboard shortcuts and their functionalities. Note that the shortcuts are fully [customizable](#user-defined-shortcuts).
 
-![Example of a Help View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/help_view.png)
+![Example of a Help View](https://user-images.githubusercontent.com/40011582/147393555-5ca346ca-b59a-4a7f-ab53-b1ec7025eca4.png)
 
 ### Global key shortcuts
 
@@ -254,33 +247,7 @@ For further information about the configuration options, please refer to the [ex
 
 ### Article Parse Command
 
-To enable viewing a web page in reader mode with `Article View`, you must configure the `article_parse_command` field in your configuration file:
-
-````yaml
-# `article_parse_command` defines a command to parse a web article's content
-# to a markdown format. The parsed data is then used to render the `ArticleView`
-# of the corresponding article.
-#
-# The command must have the following form:
-# `<article_parse_command> [options...] <article_url>`
-# It should return a JSON string representing the parsed `Article` data:
-# ```
-# pub struct Article {
-#     title: String,
-#     url: String,
-#     content: String,
-#     author: Option<String>,
-#     date_published: Option<String>,
-#     word_count: usize,
-# }
-# ```
-article_parse_command = {command = "mercury-parser", options = ["--format", "markdown"]} // default value
-# article_parse_command = {command = "article_md", options = []}
-````
-
-If you don't want to implement an article parser by your own, one way to configure `article_parse_command` is to use [`mercury-parser`](https://github.com/postlight/mercury-parser#installation), a web parser tool that `hackernews_tui` has been using by default since the version `0.6.0`. `mercury-parser` is powerful and stable. However, in some cases, the text content it returns when parsing HTML `code` tags has some weird indentations.
-
-An alternative is to use [`article_md`](https://github.com/aome510/article-md-cli), a CLI tool I wrote for parsing web page's content into a markdown text. Under the hood, it uses [mozilla's readability](https://github.com/mozilla/readability), so the parsed text for HTML `code` tags look nicer.
+TBA
 
 ### User-defined shortcuts
 
@@ -310,9 +277,9 @@ It's possible to define a custom shortcut to switch between different `StoryView
   - [ ] add comment
   - [ ] post
 - improve application's theme
-  - [ ] improve the application's overall look
-  - [ ] include useful font-highliting
-  - [ ] rewrite the theme parser to support more themes and allow to parse themes from known colorschemes
+  - [x] improve the application's overall look
+  - [x] include useful font-highliting
+  - [x] rewrite the theme parser to support more themes and allow to parse themes from known colorschemes
   - [ ] add some extra transition effects
 - improve the keybinding handler
   - [ ] allow to bind multiple keys to a single command
