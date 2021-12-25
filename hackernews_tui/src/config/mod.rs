@@ -12,7 +12,7 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize, ConfigParse)]
 /// Config is a struct storing the application's configurations
 pub struct Config {
-    pub page_scrolling: bool,
+    pub use_page_scrolling: bool,
     pub use_pacman_loading: bool,
     pub client_timeout: u64,
     pub url_open_command: Command,
@@ -36,7 +36,7 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            page_scrolling: true,
+            use_page_scrolling: true,
             use_pacman_loading: true,
             url_open_command: Command {
                 command: "open".to_string(),

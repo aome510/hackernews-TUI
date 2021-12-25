@@ -33,7 +33,7 @@ macro_rules! impl_scrollable_list {
         }
 
         fn scroll(&mut self, direction: bool) {
-            if !config::get_config().page_scrolling {
+            if !config::get_config().use_page_scrolling {
                 self.get_inner_mut().scroll_to_important_area();
                 return;
             }

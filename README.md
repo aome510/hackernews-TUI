@@ -24,9 +24,6 @@
     - [Comment View](#comment-view-shortcuts)
     - [Search View](#search-view-shortcuts)
 - [Configuration](#configuration)
-  - [Article Parse Command](#article-parse-command)
-  - [User-defined shortcuts](#user-defined-shortcuts)
-  - [Custom Story View Navigation keymap](#custom-story-view-navigation-keymap)
 - [Logging](#logging)
 - [Roadmap](#roadmap)
 
@@ -234,18 +231,6 @@ hackernews_tui -c ~/.config/hn-tui.toml
 ```
 
 For further information about the configuration options, please refer to the [example configuration file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml)
-
-### Article Parse Command
-
-TBA
-
-### User-defined shortcuts
-
-Shortcuts in each `View` are fully customizable. For further information about the supported keys and the commands, please refer to the **key bindings** section in the [example configuration file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml).
-
-### Custom Story View Navigation Keymap
-
-It's possible to define custom shortcuts to navigate between different `StoryView` (`front_page`, `show_hn`, `ask_hn`, etc) with stories filtered by HN Algolia's [`numericFilters` filter options](https://hn.algolia.com/api/). An example of defining such custom shortcuts can be found under the **custom keymap** section in the [example configuration file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml).
 
 ## Logging
 
