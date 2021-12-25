@@ -225,11 +225,7 @@ pub fn get_story_view(
     page: usize,
     numeric_filters: client::StoryNumericFilters,
 ) -> impl View {
-    let starting_id = config::get_config()
-        .client
-        .story_limit
-        .get_story_limit_by_tag(tag)
-        * page;
+    let starting_id = client::STORY_LIMIT * page;
     let main_view = get_story_main_view(stories, client, starting_id).full_height();
 
     let mut view = LinearLayout::vertical()

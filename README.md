@@ -4,7 +4,7 @@
 
 `hackernews_tui` is written in Rust with the help of [Cursive TUI library](https://github.com/gyscos/cursive/). It uses [HN Algolia APIs](https://hn.algolia.com/api/) and [HN Official APIs](https://github.com/HackerNews/API) to get Hacker News data.
 
-### Table of Contents
+## Table of Contents
 
 - [Install](#install)
   - [Using Cargo](#using-cargo)

@@ -128,7 +128,7 @@ impl SearchView {
     /// updates the Story View with new matched stories
     fn update_stories_view(&mut self, stories: Vec<client::Story>) {
         self.view.remove_child(1);
-        let starting_id = config::get_config().client.story_limit.search * self.page;
+        let starting_id = client::SEARCH_LIMIT * self.page;
         self.view.add_child(
             story_view::get_story_main_view(stories, self.client, starting_id).full_height(),
         );

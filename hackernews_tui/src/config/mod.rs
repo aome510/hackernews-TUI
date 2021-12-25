@@ -16,7 +16,8 @@ pub struct Config {
     pub use_pacman_loading: bool,
     pub url_open_command: String,
     pub article_parse_command: ArticleParseCommand,
-    pub client: Client,
+    pub client_timeout: u64,
+
     pub theme: theme::Theme,
     pub keymap: keybindings::KeyMap,
 }
@@ -42,17 +43,7 @@ impl Default for Config {
                 command: "article_md".to_string(),
                 options: vec!["--format".to_string(), "html".to_string()],
             },
-            client: Client {
-                story_limit: StoryLimit {
-                    search: 10,
-                    front_page: 20,
-                    story: 20,
-                    ask_hn: 15,
-                    show_hn: 15,
-                    job: 15,
-                },
-                client_timeout: 32,
-            },
+            client_timeout: 32,
             theme: theme::Theme::default(),
             keymap: keybindings::KeyMap::default(),
         }
@@ -68,33 +59,7 @@ pub struct ArticleParseCommand {
 config_parser_impl!(ArticleParseCommand);
 
 #[derive(Debug, Deserialize, ConfigParse)]
-pub struct StoryLimit {
-    pub front_page: usize,
-    pub story: usize,
-    pub ask_hn: usize,
-    pub show_hn: usize,
-    pub job: usize,
-    pub search: usize,
-}
-
-impl StoryLimit {
-    pub fn get_story_limit_by_tag(&self, tag: &str) -> usize {
-        match tag {
-            "front_page" => self.front_page,
-            "story" => self.story,
-            "job" => self.job,
-            "ask_hn" => self.ask_hn,
-            "show_hn" => self.show_hn,
-            _ => panic!("unknown tag: {}", tag),
-        }
-    }
-}
-
-#[derive(Debug, Deserialize, ConfigParse)]
-pub struct Client {
-    pub story_limit: StoryLimit,
-    pub client_timeout: u64,
-}
+pub struct Client {}
 
 static CONFIG: once_cell::sync::OnceCell<Config> = once_cell::sync::OnceCell::new();
 
