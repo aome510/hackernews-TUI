@@ -38,8 +38,8 @@ impl ArticleView {
             .child(PaddedView::lrtb(
                 1,
                 1,
-                0,
-                0,
+                1,
+                1,
                 TextView::new(article.parsed_content.clone()),
             ))
             .scrollable();
