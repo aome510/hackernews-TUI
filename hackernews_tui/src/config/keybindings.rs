@@ -221,8 +221,8 @@ impl Default for ArticleViewKeyMap {
             up: Key::new('k'),
             page_down: Key::new('d'),
             page_up: Key::new('u'),
-            top: Key::new('t'),
-            bottom: Key::new('b'),
+            top: Key::new('g'),
+            bottom: Key::new('G'),
 
             open_link_dialog: Key::new('l'),
             link_dialog_focus_next: Key::new('j'),

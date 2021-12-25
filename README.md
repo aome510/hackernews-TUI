@@ -4,16 +4,6 @@
 
 `hackernews_tui` is written in Rust with the help of [Cursive TUI library](https://github.com/gyscos/cursive/). It uses [HN Algolia APIs](https://hn.algolia.com/api/) and [HN Official APIs](https://github.com/HackerNews/API) to get Hacker News data.
 
-### Why hackernews-TUI?
-
-If you are either
-
-- a Hacker News reader
-- a computer nerd who likes doing things on the terminal
-- a person who prefers navigating using the keyboard over a mouse
-
-This application is the right tool for you :muscle:
-
 ### Table of Contents
 
 - [Install](#install)
@@ -36,7 +26,7 @@ This application is the right tool for you :muscle:
 - [Configuration](#configuration)
   - [Article Parse Command](#article-parse-command)
   - [User-defined shortcuts](#user-defined-shortcuts)
-  - [Custom keymap](#custom-keymap)
+  - [Custom Story View Navigation keymap](#custom-story-view-navigation-keymap)
 - [Logging](#logging)
 - [Roadmap](#roadmap)
 
@@ -137,9 +127,11 @@ $ cd /usr/pkgsrc/www/hackernews-tui
 
 ## Default Shortcuts
 
-In each `View`, press `?` to see a list of supported keyboard shortcuts and their functionalities. Note that the shortcuts are fully [customizable](#user-defined-shortcuts).
+In each `View`, press `?` to see a list of supported keyboard shortcuts and their functionalities.
 
 ![Example of a Help View](https://user-images.githubusercontent.com/40011582/147393555-5ca346ca-b59a-4a7f-ab53-b1ec7025eca4.png)
+
+The below sections will list the application's default shortcuts which can be customized by changing the key mappings in the configuration file.
 
 ### Global key shortcuts
 
@@ -147,22 +139,20 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 - `esc`: Close a dialog
 - `C-q`: Quit the application
 - `C-p`: Go to the previous view
-- `C-f`: Go to front page view
 - `C-s`: Go to search view
-- `C-z`: Go to all stories view
-- `C-x`: Go to ask HN view
-- `C-c`: Go to show HN view
-- `C-v`: Go to jobs view
+- `F1`: Go to front page view
+- `F2`: Go to all stories view
+- `F3`: Go to ask HN view
+- `F4`: Go to show HN view
+- `F5`: Go to jobs view
 
 ### Edit key shortcuts
-
-**Shortcuts** only available in an editable text.
 
 - `left`: Move cursor to left
 - `right`: Move cursor to right
 - `home`: Move cursor to the begin of line
 - `end`: Move cursor to the end of line
-- `backspace`: Delete backward character
+- `backspace`: Delete backward a character
 
 ### Key shortcuts for each `View`
 
@@ -170,16 +160,16 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 
 - `j`: Focus the next story
 - `k`: Focus the previous story
-- `{story_id} g`: Focus the {story_id}-th story
-- `enter`: Go the comment view associated with the focused story
 - `l`: Go to the next story tag
 - `h`: Go to the previous story tag
+- `{story_id} g`: Focus the {story_id}-th story
+- `enter`: Go the comment view associated with the focused story
 - `o`: Open in browser the article associated with the focused story
 - `O`: Open in article view the article associated with the focused story
 - `s`: Open in browser the focused story
 - `n`: Go to the next page
 - `p`: Go the previous page
-- `d`: Toggle sort by date
+- `d`: Toggle sort stories by date
 
 #### Article View shortcuts
 
@@ -187,8 +177,8 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 - `j`: Scroll down
 - `u`: Scroll up half a page
 - `d`: Scroll down half a page
-- `t`: Scroll to top
-- `b`: Scroll to bottom
+- `g`: Scroll to top
+- `G`: Scroll to bottom
 - `o`: Open article in browser
 - `{link_id} f`: Open in browser {link_id}-th link
 - `{link_id} F`: Open in article view {link_id}-th link
@@ -205,10 +195,10 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 
 - `j`: Focus the next comment
 - `k`: Focus the previous comment
-- `n`: Focus the next top level comment
-- `p`: Focus the previous top level comment
 - `l`: Focus the next comment with smaller or equal level
 - `h`: Focus the previous comment with smaller or equal level
+- `n`: Focus the next top level comment
+- `p`: Focus the previous top level comment
 - `u`: Focus the parent comment (if exists)
 - `tab`: Toggle collapsing the focused comment
 - `up`: Scroll up
@@ -226,11 +216,11 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 
 In `SearchView`, there are two modes: `Navigation` and `Search`. The default mode is `Search`.
 
-`Search` mode is similar to Vim's insert mode, in which users can input the query string.
+`Search` mode is similar to Vim's insert mode, in which users can input a query string.
 
-`Navigation` mode allows the `SearchView` to behave like a `StoryView` with a subset of `StoryView` shortcuts enabled.
+`Navigation` mode allows the `SearchView` to behave like a `StoryView` of matched stories with a subset of `StoryView` shortcuts enabled.
 
-Key shortcuts:
+`SearchView`-specific key shortcuts:
 
 - `i`: Enter `Search` mode from `Navigation` mode
 - `<esc>`: Enter `Navigation` mode from `Search` mode
@@ -253,9 +243,9 @@ TBA
 
 Shortcuts in each `View` are fully customizable. For further information about the supported keys and the commands, please refer to the **key bindings** section in the [example configuration file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml).
 
-### Custom Keymap
+### Custom Story View Navigation Keymap
 
-It's possible to define a custom shortcut to switch between different `StoryView` (`front_page`, `show_hn`, `ask_hn`, etc) with stories filtered by HN Algolia's [`numericFilters` filter option](https://hn.algolia.com/api/). An example of defining such custom shortcuts can be found under the **custom keymap** section of the [example configuration file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml).
+It's possible to define custom shortcuts to navigate between different `StoryView` (`front_page`, `show_hn`, `ask_hn`, etc) with stories filtered by HN Algolia's [`numericFilters` filter options](https://hn.algolia.com/api/). An example of defining such custom shortcuts can be found under the **custom keymap** section in the [example configuration file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml).
 
 ## Logging
 
