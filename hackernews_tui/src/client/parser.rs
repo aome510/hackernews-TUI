@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use lazy_static::lazy_static;
+use rayon::prelude::*;
 use regex::Regex;
 use serde::{de, Deserialize, Deserializer};
 
@@ -253,9 +254,9 @@ impl From<CommentResponse> for Vec<Comment> {
     fn from(c: CommentResponse) -> Self {
         let mut children = c
             .children
-            .into_iter()
+            .into_par_iter()
             .filter(|comment| comment.author.is_some() && comment.text.is_some())
-            .flat_map(Into::<Vec<Comment>>::into)
+            .flat_map(<Vec<Comment>>::from)
             .map(|mut c| {
                 c.height += 1; // update the height of every children comments
                 c
