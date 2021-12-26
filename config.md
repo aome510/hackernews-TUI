@@ -16,17 +16,39 @@ An example of user-defined configuration file can be found in [example `hn-tui.t
 
 ## General
 
-| Option                  | Description                                                                                                                | Default                                                    |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Option                  | Description                                                                                                           | Default                                                    |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
 | `use_page_scrolling`    | whether to enable page-like scrolling behavior, which automatically adjusts the view based on the scrolling direction | `true`                                                     |
-| `use_pacman_loading`    | whether to use a pacman loading screen or a plain loading screen                                                           | `true`                                                     |
-| `url_open_command`      | the command the application uses to open an url in browser                                                                 | `{ command: 'open', options: [] }`                         |
-| `article_parse_command` | the command the application uses to parse an article into a readable text                                                    | `{ command: 'article_md', options: ['--format', 'html'] }` |
-| `client_timeout`        | the timeout (in seconds) when the application's client makes an API request                                                       | `32`                                                       |
+| `use_pacman_loading`    | whether to use a pacman loading screen or a plain loading screen                                                      | `true`                                                     |
+| `url_open_command`      | the command the application uses to open an url in browser                                                            | `{ command: 'open', options: [] }`                         |
+| `article_parse_command` | the command the application uses to parse an article into a readable text                                             | `{ command: 'article_md', options: ['--format', 'html'] }` |
+| `client_timeout`        | the timeout (in seconds) when the application's client makes an API request                                           | `32`                                                       |
 
 ### Article Parse Command
 
-TBA
+To enable viewing an article's content in reader mode with `ArticleView`, user will need to install additional tools and specify the `article_parse_command` config option.
+
+An `article_parse_command` must be a command that returns result of the following schema:
+
+```typescript
+type result_schema = {
+  content: string;
+  url: string;
+  title: string;
+  author: string | null;
+  date_published: string | null;
+};
+```
+
+The returned `content` **must** be a **HTML string** respresenting the article's content in reader mode.
+
+By default, `hackernews-TUI` uses [`article_md`](https://github.com/aome510/article-md-cli) as the default command for parsing articles.
+
+One alternative is [`mercury-parser`](https://github.com/postlight/mercury-parser#installation):
+
+```toml
+article_parse_command = { command: 'mercury-parser', options: [] }
+```
 
 ## Theme
 
@@ -41,7 +63,7 @@ TBA
 `custom_keymaps` has the following schema:
 
 ```typescript
-let custom_keymaps: [
+type custom_keymaps_schema = [
   {
     key: string;
     tag: "story" | "ask_hn" | "show_hn" | "job";
@@ -56,7 +78,7 @@ let custom_keymaps: [
 ```
 
 An example of defining such custom keymaps can be found in the [example configuration file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml).
-  
+
 ### Supported keys
 
 List of supported keys for mapping:
