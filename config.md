@@ -1,8 +1,10 @@
 # Configuration Documentation
 
-User can change the application's configuration options by modifying the user-defined configuration file (default to be `$HOME/.config/hn-tui.toml`).
+User can change the application's configurations by modifying the user-defined config file (default to be `$HOME/.config/hn-tui.toml`).
 
-User doesn't need to specify all the configuration options in the configuration file as a default value will be used for non-specified options.
+**Note**: user doesn't need to specify all the options in the config file as a default value will be used for non-specified options.
+
+An example of user-defined configuration file can be found in [example `hn-tui.toml`](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml).
 
 ## Table of Contents
 
@@ -16,11 +18,11 @@ User doesn't need to specify all the configuration options in the configuration 
 
 | Option                  | Description                                                                                                                | Default                                                    |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `use_page_scrolling`    | whether to enable page-like behavior, which automatically adjust the view based on the scrolling direction, when scrolling | `true`                                                     |
+| `use_page_scrolling`    | whether to enable page-like scrolling behavior, which automatically adjusts the view based on the scrolling direction | `true`                                                     |
 | `use_pacman_loading`    | whether to use a pacman loading screen or a plain loading screen                                                           | `true`                                                     |
 | `url_open_command`      | the command the application uses to open an url in browser                                                                 | `{ command: 'open', options: [] }`                         |
-| `article_parse_command` | the command the application uses to parse an article into readable text                                                    | `{ command: 'article_md', options: ['--format', 'html'] }` |
-| `client_timeout`        | the timeout (in seconds) when the application's makes an API request                                                       | `32`                                                       |
+| `article_parse_command` | the command the application uses to parse an article into a readable text                                                    | `{ command: 'article_md', options: ['--format', 'html'] }` |
+| `client_timeout`        | the timeout (in seconds) when the application's client makes an API request                                                       | `32`                                                       |
 
 ### Article Parse Command
 
@@ -36,29 +38,28 @@ TBA
 
 `custom_keymaps` is a config option used to define custom shortcuts to navigate between different `StoryView` with stories filtered by certain conditions.
 
-`custom_keymaps` consists of multiple custom keymaps, each has the following schema:
+`custom_keymaps` has the following schema:
 
+```typescript
+let custom_keymaps: [
+  {
+    key: string;
+    tag: "story" | "ask_hn" | "show_hn" | "job";
+    by_date: string;
+    numeric_filters: {
+      elapsed_days_interval: { start: number; end: number };
+      points_interval: { start: number; end: number };
+      num_comments_interval: { start: number; end: number };
+    };
+  }
+];
 ```
-{
-  key: string;
-  tag: string;
-  by_date: string;
-  numeric_filters: {
-    elapsed_days_interval: { start: number; end: number };
-    points_interval: { start: number; end: number };
-    num_comments_interval: { start: number; end: number };
-  };
-}
-```
 
-Possible values for `tag`
-
-- `story`: All Stories
-- `ask_hn`: Ask HN
-- `show_hn`: Show HN
-- `job`: Jobs
-
+An example of defining such custom keymaps can be found in the [example configuration file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml).
+  
 ### Supported keys
+
+List of supported keys for mapping:
 
 - `<char>` (any single character)
 - `C-<char>` (ctrl character)
