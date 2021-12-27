@@ -404,15 +404,38 @@ impl Article {
                         }
                     }
                     expanded_name!(html "pre") => {
-                        is_pre = true;
-                        style = style.combine(component_style.multiline_code_block);
-
                         // indent `pre` block by 2 whitespaces
                         s.append_plain("\n\n  ");
                     }
                     expanded_name!(html "table") => {
-                        // currently, parsing `table` tag is not supported
-                        s.append_styled("\n\n  (table)", component_style.metadata);
+                        let mut headers = vec![];
+                        let mut rows = vec![];
+                        node.children.borrow().iter().for_each(|node| {
+                            Self::parse_html_table(
+                                node.clone(),
+                                links,
+                                &mut headers,
+                                &mut rows,
+                                style,
+                                false,
+                            );
+                        });
+
+                        let mut table = comfy_table::Table::new();
+                        table
+                            .load_preset(comfy_table::presets::UTF8_FULL)
+                            .set_header(
+                                headers
+                                    .into_iter()
+                                    .map(|h| comfy_table::Cell::new(h.source()))
+                                    .collect::<Vec<_>>(),
+                            );
+                        for row in rows {
+                            table.add_row(row.into_iter().map(|c| c.source().to_owned()));
+                        }
+
+                        s.append_plain(format!("\n\n{}", table));
+
                         return;
                     }
                     expanded_name!(html "ul") | expanded_name!(html "ol") => {
@@ -474,6 +497,59 @@ impl Article {
             Self::parse_dom_node(node.clone(), s, links, style, is_pre, prefix.clone());
         });
         s.append(suffix);
+    }
+
+    fn parse_html_table(
+        node: Handle,
+        links: &mut Vec<String>,
+        headers: &mut Vec<StyledString>,
+        rows: &mut Vec<Vec<StyledString>>,
+        mut style: Style,
+        mut is_header: bool,
+    ) {
+        debug!("parse html table: {:?}", node);
+
+        if let NodeData::Element { name, .. } = &node.data {
+            match name.expanded() {
+                expanded_name!(html "thead") => {
+                    is_header = true;
+                }
+                expanded_name!(html "tbody") => {
+                    is_header = false;
+                }
+                expanded_name!(html "tr") => {
+                    if !is_header {
+                        rows.push(vec![]);
+                    }
+                }
+                expanded_name!(html "td") | expanded_name!(html "th") => {
+                    let mut s = StyledString::new();
+
+                    node.children.borrow().iter().for_each(|node| {
+                        Self::parse_dom_node(
+                            node.clone(),
+                            &mut s,
+                            links,
+                            style,
+                            false,
+                            String::new(),
+                        );
+                    });
+
+                    if !is_header {
+                        rows.last_mut().unwrap().push(s);
+                    } else {
+                        headers.push(s);
+                    }
+                    return;
+                }
+                _ => {}
+            }
+        }
+
+        node.children.borrow().iter().for_each(|node| {
+            Self::parse_html_table(node.clone(), links, headers, rows, style, is_header);
+        });
     }
 }
 
