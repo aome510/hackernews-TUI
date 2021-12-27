@@ -37,25 +37,25 @@ light_blue = "#5555ff"
 light_yellow = "#ffff55"
 
 [theme.component_style]
-title = { effect = "Bold" }
-title_bar = { back = "#ff6600", effect = "Bold" }
+title = { effect = "bold" }
+title_bar = { back = "#ff6600", effect = "bold" }
 current_story_tag = { front = "light white" }
 link = { front = "#4fbbfd" }
 link_id = { front = "black", back = "#ffff55"}
 matched_highlight = { front = "black", back = "#ffff55"}
 single_code_block = { front = "black", back = "#c8c8c8"}
-multiline_code_block = { front = "light black", effect = "Bold" }
-header = { front = "black", effect = "Bold" }
+multiline_code_block = { front = "light black", effect = "bold" }
+header = { front = "black", effect = "bold" }
 quote = { front = "#677280" }
-italic = { effect = "Italic" }
-bold = { effect = "Bold" }
+italic = { effect = "italic" }
+bold = { effect = "bold" }
 metadata = { front = "#828282" }
-username = { effect = "Bold" }
+username = { effect = "bold" }
 loading_bar = { front = "light yellow", back = "blue"}
-ask_hn = { front = "red", effect = "Bold" }
-tell_hn = { front = "yellow", effect = "Bold" }
-show_hn = { front = "blue", effect = "Bold" }
-launch_hn = { front = "green", effect = "Bold" }
+ask_hn = { front = "red", effect = "bold" }
+tell_hn = { front = "yellow", effect = "bold" }
+show_hn = { front = "blue", effect = "bold" }
+launch_hn = { front = "green", effect = "bold" }
 
 # ---------------------------------
 # keymap

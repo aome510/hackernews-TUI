@@ -283,6 +283,7 @@ impl<'de> Deserialize<'de> for Color {
 // A copy struct of `cursive::theme::Effect` that
 // derives serde::Deserialize
 #[derive(Deserialize, Debug, Clone, Copy)]
+#[serde(rename_all = "lowercase")]
 pub enum Effect {
     Simple,
     Reverse,
