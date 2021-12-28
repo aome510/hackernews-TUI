@@ -344,6 +344,7 @@ impl Article {
         Ok(())
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn parse_dom_node(
         node: Handle,
         width: usize,
