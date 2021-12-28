@@ -94,7 +94,7 @@ pub struct StoryViewKeyMap {
     // stories paging/filtering keymaps
     pub next_page: Key,
     pub prev_page: Key,
-    pub toggle_sort_by: Key,
+    pub toggle_sort_by_date: Key,
 
     // link opening keymaps
     pub open_article_in_browser: Key,
@@ -115,7 +115,7 @@ impl Default for StoryViewKeyMap {
 
             next_page: Key::new('n'),
             prev_page: Key::new('p'),
-            toggle_sort_by: Key::new('d'),
+            toggle_sort_by_date: Key::new('d'),
 
             open_article_in_browser: Key::new('o'),
             open_article_in_article_view: Key::new('O'),

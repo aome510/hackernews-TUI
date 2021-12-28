@@ -212,7 +212,7 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
             }
         })
         // paging/filtering while in NavigationMode
-        .on_pre_event_inner(story_view_keymap.toggle_sort_by, |s, _| match s.mode {
+        .on_pre_event_inner(story_view_keymap.toggle_sort_by_date, |s, _| match s.mode {
             SearchViewMode::Navigation => {
                 s.page = 0;
                 s.by_date = !s.by_date;
