@@ -6,12 +6,32 @@ use crate::prelude::*;
 pub struct ArticleView {
     article: client::Article,
     view: ScrollView<LinearLayout>,
+    width: usize,
 
     raw_command: String,
 }
 
 impl ViewWrapper for ArticleView {
     wrap_impl!(self.view: ScrollView<LinearLayout>);
+
+    fn wrap_layout(&mut self, size: Vec2) {
+        if self.width != size.x {
+            // got a new width since the last time the article view is rendered,
+            // re-parse the article using the new width
+
+            self.width = size.x;
+
+            // we need some spacings (at the end) for the table
+            self.article
+                .parse(self.width.saturating_sub(5))
+                .unwrap_or_else(|err| {
+                    warn!("failed to parse the article: {}", err);
+                });
+
+            self.set_article_content(self.article.parsed_content.clone());
+        }
+        self.with_view_mut(|v| v.layout(size));
+    }
 
     fn wrap_take_focus(&mut self, _: Direction) -> bool {
         true
@@ -35,20 +55,27 @@ impl ArticleView {
                     .center()
                     .full_width(),
             )
-            .child(PaddedView::lrtb(
-                1,
-                1,
-                0,
-                0,
-                TextView::new(article.parsed_content.clone()),
-            ))
+            .child(PaddedView::lrtb(1, 1, 0, 0, TextView::new("")))
             .scrollable();
 
         ArticleView {
             article,
             view,
+            width: 0,
             raw_command: "".to_string(),
         }
+    }
+
+    /// Update the content of the article
+    pub fn set_article_content(&mut self, new_content: StyledString) {
+        self.view
+            .get_inner_mut()
+            .get_child_mut(2)
+            .expect("The article view should have 3 children")
+            .downcast_mut::<PaddedView<TextView>>()
+            .expect("The 3rd child of the article view should be a padded text view")
+            .get_inner_mut()
+            .set_content(new_content)
     }
 
     inner_getters!(self.view: ScrollView<LinearLayout>);
