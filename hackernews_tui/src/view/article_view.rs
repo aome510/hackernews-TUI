@@ -16,14 +16,17 @@ impl ViewWrapper for ArticleView {
 
     fn wrap_layout(&mut self, size: Vec2) {
         if self.width != size.x {
-            // got a new width compared to the last time,
-            // the article view is rendered, we need to
+            // got a new width since the last time the article view is rendered,
             // re-parse the article using the new width
-             
+
             self.width = size.x;
 
             // we need some spacings (at the end) for the table
-            self.article.parse(self.width.saturating_sub(5)).unwrap();
+            self.article
+                .parse(self.width.saturating_sub(5))
+                .unwrap_or_else(|err| {
+                    warn!("failed to parse the article: {}", err);
+                });
 
             self.set_article_content(self.article.parsed_content.clone());
         }
@@ -68,9 +71,9 @@ impl ArticleView {
         self.view
             .get_inner_mut()
             .get_child_mut(2)
-            .unwrap()
+            .expect("The article view should have 3 children")
             .downcast_mut::<PaddedView<TextView>>()
-            .unwrap()
+            .expect("The 3rd child of the article view should be a padded text view")
             .get_inner_mut()
             .set_content(new_content)
     }

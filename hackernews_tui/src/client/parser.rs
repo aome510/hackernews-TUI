@@ -304,7 +304,7 @@ impl Article {
         // as it's possible that the terminal cannot render the tab character
         self.content = self.content.replace("\t", "    ");
 
-        debug!("article (url={}), content: {}", self.url, self.content);
+        debug!("parse article (url={}), width: {}, content: {}", self.url, width, self.content);
 
         // parse HTML content into DOM node(s)
         let dom = parse_document(RcDom::default(), Default::default())
@@ -360,8 +360,8 @@ impl Article {
         // the first child must be handled separately
         mut prefix: String,
     ) -> bool {
-        // TODO: handle parsing <ol>, <table> tags correctly
-        debug!("parse node: {:?}", node);
+        // TODO: handle parsing <ol> tags correctly
+        debug!("parse dom node: {:?}", node);
 
         let mut suffix = StyledString::new();
         let mut visit_block_element_cb = || {
@@ -443,6 +443,7 @@ impl Article {
                     expanded_name!(html "table") => {
                         let mut headers = vec![];
                         let mut rows = vec![];
+
                         node.children.borrow().iter().for_each(|node| {
                             Self::parse_html_table(
                                 node.clone(),
@@ -468,11 +469,12 @@ impl Article {
                                     .map(|h| comfy_table::Cell::new(h.source()))
                                     .collect::<Vec<_>>(),
                             );
+
                         for row in rows {
                             table.add_row(row.into_iter().map(|c| c.source().to_owned()));
                         }
 
-                        s.append_plain(format!("\n\n{}", table));
+                        s.append_styled(format!("\n\n{}", table), style);
 
                         return true;
                     }
