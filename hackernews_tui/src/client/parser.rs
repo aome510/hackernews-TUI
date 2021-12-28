@@ -430,7 +430,14 @@ impl Article {
                         prefix = format!("{}  ", prefix);
                         s.append_styled("  ", style);
                     }
-                    expanded_name!(html "table") => {
+                   expanded_name!(html "blockquote") => {
+                        visit_block_element_cb();
+
+                        style = style.combine(component_style.quote);
+                        prefix = format!("{}▎ ", prefix);
+                        s.append_styled("▎ ", style);
+                    }
+                     expanded_name!(html "table") => {
                         let mut headers = vec![];
                         let mut rows = vec![];
                         node.children.borrow().iter().for_each(|node| {
@@ -447,6 +454,8 @@ impl Article {
                         let mut table = comfy_table::Table::new();
                         table
                             .load_preset(comfy_table::presets::UTF8_FULL)
+                            .apply_modifier(comfy_table::modifiers::UTF8_ROUND_CORNERS)
+                            .apply_modifier(comfy_table::modifiers::UTF8_SOLID_INNER_BORDERS)
                             .set_header(
                                 headers
                                     .into_iter()
@@ -460,13 +469,6 @@ impl Article {
                         s.append_plain(format!("\n\n{}", table));
 
                         return true;
-                    }
-                    expanded_name!(html "blockquote") => {
-                        visit_block_element_cb();
-
-                        style = style.combine(component_style.quote);
-                        prefix = format!("{}▎ ", prefix);
-                        s.append_styled("▎ ", style);
                     }
                     expanded_name!(html "menu")
                     | expanded_name!(html "ul")
@@ -549,7 +551,7 @@ impl Article {
         links: &mut Vec<String>,
         headers: &mut Vec<StyledString>,
         rows: &mut Vec<Vec<StyledString>>,
-        mut style: Style,
+        style: Style,
         mut is_header: bool,
     ) {
         debug!("parse html table: {:?}", node);
@@ -577,6 +579,7 @@ impl Article {
                             links,
                             style,
                             false,
+                            true,
                             String::new(),
                         );
                     });
