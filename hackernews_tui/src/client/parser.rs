@@ -299,7 +299,7 @@ impl From<CommentResponse> for Vec<Comment> {
 impl Article {
     /// Parse article's content (in HTML) into a styled text depending on
     /// the application's component styles and the HTML tags
-    pub fn parse(&mut self) -> Result<()> {
+    pub fn parse(&mut self, width: usize) -> Result<()> {
         // replace a tab character by 4 spaces
         // as it's possible that the terminal cannot render the tab character
         self.content = self.content.replace("\t", "    ");
@@ -315,6 +315,7 @@ impl Article {
         let mut links = vec![];
         Self::parse_dom_node(
             dom.document,
+            width,
             &mut s,
             &mut links,
             Style::default(),
@@ -345,6 +346,7 @@ impl Article {
 
     fn parse_dom_node(
         node: Handle,
+        width: usize,
         s: &mut StyledString,
         links: &mut Vec<String>,
         mut style: Style,
@@ -430,19 +432,20 @@ impl Article {
                         prefix = format!("{}  ", prefix);
                         s.append_styled("  ", style);
                     }
-                   expanded_name!(html "blockquote") => {
+                    expanded_name!(html "blockquote") => {
                         visit_block_element_cb();
 
                         style = style.combine(component_style.quote);
                         prefix = format!("{}▎ ", prefix);
                         s.append_styled("▎ ", style);
                     }
-                     expanded_name!(html "table") => {
+                    expanded_name!(html "table") => {
                         let mut headers = vec![];
                         let mut rows = vec![];
                         node.children.borrow().iter().for_each(|node| {
                             Self::parse_html_table(
                                 node.clone(),
+                                width,
                                 links,
                                 &mut headers,
                                 &mut rows,
@@ -453,6 +456,8 @@ impl Article {
 
                         let mut table = comfy_table::Table::new();
                         table
+                            .set_content_arrangement(comfy_table::ContentArrangement::Dynamic)
+                            .set_table_width(width as u16)
                             .load_preset(comfy_table::presets::UTF8_FULL)
                             .apply_modifier(comfy_table::modifiers::UTF8_ROUND_CORNERS)
                             .apply_modifier(comfy_table::modifiers::UTF8_SOLID_INNER_BORDERS)
@@ -530,6 +535,7 @@ impl Article {
         node.children.borrow().iter().for_each(|node| {
             found_text |= Self::parse_dom_node(
                 node.clone(),
+                width,
                 s,
                 links,
                 style,
@@ -548,6 +554,7 @@ impl Article {
 
     fn parse_html_table(
         node: Handle,
+        width: usize,
         links: &mut Vec<String>,
         headers: &mut Vec<StyledString>,
         rows: &mut Vec<Vec<StyledString>>,
@@ -575,6 +582,7 @@ impl Article {
                     node.children.borrow().iter().for_each(|node| {
                         Self::parse_dom_node(
                             node.clone(),
+                            width,
                             &mut s,
                             links,
                             style,
@@ -596,7 +604,7 @@ impl Article {
         }
 
         node.children.borrow().iter().for_each(|node| {
-            Self::parse_html_table(node.clone(), links, headers, rows, style, is_header);
+            Self::parse_html_table(node.clone(), width, links, headers, rows, style, is_header);
         });
     }
 }
