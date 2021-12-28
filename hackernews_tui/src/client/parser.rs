@@ -304,7 +304,10 @@ impl Article {
         // as it's possible that the terminal cannot render the tab character
         self.content = self.content.replace("\t", "    ");
 
-        debug!("parse article (url={}), width: {}, content: {}", self.url, width, self.content);
+        debug!(
+            "parse article (url={}), width: {}, content: {}",
+            self.url, width, self.content
+        );
 
         // parse HTML content into DOM node(s)
         let dom = parse_document(RcDom::default(), Default::default())
