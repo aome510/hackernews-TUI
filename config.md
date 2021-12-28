@@ -1,6 +1,6 @@
 # Configuration Documentation
 
-User can change the application's configurations by modifying the user-defined config file (default to be `$HOME/.config/hn-tui.toml`).
+User can change the application's configurations by modifying the user's config file (default to be `$HOME/.config/hn-tui.toml`).
 
 **Note**: user doesn't need to specify all the options in the config file as a default value will be used for non-specified options.
 
@@ -13,6 +13,7 @@ An example of user-defined configuration file can be found in [example `hn-tui.t
 - [Theme](#theme)
 - [Keymap](#keymap)
   - [Custom Keymap](#custom-keymap)
+  - [Supported Keys](#supported-keys)
 
 ## General
 
@@ -26,7 +27,7 @@ An example of user-defined configuration file can be found in [example `hn-tui.t
 
 ### Article Parse Command
 
-To enable viewing an article's content in reader mode with `ArticleView`, user will need to install additional tools and specify the `article_parse_command` config option.
+To enable viewing an article's content in reader mode with `ArticleView`, user will need to install **additional** tools and specify the `article_parse_command` config option.
 
 An `article_parse_command` must be a command that returns result of the following schema:
 
@@ -56,9 +57,17 @@ TBA
 
 ## Keymap
 
+To modify the [default key mapping](https://github.com/aome510/hackernews-TUI#default-shortcuts), simply add new mapping entries to the corresponding keymap section. For example, to change the key shortcuts for the command `next_comment` to `J` and the command `prev_comment` to `K` in the comment view, add these 3 lines to the config file:
+
+```toml
+[keymap.comment_view_keymap]
+next_comment = "J"
+prev_comment = "K"
+```
+
 ### Custom Keymap
 
-`custom_keymaps` is a config option used to define custom shortcuts to navigate between different `StoryView` with stories filtered by certain conditions.
+`custom_keymaps` is a config option used to define custom shortcuts to navigate between different story views with stories filtered by certain conditions.
 
 `custom_keymaps` has the following schema:
 
