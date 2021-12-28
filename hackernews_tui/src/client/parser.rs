@@ -319,6 +319,7 @@ impl Article {
             &mut links,
             Style::default(),
             false,
+            true,
             String::new(),
         );
 
@@ -347,28 +348,48 @@ impl Article {
         s: &mut StyledString,
         links: &mut Vec<String>,
         mut style: Style,
-        mut is_pre: bool,
+        // indicates whether a node is inside a <pre> tag
+        mut in_pre: bool,
+        // indicates whether a node is the first element of a block tag
+        // this is mostly used to add newlines separating a block tag and its sibling tags
+        mut is_first_element_in_block: bool,
+        // a string added to non-first children of the current block element,
+        // the first child must be handled separately
         mut prefix: String,
-    ) {
+    ) -> bool {
         // TODO: handle parsing <ol>, <table> tags correctly
         debug!("parse node: {:?}", node);
 
         let mut suffix = StyledString::new();
+        let mut visit_block_element_cb = || {
+            if !is_first_element_in_block {
+                s.append_plain("\n\n");
+                s.append_styled(&prefix, style);
+            }
+            is_first_element_in_block = true;
+        };
+
+        // `found_text` is the return value of the function.
+        // It is used to indicate whether the current node has renderable and non-whitespace text inside.
+        let mut found_text = false;
 
         match &node.data {
             NodeData::Text { contents } => {
                 let content = contents.borrow().to_string();
-                let text = if is_pre {
-                    // indent `pre` block by 2 whitespaces
-                    content.trim_matches('\n').to_string().replace("\n", "\n  ")
+
+                let text = if in_pre {
+                    // add `prefix` to each line of the text inside the `<pre>` tag
+                    content.replace("\n", &format!("\n{}", prefix))
                 } else {
                     // for non-pre element, consecutive whitespaces are ignored.
                     // This is to prevent reader-mode engine from adding unneccesary line wraps/indents in a paragraph.
                     WS_RE.replace_all(&content, " ").to_string()
                 };
 
+                found_text |= !text.trim().is_empty();
+
                 debug!("visit text: {}", text);
-                suffix.append_styled(decode_html(&text), style);
+                s.append_styled(decode_html(&text), style);
             }
             NodeData::Element {
                 ref name,
@@ -386,26 +407,28 @@ impl Article {
                     | expanded_name!(html "h4")
                     | expanded_name!(html "h5")
                     | expanded_name!(html "h6") => {
-                        style = style.combine(component_style.header);
+                        visit_block_element_cb();
 
-                        s.append_plain("\n\n");
+                        style = style.combine(component_style.header);
                     }
                     expanded_name!(html "br") => {
-                        s.append_plain("\n");
+                        s.append_styled(format!("\n{}", prefix), style);
                     }
-                    expanded_name!(html "p") => {
-                        s.append_styled(format!("\n\n{}", prefix), style);
-                    }
+                    expanded_name!(html "p") => visit_block_element_cb(),
                     expanded_name!(html "code") => {
-                        if !is_pre {
-                            // we don't want to mix the single_code_block and multiline_code_block
+                        if !in_pre {
+                            // we don't want to mix the `single_code_block` and `multiline_code_block` styles
                             // if the multiline code block is inside <pre><code>...</code></pre>
                             style = style.combine(component_style.single_code_block);
                         }
                     }
                     expanded_name!(html "pre") => {
-                        // indent `pre` block by 2 whitespaces
-                        s.append_plain("\n\n  ");
+                        visit_block_element_cb();
+
+                        in_pre = true;
+                        style = style.combine(component_style.multiline_code_block);
+                        prefix = format!("{}  ", prefix);
+                        s.append_styled("  ", style);
                     }
                     expanded_name!(html "table") => {
                         let mut headers = vec![];
@@ -436,18 +459,24 @@ impl Article {
 
                         s.append_plain(format!("\n\n{}", table));
 
-                        return;
+                        return true;
                     }
-                    expanded_name!(html "ul") | expanded_name!(html "ol") => {
+                    expanded_name!(html "blockquote") => {
+                        visit_block_element_cb();
+
+                        style = style.combine(component_style.quote);
+                        prefix = format!("{}▎ ", prefix);
+                        s.append_styled("▎ ", style);
+                    }
+                    expanded_name!(html "menu")
+                    | expanded_name!(html "ul")
+                    | expanded_name!(html "ol") => {
                         // currently, <ol> tag is treated the same as <ul> tag
                         prefix = format!("{}  ", prefix);
                     }
                     expanded_name!(html "li") => {
                         s.append_styled(format!("\n{}• ", prefix), style);
-                    }
-                    expanded_name!(html "blockquote") => {
-                        prefix = format!("{}▎ ", prefix);
-                        style = style.combine(component_style.quote);
+                        is_first_element_in_block = true;
                     }
                     expanded_name!(html "img") => {
                         let img_desc = if let Some(attr) = attrs
@@ -460,7 +489,10 @@ impl Article {
                             String::new()
                         };
 
-                        s.append_styled(format!("\n  {}", img_desc), style);
+                        if !is_first_element_in_block {
+                            s.append_plain("\n\n");
+                        }
+                        s.append_styled(&img_desc, style);
                         s.append_styled(" (image)", component_style.metadata);
                     }
                     expanded_name!(html "a") => {
@@ -494,9 +526,22 @@ impl Article {
         }
 
         node.children.borrow().iter().for_each(|node| {
-            Self::parse_dom_node(node.clone(), s, links, style, is_pre, prefix.clone());
+            found_text |= Self::parse_dom_node(
+                node.clone(),
+                s,
+                links,
+                style,
+                in_pre,
+                is_first_element_in_block,
+                prefix.clone(),
+            );
+            if found_text {
+                is_first_element_in_block = false;
+            }
         });
+
         s.append(suffix);
+        found_text
     }
 
     fn parse_html_table(
