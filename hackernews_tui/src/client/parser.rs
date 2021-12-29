@@ -701,6 +701,7 @@ fn parse_comment_helper(text: String, style: Style, s: &mut StyledString, links:
                 m.as_str(),
                 style.combine(component_style.multiline_code_block),
             );
+            s.append_plain("\n");
         } else if let Some(m) = caps.name("code") {
             s.append_styled(m.as_str(), style.combine(component_style.single_code_block));
         } else if let Some(m) = caps.name("italic") {
