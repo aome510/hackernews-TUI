@@ -1,181 +1,154 @@
 # Example configuration file
 
-# `page_scrolling` is a feature that enables page-like behavior when scrolling.
-# It is used to automatically adjust the view based on the scrolling direction.
-# page_scrolling = true
+# ---------------------------------
+# general
+# ---------------------------------
 
-# `url_open_command` defines a command used to open url in browser
-# url_open_command = "open"
-
-# `article_parse_command` defines a command to parse a web article's content.
-# The parsed data is then used to render an `ArticleView` of the article.
-# TODO: add documentation/requirement for `article_parse_command`
-# article_parse_command = {command = "mercury-parser", options = []}
-# article_parse_command = {command = "article_md", options = ["--format", "html"]}
-
-#[client]
-# `client_timeout` defines the application's client timeout (in seconds) when making an API request
-# client_timeout = 32
-
-#[client.story_limit]
-# `story_limit` stores the number of maximum stories displayed in a page in each View
-# Fields of `story_limit`
-# - "search" -> "Search View"
-# - "front_page" -> "Story View - Front Page"
-# - "story" -> "Story View - All Stories"
-# - "ask_hn" -> "Story View - Ask HN"
-# - "show_hn" -> "Story View - Show HN"
-# - "job" -> "Story View - Jobs"
-# search = 10
-# front_page = 20
-# story = 20
-# ask_hn = 15
-# show_hn = 15
-# job = 15
+use_page_scrolling = true
+use_pacman_loading = true
+url_open_command = { command = "open", options = [] }
+article_parse_command = { command = "article_md", options = [ "--format", "html" ] }
+client_timeout = 32
 
 # ---------------------------------
 # theme
 # ---------------------------------
 
-#[theme]
-# TODO: add default configuration settings for the application's theme
+[theme.palette]
+background = "#f6f6ef"
+foreground = "#242424"
+selection_background = "#d8dad6"
+selection_foreground = "#4a4c4c"
+black = "#000000"
+blue = "#0000aa"
+cyan = "#00aaaa"
+green = "#00aa00"
+magenta = "#aa00aa"
+red = "#aa0000"
+white = "#aaaaaa"
+yellow = "#aaaa00"
+light_black = "#555555"
+light_white = "#ffffff"
+light_red = "#ff5555"
+light_magenta = "#5555ff"
+light_green = "#55ff55"
+light_cyan = "#55ffff"
+light_blue = "#5555ff"
+light_yellow = "#ffff55"
+
+[theme.component_style]
+title_bar = { back = "#ff6600", effect = "bold" }
+matched_highlight = { front = "black", back = "#ffff55"}
+metadata = { front = "#828282" }
+username = { effect = "bold" }
+loading_bar = { front = "light yellow", back = "blue"}
+header = { front = "black", effect = "bold" }
+quote = { front = "#677280" }
+italic = { effect = "italic" }
+bold = { effect = "bold" }
+single_code_block = { front = "black", back = "#c8c8c8"}
+multiline_code_block = { front = "light black", effect = "bold" }
+link = { front = "#4fbbfd" }
+link_id = { front = "black", back = "#ffff55"}
+current_story_tag = { front = "light white" }
+ask_hn = { front = "red", effect = "bold" }
+tell_hn = { front = "yellow", effect = "bold" }
+show_hn = { front = "blue", effect = "bold" }
+launch_hn = { front = "green", effect = "bold" }
 
 # ---------------------------------
-# key bindings
+# keymap
 # ---------------------------------
-# Go to the end of this section to see list of supported keys.
 
-#[keymap.global_keymap]
-# open_help_dialog = "?"
-# quit = "C-q"
-# close_dialog = "esc"
-# goto_previous_view = "C-p"
-# goto_front_page_view = "C-f"
-# goto_search_view = "C-s"
-# goto_all_stories_view = "C-z"
-# goto_ask_hn_view = "C-x"
-# goto_show_hn_view = "C-c"
-# goto_jobs_view = "C-v"
+[keymap.global_keymap]
+open_help_dialog = "?"
+quit = "C-q"
+close_dialog = "esc"
+goto_previous_view = "C-p"
+goto_search_view = "C-s"
+goto_front_page_view = "f1"
+goto_all_stories_view = "f2"
+goto_ask_hn_view = "f3"
+goto_show_hn_view = "f4"
+goto_jobs_view = "f5"
 
-#[keymap.edit_keymap]
-# move_cursor_left = "left"
-# move_cursor_right = "right"
-# move_cursor_to_begin = "home"
-# move_cursor_to_end = "end"
-# backward_delete_char = "backspace"
+[keymap.edit_keymap]
+move_cursor_left = "left"
+move_cursor_right = "right"
+move_cursor_to_begin = "home"
+move_cursor_to_end = "end"
+backward_delete_char = "backspace"
 
-#[keymap.story_view_keymap]
-# next_story = "j"
-# prev_story = "k"
-# goto_story = "g"
-# next_page = "n"
-# prev_page = "p"
-# toggle_sort_by = "d"
-# open_article_in_browser = "o"
-# open_article_in_article_view = "O"
-# open_story_in_browser = "s"
-# goto_story_comment_view = "enter"
-# next_story_tag = "l"
-# prev_story_tag = "h"
+[keymap.story_view_keymap]
+next_story = "j"
+prev_story = "k"
+goto_story = "g"
+next_page = "n"
+prev_page = "p"
+toggle_sort_by_date = "d"
+open_article_in_browser = "o"
+open_article_in_article_view = "O"
+open_story_in_browser = "s"
+goto_story_comment_view = "enter"
+next_story_tag = "l"
+prev_story_tag = "h"
 
-#[keymap.search_view_keymap]
-# to_navigation_mode = "esc"
-# to_search_mode = "i"
+[keymap.search_view_keymap]
+to_navigation_mode = "esc"
+to_search_mode = "i"
 
-#[keymap.comment_view_keymap]
-# next_comment = "j"
-# prev_comment = "k"
-# next_top_level_comment = "n"
-# prev_top_level_comment = "p"
-# next_leq_level_comment = "l"
-# prev_leq_level_comment = "h"
-# parent_comment = "u"
-# down = "down"
-# up = "up"
-# page_down = "page_down"
-# page_up = "page_up"
-# open_comment_in_browser = "c"
-# open_link_in_browser = "f"
-# open_link_in_article_view = "F"
-# toggle_collapse_comment = "tab"
+[keymap.comment_view_keymap]
+next_comment = "j"
+prev_comment = "k"
+next_top_level_comment = "n"
+prev_top_level_comment = "p"
+next_leq_level_comment = "l"
+prev_leq_level_comment = "h"
+parent_comment = "u"
+down = "down"
+up = "up"
+page_down = "page_down"
+page_up = "page_up"
+open_comment_in_browser = "c"
+open_link_in_browser = "f"
+open_link_in_article_view = "F"
+toggle_collapse_comment = "tab"
 
-#[keymap.article_view_keymap]
-# down = "j"
-# up = "k"
-# page_down = "d"
-# page_up = "u"
-# top = "t"
-# bottom = "b"
-# open_article_in_browser = "o"
-# open_link_in_browser = "f"
-# open_link_in_article_view = "F"
-# open_link_dialog = "l"
-# link_dialog_focus_next = "j"
-# link_dialog_focus_prev = "k"
+[keymap.article_view_keymap]
+down = "j"
+up = "k"
+page_down = "d"
+page_up = "u"
+top = "g"
+bottom = "G"
+open_story_in_browser = "s"
+open_article_in_browser = "o"
+open_article_in_browser = "o"
+open_article_in_article_view = "O"
+open_link_in_browser = "f"
+open_link_in_article_view = "F"
+open_link_dialog = "l"
+link_dialog_focus_next = "j"
+link_dialog_focus_prev = "k"
 
 # ---------------------
 # custom keymap
 # ---------------------
 
-# `custom_view_navigation` is used to define custom shortcuts
-# to navigate to a `StoryView` with stories filtered by certain conditions.
-# **Note**: `key`, `tag` and `by_date` are required fields when defining a custom view navigation shortcut
+[[keymap.custom_keymaps]]
+key = "M-1"
+tag = "story"
+by_date = false
+[keymap.custom_keymaps.numeric_filters]
+elapsed_days_interval = {start = 0, end = 3} # stories posted between now and 3 days ago
+points_interval = {start = 10} # stories with points >= 10
+num_comments_interval = {}
 
-# possible values for `tag`
-# - "story" -> "Story View - All Stories"
-# - "ask_hn" -> "Story View - Ask HN"
-# - "show_hn" -> "Story View - Show HN"
-# - "job" -> "Story View - Jobs"
-
-# Below is an example of defining two custom shortcuts using `custom_view_navigation`.
-
-# [[keymap.custom_keymap.custom_view_navigation]]
-# key = "M-1"
-# tag = "story"
-# by_date = false
-# [keymap.custom_keymap.custom_view_navigation.numeric_filters]
-# elapsed_days_interval = {start = 0, end = 3} # stories posted between now and 3 days ago
-# points_interval = {start = 10} # stories with points >= 10
-# num_comments_interval = {} # no restriction on the number of comments
-
-# [[keymap.custom_keymap.custom_view_navigation]]
-# key = "M-2"
-# tag = "show_hn"
-# by_date = true
-# [keymap.custom_keymap.custom_view_navigation.numeric_filters]
-# elapsed_days_interval = {}
-# points_interval = {start = 50, end = 200}
-# num_comments_interval = {end = 100}
-
-# --------------------------
-# List of supported keys:
-# --------------------------
-# - <char> (any single character)
-# - C-<char> (ctrl-<char>)
-# - M-<char> (alt-<char>)
-# - enter
-# - tab
-# - backspace
-# - esc
-# - left
-# - right
-# - up
-# - down
-# - ins
-# - del
-# - home
-# - end
-# - page_up
-# - page_down
-# - f1
-# - f2
-# - f3
-# - f4
-# - f5
-# - f6
-# - f7
-# - f8
-# - f9
-# - f10
-# - f11
-# - f12
+[[keymap.custom_keymaps]]
+key = "M-2"
+tag = "show_hn"
+by_date = true
+[keymap.custom_keymaps.numeric_filters]
+elapsed_days_interval = {}
+points_interval = {start = 50, end = 200}
+num_comments_interval = {end = 100}

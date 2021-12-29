@@ -12,11 +12,12 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize, ConfigParse)]
 /// Config is a struct storing the application's configurations
 pub struct Config {
-    pub page_scrolling: bool,
+    pub use_page_scrolling: bool,
     pub use_pacman_loading: bool,
-    pub url_open_command: String,
-    pub article_parse_command: ArticleParseCommand,
-    pub client: Client,
+    pub client_timeout: u64,
+    pub url_open_command: Command,
+    pub article_parse_command: Command,
+
     pub theme: theme::Theme,
     pub keymap: keybindings::KeyMap,
 }
@@ -35,63 +36,35 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            page_scrolling: true,
+            use_page_scrolling: true,
             use_pacman_loading: true,
-            url_open_command: "open".to_string(),
-            article_parse_command: ArticleParseCommand {
-                command: "mercury-parser".to_string(),
+            url_open_command: Command {
+                command: "open".to_string(),
                 options: vec![],
             },
-            client: Client {
-                story_limit: StoryLimit {
-                    search: 10,
-                    front_page: 20,
-                    story: 20,
-                    ask_hn: 15,
-                    show_hn: 15,
-                    job: 15,
-                },
-                client_timeout: 32,
+            article_parse_command: Command {
+                command: "article_md".to_string(),
+                options: vec!["--format".to_string(), "html".to_string()],
             },
+            client_timeout: 32,
             theme: theme::Theme::default(),
             keymap: keybindings::KeyMap::default(),
         }
     }
 }
 
-#[derive(Debug, Deserialize, ConfigParse, Clone)]
-pub struct ArticleParseCommand {
+#[derive(Debug, Deserialize, Clone)]
+pub struct Command {
     pub command: String,
     pub options: Vec<String>,
 }
 
-#[derive(Debug, Deserialize, ConfigParse)]
-pub struct StoryLimit {
-    pub front_page: usize,
-    pub story: usize,
-    pub ask_hn: usize,
-    pub show_hn: usize,
-    pub job: usize,
-    pub search: usize,
-}
+config_parser_impl!(Command);
 
-impl StoryLimit {
-    pub fn get_story_limit_by_tag(&self, tag: &str) -> usize {
-        match tag {
-            "front_page" => self.front_page,
-            "story" => self.story,
-            "job" => self.job,
-            "ask_hn" => self.ask_hn,
-            "show_hn" => self.show_hn,
-            _ => panic!("unknown tag: {}", tag),
-        }
+impl std::fmt::Display for Command {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{} {}", self.command, self.options.join(" ")))
     }
-}
-
-#[derive(Debug, Deserialize, ConfigParse)]
-pub struct Client {
-    pub story_limit: StoryLimit,
-    pub client_timeout: u64,
 }
 
 static CONFIG: once_cell::sync::OnceCell<Config> = once_cell::sync::OnceCell::new();

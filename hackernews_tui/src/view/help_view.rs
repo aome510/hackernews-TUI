@@ -68,7 +68,7 @@ impl HelpView {
                 self.key_groups.iter().for_each(|(group_desc, keys)| {
                     s.add_child(TextView::new(StyledString::styled(
                         *group_desc,
-                        config::get_config_theme().component_style.title,
+                        config::get_config_theme().component_style.bold,
                     )));
                     s.add_child(HelpView::construct_keys_view(keys));
                 });
@@ -165,8 +165,9 @@ impl HasHelpView for DefaultHelpView {}
 impl HasHelpView for story_view::StoryView {
     fn construct_help_view() -> HelpView {
         let story_view_keymap = config::get_story_view_keymap();
-        let custom_keymaps: Vec<(String, String)> = config::get_custom_keymap()
-            .custom_view_navigation
+        let custom_keymaps: Vec<(String, String)> = config::get_config()
+            .keymap
+            .custom_keymaps
             .iter()
             .map(|keymap| {
                 (
@@ -218,7 +219,7 @@ impl HasHelpView for story_view::StoryView {
                         "Go the previous page",
                     ),
                     (
-                        story_view_keymap.toggle_sort_by.to_string(),
+                        story_view_keymap.toggle_sort_by_date.to_string(),
                         "Toggle sort by date (only for non `Front Page` views)",
                     ),
                 ],
@@ -407,7 +408,7 @@ impl HasHelpView for search_view::SearchView {
                         "Go the previous page",
                     ),
                     (
-                        story_view_keymap.toggle_sort_by.to_string(),
+                        story_view_keymap.toggle_sort_by_date.to_string(),
                         "Toggle sort by date",
                     ),
                 ],

@@ -4,17 +4,7 @@
 
 `hackernews_tui` is written in Rust with the help of [Cursive TUI library](https://github.com/gyscos/cursive/). It uses [HN Algolia APIs](https://hn.algolia.com/api/) and [HN Official APIs](https://github.com/HackerNews/API) to get Hacker News data.
 
-### Why hackernews-TUI?
-
-If you are either
-
-- a Hacker News reader
-- a computer nerd who likes doing things on the terminal
-- a person who prefers navigating using the keyboard over a mouse
-
-This application is the right tool for you :muscle:
-
-### Table of Contents
+## Table of Contents
 
 - [Install](#install)
   - [Using Cargo](#using-cargo)
@@ -34,9 +24,6 @@ This application is the right tool for you :muscle:
     - [Comment View](#comment-view-shortcuts)
     - [Search View](#search-view-shortcuts)
 - [Configuration](#configuration)
-  - [Article Parse Command](#article-parse-command)
-  - [User-defined shortcuts](#user-defined-shortcuts)
-  - [Custom keymap](#custom-keymap)
 - [Logging](#logging)
 - [Roadmap](#roadmap)
 
@@ -119,128 +106,137 @@ $ cd /usr/pkgsrc/www/hackernews-tui
 
 ## Examples
 
-### Demo
-
-List of demo videos:
-
-- `hackernews_tui v0.5.0`: demo general usage of `Story View`, `Search View` and `Comment View` can be found [here](https://www.youtube.com/watch?v=AArtVod0b6A)
-- `hackernews_tui v0.6.0-beta`: demo the usage of `Article View` to read a web page in reader mode can be found [here](https://www.youtube.com/watch?v=jIsKZwPi2T8)
-
 ### Story View
 
-![Example of a Story View - Front Page](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/story_view.png)
+![Example of a Story View](https://user-images.githubusercontent.com/40011582/147393397-71991e48-cba6-4f89-9d28-cafbc0143c42.png)
 
 ### Article View
 
-![Example of a Story View - Front Page](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/article_view.png)
+![Example of an Article View](https://user-images.githubusercontent.com/40011582/147393483-06b57c07-3fa3-49ec-b238-a2d67905610d.png)
 
 ### Search View
 
-![Example of a Search View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/story_search_view.png)
+![Example of a Search View](https://user-images.githubusercontent.com/40011582/147393493-41d52d9f-65cd-4f63-bf76-c11d9bea1f49.png)
 
 ### Comment View
 
-![Example of a Comment View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/comment_view.png)
+![Example of a Comment View](https://user-images.githubusercontent.com/40011582/147393459-641dd6c3-3564-472c-83cd-e1865339c861.png)
 
 ## Default Shortcuts
 
-In each `View`, press `?` to see a list of supported keyboard shortcuts and their functionalities. Note that the shortcuts are fully [customizable](#user-defined-shortcuts).
+In each `View`, press `?` to see a list of supported keyboard shortcuts and their functionalities.
 
-![Example of a Help View](https://raw.githubusercontent.com/aome510/hackernews-TUI/main/examples/assets/help_view.png)
+![Example of a Help View](https://user-images.githubusercontent.com/40011582/147393555-5ca346ca-b59a-4a7f-ab53-b1ec7025eca4.png)
+
+The below sections will list the application's default shortcuts, which can be customized by changing the [key mappings](https://github.com/aome510/hackernews-TUI/blob/main/config.md#keymap) in the user's config file.
+
+For more information about configuring the key mapping or defining custom shortcuts, please refer to the [config documentation](https://github.com/aome510/hackernews-TUI/blob/main/config.md#keymap).
 
 ### Global key shortcuts
 
-- `?`: Open the help dialog
-- `esc`: Close a dialog
-- `C-q`: Quit the application
-- `C-p`: Go to the previous view
-- `C-f`: Go to front page view
-- `C-s`: Go to search view
-- `C-z`: Go to all stories view
-- `C-x`: Go to ask HN view
-- `C-c`: Go to show HN view
-- `C-v`: Go to jobs view
+| Command                 | Description             | Default Shortcut |
+| ----------------------- | ----------------------- | ---------------- |
+| `open_help_dialog`      | Open the help dialog    | `?`              |
+| `close_dialog`          | Close a dialog          | `esc`            |
+| `quit`                  | Quit the application    | `C-q`            |
+| `goto_previous_view`    | Go to the previous view | `C-p`            |
+| `goto_search_view`      | Go to search view       | `C-s`            |
+| `goto_front_page_view`  | Go to front page view   | `F1`             |
+| `goto_all_stories_view` | Go to all stories view  | `F2`             |
+| `goto_ask_hn_view`      | Go to ask HN view       | `F3`             |
+| `goto_show_hn_view`     | Go to show HN view      | `F4`             |
+| `goto_jobs_view`        | Go to jobs view         | `F5`             |
 
 ### Edit key shortcuts
 
-**Shortcuts** only available in an editable text.
-
-- `left`: Move cursor to left
-- `right`: Move cursor to right
-- `home`: Move cursor to the begin of line
-- `end`: Move cursor to the end of line
-- `backspace`: Delete backward character
+| Command                | Description                      | Default Shortcut |
+| ---------------------- | -------------------------------- | ---------------- |
+| `move_cursor_left`     | Move cursor to left              | `left`           |
+| `move_cursor_right`    | Move cursor to right             | `right`          |
+| `move_cursor_to_begin` | Move cursor to the begin of line | `home`           |
+| `move_cursor_to_end`   | Move cursor to the end of line   | `end`            |
+| `backward_delete_char` | Delete backward a character      | `backspace`      |
 
 ### Key shortcuts for each `View`
 
 #### Story View shortcuts
 
-- `j`: Focus the next story
-- `k`: Focus the previous story
-- `{story_id} g`: Focus the {story_id}-th story
-- `enter`: Go the comment view associated with the focused story
-- `l`: Go to the next story tag
-- `h`: Go to the previous story tag
-- `o`: Open in browser the article associated with the focused story
-- `O`: Open in article view the article associated with the focused story
-- `s`: Open in browser the focused story
-- `n`: Go to the next page
-- `p`: Go the previous page
-- `d`: Toggle sort by date
+| Command                        | Description                                                        | Default Shortcut |
+| ------------------------------ | ------------------------------------------------------------------ | ---------------- |
+| `next_story`                   | Focus the next story                                               | `j`              |
+| `prev_story`                   | Focus the previous story                                           | `k`              |
+| `next_story_tag`               | Go to the next story tag                                           | `l`              |
+| `previous_story_tag`           | Go to the previous story tag                                       | `h`              |
+| `goto_story`                   | Focus the {story_id}-th story                                      | `{story_id} g`   |
+| `goto_story_comment_view`      | Go the comment view associated with the focused story              | `enter`          |
+| `open_article_in_browser`      | Open in browser the article associated with the focused story      | `o`              |
+| `open_article_in_article_view` | Open in article view the article associated with the focused story | `O`              |
+| `open_story_in_browser`        | Open in browser the focused story                                  | `s`              |
+| `next_page`                    | Go to the next page                                                | `n`              |
+| `prev_page`                    | Go the previous page                                               | `p`              |
+| `toggle_sort_by_date`          | Toggle sort stories by date                                        | `d`              |
 
 #### Article View shortcuts
 
-- `k`: Scroll up
-- `j`: Scroll down
-- `u`: Scroll up half a page
-- `d`: Scroll down half a page
-- `t`: Scroll to top
-- `b`: Scroll to bottom
-- `o`: Open article in browser
-- `{link_id} f`: Open in browser {link_id}-th link
-- `{link_id} F`: Open in article view {link_id}-th link
+| Command                     | Description                            | Default Shortcut |
+| --------------------------- | -------------------------------------- | ---------------- |
+| `up`                        | Scroll up                              | `k`              |
+| `down`                      | Scroll down                            | `j`              |
+| `page_down`                 | Scroll up half a page                  | `u`              |
+| `page_up`                   | Scroll down half a page                | `d`              |
+| `top`                       | Scroll to top                          | `g`              |
+| `bottom`                    | Scroll to bottom                       | `G`              |
+| `open_article_in_browser`   | Open article in browser                | `o`              |
+| `open_link_in_browser`      | Open in browser {link_id}-th link      | `{link_id} f`    |
+| `open_link_in_article_view` | Open in article view {link_id}-th link | `{link_id} F`    |
+| `open_link_dialog`          | Open link dialog                       | `l`              |
 
 ##### Link dialog shortcuts
 
-- `l`: Open link dialog
-- `j`: Focus next link
-- `k`: Focus previous link
-- `f`: Open in browser the focused link
-- `F`: Open in article view the focused link
+| Command                     | Description                           | Default Shortcut |
+| --------------------------- | ------------------------------------- | ---------------- |
+| `link_dialog_focus_next`    | Focus next link                       | `j`              |
+| `link_dialog_focus_prev`    | Focus previous link                   | `k`              |
+| `open_link_in_browser`      | Open in browser the focused link      | `f`              |
+| `open_link_in_article_view` | Open in article view the focused link | `F`              |
 
 #### Comment View shortcuts
 
-- `j`: Focus the next comment
-- `k`: Focus the previous comment
-- `n`: Focus the next top level comment
-- `p`: Focus the previous top level comment
-- `l`: Focus the next comment with smaller or equal level
-- `h`: Focus the previous comment with smaller or equal level
-- `u`: Focus the parent comment (if exists)
-- `tab`: Toggle collapsing the focused comment
-- `up`: Scroll up
-- `down`: Scroll down
-- `page_up`: Scroll up half a page
-- `page_down`: Scroll down half a page
-- `o`: Open in browser the article associated with the discussed story
-- `O`: Open in article view the article associated with the discussed story
-- `s`: Open in browser the discussed story
-- `c`: Open in browser the focused comment
-- `{link_id} f`: Open in browser the {link_id}-th link in the focused comment
-- `{link_id} F`: Open in article view the {link_id}-th link in the focused comment
+| Command                     | Description                                                          | Default Shortcut |
+| --------------------------- | -------------------------------------------------------------------- | ---------------- |
+| `next_comment`              | Focus the next comment                                               | `j`              |
+| `prev_comment`              | Focus the previous comment                                           | `k`              |
+| `next_leq_level_comment`    | Focus the next comment with smaller or equal level                   | `l`              |
+| `prev_leq_level_comment`    | Focus the previous comment with smaller or equal level               | `h`              |
+| `next_top_level_comment`    | Focus the next top level comment                                     | `n`              |
+| `prev_top_level_comment`    | Focus the previous top level comment                                 | `p`              |
+| `parent_comment`            | Focus the parent comment (if exists)                                 | `u`              |
+| `toggle_collapse_comment`   | Toggle collapsing the focused comment                                | `tab`            |
+| `up`                        | Scroll up                                                            | `up`             |
+| `down`                      | Scroll down                                                          | `down`           |
+| `page_up`                   | Scroll up half a page                                                | `page_up`        |
+| `page_down`                 | Scroll down half a page                                              | `page_down`      |
+| `open_article_in_browser`   | Open in browser the article associated with the discussed story      | `o`              |
+| `open_link_in_article_view` | Open in article view the article associated with the discussed story | `O`              |
+| `open_story_in_browser`     | Open in browser the discussed story                                  | `s`              |
+| `open_comment_in_browser`   | Open in browser the focused comment                                  | `c`              |
+| `open_link_in_browser`      | Open in browser the {link_id}-th link in the focused comment         | `{link_id} f`    |
+| `open_link_in_article_view` | Open in article view the {link_id}-th link in the focused comment    | `{link_id} F`    |
 
 #### Search View shortcuts
 
 In `SearchView`, there are two modes: `Navigation` and `Search`. The default mode is `Search`.
 
-`Search` mode is similar to Vim's insert mode, in which users can input the query string.
+`Search` mode is similar to Vim's insert mode, in which users can input a query string.
 
-`Navigation` mode allows the `SearchView` to behave like a `StoryView` with a subset of `StoryView` shortcuts enabled.
+`Navigation` mode allows the `SearchView` to behave like a `StoryView` of matched stories with a subset of `StoryView` shortcuts enabled.
 
-Key shortcuts:
+`SearchView`-specific key shortcuts:
 
-- `i`: Enter `Search` mode from `Navigation` mode
-- `<esc>`: Enter `Navigation` mode from `Search` mode
+| Command              | Description                                | Default Shortcut |
+| -------------------- | ------------------------------------------ | ---------------- |
+| `to_search_mode`     | Enter `Search` mode from `Navigation` mode | `i`              |
+| `to_navigation_mode` | Enter `Navigation` mode from `Search` mode | `<esc>`          |
 
 ## Configuration
 
@@ -251,44 +247,6 @@ hackernews_tui -c ~/.config/hn-tui.toml
 ```
 
 For further information about the configuration options, please refer to the [example configuration file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml)
-
-### Article Parse Command
-
-To enable viewing a web page in reader mode with `Article View`, you must configure the `article_parse_command` field in your configuration file:
-
-````yaml
-# `article_parse_command` defines a command to parse a web article's content
-# to a markdown format. The parsed data is then used to render the `ArticleView`
-# of the corresponding article.
-#
-# The command must have the following form:
-# `<article_parse_command> [options...] <article_url>`
-# It should return a JSON string representing the parsed `Article` data:
-# ```
-# pub struct Article {
-#     title: String,
-#     url: String,
-#     content: String,
-#     author: Option<String>,
-#     date_published: Option<String>,
-#     word_count: usize,
-# }
-# ```
-article_parse_command = {command = "mercury-parser", options = ["--format", "markdown"]} // default value
-# article_parse_command = {command = "article_md", options = []}
-````
-
-If you don't want to implement an article parser by your own, one way to configure `article_parse_command` is to use [`mercury-parser`](https://github.com/postlight/mercury-parser#installation), a web parser tool that `hackernews_tui` has been using by default since the version `0.6.0`. `mercury-parser` is powerful and stable. However, in some cases, the text content it returns when parsing HTML `code` tags has some weird indentations.
-
-An alternative is to use [`article_md`](https://github.com/aome510/article-md-cli), a CLI tool I wrote for parsing web page's content into a markdown text. Under the hood, it uses [mozilla's readability](https://github.com/mozilla/readability), so the parsed text for HTML `code` tags look nicer.
-
-### User-defined shortcuts
-
-Shortcuts in each `View` are fully customizable. For further information about the supported keys and the commands, please refer to the **key bindings** section in the [example configuration file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml).
-
-### Custom Keymap
-
-It's possible to define a custom shortcut to switch between different `StoryView` (`front_page`, `show_hn`, `ask_hn`, etc) with stories filtered by HN Algolia's [`numericFilters` filter option](https://hn.algolia.com/api/). An example of defining such custom shortcuts can be found under the **custom keymap** section of the [example configuration file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml).
 
 ## Logging
 
@@ -310,9 +268,9 @@ It's possible to define a custom shortcut to switch between different `StoryView
   - [ ] add comment
   - [ ] post
 - improve application's theme
-  - [ ] improve the application's overall look
-  - [ ] include useful font-highliting
-  - [ ] rewrite the theme parser to support more themes and allow to parse themes from known colorschemes
+  - [x] improve the application's overall look
+  - [x] include useful font-highliting
+  - [x] rewrite the theme parser to support more themes and allow to parse themes from known colorschemes
   - [ ] add some extra transition effects
 - improve the keybinding handler
   - [ ] allow to bind multiple keys to a single command

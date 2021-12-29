@@ -58,7 +58,7 @@ pub fn construct_footer_view<T: view::help_view::HasHelpView>() -> impl View {
         .child(
             TextView::new(StyledString::styled(
                 "Hacker News Terminal UI - made by AOME ©",
-                config::get_config_theme().component_style.title,
+                config::get_config_theme().component_style.bold,
             ))
             .align(align::Align::bot_center())
             .full_width(),
@@ -99,20 +99,27 @@ pub fn open_url_in_browser(url: &str) {
     }
 
     let url = url.to_string();
-    let command = config::get_config().url_open_command.clone();
-    std::thread::spawn(
-        move || match std::process::Command::new(&command).arg(&url).output() {
-            Err(err) => warn!("failed to execute command `{} {}`: {}", command, url, err),
+    let url_open_command = &config::get_config().url_open_command;
+    std::thread::spawn(move || {
+        match std::process::Command::new(&url_open_command.command)
+            .args(&url_open_command.options)
+            .arg(&url)
+            .output()
+        {
+            Err(err) => warn!(
+                "failed to execute command `{} {}`: {}",
+                url_open_command, url, err
+            ),
             Ok(output) => {
                 if !output.status.success() {
                     warn!(
                         "failed to execute command `{} {}`: {}",
-                        command,
+                        url_open_command,
                         url,
                         std::str::from_utf8(&output.stderr).unwrap(),
                     )
                 }
             }
-        },
-    );
+        }
+    });
 }

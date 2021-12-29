@@ -41,8 +41,9 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &'static client::HNClient) {
     set_up_switch_view_shortcut!(global_keymap.goto_jobs_view, "job", s, client);
 
     // custom navigation shortcuts
-    config::get_custom_keymap()
-        .custom_view_navigation
+    config::get_config()
+        .keymap
+        .custom_keymaps
         .iter()
         .for_each(|data| {
             s.set_on_post_event(data.key.clone(), move |s| {

@@ -70,14 +70,13 @@ pub fn get_story_view_async(
 /// Return an async_view wrapping ArticleView with a loading screen when
 /// parsing the Article data
 pub fn get_article_view_async(siv: &mut Cursive, article_url: &str) -> impl View {
-    let article_parse_command = config::get_config().article_parse_command.clone();
     let err_desc = format!(
-        "failed to execute command `{} {} {}`:\n\
+        "failed to execute command `{} {}`:\n\
          Please make sure you have configured `article_parse_command` config option as described in (https://github.com/aome510/hackernews-TUI#article-parse-command)",
-        article_parse_command.command,
-        article_parse_command.options.join(" "),
+        config::get_config().article_parse_command,
         article_url
     );
+
     AsyncView::new_with_bg_creator(
         siv,
         {

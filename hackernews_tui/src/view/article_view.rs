@@ -55,7 +55,7 @@ impl ArticleView {
                     .center()
                     .full_width(),
             )
-            .child(PaddedView::lrtb(1, 1, 0, 0, TextView::new("")))
+            .child(PaddedView::lrtb(1, 1, 1, 1, TextView::new("")))
             .scrollable();
 
         ArticleView {

@@ -5,26 +5,22 @@ use serde::{de, Deserialize, Deserializer};
 
 #[derive(Default, Debug, Clone, Deserialize, ConfigParse)]
 pub struct KeyMap {
-    pub custom_keymap: CustomKeyMap,
     pub edit_keymap: EditKeyMap,
     pub global_keymap: GlobalKeyMap,
     pub story_view_keymap: StoryViewKeyMap,
     pub search_view_keymap: SearchViewKeyMap,
     pub comment_view_keymap: CommentViewKeyMap,
     pub article_view_keymap: ArticleViewKeyMap,
+
+    pub custom_keymaps: Vec<CustomKeyMap>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct CustomViewNavigation {
+pub struct CustomKeyMap {
     pub key: Key,
     pub tag: String,
     pub by_date: bool,
     pub numeric_filters: client::StoryNumericFilters,
-}
-
-#[derive(Default, Debug, Clone, Deserialize)]
-pub struct CustomKeyMap {
-    pub custom_view_navigation: Vec<CustomViewNavigation>,
 }
 
 config_parser_impl!(CustomKeyMap);
@@ -98,7 +94,7 @@ pub struct StoryViewKeyMap {
     // stories paging/filtering keymaps
     pub next_page: Key,
     pub prev_page: Key,
-    pub toggle_sort_by: Key,
+    pub toggle_sort_by_date: Key,
 
     // link opening keymaps
     pub open_article_in_browser: Key,
@@ -119,7 +115,7 @@ impl Default for StoryViewKeyMap {
 
             next_page: Key::new('n'),
             prev_page: Key::new('p'),
-            toggle_sort_by: Key::new('d'),
+            toggle_sort_by_date: Key::new('d'),
 
             open_article_in_browser: Key::new('o'),
             open_article_in_article_view: Key::new('O'),
@@ -221,8 +217,8 @@ impl Default for ArticleViewKeyMap {
             up: Key::new('k'),
             page_down: Key::new('d'),
             page_up: Key::new('u'),
-            top: Key::new('t'),
-            bottom: Key::new('b'),
+            top: Key::new('g'),
+            bottom: Key::new('G'),
 
             open_link_dialog: Key::new('l'),
             link_dialog_focus_next: Key::new('j'),
@@ -368,10 +364,6 @@ impl<'de> de::Deserialize<'de> for Key {
 
         Ok(key)
     }
-}
-
-pub fn get_custom_keymap() -> &'static CustomKeyMap {
-    &super::get_config().keymap.custom_keymap
 }
 
 pub fn get_edit_keymap() -> &'static EditKeyMap {

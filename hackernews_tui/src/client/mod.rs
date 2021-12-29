@@ -15,6 +15,8 @@ const HN_OFFICIAL_PREFIX: &str = "https://hacker-news.firebaseio.com/v0";
 const HN_SEARCH_QUERY_STRING: &str =
     "tags=story&restrictSearchableAttributes=title,url&typoTolerance=false";
 pub const HN_HOST_URL: &str = "https://news.ycombinator.com";
+pub const STORY_LIMIT: usize = 20;
+pub const SEARCH_LIMIT: usize = 15;
 
 static CLIENT: once_cell::sync::OnceCell<HNClient> = once_cell::sync::OnceCell::new();
 
@@ -41,7 +43,7 @@ macro_rules! log {
 impl HNClient {
     /// Create a new Hacker News Client
     pub fn new() -> Result<HNClient> {
-        let timeout = config::get_config().client.client_timeout;
+        let timeout = config::get_config().client_timeout;
         Ok(HNClient {
             client: ureq::AgentBuilder::new()
                 .timeout(std::time::Duration::from_secs(timeout))
@@ -150,13 +152,12 @@ impl HNClient {
         by_date: bool,
         page: usize,
     ) -> Result<Vec<Story>> {
-        let search_story_limit = config::get_config().client.story_limit.search;
         let request_url = format!(
             "{}/{}?{}&hitsPerPage={}&page={}",
             HN_ALGOLIA_PREFIX,
             if by_date { "search_by_date" } else { "search" },
             HN_SEARCH_QUERY_STRING,
-            search_story_limit,
+            SEARCH_LIMIT,
             page
         );
         let response = log!(
@@ -203,7 +204,6 @@ impl HNClient {
     // compose a HN Algolia API to retrieve the corresponding stories.
     fn get_front_page_stories(
         &self,
-        story_limit: usize,
         page: usize,
         numeric_filters: query::StoryNumericFilters,
     ) -> Result<Vec<Story>> {
@@ -216,23 +216,23 @@ impl HNClient {
             format!("get front page stories using {}", request_url)
         );
 
-        let start_id = story_limit * page;
+        let start_id = STORY_LIMIT * page;
         if start_id >= stories.len() {
             return Ok(vec![]);
         }
 
-        let end_id = std::cmp::min(start_id + story_limit, stories.len());
+        let end_id = std::cmp::min(start_id + STORY_LIMIT, stories.len());
         let ids = &stories[start_id..end_id];
 
         let request_url = format!(
-            "{}/search?tags=story,({})&hitsPerPage={}{}",
+            "{}/search?tags=story,({}){}&hitsPerPage={}",
             HN_ALGOLIA_PREFIX,
             ids.iter().fold("".to_owned(), |tags, story_id| format!(
                 "{}story_{},",
                 tags, story_id
             )),
-            story_limit,
             numeric_filters.query(),
+            STORY_LIMIT,
         );
 
         let response = log!(
@@ -257,20 +257,15 @@ impl HNClient {
         page: usize,
         numeric_filters: query::StoryNumericFilters,
     ) -> Result<Vec<Story>> {
-        let story_limit = config::get_config()
-            .client
-            .story_limit
-            .get_story_limit_by_tag(tag);
-
         if tag == "front_page" {
-            return self.get_front_page_stories(story_limit, page, numeric_filters);
+            return self.get_front_page_stories(page, numeric_filters);
         }
         let request_url = format!(
             "{}/{}?tags={}&hitsPerPage={}&page={}{}",
             HN_ALGOLIA_PREFIX,
             if by_date { "search_by_date" } else { "search" },
             tag,
-            story_limit,
+            STORY_LIMIT,
             page,
             numeric_filters.query(),
         );

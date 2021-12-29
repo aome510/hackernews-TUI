@@ -128,7 +128,7 @@ impl SearchView {
     /// updates the Story View with new matched stories
     fn update_stories_view(&mut self, stories: Vec<client::Story>) {
         self.view.remove_child(1);
-        let starting_id = config::get_config().client.story_limit.search * self.page;
+        let starting_id = client::SEARCH_LIMIT * self.page;
         self.view.add_child(
             story_view::get_story_main_view(stories, self.client, starting_id).full_height(),
         );
@@ -212,7 +212,7 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
             }
         })
         // paging/filtering while in NavigationMode
-        .on_pre_event_inner(story_view_keymap.toggle_sort_by, |s, _| match s.mode {
+        .on_pre_event_inner(story_view_keymap.toggle_sort_by_date, |s, _| match s.mode {
             SearchViewMode::Navigation => {
                 s.page = 0;
                 s.by_date = !s.by_date;
