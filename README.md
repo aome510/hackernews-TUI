@@ -130,6 +130,8 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 
 The below sections will list the application's default shortcuts, which can be customized by changing the [key mappings](https://github.com/aome510/hackernews-TUI/blob/main/config.md#keymap) in the user's config file.
 
+For more information about configuring the key mapping or defining custom shortcuts, please refer to the [config documentation](https://github.com/aome510/hackernews-TUI/blob/main/config.md#keymap).
+
 ### Global key shortcuts
 
 | Command                 | Description             | Default Shortcut |

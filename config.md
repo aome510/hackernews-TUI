@@ -2,15 +2,16 @@
 
 User can change the application's configurations by modifying the user's config file (default to be `$HOME/.config/hn-tui.toml`).
 
-**Note**: user doesn't need to specify all the options in the config file as a default value will be used for non-specified options.
+**Note**: user doesn't need to specify all the options in the config file as a **default** value will be used for non-specified options.
 
-An example of user-defined configuration file can be found in [example `hn-tui.toml`](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml).
+An example config file (with default config values) can be found in [example `hn-tui.toml`](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml).
 
 ## Table of Contents
 
 - [General](#general)
   - [Article Parse Command](#article-parse-command)
 - [Theme](#theme)
+  - [Default Theme](#default-theme)
   - [Palette](#palette)
   - [Component Style](#component-style)
 - [Keymap](#keymap)
@@ -65,10 +66,6 @@ An application's theme has two components:
 The default theme configurations:
 
 ```toml
-# ---------------------------------
-# theme
-# ---------------------------------
-
 [theme.palette]
 background = "#f6f6ef"
 foreground = "#242424"
@@ -156,7 +153,7 @@ A style has 3 **optional** fields: `front` (foreground color), `back` (backgroun
 
 - `front` and `back` can be either a **raw hex string** representing the color (`0xf6f6ef`, `#f6f6ef`, `f6f6ef`) or a **16-bit color's name** (`black`, `dark black`, `light black`).
 
-  Using the 16-bit color's name will use **the theme palette's color**. For example, `link = { back = "black" }` will make any links in the application uses the theme palette's black color as the background color.
+  Using the 16-bit color's name will use **the theme palette's color**. For example, `link = { back = "blue" }` will make any links in the application uses the theme palette's blue color as the background color.
 
 - `effect` can be only **one** of the following values
   - `simple`
