@@ -58,7 +58,7 @@ pub fn construct_footer_view<T: view::help_view::HasHelpView>() -> impl View {
         .child(
             TextView::new(StyledString::styled(
                 "Hacker News Terminal UI - made by AOME ©",
-                config::get_config_theme().component_style.title,
+                config::get_config_theme().component_style.bold,
             ))
             .align(align::Align::bot_center())
             .full_width(),

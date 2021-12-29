@@ -68,7 +68,7 @@ impl HelpView {
                 self.key_groups.iter().for_each(|(group_desc, keys)| {
                     s.add_child(TextView::new(StyledString::styled(
                         *group_desc,
-                        config::get_config_theme().component_style.title,
+                        config::get_config_theme().component_style.bold,
                     )));
                     s.add_child(HelpView::construct_keys_view(keys));
                 });
@@ -166,7 +166,8 @@ impl HasHelpView for story_view::StoryView {
     fn construct_help_view() -> HelpView {
         let story_view_keymap = config::get_story_view_keymap();
         let custom_keymaps: Vec<(String, String)> = config::get_config()
-            .keymap.custom_keymaps
+            .keymap
+            .custom_keymaps
             .iter()
             .map(|keymap| {
                 (

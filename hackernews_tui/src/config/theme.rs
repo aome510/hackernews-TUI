@@ -47,7 +47,6 @@ pub struct Palette {
 #[derive(Clone, Copy, Debug, Deserialize, ConfigParse)]
 /// Additional colors/styles for specific components of the application.
 pub struct ComponentStyle {
-    pub title: Style,
     pub title_bar: Style,
     pub link: Style,
     pub link_id: Style,
@@ -100,7 +99,6 @@ impl Default for Palette {
 impl Default for ComponentStyle {
     fn default() -> Self {
         Self {
-            title: Style::default().effect(Effect::Bold),
             title_bar: Style::default()
                 .back(Color::parse("#ff6600"))
                 .effect(Effect::Bold),
