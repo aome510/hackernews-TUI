@@ -42,7 +42,8 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &'static client::HNClient) {
 
     // custom navigation shortcuts
     config::get_config()
-        .keymap.custom_keymaps
+        .keymap
+        .custom_keymaps
         .iter()
         .for_each(|data| {
             s.set_on_post_event(data.key.clone(), move |s| {
