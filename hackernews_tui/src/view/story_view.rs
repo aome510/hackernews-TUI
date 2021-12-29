@@ -245,8 +245,7 @@ pub fn get_story_view(
         .on_pre_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
             s.add_layer(StoryView::construct_help_view())
         })
-        // toggle sort_by
-        .on_event(story_view_keymap.toggle_sort_by, move |s| {
+        .on_event(story_view_keymap.toggle_sort_by_date, move |s| {
             // disable "search_by_date" for front_page stories
             if tag == "front_page" {
                 return;
