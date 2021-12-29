@@ -15,7 +15,7 @@ const HN_OFFICIAL_PREFIX: &str = "https://hacker-news.firebaseio.com/v0";
 const HN_SEARCH_QUERY_STRING: &str =
     "tags=story&restrictSearchableAttributes=title,url&typoTolerance=false";
 pub const HN_HOST_URL: &str = "https://news.ycombinator.com";
-pub const STORY_LIMIT: usize = 30;
+pub const STORY_LIMIT: usize = 20;
 pub const SEARCH_LIMIT: usize = 15;
 
 static CLIENT: once_cell::sync::OnceCell<HNClient> = once_cell::sync::OnceCell::new();
@@ -225,13 +225,14 @@ impl HNClient {
         let ids = &stories[start_id..end_id];
 
         let request_url = format!(
-            "{}/search?tags=story,({}){}",
+            "{}/search?tags=story,({}){}&hitsPerPage={}",
             HN_ALGOLIA_PREFIX,
             ids.iter().fold("".to_owned(), |tags, story_id| format!(
                 "{}story_{},",
                 tags, story_id
             )),
             numeric_filters.query(),
+            STORY_LIMIT,
         );
 
         let response = log!(
