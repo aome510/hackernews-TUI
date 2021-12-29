@@ -299,12 +299,15 @@ impl From<CommentResponse> for Vec<Comment> {
 impl Article {
     /// Parse article's content (in HTML) into a styled text depending on
     /// the application's component styles and the HTML tags
-    pub fn parse(&mut self) -> Result<()> {
+    pub fn parse(&mut self, width: usize) -> Result<()> {
         // replace a tab character by 4 spaces
         // as it's possible that the terminal cannot render the tab character
         self.content = self.content.replace("\t", "    ");
 
-        debug!("article (url={}), content: {}", self.url, self.content);
+        debug!(
+            "parse article (url={}), width: {}, content: {}",
+            self.url, width, self.content
+        );
 
         // parse HTML content into DOM node(s)
         let dom = parse_document(RcDom::default(), Default::default())
@@ -315,6 +318,7 @@ impl Article {
         let mut links = vec![];
         Self::parse_dom_node(
             dom.document,
+            width,
             &mut s,
             &mut links,
             Style::default(),
@@ -343,8 +347,10 @@ impl Article {
         Ok(())
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn parse_dom_node(
         node: Handle,
+        width: usize,
         s: &mut StyledString,
         links: &mut Vec<String>,
         mut style: Style,
@@ -357,8 +363,8 @@ impl Article {
         // the first child must be handled separately
         mut prefix: String,
     ) -> bool {
-        // TODO: handle parsing <ol>, <table> tags correctly
-        debug!("parse node: {:?}", node);
+        // TODO: handle parsing <ol> tags correctly
+        debug!("parse dom node: {:?}", node);
 
         let mut suffix = StyledString::new();
         let mut visit_block_element_cb = || {
@@ -438,8 +444,41 @@ impl Article {
                         s.append_styled("▎ ", style);
                     }
                     expanded_name!(html "table") => {
-                        // currently, parsing `table` tag is not supported
-                        s.append_styled("\n\n  (table)", component_style.metadata);
+                        let mut headers = vec![];
+                        let mut rows = vec![];
+
+                        node.children.borrow().iter().for_each(|node| {
+                            Self::parse_html_table(
+                                node.clone(),
+                                width,
+                                links,
+                                &mut headers,
+                                &mut rows,
+                                style,
+                                false,
+                            );
+                        });
+
+                        let mut table = comfy_table::Table::new();
+                        table
+                            .set_content_arrangement(comfy_table::ContentArrangement::Dynamic)
+                            .set_table_width(width as u16)
+                            .load_preset(comfy_table::presets::UTF8_FULL)
+                            .apply_modifier(comfy_table::modifiers::UTF8_ROUND_CORNERS)
+                            .apply_modifier(comfy_table::modifiers::UTF8_SOLID_INNER_BORDERS)
+                            .set_header(
+                                headers
+                                    .into_iter()
+                                    .map(|h| comfy_table::Cell::new(h.source()))
+                                    .collect::<Vec<_>>(),
+                            );
+
+                        for row in rows {
+                            table.add_row(row.into_iter().map(|c| c.source().to_owned()));
+                        }
+
+                        s.append_styled(format!("\n\n{}", table), style);
+
                         return true;
                     }
                     expanded_name!(html "menu")
@@ -502,6 +541,7 @@ impl Article {
         node.children.borrow().iter().for_each(|node| {
             found_text |= Self::parse_dom_node(
                 node.clone(),
+                width,
                 s,
                 links,
                 style,
@@ -516,6 +556,62 @@ impl Article {
 
         s.append(suffix);
         found_text
+    }
+
+    fn parse_html_table(
+        node: Handle,
+        width: usize,
+        links: &mut Vec<String>,
+        headers: &mut Vec<StyledString>,
+        rows: &mut Vec<Vec<StyledString>>,
+        style: Style,
+        mut is_header: bool,
+    ) {
+        debug!("parse html table: {:?}", node);
+
+        if let NodeData::Element { name, .. } = &node.data {
+            match name.expanded() {
+                expanded_name!(html "thead") => {
+                    is_header = true;
+                }
+                expanded_name!(html "tbody") => {
+                    is_header = false;
+                }
+                expanded_name!(html "tr") => {
+                    if !is_header {
+                        rows.push(vec![]);
+                    }
+                }
+                expanded_name!(html "td") | expanded_name!(html "th") => {
+                    let mut s = StyledString::new();
+
+                    node.children.borrow().iter().for_each(|node| {
+                        Self::parse_dom_node(
+                            node.clone(),
+                            width,
+                            &mut s,
+                            links,
+                            style,
+                            false,
+                            true,
+                            String::new(),
+                        );
+                    });
+
+                    if !is_header {
+                        rows.last_mut().unwrap().push(s);
+                    } else {
+                        headers.push(s);
+                    }
+                    return;
+                }
+                _ => {}
+            }
+        }
+
+        node.children.borrow().iter().for_each(|node| {
+            Self::parse_html_table(node.clone(), width, links, headers, rows, style, is_header);
+        });
     }
 }
 
