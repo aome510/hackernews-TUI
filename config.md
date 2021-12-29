@@ -11,6 +11,8 @@ An example of user-defined configuration file can be found in [example `hn-tui.t
 - [General](#general)
   - [Article Parse Command](#article-parse-command)
 - [Theme](#theme)
+  - [Palette](#palette)
+  - [Component Style](#component-style)
 - [Keymap](#keymap)
   - [Custom Keymap](#custom-keymap)
   - [Supported Keys](#supported-keys)
@@ -53,7 +55,117 @@ article_parse_command = { command: 'mercury-parser', options: [] }
 
 ## Theme
 
-TBA
+An application's theme has two components:
+
+1. `palette`: the theme's color palette
+2. `component_style`: styles for application's components
+
+### Default theme
+
+The default theme configurations:
+
+```toml
+# ---------------------------------
+# theme
+# ---------------------------------
+
+[theme.palette]
+background = "#f6f6ef"
+foreground = "#242424"
+selection_background = "#d8dad6"
+selection_foreground = "#4a4c4c"
+black = "#000000"
+blue = "#0000aa"
+cyan = "#00aaaa"
+green = "#00aa00"
+magenta = "#aa00aa"
+red = "#aa0000"
+white = "#aaaaaa"
+yellow = "#aaaa00"
+light_black = "#555555"
+light_white = "#ffffff"
+light_red = "#ff5555"
+light_magenta = "#5555ff"
+light_green = "#55ff55"
+light_cyan = "#55ffff"
+light_blue = "#5555ff"
+light_yellow = "#ffff55"
+
+[theme.component_style]
+# styles for application's specific components
+title_bar = { back = "#ff6600", effect = "bold" }
+matched_highlight = { front = "black", back = "#ffff55"}
+metadata = { front = "#828282" }
+username = { effect = "bold" }
+loading_bar = { front = "light yellow", back = "blue"}
+
+# general component styles
+header = { front = "black", effect = "bold" }
+quote = { front = "#677280" }
+italic = { effect = "italic" }
+bold = { effect = "bold" }
+single_code_block = { front = "black", back = "#c8c8c8"}
+multiline_code_block = { front = "light black", effect = "bold" }
+link = { front = "#4fbbfd" }
+link_id = { front = "black", back = "#ffff55"}
+
+# story tag styles
+current_story_tag = { front = "light white" }
+ask_hn = { front = "red", effect = "bold" }
+tell_hn = { front = "yellow", effect = "bold" }
+show_hn = { front = "blue", effect = "bold" }
+launch_hn = { front = "green", effect = "bold" }
+```
+
+### Palette
+
+A theme's color palette is based on the 4-bit ANSI terminal colors.
+
+User can change the default color palette by changing the values of any of the following fields
+
+- `background`
+- `foreground`
+- `selection_background`
+- `selection_foreground`
+- `black`
+- `blue`
+- `cyan`
+- `green`
+- `magenta`
+- `red`
+- `white`
+- `yellow`
+- `light_black`
+- `light_blue`
+- `light_cyan`
+- `light_green`
+- `light_magenta`
+- `light_red`
+- `light_white`
+- `light_yellow`
+
+Each field's value can be either a **raw hex string** representing the color (`0xf6f6ef`, `#f6f6ef`, `f6f6ef`) or a **16-bit color's name** (`black`, `dark black`, `light black`).
+
+Using the 16-bit color's name will use **the terminal's default color**. For example, `background = "black"` will make the application's background be in the terminal's default black color.
+
+### Component Style
+
+The application defines styles for some components. For example, any links in `hackernews-TUI` has the following style by default: `link = { front = "#4fbbfd" }`.
+
+A style has 3 **optional** fields: `front` (foreground color), `back` (background color), `effect` (additional terminal effect).
+
+- `front` and `back` can be either a **raw hex string** representing the color (`0xf6f6ef`, `#f6f6ef`, `f6f6ef`) or a **16-bit color's name** (`black`, `dark black`, `light black`).
+
+  Using the 16-bit color's name will use **the theme palette's color**. For example, `link = { back = "black" }` will make any links in the application uses the theme palette's black color as the background color.
+
+- `effect` can be only **one** of the following values
+  - `simple`
+  - `reverse`
+  - `bold`
+  - `italic`
+  - `strikethrough`
+  - `underline`
+  - `blink`
 
 ## Keymap
 
