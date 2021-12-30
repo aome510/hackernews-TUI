@@ -106,6 +106,12 @@ $ cd /usr/pkgsrc/www/hackernews-tui
 
 ## Examples
 
+### Demo
+
+Demo videos of `hackernews_tui` `v0.9.0` are available on [youtube](https://www.youtube.com/watch?v=m5O5QIlRFpc) and [asciinema](https://asciinema.org/a/459196)
+
+[![asciicast](https://asciinema.org/a/459196.svg)](https://asciinema.org/a/459196)
+
 ### Story View
 
 ![Example of a Story View](https://user-images.githubusercontent.com/40011582/147393397-71991e48-cba6-4f89-9d28-cafbc0143c42.png)
