@@ -4,7 +4,7 @@ User can change the application's configurations by modifying the user's config 
 
 **Note**: user doesn't need to specify all the options in the config file as a **default** value will be used for non-specified options.
 
-An example config file (with default config values) can be found in [example `hn-tui.toml`](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml).
+An example config file (with some default config values) can be found in [example `hn-tui.toml`](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml).
 
 ## Table of Contents
 
@@ -32,7 +32,7 @@ An example config file (with default config values) can be found in [example `hn
 
 To enable viewing an article's content in reader mode with `ArticleView`, user will need to install **additional** tools and specify the `article_parse_command` config option.
 
-An `article_parse_command` must be a command that returns result of the following schema:
+An `article_parse_command` must be a command that returns result with the following schema:
 
 ```typescript
 type result_schema = {
@@ -143,7 +143,7 @@ User can change the default color palette by changing the values of any of the f
 
 Each field's value can be either a **raw hex string** representing the color (`0xf6f6ef`, `#f6f6ef`, `f6f6ef`) or a **16-bit color's name** (`black`, `dark black`, `light black`).
 
-Using the 16-bit color's name will use **the terminal's default color**. For example, `background = "black"` will make the application's background be in the terminal's default black color.
+Specifying the 16-bit color's name will use **the terminal's default color**. For example, `background = "black"` will make the application's background be in the terminal's default black color.
 
 ### Component Style
 
@@ -153,7 +153,7 @@ A style has 3 **optional** fields: `front` (foreground color), `back` (backgroun
 
 - `front` and `back` can be either a **raw hex string** representing the color (`0xf6f6ef`, `#f6f6ef`, `f6f6ef`) or a **16-bit color's name** (`black`, `dark black`, `light black`).
 
-  Using the 16-bit color's name will use **the theme palette's color**. For example, `link = { back = "blue" }` will make any links in the application uses the theme palette's blue color as the background color.
+Specifying the 16-bit color's name will use **the theme palette's color** (as opposed to **the terminal's default color** when configuring the theme's palette color). For example, `link = { back = "blue" }` will make any links in the application use the theme palette's blue color as the background color.
 
 - `effect` can be only **one** of the following values
   - `simple`
@@ -202,8 +202,8 @@ An example of defining such custom keymaps can be found in the [example configur
 List of supported keys for mapping:
 
 - `<char>` (any single character)
-- `C-<char>` (ctrl character)
-- `M-<char>` (alt character)
+- `C-<char>` (ctrl + character)
+- `M-<char>` (alt + character)
 - `enter`
 - `tab`
 - `backspace`
