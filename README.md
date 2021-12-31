@@ -37,20 +37,20 @@ Install the latest version from [crates.io](https://crates.io/crates/hackernews_
 
 You can download the binary image of the latest build from the `master` branch by running
 
-```
-# docker pull aome510/hackernews_tui:latest
+```shell
+docker pull aome510/hackernews_tui:latest
 ```
 
 then run
 
-```
-# docker run -it aome510/hackernews_tui:latest
+```shell
+docker run -it aome510/hackernews_tui:latest
 ```
 
 to run the application. You can also use your local configuration file when running the image by running
 
-```
-# docker run --rm -v ${CONFIG_FILE_PATH}:/app/hn-tui.toml -it aome510/hackernews_tui:latest
+```shell
+docker run --rm -v ${CONFIG_FILE_PATH}:/app/hn-tui.toml -it aome510/hackernews_tui:latest
 ```
 
 with `${CONFIG_FILE_PATH}` is the path to the local configuration file.
@@ -59,7 +59,7 @@ with `${CONFIG_FILE_PATH}` is the path to the local configuration file.
 
 Run
 
-```
+```shell
 git clone https://github.com/aome510/hackernews-TUI.git
 cd hackernews-TUI
 cargo build --release
@@ -67,13 +67,13 @@ cargo build --release
 
 to build the application, then run
 
-```
+```shell
 ./target/release/hackernews_tui
 ```
 
 to run the application, or
 
-```
+```shell
 ln -sf $PWD/target/release/hackernews_tui /usr/local/bin
 ```
 
@@ -93,15 +93,15 @@ Run `yay -S hackernews_tui` to install the application as an AUR package.
 
 #### Using the package manager
 
-```
+```shell
 pkgin install hackernews-tui
 ```
 
 #### Building from source
 
-```
-$ cd /usr/pkgsrc/www/hackernews-tui
-# make install
+```shell
+cd /usr/pkgsrc/www/hackernews-tui
+make install
 ```
 
 ## Examples
@@ -248,7 +248,7 @@ In `SearchView`, there are two modes: `Navigation` and `Search`. The default mod
 
 By default, `hackernews-tui` will look for `~/.config/hn-tui.toml` as the user-defined config file, which can be changed by specifying the `-c` or `--config` option when running the application:
 
-```
+```shell
 hackernews_tui -c ~/.config/hn-tui.toml
 ```
 
