@@ -1,6 +1,6 @@
 # hackernews-TUI
 
-`hackernews_tui` is a fast and customizable Terminal UI application for browsing Hacker News on the terminal.
+`hackernews_tui` is a fast and [customizable](https://github.com/aome510/hackernews-TUI/blob/main/config.md) application for browsing Hacker News on the terminal.
 
 `hackernews_tui` is written in Rust with the help of [Cursive TUI library](https://github.com/gyscos/cursive/). It uses [HN Algolia APIs](https://hn.algolia.com/api/) and [HN Official APIs](https://github.com/HackerNews/API) to get Hacker News data.
 
@@ -31,7 +31,7 @@
 
 ### Using cargo
 
-Install the latest version from [crates.io](https://crates.io/crates/hackernews_tui) by running `cargo install hackernews_tui`
+Install the latest version from [crates.io](https://crates.io/crates/hackernews_tui) by running `cargo install hackernews_tui`.
 
 ### Docker image
 
@@ -47,13 +47,13 @@ then run
 # docker run -it aome510/hackernews_tui:latest
 ```
 
-to run the application. You can also use your local [configuration file](#configuration) when running the image by running
+to run the application. You can also use your local configuration file when running the image by running
 
 ```
 # docker run --rm -v ${CONFIG_FILE_PATH}:/app/hn-tui.toml -it aome510/hackernews_tui:latest
 ```
 
-with `${CONFIG_FILE_PATH}` is your local configuration file path.
+with `${CONFIG_FILE_PATH}` is the path to the local configuration file.
 
 #### Building from source
 
@@ -246,13 +246,13 @@ In `SearchView`, there are two modes: `Navigation` and `Search`. The default mod
 
 ## Configuration
 
-By default, `hackernews-tui` will look for `~/.config/hn-tui.toml` as the configuration file, which can be configured by specifying the path with the `-c` or `--config` option when running the application:
+By default, `hackernews-tui` will look for `~/.config/hn-tui.toml` as the user-defined config file, which can be changed by specifying the `-c` or `--config` option when running the application:
 
 ```
 hackernews_tui -c ~/.config/hn-tui.toml
 ```
 
-For further information about the configuration options, please refer to the [example configuration file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml)
+For further information about the config options, please refer to the [example config file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml) and the [config documentation](https://github.com/aome510/hackernews-TUI/blob/main/config.md).
 
 ## Logging
 
