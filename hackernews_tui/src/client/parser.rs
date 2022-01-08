@@ -76,6 +76,7 @@ pub struct StoryResponse {
 
     author: Option<String>,
     url: Option<String>,
+    #[serde(rename(deserialize = "story_text"))]
     text: Option<String>,
 
     #[serde(default)]
@@ -240,13 +241,21 @@ impl From<StoryResponse> for Story {
             parsed_title.append_plain(&title[curr_pos..title.len()]);
         }
 
+        let author = s.author.unwrap_or_else(|| String::from("[deleted]"));
+
         // parse story's text
         let text = {
             let metadata = utils::combine_styled_strings(vec![
                 StyledString::plain(parsed_title.source()),
                 StyledString::plain("\n"),
                 StyledString::styled(
-                    format!(" {} ago ", utils::get_elapsed_time_as_text(s.time)),
+                    format!(
+                        "{} points | by {} | {} ago | {} comments\n",
+                        s.points,
+                        author,
+                        utils::get_elapsed_time_as_text(s.time),
+                        s.num_comments,
+                    ),
                     config::get_config_theme().component_style.metadata,
                 ),
             ]);
@@ -274,7 +283,7 @@ impl From<StoryResponse> for Story {
         Story {
             title: parsed_title,
             url: s.url.unwrap_or_default(),
-            author: s.author.unwrap_or_else(|| String::from("[deleted]")),
+            author,
             id: s.id,
             points: s.points,
             num_comments: s.num_comments,

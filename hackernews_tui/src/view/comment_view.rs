@@ -23,13 +23,22 @@ impl ViewWrapper for CommentView {
 
 impl CommentView {
     /// Return a new CommentView given a comment list and the discussed story url
-    pub fn new(receiver: client::CommentReceiver) -> Self {
+    pub fn new(main_text: client::HnText, receiver: client::CommentReceiver) -> Self {
         let mut view = CommentView {
-            comments: vec![],
-            view: LinearLayout::vertical().scrollable(),
+            view: LinearLayout::vertical()
+                .child(HideableView::new(PaddedView::lrtb(
+                    main_text.level * 2 + 1,
+                    1,
+                    0,
+                    1,
+                    text_view::TextView::new(main_text.text.clone()),
+                )))
+                .scrollable(),
+            comments: vec![main_text],
             raw_command: String::new(),
             receiver,
         };
+
         view.try_update_comments();
         view
     }
@@ -196,7 +205,10 @@ impl CommentView {
 
 /// Return a main view of a CommentView displaying the comment list.
 /// The main view of a CommentView is a View without status bar or footer.
-fn get_comment_main_view(receiver: client::CommentReceiver) -> impl View {
+fn get_comment_main_view(
+    main_text: client::HnText,
+    receiver: client::CommentReceiver,
+) -> impl View {
     let comment_view_keymap = config::get_comment_view_keymap().clone();
 
     let is_suffix_key = |c: &Event| -> bool {
@@ -205,7 +217,7 @@ fn get_comment_main_view(receiver: client::CommentReceiver) -> impl View {
             || *c == comment_view_keymap.open_link_in_article_view.into()
     };
 
-    OnEventView::new(CommentView::new(receiver))
+    OnEventView::new(CommentView::new(main_text, receiver))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
             s.try_update_comments();
 
@@ -330,7 +342,7 @@ pub fn get_comment_view(story: &client::Story, receiver: client::CommentReceiver
     let status_bar =
         utils::construct_view_title_bar(&format!("Comment View - {}", story.title.source()));
 
-    let main_view = get_comment_main_view(receiver);
+    let main_view = get_comment_main_view(story.text.clone(), receiver);
 
     let mut view = LinearLayout::vertical()
         .child(status_bar)
