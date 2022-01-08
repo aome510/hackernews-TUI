@@ -123,20 +123,20 @@ pub struct StoriesResponse {
 
 // parsed structs
 
-/// Story represents a parsed Hacker News story
+/// A parsed Hacker News story
 #[derive(Debug, Clone)]
 pub struct Story {
     pub id: u32,
     pub title: StyledString,
     pub url: String,
     pub author: String,
-    pub text: (StyledString, Vec<String>),
+    pub text: HnText,
     pub points: u32,
     pub num_comments: usize,
     pub time: u64,
 }
 
-/// Comment represents a parsed Hacker News comment
+/// A parsed Hacker News text
 #[derive(Debug, Clone)]
 pub struct HnText {
     pub id: u32,
@@ -148,7 +148,7 @@ pub struct HnText {
 }
 
 #[derive(Debug, Clone)]
-/// CommentState represents the state of a single comment component
+/// The collapse state of a text component
 pub enum CollapseState {
     Collapsed,
     PartiallyCollapsed,
@@ -156,7 +156,7 @@ pub enum CollapseState {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-/// Article represents a web article in a reader mode
+/// A web article in a reader mode
 pub struct Article {
     pub title: String,
     pub url: String,
@@ -240,15 +240,35 @@ impl From<StoryResponse> for Story {
             parsed_title.append_plain(&title[curr_pos..title.len()]);
         }
 
-        // parse the story's text (if any)
-        let text = match s.text {
-            Some(text) => {
-                let mut s = StyledString::new();
-                let mut links = vec![];
-                parse_hn_html_text(text, Style::default(), &mut s, &mut links);
-                (s, links)
+        // parse story's text
+        let text = {
+            let metadata = utils::combine_styled_strings(vec![
+                StyledString::plain(parsed_title.source()),
+                StyledString::plain("\n"),
+                StyledString::styled(
+                    format!(" {} ago ", utils::get_elapsed_time_as_text(s.time)),
+                    config::get_config_theme().component_style.metadata,
+                ),
+            ]);
+
+            let mut text = metadata.clone();
+            let mut links = vec![];
+
+            parse_hn_html_text(
+                s.text.unwrap_or_default(),
+                Style::default(),
+                &mut text,
+                &mut links,
+            );
+
+            HnText {
+                id: s.id,
+                level: 0,
+                state: CollapseState::Normal,
+                minimized_text: metadata,
+                text,
+                links,
             }
-            None => (StyledString::new(), vec![]),
         };
 
         Story {
@@ -266,6 +286,7 @@ impl From<StoryResponse> for Story {
 
 impl From<CommentResponse> for Vec<HnText> {
     fn from(c: CommentResponse) -> Self {
+        // recursively parse child comments of the current comment
         let mut children = c
             .children
             .into_par_iter()
@@ -277,31 +298,43 @@ impl From<CommentResponse> for Vec<HnText> {
             })
             .collect::<Vec<_>>();
 
-        let metadata = utils::combine_styled_strings(vec![
-            StyledString::styled(
-                c.author.unwrap_or_default(),
-                config::get_config_theme().component_style.username,
-            ),
-            StyledString::styled(
-                format!(" {} ago ", utils::get_elapsed_time_as_text(c.time)),
-                config::get_config_theme().component_style.metadata,
-            ),
-        ]);
-        let (text, links) = parse_comment(&c.text.unwrap_or_default(), metadata.clone());
-
-        let comment = HnText {
-            id: c.id,
-            level: 0,
-            state: CollapseState::Normal,
-            text,
-            minimized_text: utils::combine_styled_strings(vec![
-                metadata,
+        // parse current comment
+        let comment = {
+            let metadata = utils::combine_styled_strings(vec![
                 StyledString::styled(
-                    format!("({} more)", children.len() + 1),
+                    c.author.unwrap_or_default(),
+                    config::get_config_theme().component_style.username,
+                ),
+                StyledString::styled(
+                    format!(" {} ago ", utils::get_elapsed_time_as_text(c.time)),
                     config::get_config_theme().component_style.metadata,
                 ),
-            ]),
-            links,
+            ]);
+
+            let mut text = metadata.clone();
+            let mut links = vec![];
+
+            parse_hn_html_text(
+                c.text.unwrap_or_default(),
+                Style::default(),
+                &mut text,
+                &mut links,
+            );
+
+            HnText {
+                id: c.id,
+                level: 0,
+                state: CollapseState::Normal,
+                minimized_text: utils::combine_styled_strings(vec![
+                    metadata,
+                    StyledString::styled(
+                        format!("({} more)", children.len() + 1),
+                        config::get_config_theme().component_style.metadata,
+                    ),
+                ]),
+                text,
+                links,
+            }
         };
 
         let mut comments = vec![comment];
@@ -634,19 +667,7 @@ fn decode_html(s: &str) -> String {
     html_escape::decode_html_entities(s).into()
 }
 
-/// Parse a HTML comment into a styled text.
-/// The fucntion also returns a list of links inside the comment beside the parsed styled text.
-fn parse_comment(text: &str, metadata: StyledString) -> (StyledString, Vec<String>) {
-    let text = decode_html(text);
-
-    let mut s = utils::combine_styled_strings(vec![metadata, StyledString::plain("\n")]);
-    let mut links = vec![];
-    parse_hn_html_text(text, Style::default(), &mut s, &mut links);
-
-    (s, links)
-}
-
-/// A helper function for parsing Hacker News HTML text
+/// parse a Hacker News HTML text
 fn parse_hn_html_text(text: String, style: Style, s: &mut StyledString, links: &mut Vec<String>) {
     debug!("parse hn html text: {}", text);
 
