@@ -76,6 +76,7 @@ pub struct StoryResponse {
 
     author: Option<String>,
     url: Option<String>,
+    text: Option<String>,
 
     #[serde(default)]
     #[serde(deserialize_with = "parse_null_default")]
@@ -129,6 +130,7 @@ pub struct Story {
     pub title: StyledString,
     pub url: String,
     pub author: String,
+    pub text: (StyledString, Vec<String>),
     pub points: u32,
     pub num_comments: usize,
     pub time: u64,
@@ -238,6 +240,17 @@ impl From<StoryResponse> for Story {
             parsed_title.append_plain(&title[curr_pos..title.len()]);
         }
 
+        // parse the story's text (if any)
+        let text = match s.text {
+            Some(text) => {
+                let mut s = StyledString::new();
+                let mut links = vec![];
+                parse_hn_html_text(text, Style::default(), &mut s, &mut links);
+                (s, links)
+            }
+            None => (StyledString::new(), vec![]),
+        };
+
         Story {
             title: parsed_title,
             url: s.url.unwrap_or_default(),
@@ -246,6 +259,7 @@ impl From<StoryResponse> for Story {
             points: s.points,
             num_comments: s.num_comments,
             time: s.time,
+            text,
         }
     }
 }
@@ -627,14 +641,14 @@ fn parse_comment(text: &str, metadata: StyledString) -> (StyledString, Vec<Strin
 
     let mut s = utils::combine_styled_strings(vec![metadata, StyledString::plain("\n")]);
     let mut links = vec![];
-    parse_comment_helper(text, Style::default(), &mut s, &mut links);
+    parse_hn_html_text(text, Style::default(), &mut s, &mut links);
 
     (s, links)
 }
 
-/// A helper function for parsing comment text that allows recursively parsing sub-elements of the text.
-fn parse_comment_helper(text: String, style: Style, s: &mut StyledString, links: &mut Vec<String>) {
-    debug!("parse comment: {}", text);
+/// A helper function for parsing Hacker News HTML text
+fn parse_hn_html_text(text: String, style: Style, s: &mut StyledString, links: &mut Vec<String>) {
+    debug!("parse hn html text: {}", text);
 
     let mut curr_pos = 0;
 
@@ -666,7 +680,7 @@ fn parse_comment_helper(text: String, style: Style, s: &mut StyledString, links:
                     .repeat(m_quote.as_str().matches('>').count()),
                 style,
             );
-            parse_comment_helper(
+            parse_hn_html_text(
                 m_text.as_str().to_string(),
                 component_style.quote.into(),
                 s,
@@ -681,7 +695,7 @@ fn parse_comment_helper(text: String, style: Style, s: &mut StyledString, links:
                 seen_first_paragraph = true;
             }
 
-            parse_comment_helper(m.as_str().to_string(), style, s, links);
+            parse_hn_html_text(m.as_str().to_string(), style, s, links);
 
             s.append_plain("\n");
         } else if let Some(m) = caps.name("link") {
