@@ -138,10 +138,10 @@ pub struct Story {
 
 /// Comment represents a parsed Hacker News comment
 #[derive(Debug, Clone)]
-pub struct Comment {
+pub struct HnText {
     pub id: u32,
-    pub height: usize,
-    pub state: CommentState,
+    pub level: usize,
+    pub state: CollapseState,
     pub text: StyledString,
     pub minimized_text: StyledString,
     pub links: Vec<String>,
@@ -149,7 +149,7 @@ pub struct Comment {
 
 #[derive(Debug, Clone)]
 /// CommentState represents the state of a single comment component
-pub enum CommentState {
+pub enum CollapseState {
     Collapsed,
     PartiallyCollapsed,
     Normal,
@@ -264,15 +264,15 @@ impl From<StoryResponse> for Story {
     }
 }
 
-impl From<CommentResponse> for Vec<Comment> {
+impl From<CommentResponse> for Vec<HnText> {
     fn from(c: CommentResponse) -> Self {
         let mut children = c
             .children
             .into_par_iter()
             .filter(|comment| comment.author.is_some() && comment.text.is_some())
-            .flat_map(<Vec<Comment>>::from)
+            .flat_map(<Vec<HnText>>::from)
             .map(|mut c| {
-                c.height += 1; // update the height of every children comments
+                c.level += 1; // update the height of every children comments
                 c
             })
             .collect::<Vec<_>>();
@@ -289,10 +289,10 @@ impl From<CommentResponse> for Vec<Comment> {
         ]);
         let (text, links) = parse_comment(&c.text.unwrap_or_default(), metadata.clone());
 
-        let comment = Comment {
+        let comment = HnText {
             id: c.id,
-            height: 0,
-            state: CommentState::Normal,
+            level: 0,
+            state: CollapseState::Normal,
             text,
             minimized_text: utils::combine_styled_strings(vec![
                 metadata,
