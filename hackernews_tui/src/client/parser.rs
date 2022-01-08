@@ -255,7 +255,7 @@ impl From<StoryResponse> for Story {
             let mut links = vec![];
 
             parse_hn_html_text(
-                s.text.unwrap_or_default(),
+                decode_html(&s.text.unwrap_or_default()),
                 Style::default(),
                 &mut text,
                 &mut links,
@@ -311,11 +311,12 @@ impl From<CommentResponse> for Vec<HnText> {
                 ),
             ]);
 
-            let mut text = metadata.clone();
+            let mut text =
+                utils::combine_styled_strings(vec![metadata.clone(), StyledString::plain("\n")]);
             let mut links = vec![];
 
             parse_hn_html_text(
-                c.text.unwrap_or_default(),
+                decode_html(&c.text.unwrap_or_default()),
                 Style::default(),
                 &mut text,
                 &mut links,
