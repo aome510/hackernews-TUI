@@ -15,9 +15,9 @@ lazy_static! {
     /// a regex that matches whitespace character(s)
     static ref WS_RE: Regex = Regex::new(r"\s+").unwrap();
 
-    /// a regex used to parse a HN comment (in HTML format)
+    /// a regex used to parse a HN text (in HTML format)
     /// It consists of multiple regex(s) representing different elements
-    static ref COMMENT_RE: Regex = Regex::new(&format!(
+    static ref HN_TEXT_RE: Regex = Regex::new(&format!(
         "(({})|({})|({})|({})|({})|({}))",
         // a regex that matches a HTML paragraph
         r"<p>(?s)(?P<paragraph>(|[^>].*?))</p>",
@@ -260,21 +260,31 @@ impl From<StoryResponse> for Story {
                 ),
             ]);
 
-            let mut text = metadata.clone();
-            let mut links = vec![];
+            // the HTML story text returned by HN Algolia API doesn't wrap a paragraph
+            // inside the `<p><\p>` tag pair.
+            // Instead, it seems to use `<p>` to indicate a paragraph break.
+            let mut story_text = decode_html(&s.text.unwrap_or_default()).replace("<p>", "\n\n");
 
-            parse_hn_html_text(
-                decode_html(&s.text.unwrap_or_default()),
-                Style::default(),
-                &mut text,
-                &mut links,
-            );
+            let minimized_text = if story_text.is_empty() {
+                metadata.clone()
+            } else {
+                story_text = format!("\n{}", story_text);
+
+                utils::combine_styled_strings(vec![
+                    metadata.clone(),
+                    StyledString::plain("... (more)"),
+                ])
+            };
+
+            let mut text = metadata;
+            let mut links = vec![];
+            parse_hn_html_text(story_text, Style::default(), &mut text, &mut links);
 
             HnText {
                 id: s.id,
                 level: 0,
                 state: CollapseState::Normal,
-                minimized_text: metadata,
+                minimized_text,
                 text,
                 links,
             }
@@ -687,7 +697,7 @@ fn parse_hn_html_text(text: String, style: Style, s: &mut StyledString, links: &
     // It is used to add a break between 2 consecutive paragraphs.
     let mut seen_first_paragraph = false;
 
-    for caps in COMMENT_RE.captures_iter(&text) {
+    for caps in HN_TEXT_RE.captures_iter(&text) {
         // the part that doesn't match any patterns is rendered in the default style
         let whole_match = caps.get(0).unwrap();
         if curr_pos < whole_match.start() {
