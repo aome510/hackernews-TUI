@@ -260,9 +260,9 @@ impl From<StoryResponse> for Story {
                 ),
             ]);
 
-            // the HTML story text returned by HN Algolia API doesn't wrap a paragraph
-            // inside the `<p><\p>` tag pair.
-            // Instead, it seems to use `<p>` to indicate a paragraph break.
+            // the HTML story text returned by HN Algolia API doesn't wrap a
+            // paragraph inside a `<p><\p>` tag pair.
+            // Instead, it seems to use `<p>` to represent a paragraph break.
             let mut story_text = decode_html(&s.text.unwrap_or_default()).replace("<p>", "\n\n");
 
             let minimized_text = if story_text.is_empty() {
@@ -312,7 +312,7 @@ impl From<CommentResponse> for Vec<HnText> {
             .filter(|comment| comment.author.is_some() && comment.text.is_some())
             .flat_map(<Vec<HnText>>::from)
             .map(|mut c| {
-                c.level += 1; // update the height of every children comments
+                c.level += 1; // update the level of every children comments
                 c
             })
             .collect::<Vec<_>>();
