@@ -3,7 +3,7 @@
 
 * Roadmap
 
-** ONGOING Render story/comment main text in ~CommentView~
+** DONE Render story/comment main text in ~CommentView~
 
 ** TODO Improve error message for config parser
 
@@ -25,5 +25,13 @@ More specifically, open link starting with ~https://news.ycombinator.com/item?id
 
 
 * Changes
-** [[https://github.com/aome510/hackernews-TUI/pull/62][Render story text in comment view #62]]
+** [[https://github.com/aome510/hackernews-TUI/pull/62][Render story text in comment view #62]] :ATTACH:
+:PROPERTIES:
+:ID:       024b344d-e592-45d0-8957-0477a4f95139
+:END:
 This PR implements [[*Render story/comment main text in ~CommentView~]].
+
+- Render a story text on the top of the ~CommentView~:
+
+  #+attr_html: :width 1000
+  [[attachment:_20220109_200339Screen Shot 2022-01-09 at 8.03.36 PM.png]]
