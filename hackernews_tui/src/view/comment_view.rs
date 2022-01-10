@@ -87,23 +87,23 @@ impl CommentView {
         self.layout(self.get_scroller().last_outer_size())
     }
 
-    /// Return the `id` of the first (`direction` dependent and starting but not including `start_id`)
-    /// comment which has the `height` less than or equal the `max_height`
-    pub fn find_comment_id_by_max_height(
+    /// Return the id of the first comment (`direction` dependent)
+    /// whose level is less than or equal `max_level`.
+    pub fn find_comment_id_by_max_level(
         &self,
         start_id: usize,
-        max_height: usize,
+        max_level: usize,
         direction: bool,
     ) -> usize {
         if direction {
             // ->
             (start_id + 1..self.len())
-                .find(|&id| self.comments[id].level <= max_height)
+                .find(|&id| self.comments[id].level <= max_level)
                 .unwrap_or_else(|| self.len())
         } else {
             // <-
             (0..start_id)
-                .rfind(|&id| self.comments[id].level <= max_height)
+                .rfind(|&id| self.comments[id].level <= max_level)
                 .unwrap_or(start_id)
         }
     }
@@ -165,7 +165,7 @@ impl CommentView {
                 }
 
                 // skip toggling all child comments of the current comment
-                let next_id = self.find_comment_id_by_max_height(i, self.comments[i].level, true);
+                let next_id = self.find_comment_id_by_max_level(i, self.comments[i].level, true);
                 self.toggle_comment_collapse_state(next_id, min_height)
             }
         };
@@ -262,28 +262,28 @@ fn get_comment_main_view(
         })
         .on_pre_event_inner(comment_view_keymap.next_leq_level_comment, move |s, _| {
             let id = s.get_focus_index();
-            let next_id = s.find_comment_id_by_max_height(id, s.comments[id].level, true);
+            let next_id = s.find_comment_id_by_max_level(id, s.comments[id].level, true);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.prev_leq_level_comment, move |s, _| {
             let id = s.get_focus_index();
-            let next_id = s.find_comment_id_by_max_height(id, s.comments[id].level, false);
+            let next_id = s.find_comment_id_by_max_level(id, s.comments[id].level, false);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.next_top_level_comment, move |s, _| {
             let id = s.get_focus_index();
-            let next_id = s.find_comment_id_by_max_height(id, 0, true);
+            let next_id = s.find_comment_id_by_max_level(id, 0, true);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.prev_top_level_comment, move |s, _| {
             let id = s.get_focus_index();
-            let next_id = s.find_comment_id_by_max_height(id, 0, false);
+            let next_id = s.find_comment_id_by_max_level(id, 0, false);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.parent_comment, move |s, _| {
             let id = s.get_focus_index();
             if s.comments[id].level > 0 {
-                let next_id = s.find_comment_id_by_max_height(id, s.comments[id].level - 1, false);
+                let next_id = s.find_comment_id_by_max_level(id, s.comments[id].level - 1, false);
                 s.set_focus_index(next_id)
             } else {
                 Some(EventResult::Consumed(None))
