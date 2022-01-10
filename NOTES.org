@@ -1,0 +1,29 @@
+#+TITLE: Hacker News TUI Project Notes
+#+AUTHOR: Thang Pham
+
+* Roadmap
+
+** ONGOING Render story/comment main text in ~CommentView~
+
+** TODO Improve error message for config parser
+
+** TODO Add Hacker News credential supports
+Ideally, users should be able to [0/3] [0%]
+- [ ] upvote/downvote
+- [ ] add comment
+- [ ] post
+
+** TODO Improve keymapping [0/2] [0%]
+- [ ] allow to bind multiple shortcuts to a single command
+- [ ] improve command naming/structure in each view
+
+** TODO Allow to parse Hacker News URL
+More specifically, open link starting with ~https://news.ycombinator.com/item?id=~ should open a new ~CommentView~ with the corresponding item as the main entry.
+
+** TODO Others [0/1] [0%]
+- [ ] Try [[https://github.com/cheeaun/node-hnapi][node-hnapi]] to replace [[https://hn.algolia.com/api][HN Algolia]] for retrieving story's comments
+
+
+* Changes
+** [[https://github.com/aome510/hackernews-TUI/pull/62][Render story text in comment view #62]]
+This PR implements [[*Render story/comment main text in ~CommentView~]].
