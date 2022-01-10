@@ -15,9 +15,9 @@ lazy_static! {
     /// a regex that matches whitespace character(s)
     static ref WS_RE: Regex = Regex::new(r"\s+").unwrap();
 
-    /// a regex used to parse a HN comment (in HTML format)
+    /// a regex used to parse a HN text (in HTML format)
     /// It consists of multiple regex(s) representing different elements
-    static ref COMMENT_RE: Regex = Regex::new(&format!(
+    static ref HN_TEXT_RE: Regex = Regex::new(&format!(
         "(({})|({})|({})|({})|({})|({}))",
         // a regex that matches a HTML paragraph
         r"<p>(?s)(?P<paragraph>(|[^>].*?))</p>",
@@ -76,6 +76,8 @@ pub struct StoryResponse {
 
     author: Option<String>,
     url: Option<String>,
+    #[serde(rename(deserialize = "story_text"))]
+    text: Option<String>,
 
     #[serde(default)]
     #[serde(deserialize_with = "parse_null_default")]
@@ -122,39 +124,40 @@ pub struct StoriesResponse {
 
 // parsed structs
 
-/// Story represents a parsed Hacker News story
+/// A parsed Hacker News story
 #[derive(Debug, Clone)]
 pub struct Story {
     pub id: u32,
     pub title: StyledString,
     pub url: String,
     pub author: String,
+    pub text: HnText,
     pub points: u32,
     pub num_comments: usize,
     pub time: u64,
 }
 
-/// Comment represents a parsed Hacker News comment
+/// A parsed Hacker News text
 #[derive(Debug, Clone)]
-pub struct Comment {
+pub struct HnText {
     pub id: u32,
-    pub height: usize,
-    pub state: CommentState,
+    pub level: usize,
+    pub state: CollapseState,
     pub text: StyledString,
     pub minimized_text: StyledString,
     pub links: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-/// CommentState represents the state of a single comment component
-pub enum CommentState {
+/// The collapse state of a text component
+pub enum CollapseState {
     Collapsed,
     PartiallyCollapsed,
     Normal,
 }
 
 #[derive(Debug, Clone, Deserialize)]
-/// Article represents a web article in a reader mode
+/// A web article in a reader mode
 pub struct Article {
     pub title: String,
     pub url: String,
@@ -238,56 +241,120 @@ impl From<StoryResponse> for Story {
             parsed_title.append_plain(&title[curr_pos..title.len()]);
         }
 
+        let author = s.author.unwrap_or_else(|| String::from("[deleted]"));
+
+        // parse story's text
+        let text = {
+            let metadata = utils::combine_styled_strings(vec![
+                StyledString::plain(parsed_title.source()),
+                StyledString::plain("\n"),
+                StyledString::styled(
+                    format!(
+                        "{} points | by {} | {} ago | {} comments\n",
+                        s.points,
+                        author,
+                        utils::get_elapsed_time_as_text(s.time),
+                        s.num_comments,
+                    ),
+                    config::get_config_theme().component_style.metadata,
+                ),
+            ]);
+
+            // the HTML story text returned by HN Algolia API doesn't wrap a
+            // paragraph inside a `<p><\p>` tag pair.
+            // Instead, it seems to use `<p>` to represent a paragraph break.
+            let mut story_text = decode_html(&s.text.unwrap_or_default()).replace("<p>", "\n\n");
+
+            let minimized_text = if story_text.is_empty() {
+                metadata.clone()
+            } else {
+                story_text = format!("\n{}", story_text);
+
+                utils::combine_styled_strings(vec![
+                    metadata.clone(),
+                    StyledString::plain("... (more)"),
+                ])
+            };
+
+            let mut text = metadata;
+            let mut links = vec![];
+            parse_hn_html_text(story_text, Style::default(), &mut text, &mut links);
+
+            HnText {
+                id: s.id,
+                level: 0,
+                state: CollapseState::Normal,
+                minimized_text,
+                text,
+                links,
+            }
+        };
+
         Story {
             title: parsed_title,
             url: s.url.unwrap_or_default(),
-            author: s.author.unwrap_or_else(|| String::from("[deleted]")),
+            author,
             id: s.id,
             points: s.points,
             num_comments: s.num_comments,
             time: s.time,
+            text,
         }
     }
 }
 
-impl From<CommentResponse> for Vec<Comment> {
+impl From<CommentResponse> for Vec<HnText> {
     fn from(c: CommentResponse) -> Self {
+        // recursively parse child comments of the current comment
         let mut children = c
             .children
             .into_par_iter()
             .filter(|comment| comment.author.is_some() && comment.text.is_some())
-            .flat_map(<Vec<Comment>>::from)
+            .flat_map(<Vec<HnText>>::from)
             .map(|mut c| {
-                c.height += 1; // update the height of every children comments
+                c.level += 1; // update the level of every children comments
                 c
             })
             .collect::<Vec<_>>();
 
-        let metadata = utils::combine_styled_strings(vec![
-            StyledString::styled(
-                c.author.unwrap_or_default(),
-                config::get_config_theme().component_style.username,
-            ),
-            StyledString::styled(
-                format!(" {} ago ", utils::get_elapsed_time_as_text(c.time)),
-                config::get_config_theme().component_style.metadata,
-            ),
-        ]);
-        let (text, links) = parse_comment(&c.text.unwrap_or_default(), metadata.clone());
-
-        let comment = Comment {
-            id: c.id,
-            height: 0,
-            state: CommentState::Normal,
-            text,
-            minimized_text: utils::combine_styled_strings(vec![
-                metadata,
+        // parse current comment
+        let comment = {
+            let metadata = utils::combine_styled_strings(vec![
                 StyledString::styled(
-                    format!("({} more)", children.len() + 1),
+                    c.author.unwrap_or_default(),
+                    config::get_config_theme().component_style.username,
+                ),
+                StyledString::styled(
+                    format!(" {} ago ", utils::get_elapsed_time_as_text(c.time)),
                     config::get_config_theme().component_style.metadata,
                 ),
-            ]),
-            links,
+            ]);
+
+            let mut text =
+                utils::combine_styled_strings(vec![metadata.clone(), StyledString::plain("\n")]);
+            let mut links = vec![];
+
+            parse_hn_html_text(
+                decode_html(&c.text.unwrap_or_default()),
+                Style::default(),
+                &mut text,
+                &mut links,
+            );
+
+            HnText {
+                id: c.id,
+                level: 0,
+                state: CollapseState::Normal,
+                minimized_text: utils::combine_styled_strings(vec![
+                    metadata,
+                    StyledString::styled(
+                        format!("({} more)", children.len() + 1),
+                        config::get_config_theme().component_style.metadata,
+                    ),
+                ]),
+                text,
+                links,
+            }
         };
 
         let mut comments = vec![comment];
@@ -620,21 +687,9 @@ fn decode_html(s: &str) -> String {
     html_escape::decode_html_entities(s).into()
 }
 
-/// Parse a HTML comment into a styled text.
-/// The fucntion also returns a list of links inside the comment beside the parsed styled text.
-fn parse_comment(text: &str, metadata: StyledString) -> (StyledString, Vec<String>) {
-    let text = decode_html(text);
-
-    let mut s = utils::combine_styled_strings(vec![metadata, StyledString::plain("\n")]);
-    let mut links = vec![];
-    parse_comment_helper(text, Style::default(), &mut s, &mut links);
-
-    (s, links)
-}
-
-/// A helper function for parsing comment text that allows recursively parsing sub-elements of the text.
-fn parse_comment_helper(text: String, style: Style, s: &mut StyledString, links: &mut Vec<String>) {
-    debug!("parse comment: {}", text);
+/// parse a Hacker News HTML text
+fn parse_hn_html_text(text: String, style: Style, s: &mut StyledString, links: &mut Vec<String>) {
+    debug!("parse hn html text: {}", text);
 
     let mut curr_pos = 0;
 
@@ -642,7 +697,7 @@ fn parse_comment_helper(text: String, style: Style, s: &mut StyledString, links:
     // It is used to add a break between 2 consecutive paragraphs.
     let mut seen_first_paragraph = false;
 
-    for caps in COMMENT_RE.captures_iter(&text) {
+    for caps in HN_TEXT_RE.captures_iter(&text) {
         // the part that doesn't match any patterns is rendered in the default style
         let whole_match = caps.get(0).unwrap();
         if curr_pos < whole_match.start() {
@@ -666,7 +721,7 @@ fn parse_comment_helper(text: String, style: Style, s: &mut StyledString, links:
                     .repeat(m_quote.as_str().matches('>').count()),
                 style,
             );
-            parse_comment_helper(
+            parse_hn_html_text(
                 m_text.as_str().to_string(),
                 component_style.quote.into(),
                 s,
@@ -681,7 +736,7 @@ fn parse_comment_helper(text: String, style: Style, s: &mut StyledString, links:
                 seen_first_paragraph = true;
             }
 
-            parse_comment_helper(m.as_str().to_string(), style, s, links);
+            parse_hn_html_text(m.as_str().to_string(), style, s, links);
 
             s.append_plain("\n");
         } else if let Some(m) = caps.name("link") {

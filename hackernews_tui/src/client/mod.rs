@@ -3,7 +3,7 @@ mod parser;
 mod query;
 
 // re-export
-pub use parser::{Article, Comment, CommentState, Story};
+pub use parser::{Article, CollapseState, HnText, Story};
 pub use query::StoryNumericFilters;
 
 use crate::prelude::*;
@@ -20,8 +20,8 @@ pub const SEARCH_LIMIT: usize = 15;
 
 static CLIENT: once_cell::sync::OnceCell<HNClient> = once_cell::sync::OnceCell::new();
 
-pub type CommentSender = crossbeam_channel::Sender<Vec<Comment>>;
-pub type CommentReceiver = crossbeam_channel::Receiver<Vec<Comment>>;
+pub type CommentSender = crossbeam_channel::Sender<Vec<HnText>>;
+pub type CommentReceiver = crossbeam_channel::Receiver<Vec<HnText>>;
 
 /// HNClient is a HTTP client to communicate with Hacker News APIs.
 #[derive(Clone)]

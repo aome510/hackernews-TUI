@@ -11,7 +11,7 @@ type CommentComponent = HideableView<PaddedView<text_view::TextView>>;
 /// CommentView is a View displaying a list of comments in a HN story
 pub struct CommentView {
     view: ScrollListView,
-    comments: Vec<client::Comment>,
+    comments: Vec<client::HnText>,
     receiver: client::CommentReceiver,
 
     raw_command: String,
@@ -23,13 +23,22 @@ impl ViewWrapper for CommentView {
 
 impl CommentView {
     /// Return a new CommentView given a comment list and the discussed story url
-    pub fn new(receiver: client::CommentReceiver) -> Self {
+    pub fn new(main_text: client::HnText, receiver: client::CommentReceiver) -> Self {
         let mut view = CommentView {
-            comments: vec![],
-            view: LinearLayout::vertical().scrollable(),
+            view: LinearLayout::vertical()
+                .child(HideableView::new(PaddedView::lrtb(
+                    main_text.level * 2 + 1,
+                    1,
+                    0,
+                    1,
+                    text_view::TextView::new(main_text.text.clone()),
+                )))
+                .scrollable(),
+            comments: vec![main_text],
             raw_command: String::new(),
             receiver,
         };
+
         view.try_update_comments();
         view
     }
@@ -54,15 +63,15 @@ impl CommentView {
         new_comments.iter().for_each(|comment| {
             let text_view = text_view::TextView::new(comment.text.clone());
             self.add_item(HideableView::new(PaddedView::lrtb(
-                comment.height * 2 + 1,
+                comment.level * 2 + 1,
                 1,
                 0,
                 1,
-                if comment.height > 0 {
+                if comment.level > 0 {
                     // get the padding style (color) based on the comment's height
                     //
                     // We use base 16 colors to display the comment's padding
-                    let c = config::Color::from((comment.height % 16) as u8);
+                    let c = config::Color::from((comment.level % 16) as u8);
                     text_view
                         .padding(TextPadding::default().left(StyledPaddingChar::new('▎', c.into())))
                 } else {
@@ -78,23 +87,23 @@ impl CommentView {
         self.layout(self.get_scroller().last_outer_size())
     }
 
-    /// Return the `id` of the first (`direction` dependent and starting but not including `start_id`)
-    /// comment which has the `height` less than or equal the `max_height`
-    pub fn find_comment_id_by_max_height(
+    /// Return the id of the first comment (`direction` dependent)
+    /// whose level is less than or equal `max_level`.
+    pub fn find_comment_id_by_max_level(
         &self,
         start_id: usize,
-        max_height: usize,
+        max_level: usize,
         direction: bool,
     ) -> usize {
         if direction {
             // ->
             (start_id + 1..self.len())
-                .find(|&id| self.comments[id].height <= max_height)
+                .find(|&id| self.comments[id].level <= max_level)
                 .unwrap_or_else(|| self.len())
         } else {
             // <-
             (0..start_id)
-                .rfind(|&id| self.comments[id].height <= max_height)
+                .rfind(|&id| self.comments[id].level <= max_level)
                 .unwrap_or(start_id)
         }
     }
@@ -133,21 +142,21 @@ impl CommentView {
     /// **Note** `PartiallyCollapsed` comment's state is unchanged, only toggle its visibility.
     /// Also, the state and visibility of such comment's children are unaffected.
     fn toggle_comment_collapse_state(&mut self, i: usize, min_height: usize) {
-        if i == self.len() || self.comments[i].height <= min_height {
+        if i == self.len() || self.comments[i].level <= min_height {
             return;
         }
         match self.comments[i].state {
-            client::CommentState::Collapsed => {
-                self.comments[i].state = client::CommentState::Normal;
+            client::CollapseState::Collapsed => {
+                self.comments[i].state = client::CollapseState::Normal;
                 self.get_comment_component_mut(i).unhide();
                 self.toggle_comment_collapse_state(i + 1, min_height)
             }
-            client::CommentState::Normal => {
-                self.comments[i].state = client::CommentState::Collapsed;
+            client::CollapseState::Normal => {
+                self.comments[i].state = client::CollapseState::Collapsed;
                 self.get_comment_component_mut(i).hide();
                 self.toggle_comment_collapse_state(i + 1, min_height)
             }
-            client::CommentState::PartiallyCollapsed => {
+            client::CollapseState::PartiallyCollapsed => {
                 let component = self.get_comment_component_mut(i);
                 if component.is_visible() {
                     component.hide();
@@ -156,7 +165,7 @@ impl CommentView {
                 }
 
                 // skip toggling all child comments of the current comment
-                let next_id = self.find_comment_id_by_max_height(i, self.comments[i].height, true);
+                let next_id = self.find_comment_id_by_max_level(i, self.comments[i].level, true);
                 self.toggle_comment_collapse_state(next_id, min_height)
             }
         };
@@ -167,26 +176,26 @@ impl CommentView {
         let id = self.get_focus_index();
         let comment = self.comments[id].clone();
         match comment.state {
-            client::CommentState::Collapsed => {
+            client::CollapseState::Collapsed => {
                 panic!(
                     "invalid comment state `Collapsed` when calling `toggle_collapse_focused_comment`"
                 );
             }
-            client::CommentState::PartiallyCollapsed => {
+            client::CollapseState::PartiallyCollapsed => {
                 self.get_comment_component_mut(id)
                     .get_inner_mut()
                     .get_inner_mut()
                     .set_content(comment.text);
-                self.toggle_comment_collapse_state(id + 1, self.comments[id].height);
-                self.comments[id].state = client::CommentState::Normal;
+                self.toggle_comment_collapse_state(id + 1, self.comments[id].level);
+                self.comments[id].state = client::CollapseState::Normal;
             }
-            client::CommentState::Normal => {
+            client::CollapseState::Normal => {
                 self.get_comment_component_mut(id)
                     .get_inner_mut()
                     .get_inner_mut()
                     .set_content(comment.minimized_text);
-                self.toggle_comment_collapse_state(id + 1, self.comments[id].height);
-                self.comments[id].state = client::CommentState::PartiallyCollapsed;
+                self.toggle_comment_collapse_state(id + 1, self.comments[id].level);
+                self.comments[id].state = client::CollapseState::PartiallyCollapsed;
             }
         };
     }
@@ -196,7 +205,10 @@ impl CommentView {
 
 /// Return a main view of a CommentView displaying the comment list.
 /// The main view of a CommentView is a View without status bar or footer.
-fn get_comment_main_view(receiver: client::CommentReceiver) -> impl View {
+fn get_comment_main_view(
+    main_text: client::HnText,
+    receiver: client::CommentReceiver,
+) -> impl View {
     let comment_view_keymap = config::get_comment_view_keymap().clone();
 
     let is_suffix_key = |c: &Event| -> bool {
@@ -205,7 +217,7 @@ fn get_comment_main_view(receiver: client::CommentReceiver) -> impl View {
             || *c == comment_view_keymap.open_link_in_article_view.into()
     };
 
-    OnEventView::new(CommentView::new(receiver))
+    OnEventView::new(CommentView::new(main_text, receiver))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
             s.try_update_comments();
 
@@ -250,28 +262,28 @@ fn get_comment_main_view(receiver: client::CommentReceiver) -> impl View {
         })
         .on_pre_event_inner(comment_view_keymap.next_leq_level_comment, move |s, _| {
             let id = s.get_focus_index();
-            let next_id = s.find_comment_id_by_max_height(id, s.comments[id].height, true);
+            let next_id = s.find_comment_id_by_max_level(id, s.comments[id].level, true);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.prev_leq_level_comment, move |s, _| {
             let id = s.get_focus_index();
-            let next_id = s.find_comment_id_by_max_height(id, s.comments[id].height, false);
+            let next_id = s.find_comment_id_by_max_level(id, s.comments[id].level, false);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.next_top_level_comment, move |s, _| {
             let id = s.get_focus_index();
-            let next_id = s.find_comment_id_by_max_height(id, 0, true);
+            let next_id = s.find_comment_id_by_max_level(id, 0, true);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.prev_top_level_comment, move |s, _| {
             let id = s.get_focus_index();
-            let next_id = s.find_comment_id_by_max_height(id, 0, false);
+            let next_id = s.find_comment_id_by_max_level(id, 0, false);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.parent_comment, move |s, _| {
             let id = s.get_focus_index();
-            if s.comments[id].height > 0 {
-                let next_id = s.find_comment_id_by_max_height(id, s.comments[id].height - 1, false);
+            if s.comments[id].level > 0 {
+                let next_id = s.find_comment_id_by_max_level(id, s.comments[id].level - 1, false);
                 s.set_focus_index(next_id)
             } else {
                 Some(EventResult::Consumed(None))
@@ -330,7 +342,7 @@ pub fn get_comment_view(story: &client::Story, receiver: client::CommentReceiver
     let status_bar =
         utils::construct_view_title_bar(&format!("Comment View - {}", story.title.source()));
 
-    let main_view = get_comment_main_view(receiver);
+    let main_view = get_comment_main_view(story.text.clone(), receiver);
 
     let mut view = LinearLayout::vertical()
         .child(status_bar)
