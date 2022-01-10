@@ -1,3 +1,0 @@
-#!/bin/bash
-
-RUST_LOG=debug RUST_BACKTRACE=1 cargo run -p hackernews_tui -- 2> log.txt
