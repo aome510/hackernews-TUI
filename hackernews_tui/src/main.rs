@@ -158,16 +158,16 @@ fn main() {
         .version("0.9.0")
         .author("Thang Pham <phamducthang1234@gmail>")
         .arg(
-            Arg::with_name("config")
-                .short("c")
+            Arg::new("config")
+                .short('c')
                 .long("config")
                 .value_name("FILE")
                 .help("Path to the application's config file (default: $HOME/.config/hn-tui.toml)")
                 .next_line_help(true),
         )
         .arg(
-            Arg::with_name("log")
-                .short("l")
+            Arg::new("log")
+                .short('l')
                 .long("log")
                 .value_name("FOLDER")
                 .help("Path to a folder to store application's logs (default: $HOME/.cache)")
