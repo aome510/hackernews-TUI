@@ -128,8 +128,8 @@ impl View for TextView {
         self.size_cache.is_none()
     }
 
-    fn take_focus(&mut self, _: direction::Direction) -> bool {
-        true
+    fn take_focus(&mut self, _: direction::Direction) -> Result<EventResult, CannotFocus> {
+        Ok(EventResult::Consumed(None))
     }
 
     fn required_size(&mut self, size: Vec2) -> Vec2 {

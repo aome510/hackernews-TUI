@@ -30,7 +30,7 @@ macro_rules! impl_view_for_fn_wrapper {
             self.get_view_mut().layout(size);
         }
 
-        fn take_focus(&mut self, source: Direction) -> bool {
+        fn take_focus(&mut self, source: Direction) -> Result<EventResult, CannotFocus> {
             self.get_view_mut().take_focus(source)
         }
 
@@ -42,7 +42,7 @@ macro_rules! impl_view_for_fn_wrapper {
             self.get_view().needs_relayout()
         }
 
-        fn focus_view(&mut self, selector: &Selector<'_>) -> Result<(), ViewNotFound> {
+        fn focus_view(&mut self, selector: &Selector<'_>) -> Result<EventResult, ViewNotFound> {
             self.get_view_mut().focus_view(selector)
         }
 

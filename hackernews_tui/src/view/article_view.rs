@@ -33,8 +33,8 @@ impl ViewWrapper for ArticleView {
         self.with_view_mut(|v| v.layout(size));
     }
 
-    fn wrap_take_focus(&mut self, _: Direction) -> bool {
-        true
+    fn wrap_take_focus(&mut self, _: Direction) -> Result<EventResult, CannotFocus> {
+        Ok(EventResult::Consumed(None))
     }
 }
 
@@ -97,13 +97,15 @@ pub fn get_link_dialog(links: &[String]) -> impl View {
     }))
     .on_pre_event_inner(article_view_keymap.link_dialog_focus_next, |s, _| {
         let focus_id = s.get_focus_index();
-        s.set_focus_index(focus_id + 1).unwrap_or_else(|_| {});
+        s.set_focus_index(focus_id + 1)
+            .unwrap_or(EventResult::Consumed(None));
         Some(EventResult::Consumed(None))
     })
     .on_pre_event_inner(article_view_keymap.link_dialog_focus_prev, |s, _| {
         let focus_id = s.get_focus_index();
         if focus_id > 0 {
-            s.set_focus_index(focus_id - 1).unwrap_or_else(|_| {});
+            s.set_focus_index(focus_id - 1)
+                .unwrap_or(EventResult::Consumed(None));
         }
         Some(EventResult::Consumed(None))
     })
@@ -236,7 +238,8 @@ pub fn get_article_view(article: client::Article) -> impl View {
         .child(utils::construct_view_title_bar(&desc))
         .child(main_view)
         .child(utils::construct_footer_view::<ArticleView>());
-    view.set_focus_index(1).unwrap_or_else(|_| {});
+    view.set_focus_index(1)
+        .unwrap_or(EventResult::Consumed(None));
 
     let article_view_keymap = config::get_article_view_keymap().clone();
 
