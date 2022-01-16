@@ -139,6 +139,7 @@ impl SearchView {
                 // no Story View to focus on, or no stories to display,
                 // change back to Search mode
                 self.mode = SearchViewMode::Search;
+                EventResult::Ignored
             });
         }
     }
@@ -248,7 +249,8 @@ pub fn get_search_view(client: &'static client::HNClient, cb_sink: CbSink) -> im
         .child(utils::construct_view_title_bar("Search View"))
         .child(main_view)
         .child(utils::construct_footer_view::<SearchView>());
-    view.set_focus_index(1).unwrap_or_else(|_| {});
+    view.set_focus_index(1)
+        .unwrap_or(EventResult::Consumed(None));
 
     OnEventView::new(view).on_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
         s.add_layer(SearchView::construct_help_view());

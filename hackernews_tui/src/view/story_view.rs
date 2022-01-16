@@ -232,7 +232,8 @@ pub fn get_story_view(
         .child(get_story_view_title_bar(tag))
         .child(main_view)
         .child(utils::construct_footer_view::<StoryView>());
-    view.set_focus_index(1).unwrap_or_else(|_| {});
+    view.set_focus_index(1)
+        .unwrap_or(EventResult::Consumed(None));
 
     let current_tag_pos = STORY_TAGS
         .iter()
