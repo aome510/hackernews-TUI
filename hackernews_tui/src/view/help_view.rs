@@ -468,16 +468,13 @@ impl HasHelpView for article_view::ArticleView {
                         "Open article in browser",
                     ),
                     (
-                        format!(
-                            "`{{link_id}} {}`",
-                            article_view_keymap.open_link_in_browser.to_string()
-                        ),
+                        format!("`{{link_id}} {}`", article_view_keymap.open_link_in_browser),
                         "Open in browser {link_id}-th link",
                     ),
                     (
                         format!(
                             "`{{link_id}} {}`",
-                            article_view_keymap.open_link_in_article_view.to_string()
+                            article_view_keymap.open_link_in_article_view
                         ),
                         "Open in article view {link_id}-th link",
                     ),

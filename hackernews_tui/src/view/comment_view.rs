@@ -348,7 +348,8 @@ pub fn get_comment_view(story: &client::Story, receiver: client::CommentReceiver
         .child(status_bar)
         .child(main_view)
         .child(utils::construct_footer_view::<CommentView>());
-    view.set_focus_index(1).unwrap_or_else(|_| {});
+    view.set_focus_index(1)
+        .unwrap_or(EventResult::Consumed(None));
 
     let id = story.id;
 

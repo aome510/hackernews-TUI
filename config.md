@@ -185,7 +185,7 @@ type custom_keymaps_schema = [
   {
     key: string;
     tag: "story" | "ask_hn" | "show_hn" | "job";
-    by_date: string;
+    by_date: bool;
     numeric_filters: {
       elapsed_days_interval: { start: number; end: number };
       points_interval: { start: number; end: number };
