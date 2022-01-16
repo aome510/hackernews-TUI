@@ -35,3 +35,12 @@ This PR implements [[*Render story/comment main text in ~CommentView~]].
 
   #+attr_html: :width 1000
   [[attachment:_20220109_200339Screen Shot 2022-01-09 at 8.03.36 PM.png]]
+** [[https://github.com/aome510/hackernews-TUI/pull/63][Update dependencies #63]]
+This PR updates dependencies for ~hackernews-TUI~ which includes
+- updating ~cursive~-related dependencies:
+  + ~cursive~ from ~0.16.3~ to ~0.17.0~
+  + ~cursive-async-view~ from ~0.5.0~ to ~0.6.0~
+  + ~cursive-buffered_backend~ from ~0.5.0~ to ~0.6.0~
+  + ~cursive-aligned-view~ from ~0.5.0~ to ~0.6.0~
+- ~clap~ from ~2.34.0~ to ~3.0.7~
+- and other packages
