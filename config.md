@@ -24,8 +24,8 @@ An example config file (with some default config values) can be found in [exampl
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
 | `use_page_scrolling`    | whether to enable page-like scrolling behavior, which automatically adjusts the view based on the scrolling direction | `true`                                                     |
 | `use_pacman_loading`    | whether to use a pacman loading screen or a plain loading screen                                                      | `true`                                                     |
-| `url_open_command`      | the command the application uses to open an url in browser                                                            | `{ command: 'open', options: [] }`                         |
-| `article_parse_command` | the command the application uses to parse an article into a readable text                                             | `{ command: 'article_md', options: ['--format', 'html'] }` |
+| `url_open_command`      | the command the application uses to open an url in browser                                                            | `{ command = 'open', options = [] }`                         |
+| `article_parse_command` | the command the application uses to parse an article into a readable text                                             | `{ command = 'article_md', options = ['--format', 'html'] }` |
 | `client_timeout`        | the timeout (in seconds) when the application's client makes an API request                                           | `32`                                                       |
 
 ### Article Parse Command
@@ -51,7 +51,7 @@ By default, `hackernews-TUI` uses [`article_md`](https://github.com/aome510/arti
 One alternative is [`mercury-parser`](https://github.com/postlight/mercury-parser#installation):
 
 ```toml
-article_parse_command = { command: 'mercury-parser', options: [] }
+article_parse_command = { command = 'mercury-parser', options = [] }
 ```
 
 ## Theme
