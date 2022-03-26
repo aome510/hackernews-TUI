@@ -154,7 +154,7 @@ fn init_logging(log_folder_path: Option<&str>) {
 
 fn main() {
     // parse command line arguments
-    let args = App::new("hackernews-tui")
+    let args = Command::new("hackernews-tui")
         .version("0.9.1")
         .author("Thang Pham <phamducthang1234@gmail>")
         .about("A Terminal UI to browse Hacker News")
