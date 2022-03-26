@@ -77,21 +77,17 @@ static CONFIG: once_cell::sync::OnceCell<Config> = once_cell::sync::OnceCell::ne
 pub fn load_config(config_file_str: &str) {
     let config_file = std::path::PathBuf::from(config_file_str);
 
-    let config = if config_file.exists() {
-        match Config::from_config_file(&config_file) {
-            Err(err) => {
-                tracing::error!(
-                    "failed to load configurations from the file {}: {} \
+    let config = match Config::from_config_file(&config_file) {
+        Err(err) => {
+            tracing::error!(
+                "failed to load configurations from the file {}: {} \
                      \n...Use the default configurations instead",
-                    config_file_str,
-                    err
-                );
-                Config::default()
-            }
-            Ok(config) => config,
+                config_file_str,
+                err
+            );
+            Config::default()
         }
-    } else {
-        Config::default()
+        Ok(config) => config,
     };
 
     tracing::info!("application's configurations: {:?}", config);
