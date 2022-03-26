@@ -24,8 +24,11 @@ pub struct Config {
 
 impl Config {
     /// parse config from a file
-    pub fn from_config_file(file_path: &str) -> anyhow::Result<Self> {
-        let config_str = std::fs::read_to_string(file_path)?;
+    pub fn from_config_file<P>(file: P) -> anyhow::Result<Self>
+    where
+        P: AsRef<std::path::Path>,
+    {
+        let config_str = std::fs::read_to_string(file)?;
         let value = toml::from_str::<toml::Value>(&config_str)?;
         let mut config = Self::default();
         config.parse(value)?;
@@ -69,34 +72,29 @@ impl std::fmt::Display for Command {
 
 static CONFIG: once_cell::sync::OnceCell<Config> = once_cell::sync::OnceCell::new();
 
-/// loads the configuration options from a config file.
-/// If failed to find/process the file, loads the default options.
-pub fn load_config(config_file_path: Option<&str>) {
-    // if no config file is specified, use the default value ($HOME/.config/hn-tui.toml)
-    let config_file_path = if let Some(path) = config_file_path {
-        Some(path.to_string())
-    } else {
-        dirs_next::home_dir().map(|path| format!("{}/.config/hn-tui.toml", path.to_str().unwrap()))
-    };
+/// loads the configurations from a config file.
+/// If failed to find/process the file, uses the default configurations.
+pub fn load_config(config_file_str: &str) {
+    let config_file = std::path::PathBuf::from(config_file_str);
 
-    let config = match config_file_path {
-        None => Config::default(),
-        Some(config_file_path) => match Config::from_config_file(&config_file_path) {
+    let config = if config_file.exists() {
+        match Config::from_config_file(&config_file) {
             Err(err) => {
                 tracing::error!(
                     "failed to load configurations from the file {}: {} \
                      \n...Use the default configurations instead",
-                    config_file_path,
+                    config_file_str,
                     err
                 );
                 Config::default()
             }
             Ok(config) => config,
-        },
+        }
+    } else {
+        Config::default()
     };
 
     tracing::info!("application's configurations: {:?}", config);
-
     init_config(config);
 }
 
