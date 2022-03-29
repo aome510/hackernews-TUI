@@ -369,7 +369,7 @@ impl Article {
     pub fn parse(&mut self, width: usize) -> Result<()> {
         // replace a tab character by 4 spaces
         // as it's possible that the terminal cannot render the tab character
-        self.content = self.content.replace("\t", "    ");
+        self.content = self.content.replace('\t', "    ");
 
         debug!(
             "parse article (url={}), width: {}, content: {}",
@@ -452,7 +452,7 @@ impl Article {
 
                 let text = if in_pre {
                     // add `prefix` to each line of the text inside the `<pre>` tag
-                    content.replace("\n", &format!("\n{}", prefix))
+                    content.replace('\n', &format!("\n{}", prefix))
                 } else {
                     // for non-pre element, consecutive whitespaces are ignored.
                     // This is to prevent reader-mode engine from adding unneccesary line wraps/indents in a paragraph.

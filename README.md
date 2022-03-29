@@ -246,17 +246,25 @@ In `SearchView`, there are two modes: `Navigation` and `Search`. The default mod
 
 ## Configuration
 
-By default, `hackernews-tui` will look for `~/.config/hn-tui.toml` as the user-defined config file, which can be changed by specifying the `-c` or `--config` option when running the application:
+By default, `hackernews-tui` will look for the `hn-tui.toml` user-defined config file inside 
+- the [user's config directory](https://docs.rs/dirs-next/latest/dirs_next/fn.config_dir.html)
+- `.config` directory inside the [user's home directory](https://docs.rs/dirs-next/latest/dirs_next/fn.home_dir.html)
+
+If not found such file, the application will fall back to use a set of [default configurations](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml).
+
+User can also specify the path to config file when running the application with `-c` or `--config` option.
 
 ```shell
 hackernews_tui -c ~/.config/hn-tui.toml
 ```
 
-For further information about the config options, please refer to the [example config file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml) and the [config documentation](https://github.com/aome510/hackernews-TUI/blob/main/config.md).
+For further information about the application's configurations, please refer to the [example config file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml) and the [config documentation](https://github.com/aome510/hackernews-TUI/blob/main/config.md).
 
 ## Logging
 
-`hackernews-tui` uses `RUST_LOG` environment variable to define the application's [logging level](https://docs.rs/log/0.4.14/log/enum.Level.html) (default to be `INFO`). The application stores logs inside the `$HOME/.cache/hn-tui.log` file, which can be configured by specifying the `-l` or `--log` option.
+`hackernews-tui` uses `RUST_LOG` environment variable to define the application's [logging level](https://docs.rs/log/0.4.14/log/enum.Level.html) (default to be `INFO`). 
+
+By default, the application creates the `hn-tui.log` log file inside the [user's cache directory](https://docs.rs/dirs-next/latest/dirs_next/fn.cache_dir.html), which can be configured by specifying the `-l` or `--log` option.
 
 ## Roadmap
 

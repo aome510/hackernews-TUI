@@ -5,6 +5,9 @@ pub mod prelude;
 pub mod utils;
 pub mod view;
 
+const DEFAULT_CONFIG_FILE: &str = "hn-tui.toml";
+const DEFAULT_LOG_FILE: &str = "hn-tui.log";
+
 use clap::*;
 use prelude::*;
 use view::help_view::HasHelpView;
@@ -123,27 +126,20 @@ fn run() {
 }
 
 /// initialize application logging
-fn init_logging(log_folder_path: Option<&str>) {
+fn init_logging(log_dir_str: &str) {
     if std::env::var("RUST_LOG").is_err() {
         std::env::set_var("RUST_LOG", "info")
     }
 
-    // if no log folder path is specified, use the default value (`$HOME/.cache`)
-    let log_folder_path = match log_folder_path {
-        Some(path) => path.into(),
-        None => dirs_next::home_dir()
-            .expect("failed to get user's home directory")
-            .join(".cache"),
-    };
-
-    if !log_folder_path.exists() {
-        std::fs::create_dir_all(&log_folder_path).expect("failed to create a log folder");
+    let log_dir = std::path::PathBuf::from(log_dir_str);
+    if !log_dir.exists() {
+        std::fs::create_dir_all(&log_dir)
+            .unwrap_or_else(|_| panic!("{}", "failed to create a log folder: {log_dir_str}"));
     }
 
-    let log_file =
-        std::fs::File::create(log_folder_path.join("hn-tui.log")).unwrap_or_else(|err| {
-            panic!("failed to create application's log file: {}", err);
-        });
+    let log_file = std::fs::File::create(log_dir.join(DEFAULT_LOG_FILE)).unwrap_or_else(|err| {
+        panic!("failed to create application's log file: {}", err);
+    });
 
     tracing_subscriber::fmt::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
@@ -152,9 +148,9 @@ fn init_logging(log_folder_path: Option<&str>) {
         .init();
 }
 
-fn main() {
-    // parse command line arguments
-    let args = App::new("hackernews-tui")
+/// parse command line arguments
+fn parse_args(config_dir: &std::path::Path, cache_dir: &std::path::Path) -> ArgMatches {
+    Command::new("hackernews-tui")
         .version("0.9.1")
         .author("Thang Pham <phamducthang1234@gmail>")
         .about("A Terminal UI to browse Hacker News")
@@ -163,7 +159,13 @@ fn main() {
                 .short('c')
                 .long("config")
                 .value_name("FILE")
-                .help("Path to the application's config file (default: $HOME/.config/hn-tui.toml)")
+                .default_value(
+                    config_dir
+                        .join(DEFAULT_CONFIG_FILE)
+                        .to_str()
+                        .expect("failed to config file `Path` to str"),
+                )
+                .help("Path to the application's config file")
                 .next_line_help(true),
         )
         .arg(
@@ -171,12 +173,42 @@ fn main() {
                 .short('l')
                 .long("log")
                 .value_name("FOLDER")
-                .help("Path to a folder to store application's logs (default: $HOME/.cache)")
+                .default_value(
+                    cache_dir
+                        .to_str()
+                        .expect("failed to convert cache dir `Path` to str"),
+                )
+                .help("Path to a folder to store application's logs")
                 .next_line_help(true),
         )
-        .get_matches();
+        .get_matches()
+}
 
-    init_logging(args.value_of("log"));
-    config::load_config(args.value_of("config"));
+fn init_app_dirs() -> (std::path::PathBuf, std::path::PathBuf) {
+    let mut config_dir = dirs_next::config_dir().expect("failed to get user's config dir");
+    let cache_dir = dirs_next::cache_dir().expect("failed to get user's cache dir");
+    let home_dir = dirs_next::home_dir().expect("failed to get user's home dir");
+
+    // Try to find application's config file in the user's config dir.
+    // If not found, fallback to use `$HOME/.config` (for backward compability reason)
+    if !config_dir.join(DEFAULT_CONFIG_FILE).exists() {
+        config_dir = home_dir.join(".config");
+    }
+
+    (config_dir, cache_dir)
+}
+
+fn main() {
+    let (config_dir, cache_dir) = init_app_dirs();
+    let args = parse_args(&config_dir, &cache_dir);
+
+    init_logging(
+        args.value_of("log")
+            .expect("`log` argument should have a default value"),
+    );
+    config::load_config(
+        args.value_of("config")
+            .expect("`config` argument should have a default value"),
+    );
     run();
 }
