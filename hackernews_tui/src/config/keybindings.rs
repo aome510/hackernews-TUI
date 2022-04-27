@@ -305,7 +305,20 @@ impl<'de> de::Deserialize<'de> for Key {
     where
         D: Deserializer<'de>,
     {
-        let s = String::deserialize(deserializer)?;
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum StringOrVec {
+            String(String),
+            Vec(Vec<String>),
+        }
+
+        let s = match StringOrVec::deserialize(deserializer)? {
+            StringOrVec::String(v) => vec![v],
+            StringOrVec::Vec(v) => v,
+        };
+
+        let s = s[0].clone();
+
         let err = Err(de::Error::custom(format!(
             "failed to parse key: unknown/invalid key {}",
             s
