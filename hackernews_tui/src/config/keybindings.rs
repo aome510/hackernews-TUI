@@ -312,32 +312,27 @@ impl<'de> de::Deserialize<'de> for Key {
             Vec(Vec<String>),
         }
 
-        let s = match StringOrVec::deserialize(deserializer)? {
-            StringOrVec::String(v) => vec![v],
-            StringOrVec::Vec(v) => v,
-        };
+        /// a helper function that converts a key string into `cursive::event::Event`
+        fn from_key_string_to_event(ks: String) -> Result<event::Event> {
+            let chars: Vec<char> = ks.chars().collect();
 
-        let s = s[0].clone();
-
-        let err = Err(de::Error::custom(format!(
-            "failed to parse key: unknown/invalid key {}",
-            s
-        )));
-
-        let chars: Vec<char> = s.chars().collect();
-        let key = {
-            if chars.len() == 1 {
+            let event = if chars.len() == 1 {
                 // a single character
-                Key::new(chars[0])
+                event::Event::Char(chars[0])
             } else if chars.len() == 3 && chars[1] == '-' {
                 // M-<c> for alt-<c> and C-<c> for ctrl-<c>, with <c> denotes a single character
                 match chars[0] {
-                    'C' => Key::new(event::Event::CtrlChar(chars[2])),
-                    'M' => Key::new(event::Event::AltChar(chars[2])),
-                    _ => return err,
+                    'C' => event::Event::CtrlChar(chars[2]),
+                    'M' => event::Event::AltChar(chars[2]),
+                    _ => {
+                        return Err(anyhow::anyhow!(format!(
+                            "failed to parse key: unknown/invalid key {}",
+                            ks
+                        )))
+                    }
                 }
             } else {
-                let key = match s.as_str() {
+                let key = match ks.as_str() {
                     "enter" => event::Key::Enter,
                     "tab" => event::Key::Tab,
                     "backspace" => event::Key::Backspace,
@@ -368,12 +363,32 @@ impl<'de> de::Deserialize<'de> for Key {
                     "f11" => event::Key::F11,
                     "f12" => event::Key::F12,
 
-                    _ => return err,
+                    _ => {
+                        return Err(anyhow::anyhow!(format!(
+                            "failed to parse key: unknown/invalid key {}",
+                            ks
+                        )))
+                    }
                 };
 
-                Key::new(key)
-            }
+                event::Event::Key(key)
+            };
+
+            Ok(event)
+        }
+
+        let v = match StringOrVec::deserialize(deserializer)? {
+            StringOrVec::String(v) => vec![v],
+            StringOrVec::Vec(v) => v,
         };
+
+        let keys = v
+            .into_iter()
+            .map(from_key_string_to_event)
+            .collect::<Result<Vec<_>>>()
+            .map_err(serde::de::Error::custom)?;
+
+        let key = Key::new(keys[0].clone());
 
         Ok(key)
     }
