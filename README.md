@@ -208,26 +208,26 @@ For more information about configuring the key mapping or defining custom shortc
 
 #### Comment View shortcuts
 
-| Command                     | Description                                                          | Default Shortcut |
-| --------------------------- | -------------------------------------------------------------------- | ---------------- |
-| `next_comment`              | Focus the next comment                                               | `j`              |
-| `prev_comment`              | Focus the previous comment                                           | `k`              |
-| `next_leq_level_comment`    | Focus the next comment with smaller or equal level                   | `l`              |
-| `prev_leq_level_comment`    | Focus the previous comment with smaller or equal level               | `h`              |
-| `next_top_level_comment`    | Focus the next top level comment                                     | `n`              |
-| `prev_top_level_comment`    | Focus the previous top level comment                                 | `p`              |
-| `parent_comment`            | Focus the parent comment (if exists)                                 | `u`              |
-| `toggle_collapse_comment`   | Toggle collapsing the focused comment                                | `tab`            |
-| `up`                        | Scroll up                                                            | `up`             |
-| `down`                      | Scroll down                                                          | `down`           |
-| `page_up`                   | Scroll up half a page                                                | `page_up`        |
-| `page_down`                 | Scroll down half a page                                              | `page_down`      |
-| `open_article_in_browser`   | Open in browser the article associated with the discussed story      | `o`              |
-| `open_link_in_article_view` | Open in article view the article associated with the discussed story | `O`              |
-| `open_story_in_browser`     | Open in browser the discussed story                                  | `s`              |
-| `open_comment_in_browser`   | Open in browser the focused comment                                  | `c`              |
-| `open_link_in_browser`      | Open in browser the {link_id}-th link in the focused comment         | `{link_id} f`    |
-| `open_link_in_article_view` | Open in article view the {link_id}-th link in the focused comment    | `{link_id} F`    |
+| Command                        | Description                                                          | Default Shortcut |
+| ------------------------------ | -------------------------------------------------------------------- | ---------------- |
+| `next_comment`                 | Focus the next comment                                               | `j`              |
+| `prev_comment`                 | Focus the previous comment                                           | `k`              |
+| `next_leq_level_comment`       | Focus the next comment with smaller or equal level                   | `l`              |
+| `prev_leq_level_comment`       | Focus the previous comment with smaller or equal level               | `h`              |
+| `next_top_level_comment`       | Focus the next top level comment                                     | `n`              |
+| `prev_top_level_comment`       | Focus the previous top level comment                                 | `p`              |
+| `parent_comment`               | Focus the parent comment (if exists)                                 | `u`              |
+| `toggle_collapse_comment`      | Toggle collapsing the focused comment                                | `tab`            |
+| `up`                           | Scroll up                                                            | `up`             |
+| `down`                         | Scroll down                                                          | `down`           |
+| `page_up`                      | Scroll up half a page                                                | `page_up`        |
+| `page_down`                    | Scroll down half a page                                              | `page_down`      |
+| `open_article_in_browser`      | Open in browser the article associated with the discussed story      | `o`              |
+| `open_article_in_article_view` | Open in article view the article associated with the discussed story | `O`              |
+| `open_story_in_browser`        | Open in browser the discussed story                                  | `s`              |
+| `open_comment_in_browser`      | Open in browser the focused comment                                  | `c`              |
+| `open_link_in_browser`         | Open in browser the {link_id}-th link in the focused comment         | `{link_id} f`    |
+| `open_link_in_article_view`    | Open in article view the {link_id}-th link in the focused comment    | `{link_id} F`    |
 
 #### Search View shortcuts
 
@@ -246,7 +246,8 @@ In `SearchView`, there are two modes: `Navigation` and `Search`. The default mod
 
 ## Configuration
 
-By default, `hackernews-tui` will look for the `hn-tui.toml` user-defined config file inside 
+By default, `hackernews-tui` will look for the `hn-tui.toml` user-defined config file inside
+
 - the [user's config directory](https://docs.rs/dirs-next/latest/dirs_next/fn.config_dir.html)
 - `.config` directory inside the [user's home directory](https://docs.rs/dirs-next/latest/dirs_next/fn.home_dir.html)
 
@@ -262,7 +263,7 @@ For further information about the application's configurations, please refer to 
 
 ## Logging
 
-`hackernews-tui` uses `RUST_LOG` environment variable to define the application's [logging level](https://docs.rs/log/0.4.14/log/enum.Level.html) (default to be `INFO`). 
+`hackernews-tui` uses `RUST_LOG` environment variable to define the application's [logging level](https://docs.rs/log/0.4.14/log/enum.Level.html) (default to be `INFO`).
 
 By default, the application creates the `hn-tui.log` log file inside the [user's cache directory](https://docs.rs/dirs-next/latest/dirs_next/fn.cache_dir.html), which can be configured by specifying the `-l` or `--log` option.
 
