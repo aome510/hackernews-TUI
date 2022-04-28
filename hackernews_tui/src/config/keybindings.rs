@@ -338,6 +338,11 @@ impl<'de> de::Deserialize<'de> for Keys {
     {
         #[derive(Deserialize)]
         #[serde(untagged)]
+        /// an enum representing either
+        /// - a single key string \[1\]
+        /// - an array of multiple key strings
+        ///
+        /// \[1\]: "key string" denotes the string representation of a key
         enum StringOrVec {
             String(String),
             Vec(Vec<String>),
@@ -408,12 +413,12 @@ impl<'de> de::Deserialize<'de> for Keys {
             Ok(event)
         }
 
-        let v = match StringOrVec::deserialize(deserializer)? {
+        let key_strings = match StringOrVec::deserialize(deserializer)? {
             StringOrVec::String(v) => vec![v],
             StringOrVec::Vec(v) => v,
         };
 
-        let events = v
+        let events = key_strings
             .into_iter()
             .map(from_key_string_to_event)
             .collect::<Result<Vec<_>>>()
