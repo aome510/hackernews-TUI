@@ -288,7 +288,7 @@ By default, the application creates the `hn-tui.log` log file inside the [user's
   - [x] rewrite the theme parser to support more themes and allow to parse themes from known colorschemes
   - [ ] add some extra transition effects
 - improve the keybinding handler
-  - [ ] allow to bind multiple keys to a single command
+  - [x] allow to bind multiple keys to a single command
   - [ ] add prefix key support (emacs-like key chaining - `C-x C-c ...`)
 - [ ] improve the loading progress bar
 - [ ] snipe-like navigation, inspired by [vim-snipe](https://github.com/yangmillstheory/vim-snipe)
