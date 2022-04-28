@@ -147,8 +147,8 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
 
     let is_suffix_key = |c: &Event| -> bool {
         let article_view_keymap = config::get_article_view_keymap().clone();
-        *c == article_view_keymap.open_link_in_browser.into()
-            || *c == article_view_keymap.open_link_in_article_view.into()
+        article_view_keymap.open_link_in_browser.has_event(c)
+            || article_view_keymap.open_link_in_article_view.has_event(c)
     };
 
     OnEventView::new(ArticleView::new(article))

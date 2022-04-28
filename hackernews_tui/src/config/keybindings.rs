@@ -37,11 +37,11 @@ pub struct EditKeyMap {
 impl Default for EditKeyMap {
     fn default() -> Self {
         EditKeyMap {
-            move_cursor_left: Key::new(event::Key::Left),
-            move_cursor_right: Key::new(event::Key::Right),
-            move_cursor_to_begin: Key::new(event::Key::Home),
-            move_cursor_to_end: Key::new(event::Key::End),
-            backward_delete_char: Key::new(event::Key::Backspace),
+            move_cursor_left: Key::new(vec![event::Key::Left.into()]),
+            move_cursor_right: Key::new(vec![event::Key::Right.into()]),
+            move_cursor_to_begin: Key::new(vec![event::Key::Home.into()]),
+            move_cursor_to_end: Key::new(vec![event::Key::End.into()]),
+            backward_delete_char: Key::new(vec![event::Key::Backspace.into()]),
         }
     }
 }
@@ -65,17 +65,17 @@ pub struct GlobalKeyMap {
 impl Default for GlobalKeyMap {
     fn default() -> Self {
         GlobalKeyMap {
-            open_help_dialog: Key::new('?'),
-            quit: Key::new(event::Event::CtrlChar('q')),
-            close_dialog: Key::new(event::Key::Esc),
+            open_help_dialog: Key::new(vec!['?'.into()]),
+            quit: Key::new(vec![event::Event::CtrlChar('q')]),
+            close_dialog: Key::new(vec![event::Key::Esc.into()]),
 
-            goto_previous_view: Key::new(event::Event::CtrlChar('p')),
-            goto_search_view: Key::new(event::Event::CtrlChar('s')),
-            goto_front_page_view: Key::new(event::Key::F1),
-            goto_all_stories_view: Key::new(event::Key::F2),
-            goto_ask_hn_view: Key::new(event::Key::F3),
-            goto_show_hn_view: Key::new(event::Key::F4),
-            goto_jobs_view: Key::new(event::Key::F5),
+            goto_previous_view: Key::new(vec![event::Event::CtrlChar('p')]),
+            goto_search_view: Key::new(vec![event::Event::CtrlChar('s')]),
+            goto_front_page_view: Key::new(vec![event::Key::F1.into()]),
+            goto_all_stories_view: Key::new(vec![event::Key::F2.into()]),
+            goto_ask_hn_view: Key::new(vec![event::Key::F3.into()]),
+            goto_show_hn_view: Key::new(vec![event::Key::F4.into()]),
+            goto_jobs_view: Key::new(vec![event::Key::F5.into()]),
         }
     }
 }
@@ -107,21 +107,21 @@ pub struct StoryViewKeyMap {
 impl Default for StoryViewKeyMap {
     fn default() -> Self {
         StoryViewKeyMap {
-            next_story_tag: Key::new('l'),
-            prev_story_tag: Key::new('h'),
-            next_story: Key::new('j'),
-            prev_story: Key::new('k'),
-            goto_story: Key::new('g'),
+            next_story_tag: Key::new(vec!['l'.into()]),
+            prev_story_tag: Key::new(vec!['h'.into()]),
+            next_story: Key::new(vec!['j'.into()]),
+            prev_story: Key::new(vec!['k'.into()]),
+            goto_story: Key::new(vec!['g'.into()]),
 
-            next_page: Key::new('n'),
-            prev_page: Key::new('p'),
-            toggle_sort_by_date: Key::new('d'),
+            next_page: Key::new(vec!['n'.into()]),
+            prev_page: Key::new(vec!['p'.into()]),
+            toggle_sort_by_date: Key::new(vec!['d'.into()]),
 
-            open_article_in_browser: Key::new('o'),
-            open_article_in_article_view: Key::new('O'),
-            open_story_in_browser: Key::new('s'),
+            open_article_in_browser: Key::new(vec!['o'.into()]),
+            open_article_in_article_view: Key::new(vec!['O'.into()]),
+            open_story_in_browser: Key::new(vec!['s'.into()]),
 
-            goto_story_comment_view: Key::new(event::Key::Enter),
+            goto_story_comment_view: Key::new(vec![event::Key::Enter.into()]),
         }
     }
 }
@@ -136,8 +136,8 @@ pub struct SearchViewKeyMap {
 impl Default for SearchViewKeyMap {
     fn default() -> Self {
         SearchViewKeyMap {
-            to_navigation_mode: Key::new(event::Key::Esc),
-            to_search_mode: Key::new('i'),
+            to_navigation_mode: Key::new(vec![event::Key::Esc.into()]),
+            to_search_mode: Key::new(vec!['i'.into()]),
         }
     }
 }
@@ -170,24 +170,24 @@ pub struct CommentViewKeyMap {
 impl Default for CommentViewKeyMap {
     fn default() -> Self {
         CommentViewKeyMap {
-            next_comment: Key::new('j'),
-            prev_comment: Key::new('k'),
-            next_top_level_comment: Key::new('n'),
-            prev_top_level_comment: Key::new('p'),
-            next_leq_level_comment: Key::new('l'),
-            prev_leq_level_comment: Key::new('h'),
-            parent_comment: Key::new('u'),
+            next_comment: Key::new(vec!['j'.into()]),
+            prev_comment: Key::new(vec!['k'.into()]),
+            next_top_level_comment: Key::new(vec!['n'.into()]),
+            prev_top_level_comment: Key::new(vec!['p'.into()]),
+            next_leq_level_comment: Key::new(vec!['l'.into()]),
+            prev_leq_level_comment: Key::new(vec!['h'.into()]),
+            parent_comment: Key::new(vec!['u'.into()]),
 
-            open_comment_in_browser: Key::new('c'),
-            open_link_in_browser: Key::new('f'),
-            open_link_in_article_view: Key::new('F'),
+            open_comment_in_browser: Key::new(vec!['c'.into()]),
+            open_link_in_browser: Key::new(vec!['f'.into()]),
+            open_link_in_article_view: Key::new(vec!['F'.into()]),
 
-            up: Key::new(event::Key::Up),
-            down: Key::new(event::Key::Down),
-            page_up: Key::new(event::Key::PageUp),
-            page_down: Key::new(event::Key::PageDown),
+            up: Key::new(vec![event::Key::Up.into()]),
+            down: Key::new(vec![event::Key::Down.into()]),
+            page_up: Key::new(vec![event::Key::PageUp.into()]),
+            page_down: Key::new(vec![event::Key::PageDown.into()]),
 
-            toggle_collapse_comment: Key::new(event::Key::Tab),
+            toggle_collapse_comment: Key::new(vec![event::Key::Tab.into()]),
         }
     }
 }
@@ -213,88 +213,100 @@ pub struct ArticleViewKeyMap {
 impl Default for ArticleViewKeyMap {
     fn default() -> Self {
         ArticleViewKeyMap {
-            down: Key::new('j'),
-            up: Key::new('k'),
-            page_down: Key::new('d'),
-            page_up: Key::new('u'),
-            top: Key::new('g'),
-            bottom: Key::new('G'),
+            down: Key::new(vec!['j'.into()]),
+            up: Key::new(vec!['k'.into()]),
+            page_down: Key::new(vec!['d'.into()]),
+            page_up: Key::new(vec!['u'.into()]),
+            top: Key::new(vec!['g'.into()]),
+            bottom: Key::new(vec!['G'.into()]),
 
-            open_link_dialog: Key::new('l'),
-            link_dialog_focus_next: Key::new('j'),
-            link_dialog_focus_prev: Key::new('k'),
+            open_link_dialog: Key::new(vec!['l'.into()]),
+            link_dialog_focus_next: Key::new(vec!['j'.into()]),
+            link_dialog_focus_prev: Key::new(vec!['k'.into()]),
 
-            open_article_in_browser: Key::new('o'),
-            open_link_in_browser: Key::new('f'),
-            open_link_in_article_view: Key::new('F'),
+            open_article_in_browser: Key::new(vec!['o'.into()]),
+            open_link_in_browser: Key::new(vec!['f'.into()]),
+            open_link_in_article_view: Key::new(vec!['F'.into()]),
         }
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct Key {
-    event: event::Event,
+    events: Vec<event::Event>,
 }
 
 impl From<Key> for event::EventTrigger {
     fn from(k: Key) -> Self {
-        k.event.into()
-    }
-}
-
-impl From<Key> for event::Event {
-    fn from(k: Key) -> Self {
-        k.event
+        event::EventTrigger::from_fn(move |e| k.has_event(e))
     }
 }
 
 impl std::fmt::Display for Key {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self.event {
-            event::Event::Char(c) => write!(f, "{}", c),
-            event::Event::CtrlChar(c) => write!(f, "C-{}", c),
-            event::Event::AltChar(c) => write!(f, "M-{}", c),
-            event::Event::Key(k) => match k {
-                event::Key::Enter => write!(f, "enter"),
-                event::Key::Tab => write!(f, "tab"),
-                event::Key::Backspace => write!(f, "backspace"),
-                event::Key::Esc => write!(f, "esc"),
+        fn fmt_event(e: &event::Event, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match e {
+                event::Event::Char(c) => write!(f, "{}", c),
+                event::Event::CtrlChar(c) => write!(f, "C-{}", c),
+                event::Event::AltChar(c) => write!(f, "M-{}", c),
+                event::Event::Key(k) => match k {
+                    event::Key::Enter => write!(f, "enter"),
+                    event::Key::Tab => write!(f, "tab"),
+                    event::Key::Backspace => write!(f, "backspace"),
+                    event::Key::Esc => write!(f, "esc"),
 
-                event::Key::Left => write!(f, "left"),
-                event::Key::Right => write!(f, "right"),
-                event::Key::Up => write!(f, "up"),
-                event::Key::Down => write!(f, "down"),
+                    event::Key::Left => write!(f, "left"),
+                    event::Key::Right => write!(f, "right"),
+                    event::Key::Up => write!(f, "up"),
+                    event::Key::Down => write!(f, "down"),
 
-                event::Key::Ins => write!(f, "ins"),
-                event::Key::Del => write!(f, "del"),
-                event::Key::Home => write!(f, "home"),
-                event::Key::End => write!(f, "end"),
-                event::Key::PageUp => write!(f, "page_up"),
-                event::Key::PageDown => write!(f, "page_down"),
+                    event::Key::Ins => write!(f, "ins"),
+                    event::Key::Del => write!(f, "del"),
+                    event::Key::Home => write!(f, "home"),
+                    event::Key::End => write!(f, "end"),
+                    event::Key::PageUp => write!(f, "page_up"),
+                    event::Key::PageDown => write!(f, "page_down"),
 
-                event::Key::F1 => write!(f, "f1"),
-                event::Key::F2 => write!(f, "f2"),
-                event::Key::F3 => write!(f, "f3"),
-                event::Key::F4 => write!(f, "f4"),
-                event::Key::F5 => write!(f, "f5"),
-                event::Key::F6 => write!(f, "f6"),
-                event::Key::F7 => write!(f, "f7"),
-                event::Key::F8 => write!(f, "f8"),
-                event::Key::F9 => write!(f, "f9"),
-                event::Key::F10 => write!(f, "f10"),
-                event::Key::F11 => write!(f, "f11"),
-                event::Key::F12 => write!(f, "f12"),
+                    event::Key::F1 => write!(f, "f1"),
+                    event::Key::F2 => write!(f, "f2"),
+                    event::Key::F3 => write!(f, "f3"),
+                    event::Key::F4 => write!(f, "f4"),
+                    event::Key::F5 => write!(f, "f5"),
+                    event::Key::F6 => write!(f, "f6"),
+                    event::Key::F7 => write!(f, "f7"),
+                    event::Key::F8 => write!(f, "f8"),
+                    event::Key::F9 => write!(f, "f9"),
+                    event::Key::F10 => write!(f, "f10"),
+                    event::Key::F11 => write!(f, "f11"),
+                    event::Key::F12 => write!(f, "f12"),
 
-                _ => panic!("unknown key: {:?}", k),
-            },
-            _ => panic!("unknown event: {:?}", self.event),
+                    _ => panic!("unknown key: {:?}", k),
+                },
+                _ => panic!("unknown event: {:?}", e),
+            }
+        }
+
+        if self.events.len() == 1 {
+            fmt_event(&self.events[0], f)
+        } else {
+            write!(f, "[")?;
+            for e in &self.events {
+                fmt_event(e, f)?;
+                write!(f, ", ")?;
+            }
+            write!(f, "]")?;
+            Ok(())
         }
     }
 }
 
 impl Key {
-    pub fn new<T: Into<event::Event>>(e: T) -> Self {
-        Key { event: e.into() }
+    pub fn new(events: Vec<event::Event>) -> Self {
+        Key { events }
+    }
+
+    pub fn has_event(&self, e: &event::Event) -> bool {
+        self.events.iter().any(|x| *x == *e)
     }
 }
 
@@ -382,15 +394,13 @@ impl<'de> de::Deserialize<'de> for Key {
             StringOrVec::Vec(v) => v,
         };
 
-        let keys = v
+        let events = v
             .into_iter()
             .map(from_key_string_to_event)
             .collect::<Result<Vec<_>>>()
             .map_err(serde::de::Error::custom)?;
 
-        let key = Key::new(keys[0].clone());
-
-        Ok(key)
+        Ok(Key::new(events))
     }
 }
 
