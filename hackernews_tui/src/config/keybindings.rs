@@ -37,10 +37,19 @@ pub struct EditKeyMap {
 impl Default for EditKeyMap {
     fn default() -> Self {
         EditKeyMap {
-            move_cursor_left: Keys::new(vec![event::Key::Left.into()]),
-            move_cursor_right: Keys::new(vec![event::Key::Right.into()]),
-            move_cursor_to_begin: Keys::new(vec![event::Key::Home.into()]),
-            move_cursor_to_end: Keys::new(vec![event::Key::End.into()]),
+            move_cursor_left: Keys::new(vec![event::Key::Left.into(), event::Event::CtrlChar('b')]),
+            move_cursor_right: Keys::new(vec![
+                event::Key::Right.into(),
+                event::Event::CtrlChar('f'),
+            ]),
+            move_cursor_to_begin: Keys::new(vec![
+                event::Key::Home.into(),
+                event::Event::CtrlChar('a'),
+            ]),
+            move_cursor_to_end: Keys::new(vec![
+                event::Key::End.into(),
+                event::Event::CtrlChar('e'),
+            ]),
             backward_delete_char: Keys::new(vec![event::Key::Backspace.into()]),
         }
     }
@@ -66,11 +75,16 @@ impl Default for GlobalKeyMap {
     fn default() -> Self {
         GlobalKeyMap {
             open_help_dialog: Keys::new(vec!['?'.into()]),
-            quit: Keys::new(vec![event::Event::CtrlChar('q')]),
+            quit: Keys::new(vec!['q'.into(), event::Event::CtrlChar('c')]),
             close_dialog: Keys::new(vec![event::Key::Esc.into()]),
 
-            goto_previous_view: Keys::new(vec![event::Event::CtrlChar('p')]),
-            goto_search_view: Keys::new(vec![event::Event::CtrlChar('s')]),
+            goto_previous_view: Keys::new(vec![
+                event::Key::Backspace.into(),
+                event::Event::CtrlChar('p'),
+            ]),
+
+            goto_search_view: Keys::new(vec!['/'.into(), event::Event::CtrlChar('s')]),
+
             goto_front_page_view: Keys::new(vec![event::Key::F1.into()]),
             goto_all_stories_view: Keys::new(vec![event::Key::F2.into()]),
             goto_ask_hn_view: Keys::new(vec![event::Key::F3.into()]),

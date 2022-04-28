@@ -140,27 +140,27 @@ For more information about configuring the key mapping or defining custom shortc
 
 ### Global key shortcuts
 
-| Command                 | Description             | Default Shortcut |
-| ----------------------- | ----------------------- | ---------------- |
-| `open_help_dialog`      | Open the help dialog    | `?`              |
-| `close_dialog`          | Close a dialog          | `esc`            |
-| `quit`                  | Quit the application    | `C-q`            |
-| `goto_previous_view`    | Go to the previous view | `C-p`            |
-| `goto_search_view`      | Go to search view       | `C-s`            |
-| `goto_front_page_view`  | Go to front page view   | `F1`             |
-| `goto_all_stories_view` | Go to all stories view  | `F2`             |
-| `goto_ask_hn_view`      | Go to ask HN view       | `F3`             |
-| `goto_show_hn_view`     | Go to show HN view      | `F4`             |
-| `goto_jobs_view`        | Go to jobs view         | `F5`             |
+| Command                 | Description             | Default Shortcut   |
+| ----------------------- | ----------------------- | ------------------ |
+| `open_help_dialog`      | Open the help dialog    | `?`                |
+| `close_dialog`          | Close a dialog          | `esc`              |
+| `quit`                  | Quit the application    | `[q, C-c]`         |
+| `goto_previous_view`    | Go to the previous view | `[backspace, C-p]` |
+| `goto_search_view`      | Go to search view       | `[/, C-s]`         |
+| `goto_front_page_view`  | Go to front page view   | `F1`               |
+| `goto_all_stories_view` | Go to all stories view  | `F2`               |
+| `goto_ask_hn_view`      | Go to ask HN view       | `F3`               |
+| `goto_show_hn_view`     | Go to show HN view      | `F4`               |
+| `goto_jobs_view`        | Go to jobs view         | `F5`               |
 
 ### Edit key shortcuts
 
 | Command                | Description                      | Default Shortcut |
 | ---------------------- | -------------------------------- | ---------------- |
-| `move_cursor_left`     | Move cursor to left              | `left`           |
-| `move_cursor_right`    | Move cursor to right             | `right`          |
-| `move_cursor_to_begin` | Move cursor to the begin of line | `home`           |
-| `move_cursor_to_end`   | Move cursor to the end of line   | `end`            |
+| `move_cursor_left`     | Move cursor to left              | `[left, C-b]`    |
+| `move_cursor_right`    | Move cursor to right             | `[right, C-f]`   |
+| `move_cursor_to_begin` | Move cursor to the begin of line | `[home, C-a]`    |
+| `move_cursor_to_end`   | Move cursor to the end of line   | `[end, C-e]`     |
 | `backward_delete_char` | Delete backward a character      | `backspace`      |
 
 ### Key shortcuts for each `View`

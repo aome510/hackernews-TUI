@@ -62,10 +62,10 @@ launch_hn = { front = "green", effect = "bold" }
 
 [keymap.global_keymap]
 open_help_dialog = "?"
-quit = "C-q"
+quit = ["q", "C-c"]
 close_dialog = "esc"
-goto_previous_view = "C-p"
-goto_search_view = "C-s"
+goto_previous_view = ["backspace", "C-p"]
+goto_search_view = ["/", "C-s"]
 goto_front_page_view = "f1"
 goto_all_stories_view = "f2"
 goto_ask_hn_view = "f3"
@@ -73,10 +73,10 @@ goto_show_hn_view = "f4"
 goto_jobs_view = "f5"
 
 [keymap.edit_keymap]
-move_cursor_left = "left"
-move_cursor_right = "right"
-move_cursor_to_begin = "home"
-move_cursor_to_end = "end"
+move_cursor_left = ["left", "C-b"]
+move_cursor_right = ["right", "C-f"]
+move_cursor_to_begin = ["home", "C-a"]
+move_cursor_to_end = ["end", "C-e"]
 backward_delete_char = "backspace"
 
 [keymap.story_view_keymap]
