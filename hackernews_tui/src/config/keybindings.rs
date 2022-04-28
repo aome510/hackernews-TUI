@@ -286,13 +286,18 @@ impl std::fmt::Display for Key {
             }
         }
 
+        if self.events.is_empty() {
+            return Ok(());
+        }
+
         if self.events.len() == 1 {
             fmt_event(&self.events[0], f)
         } else {
             write!(f, "[")?;
-            for e in &self.events {
-                fmt_event(e, f)?;
+            fmt_event(&self.events[0], f)?;
+            for e in &self.events[1..] {
                 write!(f, ", ")?;
+                fmt_event(e, f)?;
             }
             write!(f, "]")?;
             Ok(())
