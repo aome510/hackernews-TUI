@@ -17,7 +17,7 @@ pub struct KeyMap {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct CustomKeyMap {
-    pub key: Key,
+    pub key: Keys,
     pub tag: String,
     pub by_date: bool,
     pub numeric_filters: client::StoryNumericFilters,
@@ -27,55 +27,55 @@ config_parser_impl!(CustomKeyMap);
 
 #[derive(Debug, Clone, Deserialize, ConfigParse)]
 pub struct EditKeyMap {
-    pub move_cursor_left: Key,
-    pub move_cursor_right: Key,
-    pub move_cursor_to_begin: Key,
-    pub move_cursor_to_end: Key,
-    pub backward_delete_char: Key,
+    pub move_cursor_left: Keys,
+    pub move_cursor_right: Keys,
+    pub move_cursor_to_begin: Keys,
+    pub move_cursor_to_end: Keys,
+    pub backward_delete_char: Keys,
 }
 
 impl Default for EditKeyMap {
     fn default() -> Self {
         EditKeyMap {
-            move_cursor_left: Key::new(vec![event::Key::Left.into()]),
-            move_cursor_right: Key::new(vec![event::Key::Right.into()]),
-            move_cursor_to_begin: Key::new(vec![event::Key::Home.into()]),
-            move_cursor_to_end: Key::new(vec![event::Key::End.into()]),
-            backward_delete_char: Key::new(vec![event::Key::Backspace.into()]),
+            move_cursor_left: Keys::new(vec![event::Key::Left.into()]),
+            move_cursor_right: Keys::new(vec![event::Key::Right.into()]),
+            move_cursor_to_begin: Keys::new(vec![event::Key::Home.into()]),
+            move_cursor_to_end: Keys::new(vec![event::Key::End.into()]),
+            backward_delete_char: Keys::new(vec![event::Key::Backspace.into()]),
         }
     }
 }
 
 #[derive(Debug, Clone, Deserialize, ConfigParse)]
 pub struct GlobalKeyMap {
-    pub open_help_dialog: Key,
-    pub quit: Key,
-    pub close_dialog: Key,
+    pub open_help_dialog: Keys,
+    pub quit: Keys,
+    pub close_dialog: Keys,
 
     // view navigation keymaps
-    pub goto_previous_view: Key,
-    pub goto_front_page_view: Key,
-    pub goto_search_view: Key,
-    pub goto_all_stories_view: Key,
-    pub goto_ask_hn_view: Key,
-    pub goto_show_hn_view: Key,
-    pub goto_jobs_view: Key,
+    pub goto_previous_view: Keys,
+    pub goto_front_page_view: Keys,
+    pub goto_search_view: Keys,
+    pub goto_all_stories_view: Keys,
+    pub goto_ask_hn_view: Keys,
+    pub goto_show_hn_view: Keys,
+    pub goto_jobs_view: Keys,
 }
 
 impl Default for GlobalKeyMap {
     fn default() -> Self {
         GlobalKeyMap {
-            open_help_dialog: Key::new(vec!['?'.into()]),
-            quit: Key::new(vec![event::Event::CtrlChar('q')]),
-            close_dialog: Key::new(vec![event::Key::Esc.into()]),
+            open_help_dialog: Keys::new(vec!['?'.into()]),
+            quit: Keys::new(vec![event::Event::CtrlChar('q')]),
+            close_dialog: Keys::new(vec![event::Key::Esc.into()]),
 
-            goto_previous_view: Key::new(vec![event::Event::CtrlChar('p')]),
-            goto_search_view: Key::new(vec![event::Event::CtrlChar('s')]),
-            goto_front_page_view: Key::new(vec![event::Key::F1.into()]),
-            goto_all_stories_view: Key::new(vec![event::Key::F2.into()]),
-            goto_ask_hn_view: Key::new(vec![event::Key::F3.into()]),
-            goto_show_hn_view: Key::new(vec![event::Key::F4.into()]),
-            goto_jobs_view: Key::new(vec![event::Key::F5.into()]),
+            goto_previous_view: Keys::new(vec![event::Event::CtrlChar('p')]),
+            goto_search_view: Keys::new(vec![event::Event::CtrlChar('s')]),
+            goto_front_page_view: Keys::new(vec![event::Key::F1.into()]),
+            goto_all_stories_view: Keys::new(vec![event::Key::F2.into()]),
+            goto_ask_hn_view: Keys::new(vec![event::Key::F3.into()]),
+            goto_show_hn_view: Keys::new(vec![event::Key::F4.into()]),
+            goto_jobs_view: Keys::new(vec![event::Key::F5.into()]),
         }
     }
 }
@@ -83,45 +83,45 @@ impl Default for GlobalKeyMap {
 #[derive(Debug, Clone, Deserialize, ConfigParse)]
 pub struct StoryViewKeyMap {
     // story tags navigation keymaps
-    pub next_story_tag: Key,
-    pub prev_story_tag: Key,
+    pub next_story_tag: Keys,
+    pub prev_story_tag: Keys,
 
     // stories navigation keymaps
-    pub next_story: Key,
-    pub prev_story: Key,
-    pub goto_story: Key,
+    pub next_story: Keys,
+    pub prev_story: Keys,
+    pub goto_story: Keys,
 
     // stories paging/filtering keymaps
-    pub next_page: Key,
-    pub prev_page: Key,
-    pub toggle_sort_by_date: Key,
+    pub next_page: Keys,
+    pub prev_page: Keys,
+    pub toggle_sort_by_date: Keys,
 
     // link opening keymaps
-    pub open_article_in_browser: Key,
-    pub open_article_in_article_view: Key,
-    pub open_story_in_browser: Key,
+    pub open_article_in_browser: Keys,
+    pub open_article_in_article_view: Keys,
+    pub open_story_in_browser: Keys,
 
-    pub goto_story_comment_view: Key,
+    pub goto_story_comment_view: Keys,
 }
 
 impl Default for StoryViewKeyMap {
     fn default() -> Self {
         StoryViewKeyMap {
-            next_story_tag: Key::new(vec!['l'.into()]),
-            prev_story_tag: Key::new(vec!['h'.into()]),
-            next_story: Key::new(vec!['j'.into()]),
-            prev_story: Key::new(vec!['k'.into()]),
-            goto_story: Key::new(vec!['g'.into()]),
+            next_story_tag: Keys::new(vec!['l'.into()]),
+            prev_story_tag: Keys::new(vec!['h'.into()]),
+            next_story: Keys::new(vec!['j'.into()]),
+            prev_story: Keys::new(vec!['k'.into()]),
+            goto_story: Keys::new(vec!['g'.into()]),
 
-            next_page: Key::new(vec!['n'.into()]),
-            prev_page: Key::new(vec!['p'.into()]),
-            toggle_sort_by_date: Key::new(vec!['d'.into()]),
+            next_page: Keys::new(vec!['n'.into()]),
+            prev_page: Keys::new(vec!['p'.into()]),
+            toggle_sort_by_date: Keys::new(vec!['d'.into()]),
 
-            open_article_in_browser: Key::new(vec!['o'.into()]),
-            open_article_in_article_view: Key::new(vec!['O'.into()]),
-            open_story_in_browser: Key::new(vec!['s'.into()]),
+            open_article_in_browser: Keys::new(vec!['o'.into()]),
+            open_article_in_article_view: Keys::new(vec!['O'.into()]),
+            open_story_in_browser: Keys::new(vec!['s'.into()]),
 
-            goto_story_comment_view: Key::new(vec![event::Key::Enter.into()]),
+            goto_story_comment_view: Keys::new(vec![event::Key::Enter.into()]),
         }
     }
 }
@@ -129,15 +129,15 @@ impl Default for StoryViewKeyMap {
 #[derive(Debug, Clone, Deserialize, ConfigParse)]
 pub struct SearchViewKeyMap {
     // switch mode keymaps
-    pub to_navigation_mode: Key,
-    pub to_search_mode: Key,
+    pub to_navigation_mode: Keys,
+    pub to_search_mode: Keys,
 }
 
 impl Default for SearchViewKeyMap {
     fn default() -> Self {
         SearchViewKeyMap {
-            to_navigation_mode: Key::new(vec![event::Key::Esc.into()]),
-            to_search_mode: Key::new(vec!['i'.into()]),
+            to_navigation_mode: Keys::new(vec![event::Key::Esc.into()]),
+            to_search_mode: Keys::new(vec!['i'.into()]),
         }
     }
 }
@@ -145,104 +145,104 @@ impl Default for SearchViewKeyMap {
 #[derive(Debug, Clone, Deserialize, ConfigParse)]
 pub struct CommentViewKeyMap {
     // comments navigation keymaps
-    pub next_comment: Key,
-    pub prev_comment: Key,
-    pub next_top_level_comment: Key,
-    pub prev_top_level_comment: Key,
-    pub next_leq_level_comment: Key,
-    pub prev_leq_level_comment: Key,
-    pub parent_comment: Key,
+    pub next_comment: Keys,
+    pub prev_comment: Keys,
+    pub next_top_level_comment: Keys,
+    pub prev_top_level_comment: Keys,
+    pub next_leq_level_comment: Keys,
+    pub prev_leq_level_comment: Keys,
+    pub parent_comment: Keys,
 
     // link opening keymaps
-    pub open_comment_in_browser: Key,
-    pub open_link_in_browser: Key,
-    pub open_link_in_article_view: Key,
+    pub open_comment_in_browser: Keys,
+    pub open_link_in_browser: Keys,
+    pub open_link_in_article_view: Keys,
 
     // scrolling
-    pub down: Key,
-    pub up: Key,
-    pub page_down: Key,
-    pub page_up: Key,
+    pub down: Keys,
+    pub up: Keys,
+    pub page_down: Keys,
+    pub page_up: Keys,
 
-    pub toggle_collapse_comment: Key,
+    pub toggle_collapse_comment: Keys,
 }
 
 impl Default for CommentViewKeyMap {
     fn default() -> Self {
         CommentViewKeyMap {
-            next_comment: Key::new(vec!['j'.into()]),
-            prev_comment: Key::new(vec!['k'.into()]),
-            next_top_level_comment: Key::new(vec!['n'.into()]),
-            prev_top_level_comment: Key::new(vec!['p'.into()]),
-            next_leq_level_comment: Key::new(vec!['l'.into()]),
-            prev_leq_level_comment: Key::new(vec!['h'.into()]),
-            parent_comment: Key::new(vec!['u'.into()]),
+            next_comment: Keys::new(vec!['j'.into()]),
+            prev_comment: Keys::new(vec!['k'.into()]),
+            next_top_level_comment: Keys::new(vec!['n'.into()]),
+            prev_top_level_comment: Keys::new(vec!['p'.into()]),
+            next_leq_level_comment: Keys::new(vec!['l'.into()]),
+            prev_leq_level_comment: Keys::new(vec!['h'.into()]),
+            parent_comment: Keys::new(vec!['u'.into()]),
 
-            open_comment_in_browser: Key::new(vec!['c'.into()]),
-            open_link_in_browser: Key::new(vec!['f'.into()]),
-            open_link_in_article_view: Key::new(vec!['F'.into()]),
+            open_comment_in_browser: Keys::new(vec!['c'.into()]),
+            open_link_in_browser: Keys::new(vec!['f'.into()]),
+            open_link_in_article_view: Keys::new(vec!['F'.into()]),
 
-            up: Key::new(vec![event::Key::Up.into()]),
-            down: Key::new(vec![event::Key::Down.into()]),
-            page_up: Key::new(vec![event::Key::PageUp.into()]),
-            page_down: Key::new(vec![event::Key::PageDown.into()]),
+            up: Keys::new(vec![event::Key::Up.into()]),
+            down: Keys::new(vec![event::Key::Down.into()]),
+            page_up: Keys::new(vec![event::Key::PageUp.into()]),
+            page_down: Keys::new(vec![event::Key::PageDown.into()]),
 
-            toggle_collapse_comment: Key::new(vec![event::Key::Tab.into()]),
+            toggle_collapse_comment: Keys::new(vec![event::Key::Tab.into()]),
         }
     }
 }
 
 #[derive(Debug, Clone, Deserialize, ConfigParse)]
 pub struct ArticleViewKeyMap {
-    pub down: Key,
-    pub up: Key,
-    pub page_down: Key,
-    pub page_up: Key,
-    pub top: Key,
-    pub bottom: Key,
+    pub down: Keys,
+    pub up: Keys,
+    pub page_down: Keys,
+    pub page_up: Keys,
+    pub top: Keys,
+    pub bottom: Keys,
 
-    pub open_link_dialog: Key,
-    pub link_dialog_focus_next: Key,
-    pub link_dialog_focus_prev: Key,
+    pub open_link_dialog: Keys,
+    pub link_dialog_focus_next: Keys,
+    pub link_dialog_focus_prev: Keys,
 
-    pub open_article_in_browser: Key,
-    pub open_link_in_browser: Key,
-    pub open_link_in_article_view: Key,
+    pub open_article_in_browser: Keys,
+    pub open_link_in_browser: Keys,
+    pub open_link_in_article_view: Keys,
 }
 
 impl Default for ArticleViewKeyMap {
     fn default() -> Self {
         ArticleViewKeyMap {
-            down: Key::new(vec!['j'.into()]),
-            up: Key::new(vec!['k'.into()]),
-            page_down: Key::new(vec!['d'.into()]),
-            page_up: Key::new(vec!['u'.into()]),
-            top: Key::new(vec!['g'.into()]),
-            bottom: Key::new(vec!['G'.into()]),
+            down: Keys::new(vec!['j'.into()]),
+            up: Keys::new(vec!['k'.into()]),
+            page_down: Keys::new(vec!['d'.into()]),
+            page_up: Keys::new(vec!['u'.into()]),
+            top: Keys::new(vec!['g'.into()]),
+            bottom: Keys::new(vec!['G'.into()]),
 
-            open_link_dialog: Key::new(vec!['l'.into()]),
-            link_dialog_focus_next: Key::new(vec!['j'.into()]),
-            link_dialog_focus_prev: Key::new(vec!['k'.into()]),
+            open_link_dialog: Keys::new(vec!['l'.into()]),
+            link_dialog_focus_next: Keys::new(vec!['j'.into()]),
+            link_dialog_focus_prev: Keys::new(vec!['k'.into()]),
 
-            open_article_in_browser: Key::new(vec!['o'.into()]),
-            open_link_in_browser: Key::new(vec!['f'.into()]),
-            open_link_in_article_view: Key::new(vec!['F'.into()]),
+            open_article_in_browser: Keys::new(vec!['o'.into()]),
+            open_link_in_browser: Keys::new(vec!['f'.into()]),
+            open_link_in_article_view: Keys::new(vec!['F'.into()]),
         }
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct Key {
+pub struct Keys {
     events: Vec<event::Event>,
 }
 
-impl From<Key> for event::EventTrigger {
-    fn from(k: Key) -> Self {
+impl From<Keys> for event::EventTrigger {
+    fn from(k: Keys) -> Self {
         event::EventTrigger::from_fn(move |e| k.has_event(e))
     }
 }
 
-impl std::fmt::Display for Key {
+impl std::fmt::Display for Keys {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         fn fmt_event(e: &event::Event, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match e {
@@ -305,9 +305,9 @@ impl std::fmt::Display for Key {
     }
 }
 
-impl Key {
+impl Keys {
     pub fn new(events: Vec<event::Event>) -> Self {
-        Key { events }
+        Keys { events }
     }
 
     pub fn has_event(&self, e: &event::Event) -> bool {
@@ -315,9 +315,9 @@ impl Key {
     }
 }
 
-config_parser_impl!(Key);
+config_parser_impl!(Keys);
 
-impl<'de> de::Deserialize<'de> for Key {
+impl<'de> de::Deserialize<'de> for Keys {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
@@ -405,7 +405,7 @@ impl<'de> de::Deserialize<'de> for Key {
             .collect::<Result<Vec<_>>>()
             .map_err(serde::de::Error::custom)?;
 
-        Ok(Key::new(events))
+        Ok(Keys::new(events))
     }
 }
 
