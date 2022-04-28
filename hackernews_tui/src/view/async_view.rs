@@ -73,7 +73,7 @@ pub fn get_article_view_async(siv: &mut Cursive, article_url: &str) -> impl View
     let err_desc = format!(
         "Failed to execute the command: `{} {}`.\n\
             Please make sure you have configured the `article_parse_command` option as described in the below link:\n\
-            \"https://github.com/aome510/hackernews-TUI/blob/main/config.md#article-parse-command\"",
+            \"https://github.com/aome510/hackernews-TUI/blob/main/doc/config.md#article-parse-command\"",
         config::get_config().article_parse_command,
         article_url
     );
