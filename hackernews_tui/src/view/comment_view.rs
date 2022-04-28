@@ -213,8 +213,8 @@ fn get_comment_main_view(
 
     let is_suffix_key = |c: &Event| -> bool {
         let comment_view_keymap = config::get_comment_view_keymap().clone();
-        *c == comment_view_keymap.open_link_in_browser.into()
-            || *c == comment_view_keymap.open_link_in_article_view.into()
+        comment_view_keymap.open_link_in_browser.has_event(c)
+            || comment_view_keymap.open_link_in_article_view.has_event(c)
     };
 
     OnEventView::new(CommentView::new(main_text, receiver))

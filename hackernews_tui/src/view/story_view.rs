@@ -98,7 +98,7 @@ pub fn get_story_main_view(
     let story_view_keymap = config::get_story_view_keymap().clone();
 
     let is_suffix_key =
-        |c: &Event| -> bool { *c == config::get_story_view_keymap().goto_story.clone().into() };
+        |c: &Event| -> bool { config::get_story_view_keymap().goto_story.has_event(c) };
 
     OnEventView::new(StoryView::new(stories, starting_id))
         // number parsing

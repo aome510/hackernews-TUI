@@ -140,27 +140,27 @@ For more information about configuring the key mapping or defining custom shortc
 
 ### Global key shortcuts
 
-| Command                 | Description             | Default Shortcut |
-| ----------------------- | ----------------------- | ---------------- |
-| `open_help_dialog`      | Open the help dialog    | `?`              |
-| `close_dialog`          | Close a dialog          | `esc`            |
-| `quit`                  | Quit the application    | `C-q`            |
-| `goto_previous_view`    | Go to the previous view | `C-p`            |
-| `goto_search_view`      | Go to search view       | `C-s`            |
-| `goto_front_page_view`  | Go to front page view   | `F1`             |
-| `goto_all_stories_view` | Go to all stories view  | `F2`             |
-| `goto_ask_hn_view`      | Go to ask HN view       | `F3`             |
-| `goto_show_hn_view`     | Go to show HN view      | `F4`             |
-| `goto_jobs_view`        | Go to jobs view         | `F5`             |
+| Command                 | Description             | Default Shortcut   |
+| ----------------------- | ----------------------- | ------------------ |
+| `open_help_dialog`      | Open the help dialog    | `?`                |
+| `close_dialog`          | Close a dialog          | `esc`              |
+| `quit`                  | Quit the application    | `[q, C-c]`         |
+| `goto_previous_view`    | Go to the previous view | `[backspace, C-p]` |
+| `goto_search_view`      | Go to search view       | `[/, C-s]`         |
+| `goto_front_page_view`  | Go to front page view   | `F1`               |
+| `goto_all_stories_view` | Go to all stories view  | `F2`               |
+| `goto_ask_hn_view`      | Go to ask HN view       | `F3`               |
+| `goto_show_hn_view`     | Go to show HN view      | `F4`               |
+| `goto_jobs_view`        | Go to jobs view         | `F5`               |
 
 ### Edit key shortcuts
 
 | Command                | Description                      | Default Shortcut |
 | ---------------------- | -------------------------------- | ---------------- |
-| `move_cursor_left`     | Move cursor to left              | `left`           |
-| `move_cursor_right`    | Move cursor to right             | `right`          |
-| `move_cursor_to_begin` | Move cursor to the begin of line | `home`           |
-| `move_cursor_to_end`   | Move cursor to the end of line   | `end`            |
+| `move_cursor_left`     | Move cursor to left              | `[left, C-b]`    |
+| `move_cursor_right`    | Move cursor to right             | `[right, C-f]`   |
+| `move_cursor_to_begin` | Move cursor to the begin of line | `[home, C-a]`    |
+| `move_cursor_to_end`   | Move cursor to the end of line   | `[end, C-e]`     |
 | `backward_delete_char` | Delete backward a character      | `backspace`      |
 
 ### Key shortcuts for each `View`
@@ -208,26 +208,26 @@ For more information about configuring the key mapping or defining custom shortc
 
 #### Comment View shortcuts
 
-| Command                     | Description                                                          | Default Shortcut |
-| --------------------------- | -------------------------------------------------------------------- | ---------------- |
-| `next_comment`              | Focus the next comment                                               | `j`              |
-| `prev_comment`              | Focus the previous comment                                           | `k`              |
-| `next_leq_level_comment`    | Focus the next comment with smaller or equal level                   | `l`              |
-| `prev_leq_level_comment`    | Focus the previous comment with smaller or equal level               | `h`              |
-| `next_top_level_comment`    | Focus the next top level comment                                     | `n`              |
-| `prev_top_level_comment`    | Focus the previous top level comment                                 | `p`              |
-| `parent_comment`            | Focus the parent comment (if exists)                                 | `u`              |
-| `toggle_collapse_comment`   | Toggle collapsing the focused comment                                | `tab`            |
-| `up`                        | Scroll up                                                            | `up`             |
-| `down`                      | Scroll down                                                          | `down`           |
-| `page_up`                   | Scroll up half a page                                                | `page_up`        |
-| `page_down`                 | Scroll down half a page                                              | `page_down`      |
-| `open_article_in_browser`   | Open in browser the article associated with the discussed story      | `o`              |
-| `open_link_in_article_view` | Open in article view the article associated with the discussed story | `O`              |
-| `open_story_in_browser`     | Open in browser the discussed story                                  | `s`              |
-| `open_comment_in_browser`   | Open in browser the focused comment                                  | `c`              |
-| `open_link_in_browser`      | Open in browser the {link_id}-th link in the focused comment         | `{link_id} f`    |
-| `open_link_in_article_view` | Open in article view the {link_id}-th link in the focused comment    | `{link_id} F`    |
+| Command                        | Description                                                          | Default Shortcut |
+| ------------------------------ | -------------------------------------------------------------------- | ---------------- |
+| `next_comment`                 | Focus the next comment                                               | `j`              |
+| `prev_comment`                 | Focus the previous comment                                           | `k`              |
+| `next_leq_level_comment`       | Focus the next comment with smaller or equal level                   | `l`              |
+| `prev_leq_level_comment`       | Focus the previous comment with smaller or equal level               | `h`              |
+| `next_top_level_comment`       | Focus the next top level comment                                     | `n`              |
+| `prev_top_level_comment`       | Focus the previous top level comment                                 | `p`              |
+| `parent_comment`               | Focus the parent comment (if exists)                                 | `u`              |
+| `toggle_collapse_comment`      | Toggle collapsing the focused comment                                | `tab`            |
+| `up`                           | Scroll up                                                            | `up`             |
+| `down`                         | Scroll down                                                          | `down`           |
+| `page_up`                      | Scroll up half a page                                                | `page_up`        |
+| `page_down`                    | Scroll down half a page                                              | `page_down`      |
+| `open_article_in_browser`      | Open in browser the article associated with the discussed story      | `o`              |
+| `open_article_in_article_view` | Open in article view the article associated with the discussed story | `O`              |
+| `open_story_in_browser`        | Open in browser the discussed story                                  | `s`              |
+| `open_comment_in_browser`      | Open in browser the focused comment                                  | `c`              |
+| `open_link_in_browser`         | Open in browser the {link_id}-th link in the focused comment         | `{link_id} f`    |
+| `open_link_in_article_view`    | Open in article view the {link_id}-th link in the focused comment    | `{link_id} F`    |
 
 #### Search View shortcuts
 
@@ -246,7 +246,8 @@ In `SearchView`, there are two modes: `Navigation` and `Search`. The default mod
 
 ## Configuration
 
-By default, `hackernews-tui` will look for the `hn-tui.toml` user-defined config file inside 
+By default, `hackernews-tui` will look for the `hn-tui.toml` user-defined config file inside
+
 - the [user's config directory](https://docs.rs/dirs-next/latest/dirs_next/fn.config_dir.html)
 - `.config` directory inside the [user's home directory](https://docs.rs/dirs-next/latest/dirs_next/fn.home_dir.html)
 
@@ -262,7 +263,7 @@ For further information about the application's configurations, please refer to 
 
 ## Logging
 
-`hackernews-tui` uses `RUST_LOG` environment variable to define the application's [logging level](https://docs.rs/log/0.4.14/log/enum.Level.html) (default to be `INFO`). 
+`hackernews-tui` uses `RUST_LOG` environment variable to define the application's [logging level](https://docs.rs/log/0.4.14/log/enum.Level.html) (default to be `INFO`).
 
 By default, the application creates the `hn-tui.log` log file inside the [user's cache directory](https://docs.rs/dirs-next/latest/dirs_next/fn.cache_dir.html), which can be configured by specifying the `-l` or `--log` option.
 
@@ -287,7 +288,7 @@ By default, the application creates the `hn-tui.log` log file inside the [user's
   - [x] rewrite the theme parser to support more themes and allow to parse themes from known colorschemes
   - [ ] add some extra transition effects
 - improve the keybinding handler
-  - [ ] allow to bind multiple keys to a single command
+  - [x] allow to bind multiple keys to a single command
   - [ ] add prefix key support (emacs-like key chaining - `C-x C-c ...`)
 - [ ] improve the loading progress bar
 - [ ] snipe-like navigation, inspired by [vim-snipe](https://github.com/yangmillstheory/vim-snipe)

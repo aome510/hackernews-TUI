@@ -20,13 +20,13 @@ An example config file (with some default config values) can be found in [exampl
 
 ## General
 
-| Option                  | Description                                                                                                           | Default                                                    |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `use_page_scrolling`    | whether to enable page-like scrolling behavior, which automatically adjusts the view based on the scrolling direction | `true`                                                     |
-| `use_pacman_loading`    | whether to use a pacman loading screen or a plain loading screen                                                      | `true`                                                     |
+| Option                  | Description                                                                                                           | Default                                                      |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `use_page_scrolling`    | whether to enable page-like scrolling behavior, which automatically adjusts the view based on the scrolling direction | `true`                                                       |
+| `use_pacman_loading`    | whether to use a pacman loading screen or a plain loading screen                                                      | `true`                                                       |
 | `url_open_command`      | the command the application uses to open an url in browser                                                            | `{ command = 'open', options = [] }`                         |
 | `article_parse_command` | the command the application uses to parse an article into a readable text                                             | `{ command = 'article_md', options = ['--format', 'html'] }` |
-| `client_timeout`        | the timeout (in seconds) when the application's client makes an API request                                           | `32`                                                       |
+| `client_timeout`        | the timeout (in seconds) when the application's client makes an API request                                           | `32`                                                         |
 
 ### Article Parse Command
 
@@ -166,12 +166,19 @@ Specifying the 16-bit color's name will use **the theme palette's color** (as op
 
 ## Keymap
 
-To modify the [default key mapping](https://github.com/aome510/hackernews-TUI#default-shortcuts), simply add new mapping entries to the corresponding keymap section. For example, to change the key shortcuts for the command `next_comment` to `J` and the command `prev_comment` to `K` in the comment view, add these 3 lines to the config file:
+To modify the [default key mapping](https://github.com/aome510/hackernews-TUI#default-shortcuts), simply add new mapping entries to the corresponding keymap section. For example, to change the key shortcut for the command `next_comment` to `J` and the command `prev_comment` to `K` in the comment view, add the below lines to the config file:
 
 ```toml
 [keymap.comment_view_keymap]
 next_comment = "J"
 prev_comment = "K"
+```
+
+It's possible for a command to have multiple keybindings. For example, to use either `j` or `J` for the `next_comment` command, add the below lines to the config file:
+
+```toml
+[keymap.comment_view_keymap]
+next_comment = ["j", "J"]
 ```
 
 ### Custom Keymap

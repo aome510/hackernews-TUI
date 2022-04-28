@@ -174,17 +174,17 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
                     _ => {
                         // handle editing shortcuts when in the search mode
                         let edit_keymap = config::get_edit_keymap().clone();
-                        if *e == edit_keymap.backward_delete_char.into() {
+                        if edit_keymap.backward_delete_char.has_event(e) {
                             view.del_char();
                             s.page = 0;
                             s.retrieve_matched_stories();
-                        } else if *e == edit_keymap.move_cursor_left.into() {
+                        } else if edit_keymap.move_cursor_left.has_event(e) {
                             view.move_cursor_left();
-                        } else if *e == edit_keymap.move_cursor_right.into() {
+                        } else if edit_keymap.move_cursor_right.has_event(e) {
                             view.move_cursor_right();
-                        } else if *e == edit_keymap.move_cursor_to_begin.into() {
+                        } else if edit_keymap.move_cursor_to_begin.has_event(e) {
                             view.move_cursor_to_begin();
-                        } else if *e == edit_keymap.move_cursor_to_end.into() {
+                        } else if edit_keymap.move_cursor_to_end.has_event(e) {
                             view.move_cursor_to_end();
                         } else {
                             return Some(EventResult::Ignored);

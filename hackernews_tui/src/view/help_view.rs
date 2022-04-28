@@ -202,7 +202,7 @@ impl HasHelpView for story_view::StoryView {
                         "Focus the previous story",
                     ),
                     (
-                        format!("`{{story_id}} {}`", story_view_keymap.goto_story),
+                        format!("{{story_id}} {}", story_view_keymap.goto_story),
                         "Focus the {story_id}-th story",
                     ),
                 ],
@@ -339,12 +339,12 @@ impl HasHelpView for comment_view::CommentView {
                         "Open in browser the focused comment",
                     ),
                     (
-                        format!("`{{link_id}} {}`", comment_view_keymap.open_link_in_browser),
+                        format!("{{link_id}} {}", comment_view_keymap.open_link_in_browser),
                         "Open in browser the {link_id}-th link in the focused comment",
                     ),
                     (
                         format!(
-                            "`{{link_id}} {}`",
+                            "{{link_id}} {}",
                             comment_view_keymap.open_link_in_article_view
                         ),
                         "Open in article view the {link_id}-th link in the focused comment",
@@ -391,7 +391,7 @@ impl HasHelpView for search_view::SearchView {
                         "Focus the previous story",
                     ),
                     (
-                        format!("`{{story_id}} {}`", story_view_keymap.goto_story),
+                        format!("{{story_id}} {}", story_view_keymap.goto_story),
                         "Focus the {story_id}-th story",
                     ),
                 ],
@@ -468,12 +468,12 @@ impl HasHelpView for article_view::ArticleView {
                         "Open article in browser",
                     ),
                     (
-                        format!("`{{link_id}} {}`", article_view_keymap.open_link_in_browser),
+                        format!("{{link_id}} {}", article_view_keymap.open_link_in_browser),
                         "Open in browser {link_id}-th link",
                     ),
                     (
                         format!(
-                            "`{{link_id}} {}`",
+                            "{{link_id}} {}",
                             article_view_keymap.open_link_in_article_view
                         ),
                         "Open in article view {link_id}-th link",

@@ -69,6 +69,13 @@ pub fn construct_footer_view<T: view::help_view::HasHelpView>() -> impl View {
                     format!("[{}: help] ", config::get_global_keymap().open_help_dialog),
                     |s| s.add_layer(T::construct_help_view()),
                 ))
+                .child(Button::new_raw("[back] ", |s| {
+                    if s.screen_mut().len() > 1 {
+                        s.pop_layer();
+                    } else {
+                        s.quit();
+                    }
+                }))
                 .child(Button::new_raw("[quit] ", |s| s.quit())),
         )
 }
