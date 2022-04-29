@@ -1,4 +1,5 @@
 use super::help_view::HasHelpView;
+use super::traits::*;
 use super::{async_view, text_view};
 use crate::prelude::*;
 
@@ -165,40 +166,6 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
             };
             None
         })
-        .on_pre_event_inner(article_view_keymap.down, |s, _| {
-            s.get_inner_mut().get_scroller_mut().scroll_down(3);
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(article_view_keymap.up, |s, _| {
-            s.get_inner_mut().get_scroller_mut().scroll_up(3);
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(article_view_keymap.page_down, |s, _| {
-            let height = s.get_inner().get_scroller().last_available_size().y;
-            s.get_inner_mut().get_scroller_mut().scroll_down(height / 2);
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(article_view_keymap.page_up, |s, _| {
-            let height = s.get_inner().get_scroller().last_available_size().y;
-            s.get_inner_mut().get_scroller_mut().scroll_up(height / 2);
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(article_view_keymap.top, |s, _| {
-            s.get_inner_mut().get_scroller_mut().scroll_to_top();
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(article_view_keymap.bottom, |s, _| {
-            s.get_inner_mut().get_scroller_mut().scroll_to_bottom();
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(article_view_keymap.open_link_dialog, |s, _| {
-            Some(EventResult::with_cb({
-                let links = s.article.links.clone();
-                move |s| {
-                    s.add_layer(get_link_dialog(&links));
-                }
-            }))
-        })
         .on_pre_event_inner(article_view_keymap.open_link_in_browser, |s, _| {
             match s.raw_command.parse::<usize>() {
                 Ok(num) => {
@@ -228,6 +195,7 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
                 Err(_) => None,
             },
         )
+        .on_scroll_events()
 }
 
 /// Return a ArticleView constructed from a Article struct

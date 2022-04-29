@@ -1,6 +1,6 @@
 use super::help_view::HasHelpView;
 use super::text_view;
-use super::traits::ListViewContainer;
+use super::traits::*;
 use super::{article_view, async_view};
 use crate::prelude::*;
 use crate::view::text_view::StyledPaddingChar;
@@ -234,26 +234,6 @@ fn get_comment_main_view(
             };
             None
         })
-        // scrolling shortcuts
-        // TODO: re-implement scrolling shortcuts for Comment View
-        // .on_pre_event_inner(comment_view_keymap.up, |s, _| {
-        //     s.get_scroller_mut().scroll_up(3);
-        //     Some(EventResult::Consumed(None))
-        // })
-        // .on_pre_event_inner(comment_view_keymap.down, |s, _| {
-        //     s.get_scroller_mut().scroll_down(3);
-        //     Some(EventResult::Consumed(None))
-        // })
-        // .on_pre_event_inner(comment_view_keymap.page_up, |s, _| {
-        //     let height = s.get_scroller_mut().last_available_size().y;
-        //     s.get_scroller_mut().scroll_up(height / 2);
-        //     Some(EventResult::Consumed(None))
-        // })
-        // .on_pre_event_inner(comment_view_keymap.page_down, |s, _| {
-        //     let height = s.get_scroller_mut().last_available_size().y;
-        //     s.get_scroller_mut().scroll_down(height / 2);
-        //     Some(EventResult::Consumed(None))
-        // })
         // comment navigation shortcuts
         .on_pre_event_inner(comment_view_keymap.prev_comment, |s, _| {
             s.set_focus_index(s.find_next_visible_comment(s.get_focus_index(), false))
@@ -336,6 +316,7 @@ fn get_comment_main_view(
             s.toggle_collapse_focused_comment();
             Some(EventResult::Consumed(None))
         })
+        .on_scroll_events()
         .full_height()
 }
 

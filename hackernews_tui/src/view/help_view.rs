@@ -305,21 +305,6 @@ impl HasHelpView for comment_view::CommentView {
                 ],
             ),
             (
-                "Scrolling",
-                vec![
-                    (comment_view_keymap.up.to_string(), "Scroll up"),
-                    (comment_view_keymap.down.to_string(), "Scroll down"),
-                    (
-                        comment_view_keymap.page_up.to_string(),
-                        "Scroll up half a page",
-                    ),
-                    (
-                        comment_view_keymap.page_down.to_string(),
-                        "Scroll down half a page",
-                    ),
-                ],
-            ),
-            (
                 "Open external links",
                 vec![
                     (
@@ -443,23 +428,6 @@ impl HasHelpView for article_view::ArticleView {
     fn construct_help_view() -> HelpView {
         let article_view_keymap = config::get_article_view_keymap().clone();
         HelpView::new().key_groups(vec![
-            (
-                "Navigation",
-                vec![
-                    (article_view_keymap.up.to_string(), "Scroll up"),
-                    (article_view_keymap.down.to_string(), "Scroll down"),
-                    (
-                        article_view_keymap.page_up.to_string(),
-                        "Scroll up half a page",
-                    ),
-                    (
-                        article_view_keymap.page_down.to_string(),
-                        "Scroll down half a page",
-                    ),
-                    (article_view_keymap.top.to_string(), "Scroll to top"),
-                    (article_view_keymap.bottom.to_string(), "Scroll to bottom"),
-                ],
-            ),
             (
                 "Open external links",
                 vec![

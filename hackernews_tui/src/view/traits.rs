@@ -1,9 +1,7 @@
 use crate::prelude::*;
 
-use super::{comment_view::CommentView, story_view::StoryView};
+use super::{article_view::ArticleView, comment_view::CommentView, story_view::StoryView};
 
-/// ScrollableList is a trait that implements basic methods
-/// to interact with a View that wraps a ScrollListView
 pub trait ListViewContainer {
     fn get_inner_list(&self) -> &LinearLayout;
     fn get_inner_list_mut(&mut self) -> &mut LinearLayout;
@@ -43,6 +41,51 @@ pub trait ListViewContainer {
     // fn scroll(&mut self, direction: bool);
 }
 
+pub trait ScrollContainer {
+    fn get_inner_scroller(&self) -> &scroll::Core;
+    fn get_inner_scroller_mut(&mut self) -> &mut scroll::Core;
+}
+
+pub trait OnScrollEventView {
+    fn on_scroll_events(self) -> Self;
+}
+
+impl<T> OnScrollEventView for OnEventView<T>
+where
+    T: ScrollContainer,
+{
+    fn on_scroll_events(self) -> Self {
+        let scroll_keymap = config::get_scroll_keymap().clone();
+
+        self.on_pre_event_inner(scroll_keymap.up, |s, _| {
+            s.get_inner_scroller_mut().scroll_up(3);
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(scroll_keymap.down, |s, _| {
+            s.get_inner_scroller_mut().scroll_down(3);
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(scroll_keymap.page_up, |s, _| {
+            let height = s.get_inner_scroller().last_available_size().y;
+            s.get_inner_scroller_mut().scroll_up(height / 2);
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(scroll_keymap.page_down, |s, _| {
+            let height = s.get_inner_scroller().last_available_size().y;
+            s.get_inner_scroller_mut().scroll_down(height / 2);
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(scroll_keymap.top, |s, _| {
+            s.get_inner_scroller_mut().scroll_to_top();
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event_inner(scroll_keymap.bottom, |s, _| {
+            s.get_inner_scroller_mut().scroll_to_bottom();
+            Some(EventResult::Consumed(None))
+        })
+    }
+}
+
 impl ListViewContainer for StoryView {
     fn get_inner_list(&self) -> &LinearLayout {
         self.get_inner().get_inner()
@@ -60,6 +103,26 @@ impl ListViewContainer for CommentView {
 
     fn get_inner_list_mut(&mut self) -> &mut LinearLayout {
         self.get_inner_mut().get_inner_mut()
+    }
+}
+
+impl ScrollContainer for CommentView {
+    fn get_inner_scroller(&self) -> &scroll::Core {
+        self.get_inner().get_scroller()
+    }
+
+    fn get_inner_scroller_mut(&mut self) -> &mut scroll::Core {
+        self.get_inner_mut().get_scroller_mut()
+    }
+}
+
+impl ScrollContainer for ArticleView {
+    fn get_inner_scroller(&self) -> &scroll::Core {
+        self.get_inner().get_scroller()
+    }
+
+    fn get_inner_scroller_mut(&mut self) -> &mut scroll::Core {
+        self.get_inner_mut().get_scroller_mut()
     }
 }
 
