@@ -1,6 +1,6 @@
 use super::help_view::HasHelpView;
-use super::list_view::*;
 use super::text_view;
+use super::traits::ListViewContainer;
 use super::{article_view, async_view};
 use crate::prelude::*;
 use crate::view::text_view::StyledPaddingChar;
@@ -10,7 +10,7 @@ type CommentComponent = HideableView<PaddedView<text_view::TextView>>;
 
 /// CommentView is a View displaying a list of comments in a HN story
 pub struct CommentView {
-    view: ScrollListView,
+    view: ScrollView<LinearLayout>,
     comments: Vec<client::HnText>,
     receiver: client::CommentReceiver,
 
@@ -18,7 +18,7 @@ pub struct CommentView {
 }
 
 impl ViewWrapper for CommentView {
-    wrap_impl!(self.view: ScrollListView);
+    wrap_impl!(self.view: ScrollView<LinearLayout>);
 }
 
 impl CommentView {
@@ -84,7 +84,8 @@ impl CommentView {
         });
         self.comments.append(&mut new_comments);
 
-        self.layout(self.get_scroller().last_outer_size())
+        // TODO: handle this
+        // self.layout(self.get_scroller().last_outer_size())
     }
 
     /// Return the id of the first comment (`direction` dependent)
@@ -200,7 +201,7 @@ impl CommentView {
         };
     }
 
-    inner_getters!(self.view: ScrollListView);
+    inner_getters!(self.view: ScrollView<LinearLayout>);
 }
 
 /// Return a main view of a CommentView displaying the comment list.
@@ -234,24 +235,25 @@ fn get_comment_main_view(
             None
         })
         // scrolling shortcuts
-        .on_pre_event_inner(comment_view_keymap.up, |s, _| {
-            s.get_scroller_mut().scroll_up(3);
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(comment_view_keymap.down, |s, _| {
-            s.get_scroller_mut().scroll_down(3);
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(comment_view_keymap.page_up, |s, _| {
-            let height = s.get_scroller_mut().last_available_size().y;
-            s.get_scroller_mut().scroll_up(height / 2);
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(comment_view_keymap.page_down, |s, _| {
-            let height = s.get_scroller_mut().last_available_size().y;
-            s.get_scroller_mut().scroll_down(height / 2);
-            Some(EventResult::Consumed(None))
-        })
+        // TODO: re-implement scrolling shortcuts for Comment View
+        // .on_pre_event_inner(comment_view_keymap.up, |s, _| {
+        //     s.get_scroller_mut().scroll_up(3);
+        //     Some(EventResult::Consumed(None))
+        // })
+        // .on_pre_event_inner(comment_view_keymap.down, |s, _| {
+        //     s.get_scroller_mut().scroll_down(3);
+        //     Some(EventResult::Consumed(None))
+        // })
+        // .on_pre_event_inner(comment_view_keymap.page_up, |s, _| {
+        //     let height = s.get_scroller_mut().last_available_size().y;
+        //     s.get_scroller_mut().scroll_up(height / 2);
+        //     Some(EventResult::Consumed(None))
+        // })
+        // .on_pre_event_inner(comment_view_keymap.page_down, |s, _| {
+        //     let height = s.get_scroller_mut().last_available_size().y;
+        //     s.get_scroller_mut().scroll_down(height / 2);
+        //     Some(EventResult::Consumed(None))
+        // })
         // comment navigation shortcuts
         .on_pre_event_inner(comment_view_keymap.prev_comment, |s, _| {
             s.set_focus_index(s.find_next_visible_comment(s.get_focus_index(), false))

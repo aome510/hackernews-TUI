@@ -2,8 +2,8 @@ use super::article_view;
 use super::async_view;
 use super::comment_view;
 use super::help_view::HasHelpView;
-use super::list_view::*;
 use super::text_view;
+use super::traits::ListViewContainer;
 use crate::client::StoryNumericFilters;
 use crate::prelude::*;
 
@@ -14,12 +14,12 @@ static STORY_TAGS: [&str; 5] = ["front_page", "story", "ask_hn", "show_hn", "job
 pub struct StoryView {
     pub stories: Vec<client::Story>,
 
-    view: ScrollListView,
+    view: ScrollView<LinearLayout>,
     raw_command: String,
 }
 
 impl ViewWrapper for StoryView {
-    wrap_impl!(self.view: ScrollListView);
+    wrap_impl!(self.view: ScrollView<LinearLayout>);
 }
 
 impl StoryView {
@@ -85,7 +85,7 @@ impl StoryView {
         story_text
     }
 
-    inner_getters!(self.view: ScrollListView);
+    inner_getters!(self.view: ScrollView<LinearLayout>);
 }
 
 /// Return a main view of a StoryView displaying the story list.
@@ -121,7 +121,7 @@ pub fn get_story_main_view(
             if id == 0 {
                 None
             } else {
-                s.set_focus_index(id - 1)
+                s.set_focus_index(id)
             }
         })
         .on_pre_event_inner(story_view_keymap.next_story, |s, _| {
