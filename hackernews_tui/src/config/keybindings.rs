@@ -69,12 +69,12 @@ pub struct ScrollKeyMap {
 impl Default for ScrollKeyMap {
     fn default() -> Self {
         ScrollKeyMap {
-            up: Keys::new(vec![event::Key::Up.into()]),
-            down: Keys::new(vec![event::Key::Down.into()]),
-            page_up: Keys::new(vec![event::Key::PageUp.into()]),
-            page_down: Keys::new(vec![event::Key::PageDown.into()]),
-            top: Keys::new(vec![event::Key::Home.into()]),
-            bottom: Keys::new(vec![event::Key::End.into()]),
+            up: Keys::new(vec!['k'.into(), event::Key::Up.into()]),
+            down: Keys::new(vec!['j'.into(), event::Key::Down.into()]),
+            page_up: Keys::new(vec!['u'.into(), event::Key::PageUp.into()]),
+            page_down: Keys::new(vec!['d'.into(), event::Key::PageDown.into()]),
+            top: Keys::new(vec!['g'.into(), event::Key::Home.into()]),
+            bottom: Keys::new(vec!['G'.into(), event::Key::End.into()]),
         }
     }
 }
