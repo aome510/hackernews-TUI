@@ -3,7 +3,7 @@ use super::async_view;
 use super::comment_view;
 use super::help_view::HasHelpView;
 use super::text_view;
-use super::traits::ListViewContainer;
+use super::traits::*;
 use crate::client::StoryNumericFilters;
 use crate::prelude::*;
 
@@ -86,6 +86,16 @@ impl StoryView {
     }
 
     inner_getters!(self.view: ScrollView<LinearLayout>);
+}
+
+impl ListViewContainer for StoryView {
+    fn get_inner_list(&self) -> &LinearLayout {
+        self.get_inner().get_inner()
+    }
+
+    fn get_inner_list_mut(&mut self) -> &mut LinearLayout {
+        self.get_inner_mut().get_inner_mut()
+    }
 }
 
 /// Return a main view of a StoryView displaying the story list.

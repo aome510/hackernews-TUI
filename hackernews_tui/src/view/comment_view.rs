@@ -204,6 +204,26 @@ impl CommentView {
     inner_getters!(self.view: ScrollView<LinearLayout>);
 }
 
+impl ListViewContainer for CommentView {
+    fn get_inner_list(&self) -> &LinearLayout {
+        self.get_inner().get_inner()
+    }
+
+    fn get_inner_list_mut(&mut self) -> &mut LinearLayout {
+        self.get_inner_mut().get_inner_mut()
+    }
+}
+
+impl ScrollContainer for CommentView {
+    fn get_inner_scroller(&self) -> &scroll::Core {
+        self.get_inner().get_scroller()
+    }
+
+    fn get_inner_scroller_mut(&mut self) -> &mut scroll::Core {
+        self.get_inner_mut().get_scroller_mut()
+    }
+}
+
 /// Return a main view of a CommentView displaying the comment list.
 /// The main view of a CommentView is a View without status bar or footer.
 fn get_comment_main_view(

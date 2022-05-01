@@ -1,7 +1,5 @@
 use crate::prelude::*;
 
-use super::{article_view::ArticleView, comment_view::CommentView, story_view::StoryView};
-
 pub trait ListViewContainer {
     fn get_inner_list(&self) -> &LinearLayout;
     fn get_inner_list_mut(&mut self) -> &mut LinearLayout;
@@ -83,46 +81,6 @@ where
             s.get_inner_scroller_mut().scroll_to_bottom();
             Some(EventResult::Consumed(None))
         })
-    }
-}
-
-impl ListViewContainer for StoryView {
-    fn get_inner_list(&self) -> &LinearLayout {
-        self.get_inner().get_inner()
-    }
-
-    fn get_inner_list_mut(&mut self) -> &mut LinearLayout {
-        self.get_inner_mut().get_inner_mut()
-    }
-}
-
-impl ListViewContainer for CommentView {
-    fn get_inner_list(&self) -> &LinearLayout {
-        self.get_inner().get_inner()
-    }
-
-    fn get_inner_list_mut(&mut self) -> &mut LinearLayout {
-        self.get_inner_mut().get_inner_mut()
-    }
-}
-
-impl ScrollContainer for CommentView {
-    fn get_inner_scroller(&self) -> &scroll::Core {
-        self.get_inner().get_scroller()
-    }
-
-    fn get_inner_scroller_mut(&mut self) -> &mut scroll::Core {
-        self.get_inner_mut().get_scroller_mut()
-    }
-}
-
-impl ScrollContainer for ArticleView {
-    fn get_inner_scroller(&self) -> &scroll::Core {
-        self.get_inner().get_scroller()
-    }
-
-    fn get_inner_scroller_mut(&mut self) -> &mut scroll::Core {
-        self.get_inner_mut().get_scroller_mut()
     }
 }
 

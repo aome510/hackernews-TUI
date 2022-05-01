@@ -82,6 +82,16 @@ impl ArticleView {
     inner_getters!(self.view: ScrollView<LinearLayout>);
 }
 
+impl ScrollContainer for ArticleView {
+    fn get_inner_scroller(&self) -> &scroll::Core {
+        self.get_inner().get_scroller()
+    }
+
+    fn get_inner_scroller_mut(&mut self) -> &mut scroll::Core {
+        self.get_inner_mut().get_scroller_mut()
+    }
+}
+
 /// Construct a help dialog from a list of URLs
 pub fn get_link_dialog(links: &[String]) -> impl View {
     let article_view_keymap = config::get_article_view_keymap().clone();
