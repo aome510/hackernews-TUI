@@ -204,7 +204,7 @@ impl HasHelpView for story_view::StoryView {
 
         let mut help_view = HelpView::new().command_groups(vec![
             CommandGroup::new(
-                "Story Navigation",
+                "Story navigation",
                 vec![
                     Command::new(
                         story_view_keymap.next_story.to_string(),
@@ -287,7 +287,7 @@ impl HasHelpView for story_view::StoryView {
 
         help_view.command_groups(vec![
             CommandGroup::new(
-                "View Navigation",
+                "View navigation",
                 [
                     vec![
                         Command::new(
@@ -314,82 +314,88 @@ impl HasHelpView for story_view::StoryView {
 
 impl HasHelpView for comment_view::CommentView {
     fn construct_help_view() -> HelpView {
-        HelpView::new()
-        // let comment_view_keymap = config::get_comment_view_keymap();
-        // let story_view_keymap = config::get_story_view_keymap();
+        let comment_view_keymap = config::get_comment_view_keymap();
+        let story_view_keymap = config::get_story_view_keymap();
 
-        // HelpView::new().command_groups(vec![
-        //     (
-        //         "Navigation",
-        //         vec![
-        //             (
-        //                 comment_view_keymap.next_comment.to_string(),
-        //                 "Focus the next comment",
-        //             ),
-        //             (
-        //                 comment_view_keymap.prev_comment.to_string(),
-        //                 "Focus the previous comment",
-        //             ),
-        //             (
-        //                 comment_view_keymap.next_top_level_comment.to_string(),
-        //                 "Focus the next top level comment",
-        //             ),
-        //             (
-        //                 comment_view_keymap.prev_top_level_comment.to_string(),
-        //                 "Focus the previous top level comment",
-        //             ),
-        //             (
-        //                 comment_view_keymap.next_leq_level_comment.to_string(),
-        //                 "Focus the next comment at smaller or equal level",
-        //             ),
-        //             (
-        //                 comment_view_keymap.prev_leq_level_comment.to_string(),
-        //                 "Focus the previous comment at smaller or equal level",
-        //             ),
-        //             (
-        //                 comment_view_keymap.parent_comment.to_string(),
-        //                 "Focus the parent comment (if exists)",
-        //             ),
-        //         ],
-        //     ),
-        //     (
-        //         "Open external links",
-        //         vec![
-        //             (
-        //                 story_view_keymap.open_article_in_browser.to_string(),
-        //                 "Open in browser the article associated with the discussed story",
-        //             ),
-        //             (
-        //                 story_view_keymap.open_article_in_article_view.to_string(),
-        //                 "Open in article view the article associated with the discussed story",
-        //             ),
-        //             (
-        //                 story_view_keymap.open_story_in_browser.to_string(),
-        //                 "Open in browser the discussed story",
-        //             ),
-        //             (
-        //                 comment_view_keymap.open_comment_in_browser.to_string(),
-        //                 "Open in browser the focused comment",
-        //             ),
-        //             (
-        //                 format!("{{link_id}} {}", comment_view_keymap.open_link_in_browser),
-        //                 "Open in browser the {link_id}-th link in the focused comment",
-        //             ),
-        //             (
-        //                 format!(
-        //                     "{{link_id}} {}",
-        //                     comment_view_keymap.open_link_in_article_view
-        //                 ),
-        //                 "Open in article view the {link_id}-th link in the focused comment",
-        //             ),
-        //         ],
-        //     ),
-        //     view_navigation_key_shortcuts!(),
-        //     other_key_shortcuts!((
-        //         comment_view_keymap.toggle_collapse_comment.to_string(),
-        //         "Toggle collapsing the focused comment"
-        //     )),
-        // ])
+        HelpView::new().command_groups(vec![
+            CommandGroup::new(
+                "Comment navigation",
+                vec![
+                    Command::new(
+                        comment_view_keymap.next_comment.to_string(),
+                        "Focus the next comment",
+                    ),
+                    Command::new(
+                        comment_view_keymap.prev_comment.to_string(),
+                        "Focus the previous comment",
+                    ),
+                    Command::new(
+                        comment_view_keymap.next_top_level_comment.to_string(),
+                        "Focus the next top level comment",
+                    ),
+                    Command::new(
+                        comment_view_keymap.prev_top_level_comment.to_string(),
+                        "Focus the previous top level comment",
+                    ),
+                    Command::new(
+                        comment_view_keymap.next_leq_level_comment.to_string(),
+                        "Focus the next comment at smaller or equal level",
+                    ),
+                    Command::new(
+                        comment_view_keymap.prev_leq_level_comment.to_string(),
+                        "Focus the previous comment at smaller or equal level",
+                    ),
+                    Command::new(
+                        comment_view_keymap.parent_comment.to_string(),
+                        "Focus the parent comment (if exists)",
+                    ),
+                ],
+            ),
+            CommandGroup::new(
+                "Open external links",
+                vec![
+                    Command::new(
+                        story_view_keymap.open_article_in_browser.to_string(),
+                        "Open in browser the article associated with the discussed story",
+                    ),
+                    Command::new(
+                        story_view_keymap.open_article_in_article_view.to_string(),
+                        "Open in article view the article associated with the discussed story",
+                    ),
+                    Command::new(
+                        story_view_keymap.open_story_in_browser.to_string(),
+                        "Open in browser the discussed story",
+                    ),
+                    Command::new(
+                        comment_view_keymap.open_comment_in_browser.to_string(),
+                        "Open in browser the focused comment",
+                    ),
+                    Command::new(
+                        format!("{{link_id}} {}", comment_view_keymap.open_link_in_browser),
+                        "Open in browser the {link_id}-th link in the focused comment",
+                    ),
+                    Command::new(
+                        format!(
+                            "{{link_id}} {}",
+                            comment_view_keymap.open_link_in_article_view
+                        ),
+                        "Open in article view the {link_id}-th link in the focused comment",
+                    ),
+                ],
+            ),
+            CommandGroup::new("View navigation", default_view_navigation_commands()),
+            CommandGroup::new(
+                "Others",
+                [
+                    vec![Command::new(
+                        comment_view_keymap.toggle_collapse_comment.to_string(),
+                        "Toggle collapsing the focused comment",
+                    )],
+                    default_other_commands(),
+                ]
+                .concat(),
+            ),
+        ])
     }
 }
 
