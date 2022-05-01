@@ -110,8 +110,8 @@ impl CommentView {
     }
 
     /// Return the id of the next visible comment
-    pub fn find_next_visible_comment(&self, start_id: usize, go_left: bool) -> usize {
-        if go_left {
+    pub fn find_next_visible_comment(&self, start_id: usize, direction: bool) -> usize {
+        if direction {
             // ->
             (start_id + 1..self.len())
                 .find(|&id| self.get_comment_component(id).is_visible())

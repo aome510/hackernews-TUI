@@ -131,7 +131,7 @@ pub fn get_story_main_view(
             if id == 0 {
                 None
             } else {
-                s.set_focus_index(id)
+                s.set_focus_index(id - 1)
             }
         })
         .on_pre_event_inner(story_view_keymap.next_story, |s, _| {
