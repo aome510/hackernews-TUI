@@ -5,6 +5,7 @@ use super::{article_view, comment_view, search_view, story_view};
 type CommandGroupsView = ScrollView<LinearLayout>;
 
 /// A help item used to describe a command and its keybindings
+#[derive(Clone)]
 pub struct Command {
     keys_desc: String,
     desc: String,
@@ -107,7 +108,7 @@ impl HelpView {
         }
     }
 
-    /// construct a new help view from the current one by appending new key groups
+    /// constructs a new help view from the current one by appending new key groups
     pub fn command_groups(mut self, groups: Vec<CommandGroup>) -> Self {
         let content = self
             .view
@@ -132,44 +133,57 @@ impl ViewWrapper for HelpView {
     wrap_impl!(self.view: Dialog);
 }
 
-// #[macro_export]
-// macro_rules! other_key_shortcuts {
-//     ($(($k:expr,$d:expr)),*) => {
-//         (
-//             "Others",
-//             vec![
-//                 $(
-//                     ($k, $d),
-//                 )*
-//                 (config::get_global_keymap().open_help_dialog.to_string(), "Open the help dialog"),
-//                 (config::get_global_keymap().quit.to_string(), "Quit the application"),
-//                 (config::get_global_keymap().close_dialog.to_string(), "Close a dialog"),
-//             ],
-//         )
-//     };
-// }
+fn default_other_commands() -> Vec<Command> {
+    vec![
+        Command::new(
+            config::get_global_keymap().open_help_dialog.to_string(),
+            "Open the help dialog",
+        ),
+        Command::new(
+            config::get_global_keymap().quit.to_string(),
+            "Quit the application",
+        ),
+        Command::new(
+            config::get_global_keymap().close_dialog.to_string(),
+            "Close a dialog",
+        ),
+    ]
+}
 
-// #[macro_export]
-// macro_rules! view_navigation_key_shortcuts {
-//     ($(($k:expr,$d:expr)),*) => {
-//         (
-//             "View Navigation",
-//             vec![
-//                 $(
-//                     ($k, $d),
-//                 )*
-//                     (config::get_global_keymap().goto_previous_view.to_string(), "Go to the previous view"),
-//                     (config::get_global_keymap().goto_search_view.to_string(), "Go to search view"),
-//                     (config::get_global_keymap().goto_front_page_view.to_string(), "Go to front page view"),
-//                     (config::get_global_keymap().goto_all_stories_view.to_string(), "Go to all stories view"),
-//                     (config::get_global_keymap().goto_ask_hn_view.to_string(), "Go to ask HN view"),
-//                     (config::get_global_keymap().goto_show_hn_view.to_string(), "Go to show HN view"),
-//                     (config::get_global_keymap().goto_jobs_view.to_string(), "Go to jobs view"),
-//             ],
-
-//         )
-//     };
-// }
+fn default_view_navigation_commands() -> Vec<Command> {
+    vec![
+        Command::new(
+            config::get_global_keymap().goto_previous_view.to_string(),
+            "Go to the previous view",
+        ),
+        Command::new(
+            config::get_global_keymap().goto_search_view.to_string(),
+            "Go to search view",
+        ),
+        Command::new(
+            config::get_global_keymap().goto_front_page_view.to_string(),
+            "Go to front page view",
+        ),
+        Command::new(
+            config::get_global_keymap()
+                .goto_all_stories_view
+                .to_string(),
+            "Go to all stories view",
+        ),
+        Command::new(
+            config::get_global_keymap().goto_ask_hn_view.to_string(),
+            "Go to ask HN view",
+        ),
+        Command::new(
+            config::get_global_keymap().goto_show_hn_view.to_string(),
+            "Go to show HN view",
+        ),
+        Command::new(
+            config::get_global_keymap().goto_jobs_view.to_string(),
+            "Go to jobs view",
+        ),
+    ]
+}
 
 pub trait HasHelpView {
     fn construct_help_view() -> HelpView;
@@ -190,7 +204,7 @@ impl HasHelpView for story_view::StoryView {
 
         let mut help_view = HelpView::new().command_groups(vec![
             CommandGroup::new(
-                "Navigation",
+                "Story Navigation",
                 vec![
                     Command::new(
                         story_view_keymap.next_story.to_string(),
@@ -271,24 +285,30 @@ impl HasHelpView for story_view::StoryView {
                 .command_groups(vec![CommandGroup::new("Custom keymaps", custom_commands)]);
         }
 
-        help_view
-        // help_view.command_groups(vec![
-        //     view_navigation_key_shortcuts!(
-        //         (
-        //             story_view_keymap.goto_story_comment_view.to_string(),
-        //             "Go to the comment view associated with the focused story"
-        //         ),
-        //         (
-        //             story_view_keymap.next_story_tag.to_string(),
-        //             "Go to the next story tag"
-        //         ),
-        //         (
-        //             story_view_keymap.prev_story_tag.to_string(),
-        //             "Go to the previous story tag"
-        //         )
-        //     ),
-        //     other_key_shortcuts!(),
-        // ])
+        help_view.command_groups(vec![
+            CommandGroup::new(
+                "View Navigation",
+                [
+                    vec![
+                        Command::new(
+                            story_view_keymap.goto_story_comment_view.to_string(),
+                            "Go to the comment view associated with the focused story",
+                        ),
+                        Command::new(
+                            story_view_keymap.next_story_tag.to_string(),
+                            "Go to the next story tag",
+                        ),
+                        Command::new(
+                            story_view_keymap.prev_story_tag.to_string(),
+                            "Go to the previous story tag",
+                        ),
+                    ],
+                    default_view_navigation_commands(),
+                ]
+                .concat(),
+            ),
+            CommandGroup::new("Others", default_other_commands()),
+        ])
     }
 }
 
