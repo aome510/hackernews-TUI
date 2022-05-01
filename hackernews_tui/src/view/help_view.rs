@@ -187,29 +187,6 @@ impl HasHelpView for DefaultHelpView {
 impl HasHelpView for story_view::StoryView {
     fn construct_help_view() -> HelpView {
         let story_view_keymap = config::get_story_view_keymap();
-        let custom_keymaps = config::get_config()
-            .keymap
-            .custom_keymaps
-            .iter()
-            .map(|keymap| {
-                Command::new(
-                    keymap.key.to_string(),
-                    format!(
-                        "Go to {} view (by_date: {}, {})",
-                        match keymap.tag.as_str() {
-                            "front_page" => "front page",
-                            "story" => "all stories",
-                            "job" => "jobs",
-                            "ask_hn" => "ask HN",
-                            "show_hn" => "show HN",
-                            _ => panic!("unknown view: {}", keymap.tag),
-                        },
-                        keymap.by_date,
-                        keymap.numeric_filters.desc()
-                    ),
-                )
-            })
-            .collect::<Vec<_>>();
 
         let mut help_view = HelpView::new().command_groups(vec![
             CommandGroup::new(
@@ -264,10 +241,36 @@ impl HasHelpView for story_view::StoryView {
                 ],
             ),
         ]);
-        if !custom_keymaps.is_empty() {
-            help_view =
-                help_view.command_groups(vec![CommandGroup::new("Custom keymaps", custom_keymaps)]);
+
+        let custom_commands = config::get_config()
+            .keymap
+            .custom_keymaps
+            .iter()
+            .map(|keymap| {
+                Command::new(
+                    keymap.key.to_string(),
+                    format!(
+                        "Go to {} view (by_date: {}, {})",
+                        match keymap.tag.as_str() {
+                            "front_page" => "front page",
+                            "story" => "all stories",
+                            "job" => "jobs",
+                            "ask_hn" => "ask HN",
+                            "show_hn" => "show HN",
+                            _ => panic!("unknown view: {}", keymap.tag),
+                        },
+                        keymap.by_date,
+                        keymap.numeric_filters.desc()
+                    ),
+                )
+            })
+            .collect::<Vec<_>>();
+
+        if !custom_commands.is_empty() {
+            help_view = help_view
+                .command_groups(vec![CommandGroup::new("Custom keymaps", custom_commands)]);
         }
+
         help_view
         // help_view.command_groups(vec![
         //     view_navigation_key_shortcuts!(
