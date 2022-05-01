@@ -1,6 +1,9 @@
 use crate::prelude::*;
 
-use super::{article_view, comment_view, search_view, story_view};
+use super::{
+    article_view, comment_view, search_view, story_view,
+    traits::{OnScrollEventView, ScrollContainer},
+};
 
 type CommandGroupsView = ScrollView<LinearLayout>;
 
@@ -133,8 +136,38 @@ impl ViewWrapper for HelpView {
     wrap_impl!(self.view: Dialog);
 }
 
+impl ScrollContainer for HelpView {
+    fn get_inner_scroller(&self) -> &scroll::Core {
+        let content = self
+            .view
+            .get_content()
+            .downcast_ref::<CommandGroupsView>()
+            .expect("the dialog's content should be a `CommandGroupsView`");
+
+        content.get_scroller()
+    }
+
+    fn get_inner_scroller_mut(&mut self) -> &mut scroll::Core {
+        let content = self
+            .view
+            .get_content_mut()
+            .downcast_mut::<CommandGroupsView>()
+            .expect("the dialog's content should be a `CommandGroupsView`");
+
+        content.get_scroller_mut()
+    }
+}
+
 pub trait HasHelpView {
     fn construct_help_view() -> HelpView;
+
+    fn construct_on_event_help_view() -> OnEventView<HelpView> {
+        OnEventView::new(Self::construct_help_view())
+            .on_event(config::get_global_keymap().close_dialog.clone(), |s| {
+                s.pop_layer();
+            })
+            .on_scroll_events()
+    }
 }
 
 /// An empty struct representing a default HelpView

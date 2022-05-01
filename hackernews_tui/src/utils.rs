@@ -67,7 +67,7 @@ pub fn construct_footer_view<T: view::help_view::HasHelpView>() -> impl View {
             LinearLayout::horizontal()
                 .child(Button::new_raw(
                     format!("[{}: help] ", config::get_global_keymap().open_help_dialog),
-                    |s| s.add_layer(T::construct_help_view()),
+                    |s| s.add_layer(T::construct_on_event_help_view()),
                 ))
                 .child(Button::new_raw("[back] ", |s| {
                     if s.screen_mut().len() > 1 {

@@ -77,7 +77,7 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &'static client::HNClient) {
     });
 
     s.set_on_post_event(global_keymap.open_help_dialog, |s| {
-        s.add_layer(view::help_view::DefaultHelpView::construct_help_view())
+        s.add_layer(view::help_view::DefaultHelpView::construct_on_event_help_view())
     });
 
     s.set_on_post_event(global_keymap.quit, |s| s.quit());

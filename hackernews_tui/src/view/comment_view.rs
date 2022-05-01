@@ -338,7 +338,7 @@ pub fn get_comment_view(story: &client::Story, receiver: client::CommentReceiver
 
     OnEventView::new(view)
         .on_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
-            s.add_layer(CommentView::construct_help_view());
+            s.add_layer(CommentView::construct_on_event_help_view());
         })
         .on_event(
             config::get_story_view_keymap()

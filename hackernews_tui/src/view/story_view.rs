@@ -244,7 +244,7 @@ pub fn get_story_view(
 
     OnEventView::new(view)
         .on_pre_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
-            s.add_layer(StoryView::construct_help_view())
+            s.add_layer(StoryView::construct_on_event_help_view())
         })
         .on_event(story_view_keymap.toggle_sort_by_date, move |s| {
             // disable "search_by_date" for front_page stories

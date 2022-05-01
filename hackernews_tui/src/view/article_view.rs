@@ -134,9 +134,6 @@ pub fn get_link_dialog(links: &[String]) -> impl View {
         .on_event(config::get_global_keymap().close_dialog.clone(), |s| {
             s.pop_layer();
         })
-        .on_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
-            s.add_layer(ArticleView::construct_help_view())
-        })
         .max_height(32)
         .max_width(64)
 }
@@ -218,7 +215,7 @@ pub fn get_article_view(article: client::Article) -> impl View {
             }
         })
         .on_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
-            s.add_layer(ArticleView::construct_help_view())
+            s.add_layer(ArticleView::construct_on_event_help_view())
         })
 }
 
