@@ -214,13 +214,15 @@ impl ListViewContainer for CommentView {
     }
 }
 
-impl ScrollContainer for CommentView {
-    fn get_inner_scroller(&self) -> &scroll::Core {
-        self.get_inner().get_scroller()
+impl ScrollViewContainer for CommentView {
+    type ScrollInner = LinearLayout;
+
+    fn get_inner_scroller_view(&self) -> &ScrollView<LinearLayout> {
+        self.get_inner()
     }
 
-    fn get_inner_scroller_mut(&mut self) -> &mut scroll::Core {
-        self.get_inner_mut().get_scroller_mut()
+    fn get_inner_scroller_view_mut(&mut self) -> &mut ScrollView<LinearLayout> {
+        self.get_inner_mut()
     }
 }
 

@@ -4,6 +4,9 @@ pub trait ListViewContainer {
     fn get_inner_list(&self) -> &LinearLayout;
     fn get_inner_list_mut(&mut self) -> &mut LinearLayout;
 
+    // default to be no-op
+    fn on_set_focus_index(&mut self, _old_id: usize, _new_id: usize) {}
+
     fn len(&self) -> usize {
         self.get_inner_list().len()
     }
@@ -13,8 +16,13 @@ pub trait ListViewContainer {
     }
 
     fn set_focus_index(&mut self, id: usize) -> Option<EventResult> {
+        let old_id = self.get_focus_index();
+
         match self.get_inner_list_mut().set_focus_index(id) {
-            Ok(_) => Some(EventResult::Consumed(None)),
+            Ok(_) => {
+                self.on_set_focus_index(old_id, id);
+                Some(EventResult::Consumed(None))
+            }
             Err(_) => None,
         }
     }
@@ -39,9 +47,10 @@ pub trait ListViewContainer {
     // fn scroll(&mut self, direction: bool);
 }
 
-pub trait ScrollContainer {
-    fn get_inner_scroller(&self) -> &scroll::Core;
-    fn get_inner_scroller_mut(&mut self) -> &mut scroll::Core;
+pub trait ScrollViewContainer {
+    type ScrollInner;
+    fn get_inner_scroller_view(&self) -> &ScrollView<Self::ScrollInner>;
+    fn get_inner_scroller_view_mut(&mut self) -> &mut ScrollView<Self::ScrollInner>;
 }
 
 pub trait OnScrollEventView {
@@ -50,54 +59,69 @@ pub trait OnScrollEventView {
 
 impl<T> OnScrollEventView for OnEventView<T>
 where
-    T: ScrollContainer,
+    T: ScrollViewContainer,
 {
     fn on_scroll_events(self) -> Self {
         let scroll_keymap = config::get_scroll_keymap().clone();
 
         self.on_pre_event_inner(scroll_keymap.up, |s, _| {
-            s.get_inner_scroller_mut().scroll_up(3);
+            s.get_inner_scroller_view_mut()
+                .get_scroller_mut()
+                .scroll_up(3);
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(scroll_keymap.down, |s, _| {
-            s.get_inner_scroller_mut().scroll_down(3);
+            s.get_inner_scroller_view_mut()
+                .get_scroller_mut()
+                .scroll_down(3);
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(scroll_keymap.page_up, |s, _| {
-            let height = s.get_inner_scroller().last_available_size().y;
-            s.get_inner_scroller_mut().scroll_up(height / 2);
+            let height = s
+                .get_inner_scroller_view()
+                .get_scroller()
+                .last_available_size()
+                .y;
+            s.get_inner_scroller_view_mut()
+                .get_scroller_mut()
+                .scroll_up(height / 2);
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(scroll_keymap.page_down, |s, _| {
-            let height = s.get_inner_scroller().last_available_size().y;
-            s.get_inner_scroller_mut().scroll_down(height / 2);
+            let height = s
+                .get_inner_scroller_view()
+                .get_scroller()
+                .last_available_size()
+                .y;
+            s.get_inner_scroller_view_mut()
+                .get_scroller_mut()
+                .scroll_down(height / 2);
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(scroll_keymap.top, |s, _| {
-            s.get_inner_scroller_mut().scroll_to_top();
+            s.get_inner_scroller_view_mut().scroll_to_top();
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(scroll_keymap.bottom, |s, _| {
-            s.get_inner_scroller_mut().scroll_to_bottom();
+            s.get_inner_scroller_view_mut().scroll_to_bottom();
             Some(EventResult::Consumed(None))
         })
     }
 }
 
-// #[macro_export]
-// macro_rules! impl_scrollable_list {
-//     () => {
-//         fn len(&self) -> usize {
-//             self.get_inner().get_inner().len()
-//         }
+// pub trait AutoScrolling {
+//     fn scroll(&mut self, direction: bool);
+// }
 
-//         fn get_focus_index(&self) -> usize {
-//             self.get_inner().get_inner().get_focus_index()
-//         }
-
-//         fn scroll(&mut self, direction: bool) {
+// impl<T> AutoScrolling for T
+// where
+//     T: ScrollViewContainer,
+// {
+//     fn scroll(&mut self, direction: bool) {
+//         {
 //             if !config::get_config().use_page_scrolling {
-//                 self.get_inner_mut().scroll_to_important_area();
+//                 self.get_inner_scroller_view_mut()
+//                     .scroll_to_important_area();
 //                 return;
 //             }
 
@@ -131,6 +155,22 @@ where
 //                     }
 //                 }
 //             }
+//         }
+//     }
+// }
+
+// #[macro_export]
+// macro_rules! impl_scrollable_list {
+//     () => {
+//         fn len(&self) -> usize {
+//             self.get_inner().get_inner().len()
+//         }
+
+//         fn get_focus_index(&self) -> usize {
+//             self.get_inner().get_inner().get_focus_index()
+//         }
+
+//         fn scroll(&mut self, direction: bool) {
 //         }
 
 //         fn set_focus_index(&mut self, id: usize) -> Option<EventResult> {

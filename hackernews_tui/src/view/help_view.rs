@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 use super::{
     article_view, comment_view, search_view, story_view,
-    traits::{OnScrollEventView, ScrollContainer},
+    traits::{OnScrollEventView, ScrollViewContainer},
 };
 
 type CommandGroupsView = ScrollView<LinearLayout>;
@@ -136,25 +136,21 @@ impl ViewWrapper for HelpView {
     wrap_impl!(self.view: Dialog);
 }
 
-impl ScrollContainer for HelpView {
-    fn get_inner_scroller(&self) -> &scroll::Core {
-        let content = self
-            .view
+impl ScrollViewContainer for HelpView {
+    type ScrollInner = LinearLayout;
+
+    fn get_inner_scroller_view(&self) -> &ScrollView<LinearLayout> {
+        self.view
             .get_content()
             .downcast_ref::<CommandGroupsView>()
-            .expect("the dialog's content should be a `CommandGroupsView`");
-
-        content.get_scroller()
+            .expect("the dialog's content should be a `CommandGroupsView`")
     }
 
-    fn get_inner_scroller_mut(&mut self) -> &mut scroll::Core {
-        let content = self
-            .view
+    fn get_inner_scroller_view_mut(&mut self) -> &mut ScrollView<LinearLayout> {
+        self.view
             .get_content_mut()
             .downcast_mut::<CommandGroupsView>()
-            .expect("the dialog's content should be a `CommandGroupsView`");
-
-        content.get_scroller_mut()
+            .expect("the dialog's content should be a `CommandGroupsView`")
     }
 }
 

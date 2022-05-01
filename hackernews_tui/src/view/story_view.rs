@@ -98,6 +98,18 @@ impl ListViewContainer for StoryView {
     }
 }
 
+impl ScrollViewContainer for StoryView {
+    type ScrollInner = LinearLayout;
+
+    fn get_inner_scroller_view(&self) -> &ScrollView<LinearLayout> {
+        self.get_inner()
+    }
+
+    fn get_inner_scroller_view_mut(&mut self) -> &mut ScrollView<LinearLayout> {
+        self.get_inner_mut()
+    }
+}
+
 /// Return a main view of a StoryView displaying the story list.
 /// The main view of a StoryView is a View without status bar or footer.
 pub fn get_story_main_view(
