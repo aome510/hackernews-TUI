@@ -133,6 +133,22 @@ impl ViewWrapper for HelpView {
     wrap_impl!(self.view: Dialog);
 }
 
+pub trait HasHelpView {
+    fn construct_help_view() -> HelpView;
+}
+
+/// An empty struct representing a default HelpView
+pub struct DefaultHelpView {}
+
+impl HasHelpView for DefaultHelpView {
+    fn construct_help_view() -> HelpView {
+        HelpView::new().command_groups(vec![
+            CommandGroup::new("View navigation", default_view_navigation_commands()),
+            CommandGroup::new("Other", default_other_commands()),
+        ])
+    }
+}
+
 fn default_other_commands() -> Vec<Command> {
     vec![
         Command::new(
@@ -183,19 +199,6 @@ fn default_view_navigation_commands() -> Vec<Command> {
             "Go to jobs view",
         ),
     ]
-}
-
-pub trait HasHelpView {
-    fn construct_help_view() -> HelpView;
-}
-
-/// An empty struct representing a default HelpView
-pub struct DefaultHelpView {}
-
-impl HasHelpView for DefaultHelpView {
-    fn construct_help_view() -> HelpView {
-        HelpView::new()
-    }
 }
 
 impl HasHelpView for story_view::StoryView {
@@ -401,135 +404,141 @@ impl HasHelpView for comment_view::CommentView {
 
 impl HasHelpView for search_view::SearchView {
     fn construct_help_view() -> HelpView {
-        HelpView::new()
-        // let search_view_keymap = config::get_search_view_keymap();
-        // let story_view_keymap = config::get_story_view_keymap();
+        let search_view_keymap = config::get_search_view_keymap();
+        let story_view_keymap = config::get_story_view_keymap();
 
-        // HelpView::new().command_groups(vec![
-        //     (
-        //         "Switch Mode",
-        //         vec![
-        //             (
-        //                 search_view_keymap.to_navigation_mode.to_string(),
-        //                 "Switch to navigation mode",
-        //             ),
-        //             (
-        //                 search_view_keymap.to_search_mode.to_string(),
-        //                 "Switch to search mode",
-        //             ),
-        //         ],
-        //     ),
-        //     (
-        //         "Navigation Mode - Navigation",
-        //         vec![
-        //             (
-        //                 story_view_keymap.next_story.to_string(),
-        //                 "Focus the next story",
-        //             ),
-        //             (
-        //                 story_view_keymap.prev_story.to_string(),
-        //                 "Focus the previous story",
-        //             ),
-        //             (
-        //                 format!("{{story_id}} {}", story_view_keymap.goto_story),
-        //                 "Focus the {story_id}-th story",
-        //             ),
-        //         ],
-        //     ),
-        //     (
-        //         "Navigation Mode - Paging/Filtering",
-        //         vec![
-        //             (
-        //                 story_view_keymap.next_page.to_string(),
-        //                 "Go to the next page",
-        //             ),
-        //             (
-        //                 story_view_keymap.prev_page.to_string(),
-        //                 "Go the previous page",
-        //             ),
-        //             (
-        //                 story_view_keymap.toggle_sort_by_date.to_string(),
-        //                 "Toggle sort by date",
-        //             ),
-        //         ],
-        //     ),
-        //     (
-        //         "Navigation Mode - Open external links",
-        //         vec![
-        //             (
-        //                 story_view_keymap.open_article_in_browser.to_string(),
-        //                 "Open in browser the link associated with the focused story",
-        //             ),
-        //             (
-        //                 story_view_keymap.open_article_in_article_view.to_string(),
-        //                 "Open in article view the link associated with the focused story",
-        //             ),
-        //             (
-        //                 story_view_keymap.open_story_in_browser.to_string(),
-        //                 "Open in browser the focused story",
-        //             ),
-        //         ],
-        //     ),
-        //     view_navigation_key_shortcuts!((
-        //         story_view_keymap.goto_story_comment_view.to_string(),
-        //         "Go to the comment view associated with the focused story"
-        //     )),
-        //     other_key_shortcuts!(),
-        // ])
+        HelpView::new().command_groups(vec![
+            CommandGroup::new(
+                "Switch Mode",
+                vec![
+                    Command::new(
+                        search_view_keymap.to_navigation_mode.to_string(),
+                        "Switch to navigation mode",
+                    ),
+                    Command::new(
+                        search_view_keymap.to_search_mode.to_string(),
+                        "Switch to search mode",
+                    ),
+                ],
+            ),
+            CommandGroup::new(
+                "Navigation Mode - Navigation",
+                vec![
+                    Command::new(
+                        story_view_keymap.next_story.to_string(),
+                        "Focus the next story",
+                    ),
+                    Command::new(
+                        story_view_keymap.prev_story.to_string(),
+                        "Focus the previous story",
+                    ),
+                    Command::new(
+                        format!("{{story_id}} {}", story_view_keymap.goto_story),
+                        "Focus the {story_id}-th story",
+                    ),
+                ],
+            ),
+            CommandGroup::new(
+                "Navigation Mode - Paging/Filtering",
+                vec![
+                    Command::new(
+                        story_view_keymap.next_page.to_string(),
+                        "Go to the next page",
+                    ),
+                    Command::new(
+                        story_view_keymap.prev_page.to_string(),
+                        "Go the previous page",
+                    ),
+                    Command::new(
+                        story_view_keymap.toggle_sort_by_date.to_string(),
+                        "Toggle sort by date",
+                    ),
+                ],
+            ),
+            CommandGroup::new(
+                "Navigation Mode - Open external links",
+                vec![
+                    Command::new(
+                        story_view_keymap.open_article_in_browser.to_string(),
+                        "Open in browser the link associated with the focused story",
+                    ),
+                    Command::new(
+                        story_view_keymap.open_article_in_article_view.to_string(),
+                        "Open in article view the link associated with the focused story",
+                    ),
+                    Command::new(
+                        story_view_keymap.open_story_in_browser.to_string(),
+                        "Open in browser the focused story",
+                    ),
+                ],
+            ),
+            CommandGroup::new(
+                "View navigation",
+                [
+                    vec![Command::new(
+                        story_view_keymap.goto_story_comment_view.to_string(),
+                        "Go to the comment view associated with the focused story",
+                    )],
+                    default_view_navigation_commands(),
+                ]
+                .concat(),
+            ),
+            CommandGroup::new("Others", default_other_commands()),
+        ])
     }
 }
 
 impl HasHelpView for article_view::ArticleView {
     fn construct_help_view() -> HelpView {
-        HelpView::new()
-        // let article_view_keymap = config::get_article_view_keymap().clone();
-        // HelpView::new().command_groups(vec![
-        //     (
-        //         "Open external links",
-        //         vec![
-        //             (
-        //                 article_view_keymap.open_article_in_browser.to_string(),
-        //                 "Open article in browser",
-        //             ),
-        //             (
-        //                 format!("{{link_id}} {}", article_view_keymap.open_link_in_browser),
-        //                 "Open in browser {link_id}-th link",
-        //             ),
-        //             (
-        //                 format!(
-        //                     "{{link_id}} {}",
-        //                     article_view_keymap.open_link_in_article_view
-        //                 ),
-        //                 "Open in article view {link_id}-th link",
-        //             ),
-        //         ],
-        //     ),
-        //     (
-        //         "Link dialog",
-        //         vec![
-        //             (
-        //                 article_view_keymap.open_link_dialog.to_string(),
-        //                 "Open link dialog",
-        //             ),
-        //             (
-        //                 article_view_keymap.link_dialog_focus_next.to_string(),
-        //                 "Focus next link",
-        //             ),
-        //             (
-        //                 article_view_keymap.link_dialog_focus_prev.to_string(),
-        //                 "Focus previous link",
-        //             ),
-        //             (
-        //                 article_view_keymap.open_link_in_browser.to_string(),
-        //                 "Open in browser the focused link",
-        //             ),
-        //             (
-        //                 article_view_keymap.open_link_in_article_view.to_string(),
-        //                 "Open in article view the focused link",
-        //             ),
-        //         ],
-        //     ),
-        //     view_navigation_key_shortcuts!(),
-        // ])
+        let article_view_keymap = config::get_article_view_keymap().clone();
+        HelpView::new().command_groups(vec![
+            CommandGroup::new(
+                "Open external links",
+                vec![
+                    Command::new(
+                        article_view_keymap.open_article_in_browser.to_string(),
+                        "Open article in browser",
+                    ),
+                    Command::new(
+                        format!("{{link_id}} {}", article_view_keymap.open_link_in_browser),
+                        "Open in browser {link_id}-th link",
+                    ),
+                    Command::new(
+                        format!(
+                            "{{link_id}} {}",
+                            article_view_keymap.open_link_in_article_view
+                        ),
+                        "Open in article view {link_id}-th link",
+                    ),
+                ],
+            ),
+            CommandGroup::new(
+                "Link dialog",
+                vec![
+                    Command::new(
+                        article_view_keymap.open_link_dialog.to_string(),
+                        "Open link dialog",
+                    ),
+                    Command::new(
+                        article_view_keymap.link_dialog_focus_next.to_string(),
+                        "Focus next link",
+                    ),
+                    Command::new(
+                        article_view_keymap.link_dialog_focus_prev.to_string(),
+                        "Focus previous link",
+                    ),
+                    Command::new(
+                        article_view_keymap.open_link_in_browser.to_string(),
+                        "Open in browser the focused link",
+                    ),
+                    Command::new(
+                        article_view_keymap.open_link_in_article_view.to_string(),
+                        "Open in article view the focused link",
+                    ),
+                ],
+            ),
+            CommandGroup::new("View navigation", default_view_navigation_commands()),
+            CommandGroup::new("Others", default_other_commands()),
+        ])
     }
 }
