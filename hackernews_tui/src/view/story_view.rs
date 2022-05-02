@@ -2,8 +2,8 @@ use super::article_view;
 use super::async_view;
 use super::comment_view;
 use super::help_view::HasHelpView;
-use super::list_view::*;
 use super::text_view;
+use super::traits::*;
 use crate::client::StoryNumericFilters;
 use crate::prelude::*;
 
@@ -14,12 +14,12 @@ static STORY_TAGS: [&str; 5] = ["front_page", "story", "ask_hn", "show_hn", "job
 pub struct StoryView {
     pub stories: Vec<client::Story>,
 
-    view: ScrollListView,
+    view: ScrollView<LinearLayout>,
     raw_command: String,
 }
 
 impl ViewWrapper for StoryView {
-    wrap_impl!(self.view: ScrollListView);
+    wrap_impl!(self.view: ScrollView<LinearLayout>);
 }
 
 impl StoryView {
@@ -85,7 +85,36 @@ impl StoryView {
         story_text
     }
 
-    inner_getters!(self.view: ScrollListView);
+    inner_getters!(self.view: ScrollView<LinearLayout>);
+}
+
+impl ListViewContainer for StoryView {
+    fn get_inner_list(&self) -> &LinearLayout {
+        self.get_inner().get_inner()
+    }
+
+    fn get_inner_list_mut(&mut self) -> &mut LinearLayout {
+        self.get_inner_mut().get_inner_mut()
+    }
+
+    fn on_set_focus_index(&mut self, old_id: usize, new_id: usize) {
+        let direction = old_id <= new_id;
+
+        // enable auto-scrolling when changing the focused index of the view
+        self.scroll(direction);
+    }
+}
+
+impl ScrollViewContainer for StoryView {
+    type ScrollInner = LinearLayout;
+
+    fn get_inner_scroll_view(&self) -> &ScrollView<LinearLayout> {
+        self.get_inner()
+    }
+
+    fn get_inner_scroll_view_mut(&mut self) -> &mut ScrollView<LinearLayout> {
+        self.get_inner_mut()
+    }
 }
 
 /// Return a main view of a StoryView displaying the story list.
@@ -113,7 +142,10 @@ pub fn get_story_main_view(
                     }
                 }
             };
-            None
+
+            // don't allow the inner `LinearLayout` child view to handle the event
+            // because of its pre-defined `on_event` function
+            Some(EventResult::Ignored)
         })
         // story navigation shortcuts
         .on_pre_event_inner(story_view_keymap.prev_story, |s, _| {
@@ -181,6 +213,7 @@ pub fn get_story_main_view(
                 Err(_) => None,
             }
         })
+        .on_scroll_events()
 }
 
 fn get_story_view_title_bar(tag: &'static str) -> impl View {
@@ -244,7 +277,7 @@ pub fn get_story_view(
 
     OnEventView::new(view)
         .on_pre_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
-            s.add_layer(StoryView::construct_help_view())
+            s.add_layer(StoryView::construct_on_event_help_view())
         })
         .on_event(story_view_keymap.toggle_sort_by_date, move |s| {
             // disable "search_by_date" for front_page stories

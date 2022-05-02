@@ -1,6 +1,6 @@
 use super::help_view::HasHelpView;
-use super::list_view::*;
 use super::text_view;
+use super::traits::*;
 use super::{article_view, async_view};
 use crate::prelude::*;
 use crate::view::text_view::StyledPaddingChar;
@@ -10,7 +10,7 @@ type CommentComponent = HideableView<PaddedView<text_view::TextView>>;
 
 /// CommentView is a View displaying a list of comments in a HN story
 pub struct CommentView {
-    view: ScrollListView,
+    view: ScrollView<LinearLayout>,
     comments: Vec<client::HnText>,
     receiver: client::CommentReceiver,
 
@@ -18,7 +18,7 @@ pub struct CommentView {
 }
 
 impl ViewWrapper for CommentView {
-    wrap_impl!(self.view: ScrollListView);
+    wrap_impl!(self.view: ScrollView<LinearLayout>);
 }
 
 impl CommentView {
@@ -84,7 +84,12 @@ impl CommentView {
         });
         self.comments.append(&mut new_comments);
 
-        self.layout(self.get_scroller().last_outer_size())
+        // update the view's layout
+        self.layout(
+            self.get_inner_scroll_view()
+                .get_scroller()
+                .last_outer_size(),
+        )
     }
 
     /// Return the id of the first comment (`direction` dependent)
@@ -109,8 +114,8 @@ impl CommentView {
     }
 
     /// Return the id of the next visible comment
-    pub fn find_next_visible_comment(&self, start_id: usize, go_left: bool) -> usize {
-        if go_left {
+    pub fn find_next_visible_comment(&self, start_id: usize, direction: bool) -> usize {
+        if direction {
             // ->
             (start_id + 1..self.len())
                 .find(|&id| self.get_comment_component(id).is_visible())
@@ -200,7 +205,36 @@ impl CommentView {
         };
     }
 
-    inner_getters!(self.view: ScrollListView);
+    inner_getters!(self.view: ScrollView<LinearLayout>);
+}
+
+impl ListViewContainer for CommentView {
+    fn get_inner_list(&self) -> &LinearLayout {
+        self.get_inner().get_inner()
+    }
+
+    fn get_inner_list_mut(&mut self) -> &mut LinearLayout {
+        self.get_inner_mut().get_inner_mut()
+    }
+
+    fn on_set_focus_index(&mut self, old_id: usize, new_id: usize) {
+        let direction = old_id <= new_id;
+
+        // enable auto-scrolling when changing the focused index of the view
+        self.scroll(direction);
+    }
+}
+
+impl ScrollViewContainer for CommentView {
+    type ScrollInner = LinearLayout;
+
+    fn get_inner_scroll_view(&self) -> &ScrollView<LinearLayout> {
+        self.get_inner()
+    }
+
+    fn get_inner_scroll_view_mut(&mut self) -> &mut ScrollView<LinearLayout> {
+        self.get_inner_mut()
+    }
 }
 
 /// Return a main view of a CommentView displaying the comment list.
@@ -231,26 +265,10 @@ fn get_comment_main_view(
                     }
                 }
             };
-            None
-        })
-        // scrolling shortcuts
-        .on_pre_event_inner(comment_view_keymap.up, |s, _| {
-            s.get_scroller_mut().scroll_up(3);
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(comment_view_keymap.down, |s, _| {
-            s.get_scroller_mut().scroll_down(3);
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(comment_view_keymap.page_up, |s, _| {
-            let height = s.get_scroller_mut().last_available_size().y;
-            s.get_scroller_mut().scroll_up(height / 2);
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(comment_view_keymap.page_down, |s, _| {
-            let height = s.get_scroller_mut().last_available_size().y;
-            s.get_scroller_mut().scroll_down(height / 2);
-            Some(EventResult::Consumed(None))
+
+            // don't allow the inner `LinearLayout` child view to handle the event
+            // because of its pre-defined `on_event` function
+            Some(EventResult::Ignored)
         })
         // comment navigation shortcuts
         .on_pre_event_inner(comment_view_keymap.prev_comment, |s, _| {
@@ -334,6 +352,7 @@ fn get_comment_main_view(
             s.toggle_collapse_focused_comment();
             Some(EventResult::Consumed(None))
         })
+        .on_scroll_events()
         .full_height()
 }
 
@@ -355,7 +374,7 @@ pub fn get_comment_view(story: &client::Story, receiver: client::CommentReceiver
 
     OnEventView::new(view)
         .on_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
-            s.add_layer(CommentView::construct_help_view());
+            s.add_layer(CommentView::construct_on_event_help_view());
         })
         .on_event(
             config::get_story_view_keymap()

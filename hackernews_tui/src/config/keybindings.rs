@@ -6,6 +6,7 @@ use serde::{de, Deserialize, Deserializer};
 #[derive(Default, Debug, Clone, Deserialize, ConfigParse)]
 pub struct KeyMap {
     pub edit_keymap: EditKeyMap,
+    pub scroll_keymap: ScrollKeyMap,
     pub global_keymap: GlobalKeyMap,
     pub story_view_keymap: StoryViewKeyMap,
     pub search_view_keymap: SearchViewKeyMap,
@@ -51,6 +52,29 @@ impl Default for EditKeyMap {
                 event::Event::CtrlChar('e'),
             ]),
             backward_delete_char: Keys::new(vec![event::Key::Backspace.into()]),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, ConfigParse)]
+pub struct ScrollKeyMap {
+    pub up: Keys,
+    pub down: Keys,
+    pub page_up: Keys,
+    pub page_down: Keys,
+    pub top: Keys,
+    pub bottom: Keys,
+}
+
+impl Default for ScrollKeyMap {
+    fn default() -> Self {
+        ScrollKeyMap {
+            up: Keys::new(vec!['k'.into(), event::Key::Up.into()]),
+            down: Keys::new(vec!['j'.into(), event::Key::Down.into()]),
+            page_up: Keys::new(vec!['u'.into(), event::Key::PageUp.into()]),
+            page_down: Keys::new(vec!['d'.into(), event::Key::PageDown.into()]),
+            top: Keys::new(vec!['g'.into(), event::Key::Home.into()]),
+            bottom: Keys::new(vec!['G'.into(), event::Key::End.into()]),
         }
     }
 }
@@ -172,12 +196,6 @@ pub struct CommentViewKeyMap {
     pub open_link_in_browser: Keys,
     pub open_link_in_article_view: Keys,
 
-    // scrolling
-    pub down: Keys,
-    pub up: Keys,
-    pub page_down: Keys,
-    pub page_up: Keys,
-
     pub toggle_collapse_comment: Keys,
 }
 
@@ -196,11 +214,6 @@ impl Default for CommentViewKeyMap {
             open_link_in_browser: Keys::new(vec!['f'.into()]),
             open_link_in_article_view: Keys::new(vec!['F'.into()]),
 
-            up: Keys::new(vec![event::Key::Up.into()]),
-            down: Keys::new(vec![event::Key::Down.into()]),
-            page_up: Keys::new(vec![event::Key::PageUp.into()]),
-            page_down: Keys::new(vec![event::Key::PageDown.into()]),
-
             toggle_collapse_comment: Keys::new(vec![event::Key::Tab.into()]),
         }
     }
@@ -208,13 +221,6 @@ impl Default for CommentViewKeyMap {
 
 #[derive(Debug, Clone, Deserialize, ConfigParse)]
 pub struct ArticleViewKeyMap {
-    pub down: Keys,
-    pub up: Keys,
-    pub page_down: Keys,
-    pub page_up: Keys,
-    pub top: Keys,
-    pub bottom: Keys,
-
     pub open_link_dialog: Keys,
     pub link_dialog_focus_next: Keys,
     pub link_dialog_focus_prev: Keys,
@@ -227,13 +233,6 @@ pub struct ArticleViewKeyMap {
 impl Default for ArticleViewKeyMap {
     fn default() -> Self {
         ArticleViewKeyMap {
-            down: Keys::new(vec!['j'.into()]),
-            up: Keys::new(vec!['k'.into()]),
-            page_down: Keys::new(vec!['d'.into()]),
-            page_up: Keys::new(vec!['u'.into()]),
-            top: Keys::new(vec!['g'.into()]),
-            bottom: Keys::new(vec!['G'.into()]),
-
             open_link_dialog: Keys::new(vec!['l'.into()]),
             link_dialog_focus_next: Keys::new(vec!['j'.into()]),
             link_dialog_focus_prev: Keys::new(vec!['k'.into()]),
@@ -430,6 +429,10 @@ impl<'de> de::Deserialize<'de> for Keys {
 
 pub fn get_edit_keymap() -> &'static EditKeyMap {
     &super::get_config().keymap.edit_keymap
+}
+
+pub fn get_scroll_keymap() -> &'static ScrollKeyMap {
+    &super::get_config().keymap.scroll_keymap
 }
 
 pub fn get_global_keymap() -> &'static GlobalKeyMap {

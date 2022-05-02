@@ -1,100 +1,134 @@
 use crate::prelude::*;
 
-use std::fmt::Display;
+use super::{article_view, comment_view, search_view, story_view, traits::*};
 
-use super::{article_view, comment_view, search_view, story_view};
+type HelpViewContent = ScrollView<LinearLayout>;
 
-/// HelpView is a View displaying a help dialog with a list of key shortcuts and descriptions
-/// grouped by certain categories.
+/// A help item used to describe a command and its keybindings
+#[derive(Clone)]
+pub struct Command {
+    keys_desc: String,
+    desc: String,
+}
+
+/// A group of command help items grouped by certain categories
+pub struct CommandGroup {
+    desc: String,
+    commands: Vec<Command>,
+}
+
+impl Command {
+    pub fn new<X, Y>(keys_desc: X, desc: Y) -> Self
+    where
+        X: Into<String>,
+        Y: Into<String>,
+    {
+        Self {
+            keys_desc: keys_desc.into(),
+            desc: desc.into(),
+        }
+    }
+
+    /// converts into a command View which consists of
+    /// - a keybindings text View
+    /// - a command description text View
+    pub fn to_command_view(self, width: Option<usize>) -> impl View {
+        let key = StyledString::styled(
+            self.keys_desc,
+            config::get_config_theme().component_style.single_code_block,
+        );
+
+        let mut view = LinearLayout::horizontal();
+
+        // command's keybindings
+        match width {
+            Some(width) => view.add_child(TextView::new(key).fixed_width(width)),
+            None => view.add_child(TextView::new(key)),
+        }
+
+        // command's description
+        view.add_child(TextView::new(format!(" {}", self.desc)));
+        view
+    }
+}
+
+impl CommandGroup {
+    pub fn new<T>(desc: T, commands: Vec<Command>) -> Self
+    where
+        T: Into<String>,
+    {
+        Self {
+            desc: desc.into(),
+            commands,
+        }
+    }
+
+    /// converts into a command group View which consists of multiple command View(s)
+    pub fn to_group_view(self) -> impl View {
+        let max_keys_len = match self
+            .commands
+            .iter()
+            .max_by_key(|command| command.keys_desc.len())
+        {
+            None => 0,
+            Some(command) => command.keys_desc.len(),
+        };
+
+        LinearLayout::vertical()
+            // group description
+            .child(TextView::new(StyledString::styled(
+                self.desc,
+                config::get_config_theme().component_style.bold,
+            )))
+            // a list of command View(s) in the group
+            .with(|s| {
+                for command in self.commands {
+                    s.add_child(command.to_command_view(Some(max_keys_len)));
+                }
+            })
+            // a bottom padding
+            .child(TextView::new("\n"))
+    }
+}
+
+/// HelpView is a help dialog displaying a list of commands with
+/// corresponding keybindings and command descriptions.
+///
+/// Commands are grouped by certain categories.
 pub struct HelpView {
-    view: OnEventView<Dialog>,
-    // "section description" followed by a vector of ("key", "key description") pairs
-    key_groups: Vec<(&'static str, Vec<(String, String)>)>,
+    view: Dialog,
 }
 
 impl HelpView {
     pub fn new() -> Self {
         HelpView {
-            view: HelpView::construct_help_dialog_event_view(Dialog::new().title("Help Dialog")),
-            key_groups: vec![],
+            view: Dialog::new()
+                .title("Help Dialog")
+                .content(LinearLayout::vertical().scrollable()),
         }
     }
 
-    fn construct_key_view(key: String, desc: String, max_key_width: usize) -> impl View {
-        let key_string = StyledString::styled(
-            key,
-            config::get_config_theme().component_style.single_code_block,
-        );
-        let desc_string = StyledString::plain(desc);
-        LinearLayout::horizontal()
-            .child(TextView::new(key_string).fixed_width(max_key_width))
-            .child(TextView::new(desc_string))
+    pub fn content(&self) -> &HelpViewContent {
+        self.view
+            .get_content()
+            .downcast_ref::<HelpViewContent>()
+            .expect("the help dialog's content should have `HelpViewContent` type")
     }
 
-    fn construct_help_dialog_event_view(view: Dialog) -> OnEventView<Dialog> {
-        OnEventView::new(view).on_event(config::get_global_keymap().close_dialog.clone(), |s| {
-            s.pop_layer();
-        })
+    pub fn content_mut(&mut self) -> &mut HelpViewContent {
+        self.view
+            .get_content_mut()
+            .downcast_mut::<HelpViewContent>()
+            .expect("the help dialog's content should have `HelpViewContent` type")
     }
 
-    fn construct_keys_view(keys: &[(String, String)]) -> impl View {
-        let max_key_len = match keys.iter().max_by_key(|key| key.0.len()) {
-            None => 0,
-            Some(key) => key.0.len(),
-        };
+    /// constructs a new help view from the current one by appending new key groups
+    pub fn command_groups(mut self, groups: Vec<CommandGroup>) -> Self {
+        let content = self.content_mut();
 
-        PaddedView::lrtb(
-            0,
-            0,
-            0,
-            1,
-            LinearLayout::vertical()
-                .with(|s| {
-                    keys.iter().for_each(|(key, desc)| {
-                        s.add_child(HelpView::construct_key_view(
-                            key.to_owned(),
-                            desc.to_owned(),
-                            max_key_len + 1,
-                        ));
-                    });
-                })
-                .max_width(128),
-        )
-    }
-
-    fn construct_key_groups_view(&self) -> impl View {
-        LinearLayout::vertical()
-            .with(|s| {
-                self.key_groups.iter().for_each(|(group_desc, keys)| {
-                    s.add_child(TextView::new(StyledString::styled(
-                        *group_desc,
-                        config::get_config_theme().component_style.bold,
-                    )));
-                    s.add_child(HelpView::construct_keys_view(keys));
-                });
-            })
-            .scrollable()
-            .max_height(32)
-    }
-
-    pub fn process_keys<X: Display, Y: Display>(keys: Vec<(X, Y)>) -> Vec<(String, String)> {
-        keys.into_iter()
-            .map(|(key, desc)| (key.to_string(), desc.to_string()))
-            .collect()
-    }
-
-    // add multiple key groups
-    pub fn key_groups<X: Display, Y: Display>(
-        mut self,
-        key_groups: Vec<(&'static str, Vec<(X, Y)>)>,
-    ) -> Self {
-        let mut key_groups: Vec<(&'static str, Vec<(String, String)>)> = key_groups
-            .into_iter()
-            .map(|(group_desc, keys)| (group_desc, Self::process_keys(keys)))
-            .collect();
-        self.key_groups.append(&mut key_groups);
-        let view = self.construct_key_groups_view();
-        self.view.get_inner_mut().set_content(view);
+        for group in groups {
+            content.get_inner_mut().add_child(group.to_group_view());
+        }
         self
     }
 }
@@ -106,71 +140,165 @@ impl Default for HelpView {
 }
 
 impl ViewWrapper for HelpView {
-    wrap_impl!(self.view: OnEventView<Dialog>);
+    wrap_impl!(self.view: Dialog);
 }
 
-#[macro_export]
-macro_rules! other_key_shortcuts {
-    ($(($k:expr,$d:expr)),*) => {
-        (
-            "Others",
-            vec![
-                $(
-                    ($k, $d),
-                )*
-                (config::get_global_keymap().open_help_dialog.to_string(), "Open the help dialog"),
-                (config::get_global_keymap().quit.to_string(), "Quit the application"),
-                (config::get_global_keymap().close_dialog.to_string(), "Close a dialog"),
-            ],
-        )
-    };
-}
+impl ScrollViewContainer for HelpView {
+    type ScrollInner = LinearLayout;
 
-#[macro_export]
-macro_rules! view_navigation_key_shortcuts {
-    ($(($k:expr,$d:expr)),*) => {
-        (
-            "View Navigation",
-            vec![
-                $(
-                    ($k, $d),
-                )*
-                    (config::get_global_keymap().goto_previous_view.to_string(), "Go to the previous view"),
-                    (config::get_global_keymap().goto_search_view.to_string(), "Go to search view"),
-                    (config::get_global_keymap().goto_front_page_view.to_string(), "Go to front page view"),
-                    (config::get_global_keymap().goto_all_stories_view.to_string(), "Go to all stories view"),
-                    (config::get_global_keymap().goto_ask_hn_view.to_string(), "Go to ask HN view"),
-                    (config::get_global_keymap().goto_show_hn_view.to_string(), "Go to show HN view"),
-                    (config::get_global_keymap().goto_jobs_view.to_string(), "Go to jobs view"),
-            ],
+    fn get_inner_scroll_view(&self) -> &ScrollView<LinearLayout> {
+        self.content()
+    }
 
-        )
-    };
+    fn get_inner_scroll_view_mut(&mut self) -> &mut ScrollView<LinearLayout> {
+        self.content_mut()
+    }
 }
 
 pub trait HasHelpView {
+    fn construct_help_view() -> HelpView;
+
+    fn construct_on_event_help_view() -> OnEventView<HelpView> {
+        OnEventView::new(Self::construct_help_view())
+            .on_event(config::get_global_keymap().close_dialog.clone(), |s| {
+                s.pop_layer();
+            })
+            .on_scroll_events()
+    }
+}
+
+/// An empty struct representing a default HelpView
+pub struct DefaultHelpView {}
+
+impl HasHelpView for DefaultHelpView {
     fn construct_help_view() -> HelpView {
-        HelpView::new().key_groups(vec![
-            view_navigation_key_shortcuts!(),
-            other_key_shortcuts!(),
+        HelpView::new().command_groups(vec![
+            CommandGroup::new("View navigation", default_view_navigation_commands()),
+            CommandGroup::new("Other", default_other_commands()),
         ])
     }
 }
 
-/// An empty struct used to construct the default HelpView
-pub struct DefaultHelpView {}
+fn default_other_commands() -> Vec<Command> {
+    let global_keymap = config::get_global_keymap();
+    vec![
+        Command::new(
+            global_keymap.open_help_dialog.to_string(),
+            "Open the help dialog",
+        ),
+        Command::new(global_keymap.quit.to_string(), "Quit the application"),
+        Command::new(global_keymap.close_dialog.to_string(), "Close a dialog"),
+    ]
+}
 
-impl HasHelpView for DefaultHelpView {}
+fn default_view_navigation_commands() -> Vec<Command> {
+    let global_keymap = config::get_global_keymap();
+    vec![
+        Command::new(
+            global_keymap.goto_previous_view.to_string(),
+            "Go to the previous view",
+        ),
+        Command::new(
+            global_keymap.goto_search_view.to_string(),
+            "Go to search view",
+        ),
+        Command::new(
+            global_keymap.goto_front_page_view.to_string(),
+            "Go to front page view",
+        ),
+        Command::new(
+            global_keymap.goto_all_stories_view.to_string(),
+            "Go to all stories view",
+        ),
+        Command::new(
+            global_keymap.goto_ask_hn_view.to_string(),
+            "Go to ask HN view",
+        ),
+        Command::new(
+            global_keymap.goto_show_hn_view.to_string(),
+            "Go to show HN view",
+        ),
+        Command::new(global_keymap.goto_jobs_view.to_string(), "Go to jobs view"),
+    ]
+}
+
+fn default_scroll_commands() -> Vec<Command> {
+    let scroll_keymap = config::get_scroll_keymap();
+
+    vec![
+        Command::new(scroll_keymap.up.to_string(), "Scroll up"),
+        Command::new(scroll_keymap.down.to_string(), "Scroll down"),
+        Command::new(scroll_keymap.page_up.to_string(), "Scroll page up"),
+        Command::new(scroll_keymap.page_down.to_string(), "Scroll page down"),
+        Command::new(scroll_keymap.top.to_string(), "Scroll to top"),
+        Command::new(scroll_keymap.bottom.to_string(), "Scroll to bottom"),
+    ]
+}
 
 impl HasHelpView for story_view::StoryView {
     fn construct_help_view() -> HelpView {
         let story_view_keymap = config::get_story_view_keymap();
-        let custom_keymaps: Vec<(String, String)> = config::get_config()
+
+        let mut help_view = HelpView::new().command_groups(vec![
+            CommandGroup::new(
+                "Story navigation",
+                vec![
+                    Command::new(
+                        story_view_keymap.next_story.to_string(),
+                        "Focus the next story",
+                    ),
+                    Command::new(
+                        story_view_keymap.prev_story.to_string(),
+                        "Focus the previous story",
+                    ),
+                    Command::new(
+                        format!("{{story_id}} {}", story_view_keymap.goto_story),
+                        "Focus the {story_id}-th story",
+                    ),
+                ],
+            ),
+            CommandGroup::new(
+                "Paging/Filtering",
+                vec![
+                    Command::new(
+                        story_view_keymap.next_page.to_string(),
+                        "Go to the next page",
+                    ),
+                    Command::new(
+                        story_view_keymap.prev_page.to_string(),
+                        "Go the previous page",
+                    ),
+                    Command::new(
+                        story_view_keymap.toggle_sort_by_date.to_string(),
+                        "Toggle sort by date (only for non `Front Page` views)",
+                    ),
+                ],
+            ),
+            CommandGroup::new(
+                "Open external links",
+                vec![
+                    Command::new(
+                        story_view_keymap.open_article_in_browser.to_string(),
+                        "Open in browser the article associated with the focused story",
+                    ),
+                    Command::new(
+                        story_view_keymap.open_article_in_article_view.to_string(),
+                        "Open in article view the article associated with the focused story",
+                    ),
+                    Command::new(
+                        story_view_keymap.open_story_in_browser.to_string(),
+                        "Open in browser the focused story",
+                    ),
+                ],
+            ),
+        ]);
+
+        let custom_commands = config::get_config()
             .keymap
             .custom_keymaps
             .iter()
             .map(|keymap| {
-                (
+                Command::new(
                     keymap.key.to_string(),
                     format!(
                         "Go to {} view (by_date: {}, {})",
@@ -187,80 +315,37 @@ impl HasHelpView for story_view::StoryView {
                     ),
                 )
             })
-            .collect();
+            .collect::<Vec<_>>();
 
-        let mut help_view = HelpView::new().key_groups(vec![
-            (
-                "Navigation",
-                vec![
-                    (
-                        story_view_keymap.next_story.to_string(),
-                        "Focus the next story",
-                    ),
-                    (
-                        story_view_keymap.prev_story.to_string(),
-                        "Focus the previous story",
-                    ),
-                    (
-                        format!("{{story_id}} {}", story_view_keymap.goto_story),
-                        "Focus the {story_id}-th story",
-                    ),
-                ],
-            ),
-            (
-                "Paging/Filtering",
-                vec![
-                    (
-                        story_view_keymap.next_page.to_string(),
-                        "Go to the next page",
-                    ),
-                    (
-                        story_view_keymap.prev_page.to_string(),
-                        "Go the previous page",
-                    ),
-                    (
-                        story_view_keymap.toggle_sort_by_date.to_string(),
-                        "Toggle sort by date (only for non `Front Page` views)",
-                    ),
-                ],
-            ),
-            (
-                "Open external links",
-                vec![
-                    (
-                        story_view_keymap.open_article_in_browser.to_string(),
-                        "Open in browser the article associated with the focused story",
-                    ),
-                    (
-                        story_view_keymap.open_article_in_article_view.to_string(),
-                        "Open in article view the article associated with the focused story",
-                    ),
-                    (
-                        story_view_keymap.open_story_in_browser.to_string(),
-                        "Open in browser the focused story",
-                    ),
-                ],
-            ),
-        ]);
-        if !custom_keymaps.is_empty() {
-            help_view = help_view.key_groups(vec![("Custom keymaps", custom_keymaps)]);
+        if !custom_commands.is_empty() {
+            help_view = help_view
+                .command_groups(vec![CommandGroup::new("Custom keymaps", custom_commands)]);
         }
-        help_view.key_groups(vec![
-            view_navigation_key_shortcuts!(
-                (
-                    story_view_keymap.goto_story_comment_view.to_string(),
-                    "Go to the comment view associated with the focused story"
-                ),
-                (
-                    story_view_keymap.next_story_tag.to_string(),
-                    "Go to the next story tag"
-                ),
-                (
-                    story_view_keymap.prev_story_tag.to_string(),
-                    "Go to the previous story tag"
-                )
+
+        help_view.command_groups(vec![
+            CommandGroup::new("Scrolling", default_scroll_commands()),
+            CommandGroup::new(
+                "View navigation",
+                [
+                    vec![
+                        Command::new(
+                            story_view_keymap.goto_story_comment_view.to_string(),
+                            "Go to the comment view associated with the focused story",
+                        ),
+                        Command::new(
+                            story_view_keymap.next_story_tag.to_string(),
+                            "Go to the next story tag",
+                        ),
+                        Command::new(
+                            story_view_keymap.prev_story_tag.to_string(),
+                            "Go to the previous story tag",
+                        ),
+                    ],
+                    default_view_navigation_commands(),
+                ]
+                .concat(),
             ),
-            other_key_shortcuts!(),
+            CommandGroup::new("Others", default_other_commands()),
         ])
     }
 }
@@ -270,79 +355,64 @@ impl HasHelpView for comment_view::CommentView {
         let comment_view_keymap = config::get_comment_view_keymap();
         let story_view_keymap = config::get_story_view_keymap();
 
-        HelpView::new().key_groups(vec![
-            (
-                "Navigation",
+        HelpView::new().command_groups(vec![
+            CommandGroup::new(
+                "Comment navigation",
                 vec![
-                    (
+                    Command::new(
                         comment_view_keymap.next_comment.to_string(),
                         "Focus the next comment",
                     ),
-                    (
+                    Command::new(
                         comment_view_keymap.prev_comment.to_string(),
                         "Focus the previous comment",
                     ),
-                    (
+                    Command::new(
                         comment_view_keymap.next_top_level_comment.to_string(),
                         "Focus the next top level comment",
                     ),
-                    (
+                    Command::new(
                         comment_view_keymap.prev_top_level_comment.to_string(),
                         "Focus the previous top level comment",
                     ),
-                    (
+                    Command::new(
                         comment_view_keymap.next_leq_level_comment.to_string(),
                         "Focus the next comment at smaller or equal level",
                     ),
-                    (
+                    Command::new(
                         comment_view_keymap.prev_leq_level_comment.to_string(),
                         "Focus the previous comment at smaller or equal level",
                     ),
-                    (
+                    Command::new(
                         comment_view_keymap.parent_comment.to_string(),
                         "Focus the parent comment (if exists)",
                     ),
                 ],
             ),
-            (
-                "Scrolling",
-                vec![
-                    (comment_view_keymap.up.to_string(), "Scroll up"),
-                    (comment_view_keymap.down.to_string(), "Scroll down"),
-                    (
-                        comment_view_keymap.page_up.to_string(),
-                        "Scroll up half a page",
-                    ),
-                    (
-                        comment_view_keymap.page_down.to_string(),
-                        "Scroll down half a page",
-                    ),
-                ],
-            ),
-            (
+            CommandGroup::new(
                 "Open external links",
                 vec![
-                    (
+                    Command::new(
                         story_view_keymap.open_article_in_browser.to_string(),
                         "Open in browser the article associated with the discussed story",
                     ),
-                    (
+                    Command::new(
                         story_view_keymap.open_article_in_article_view.to_string(),
                         "Open in article view the article associated with the discussed story",
                     ),
-                    (
+                    Command::new(
                         story_view_keymap.open_story_in_browser.to_string(),
                         "Open in browser the discussed story",
                     ),
-                    (
+                    Command::new(
                         comment_view_keymap.open_comment_in_browser.to_string(),
                         "Open in browser the focused comment",
                     ),
-                    (
+                    Command::new(
                         format!("{{link_id}} {}", comment_view_keymap.open_link_in_browser),
                         "Open in browser the {link_id}-th link in the focused comment",
                     ),
-                    (
+                    Command::new(
                         format!(
                             "{{link_id}} {}",
                             comment_view_keymap.open_link_in_article_view
@@ -351,11 +421,19 @@ impl HasHelpView for comment_view::CommentView {
                     ),
                 ],
             ),
-            view_navigation_key_shortcuts!(),
-            other_key_shortcuts!((
-                comment_view_keymap.toggle_collapse_comment.to_string(),
-                "Toggle collapsing the focused comment"
-            )),
+            CommandGroup::new("Scrolling", default_scroll_commands()),
+            CommandGroup::new("View navigation", default_view_navigation_commands()),
+            CommandGroup::new(
+                "Others",
+                [
+                    vec![Command::new(
+                        comment_view_keymap.toggle_collapse_comment.to_string(),
+                        "Toggle collapsing the focused comment",
+                    )],
+                    default_other_commands(),
+                ]
+                .concat(),
+            ),
         ])
     }
 }
@@ -365,76 +443,83 @@ impl HasHelpView for search_view::SearchView {
         let search_view_keymap = config::get_search_view_keymap();
         let story_view_keymap = config::get_story_view_keymap();
 
-        HelpView::new().key_groups(vec![
-            (
+        HelpView::new().command_groups(vec![
+            CommandGroup::new(
                 "Switch Mode",
                 vec![
-                    (
+                    Command::new(
                         search_view_keymap.to_navigation_mode.to_string(),
                         "Switch to navigation mode",
                     ),
-                    (
+                    Command::new(
                         search_view_keymap.to_search_mode.to_string(),
                         "Switch to search mode",
                     ),
                 ],
             ),
-            (
+            CommandGroup::new(
                 "Navigation Mode - Navigation",
                 vec![
-                    (
+                    Command::new(
                         story_view_keymap.next_story.to_string(),
                         "Focus the next story",
                     ),
-                    (
+                    Command::new(
                         story_view_keymap.prev_story.to_string(),
                         "Focus the previous story",
                     ),
-                    (
+                    Command::new(
                         format!("{{story_id}} {}", story_view_keymap.goto_story),
                         "Focus the {story_id}-th story",
                     ),
                 ],
             ),
-            (
+            CommandGroup::new(
                 "Navigation Mode - Paging/Filtering",
                 vec![
-                    (
+                    Command::new(
                         story_view_keymap.next_page.to_string(),
                         "Go to the next page",
                     ),
-                    (
+                    Command::new(
                         story_view_keymap.prev_page.to_string(),
                         "Go the previous page",
                     ),
-                    (
+                    Command::new(
                         story_view_keymap.toggle_sort_by_date.to_string(),
                         "Toggle sort by date",
                     ),
                 ],
             ),
-            (
+            CommandGroup::new(
                 "Navigation Mode - Open external links",
                 vec![
-                    (
+                    Command::new(
                         story_view_keymap.open_article_in_browser.to_string(),
                         "Open in browser the link associated with the focused story",
                     ),
-                    (
+                    Command::new(
                         story_view_keymap.open_article_in_article_view.to_string(),
                         "Open in article view the link associated with the focused story",
                     ),
-                    (
+                    Command::new(
                         story_view_keymap.open_story_in_browser.to_string(),
                         "Open in browser the focused story",
                     ),
                 ],
             ),
-            view_navigation_key_shortcuts!((
-                story_view_keymap.goto_story_comment_view.to_string(),
-                "Go to the comment view associated with the focused story"
-            )),
-            other_key_shortcuts!(),
+            CommandGroup::new(
+                "View navigation",
+                [
+                    vec![Command::new(
+                        story_view_keymap.goto_story_comment_view.to_string(),
+                        "Go to the comment view associated with the focused story",
+                    )],
+                    default_view_navigation_commands(),
+                ]
+                .concat(),
+            ),
+            CommandGroup::new("Others", default_other_commands()),
         ])
     }
 }
@@ -442,36 +527,20 @@ impl HasHelpView for search_view::SearchView {
 impl HasHelpView for article_view::ArticleView {
     fn construct_help_view() -> HelpView {
         let article_view_keymap = config::get_article_view_keymap().clone();
-        HelpView::new().key_groups(vec![
-            (
-                "Navigation",
-                vec![
-                    (article_view_keymap.up.to_string(), "Scroll up"),
-                    (article_view_keymap.down.to_string(), "Scroll down"),
-                    (
-                        article_view_keymap.page_up.to_string(),
-                        "Scroll up half a page",
-                    ),
-                    (
-                        article_view_keymap.page_down.to_string(),
-                        "Scroll down half a page",
-                    ),
-                    (article_view_keymap.top.to_string(), "Scroll to top"),
-                    (article_view_keymap.bottom.to_string(), "Scroll to bottom"),
-                ],
-            ),
-            (
+        HelpView::new().command_groups(vec![
+            CommandGroup::new("Scrolling", default_scroll_commands()),
+            CommandGroup::new(
                 "Open external links",
                 vec![
-                    (
+                    Command::new(
                         article_view_keymap.open_article_in_browser.to_string(),
                         "Open article in browser",
                     ),
-                    (
+                    Command::new(
                         format!("{{link_id}} {}", article_view_keymap.open_link_in_browser),
                         "Open in browser {link_id}-th link",
                     ),
-                    (
+                    Command::new(
                         format!(
                             "{{link_id}} {}",
                             article_view_keymap.open_link_in_article_view
@@ -480,32 +549,33 @@ impl HasHelpView for article_view::ArticleView {
                     ),
                 ],
             ),
-            (
+            CommandGroup::new(
                 "Link dialog",
                 vec![
-                    (
+                    Command::new(
                         article_view_keymap.open_link_dialog.to_string(),
                         "Open link dialog",
                     ),
-                    (
+                    Command::new(
                         article_view_keymap.link_dialog_focus_next.to_string(),
                         "Focus next link",
                     ),
-                    (
+                    Command::new(
                         article_view_keymap.link_dialog_focus_prev.to_string(),
                         "Focus previous link",
                     ),
-                    (
+                    Command::new(
                         article_view_keymap.open_link_in_browser.to_string(),
                         "Open in browser the focused link",
                     ),
-                    (
+                    Command::new(
                         article_view_keymap.open_link_in_article_view.to_string(),
                         "Open in article view the focused link",
                     ),
                 ],
             ),
-            view_navigation_key_shortcuts!(),
+            CommandGroup::new("View navigation", default_view_navigation_commands()),
+            CommandGroup::new("Others", default_other_commands()),
         ])
     }
 }

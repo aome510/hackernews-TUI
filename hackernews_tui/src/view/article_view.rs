@@ -1,4 +1,5 @@
 use super::help_view::HasHelpView;
+use super::traits::*;
 use super::{async_view, text_view};
 use crate::prelude::*;
 
@@ -81,6 +82,18 @@ impl ArticleView {
     inner_getters!(self.view: ScrollView<LinearLayout>);
 }
 
+impl ScrollViewContainer for ArticleView {
+    type ScrollInner = LinearLayout;
+
+    fn get_inner_scroll_view(&self) -> &ScrollView<LinearLayout> {
+        self.get_inner()
+    }
+
+    fn get_inner_scroll_view_mut(&mut self) -> &mut ScrollView<LinearLayout> {
+        self.get_inner_mut()
+    }
+}
+
 /// Construct a help dialog from a list of URLs
 pub fn get_link_dialog(links: &[String]) -> impl View {
     let article_view_keymap = config::get_article_view_keymap().clone();
@@ -133,9 +146,6 @@ pub fn get_link_dialog(links: &[String]) -> impl View {
         .on_event(config::get_global_keymap().close_dialog.clone(), |s| {
             s.pop_layer();
         })
-        .on_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
-            s.add_layer(ArticleView::construct_help_view())
-        })
         .max_height(32)
         .max_width(64)
 }
@@ -164,32 +174,6 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
                 }
             };
             None
-        })
-        .on_pre_event_inner(article_view_keymap.down, |s, _| {
-            s.get_inner_mut().get_scroller_mut().scroll_down(3);
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(article_view_keymap.up, |s, _| {
-            s.get_inner_mut().get_scroller_mut().scroll_up(3);
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(article_view_keymap.page_down, |s, _| {
-            let height = s.get_inner().get_scroller().last_available_size().y;
-            s.get_inner_mut().get_scroller_mut().scroll_down(height / 2);
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(article_view_keymap.page_up, |s, _| {
-            let height = s.get_inner().get_scroller().last_available_size().y;
-            s.get_inner_mut().get_scroller_mut().scroll_up(height / 2);
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(article_view_keymap.top, |s, _| {
-            s.get_inner_mut().get_scroller_mut().scroll_to_top();
-            Some(EventResult::Consumed(None))
-        })
-        .on_pre_event_inner(article_view_keymap.bottom, |s, _| {
-            s.get_inner_mut().get_scroller_mut().scroll_to_bottom();
-            Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(article_view_keymap.open_link_dialog, |s, _| {
             Some(EventResult::with_cb({
@@ -228,6 +212,7 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
                 Err(_) => None,
             },
         )
+        .on_scroll_events()
 }
 
 /// Return a ArticleView constructed from a Article struct
@@ -250,7 +235,7 @@ pub fn get_article_view(article: client::Article) -> impl View {
             }
         })
         .on_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
-            s.add_layer(ArticleView::construct_help_view())
+            s.add_layer(ArticleView::construct_on_event_help_view())
         })
 }
 
