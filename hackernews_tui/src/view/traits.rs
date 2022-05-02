@@ -1,5 +1,6 @@
 use crate::prelude::*;
 
+/// A trait defines methods to interact with the inner `LinearLayout` list
 pub trait ListViewContainer {
     fn get_inner_list(&self) -> &LinearLayout;
     fn get_inner_list_mut(&mut self) -> &mut LinearLayout;
@@ -40,13 +41,18 @@ pub trait ListViewContainer {
     }
 }
 
+/// A trait defines a `ScrollView` container view.
+/// It defines methods to get the inner scroller view.
 pub trait ScrollViewContainer {
     type ScrollInner: View;
     fn get_inner_scroller_view(&self) -> &ScrollView<Self::ScrollInner>;
     fn get_inner_scroller_view_mut(&mut self) -> &mut ScrollView<Self::ScrollInner>;
 }
 
+/// A trait defines the `on_scroll_events` method that adds
+/// callbacks to handle scrolling events for the `self` View.
 pub trait OnScrollEventView {
+    /// adds callbacks handling scrolling events
     fn on_scroll_events(self) -> Self;
 }
 
@@ -57,12 +63,12 @@ where
     fn on_scroll_events(self) -> Self {
         let scroll_keymap = config::get_scroll_keymap().clone();
 
-        // Scrolling events are handled using the `on_event_inner` callback,
-        // which is triggered only the event is not handled by any of the children view
-        // or any `pre_on_event_inner` callbacks.
+        // Scrolling events are handled using the `on_event_inner` callbacks,
+        // which is triggered when the event is not handled by neither the children view
+        // nor the `self` view's `pre_on_event_inner` callbacks.
         //
         // The `on_scroll_events` is often placed at the end of an `OnEventView` construction
-        // after specifying all `pre_event` handler callbacks.
+        // after specifying all `on_pre_event` callbacks.
         self.on_event_inner(scroll_keymap.up, |s, _| {
             s.get_inner_scroller_view_mut()
                 .get_scroller_mut()
@@ -108,7 +114,13 @@ where
     }
 }
 
+/// A trait defines the `scroll` method that scrolls the `self` view to
+/// the inner view's important area.
+///
+/// This trait should be only implemented for a view that satisfies the `ScrollViewContainer` trait
+/// or any traits that give access to the inner `ScrollView` of the `self` view.
 pub trait AutoScrolling {
+    /// scrolls to the inner view's important area
     fn scroll(&mut self, direction: bool);
 }
 
