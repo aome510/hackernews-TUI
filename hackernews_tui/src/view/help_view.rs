@@ -180,54 +180,58 @@ impl HasHelpView for DefaultHelpView {
 }
 
 fn default_other_commands() -> Vec<Command> {
+    let global_keymap = config::get_global_keymap();
     vec![
         Command::new(
-            config::get_global_keymap().open_help_dialog.to_string(),
+            global_keymap.open_help_dialog.to_string(),
             "Open the help dialog",
         ),
-        Command::new(
-            config::get_global_keymap().quit.to_string(),
-            "Quit the application",
-        ),
-        Command::new(
-            config::get_global_keymap().close_dialog.to_string(),
-            "Close a dialog",
-        ),
+        Command::new(global_keymap.quit.to_string(), "Quit the application"),
+        Command::new(global_keymap.close_dialog.to_string(), "Close a dialog"),
     ]
 }
 
 fn default_view_navigation_commands() -> Vec<Command> {
+    let global_keymap = config::get_global_keymap();
     vec![
         Command::new(
-            config::get_global_keymap().goto_previous_view.to_string(),
+            global_keymap.goto_previous_view.to_string(),
             "Go to the previous view",
         ),
         Command::new(
-            config::get_global_keymap().goto_search_view.to_string(),
+            global_keymap.goto_search_view.to_string(),
             "Go to search view",
         ),
         Command::new(
-            config::get_global_keymap().goto_front_page_view.to_string(),
+            global_keymap.goto_front_page_view.to_string(),
             "Go to front page view",
         ),
         Command::new(
-            config::get_global_keymap()
-                .goto_all_stories_view
-                .to_string(),
+            global_keymap.goto_all_stories_view.to_string(),
             "Go to all stories view",
         ),
         Command::new(
-            config::get_global_keymap().goto_ask_hn_view.to_string(),
+            global_keymap.goto_ask_hn_view.to_string(),
             "Go to ask HN view",
         ),
         Command::new(
-            config::get_global_keymap().goto_show_hn_view.to_string(),
+            global_keymap.goto_show_hn_view.to_string(),
             "Go to show HN view",
         ),
-        Command::new(
-            config::get_global_keymap().goto_jobs_view.to_string(),
-            "Go to jobs view",
-        ),
+        Command::new(global_keymap.goto_jobs_view.to_string(), "Go to jobs view"),
+    ]
+}
+
+fn default_scroll_commands() -> Vec<Command> {
+    let scroll_keymap = config::get_scroll_keymap();
+
+    vec![
+        Command::new(scroll_keymap.up.to_string(), "Scroll up"),
+        Command::new(scroll_keymap.down.to_string(), "Scroll down"),
+        Command::new(scroll_keymap.page_up.to_string(), "Scroll page up"),
+        Command::new(scroll_keymap.page_down.to_string(), "Scroll page down"),
+        Command::new(scroll_keymap.top.to_string(), "Scroll to top"),
+        Command::new(scroll_keymap.bottom.to_string(), "Scroll to bottom"),
     ]
 }
 
@@ -416,6 +420,7 @@ impl HasHelpView for comment_view::CommentView {
                     ),
                 ],
             ),
+            CommandGroup::new("Scrolling", default_scroll_commands()),
             CommandGroup::new("View navigation", default_view_navigation_commands()),
             CommandGroup::new(
                 "Others",
@@ -522,6 +527,7 @@ impl HasHelpView for article_view::ArticleView {
     fn construct_help_view() -> HelpView {
         let article_view_keymap = config::get_article_view_keymap().clone();
         HelpView::new().command_groups(vec![
+            CommandGroup::new("Scrolling", default_scroll_commands()),
             CommandGroup::new(
                 "Open external links",
                 vec![
