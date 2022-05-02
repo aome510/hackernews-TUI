@@ -548,31 +548,6 @@ impl HasHelpView for article_view::ArticleView {
                     ),
                 ],
             ),
-            CommandGroup::new(
-                "Link dialog",
-                vec![
-                    Command::new(
-                        article_view_keymap.open_link_dialog.to_string(),
-                        "Open link dialog",
-                    ),
-                    Command::new(
-                        article_view_keymap.link_dialog_focus_next.to_string(),
-                        "Focus next link",
-                    ),
-                    Command::new(
-                        article_view_keymap.link_dialog_focus_prev.to_string(),
-                        "Focus previous link",
-                    ),
-                    Command::new(
-                        article_view_keymap.open_link_in_browser.to_string(),
-                        "Open in browser the focused link",
-                    ),
-                    Command::new(
-                        article_view_keymap.open_link_in_article_view.to_string(),
-                        "Open in article view the focused link",
-                    ),
-                ],
-            ),
             CommandGroup::new("View navigation", default_view_navigation_commands()),
             CommandGroup::new("Others", default_other_commands()),
         ])
