@@ -175,6 +175,14 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
             };
             None
         })
+        .on_pre_event_inner(article_view_keymap.open_link_dialog, |s, _| {
+            Some(EventResult::with_cb({
+                let links = s.article.links.clone();
+                move |s| {
+                    s.add_layer(get_link_dialog(&links));
+                }
+            }))
+        })
         .on_pre_event_inner(article_view_keymap.open_link_in_browser, |s, _| {
             match s.raw_command.parse::<usize>() {
                 Ok(num) => {
