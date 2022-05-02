@@ -1,10 +1,6 @@
-use super::help_view::HasHelpView;
-use super::text_view;
-use super::traits::*;
-use super::{article_view, async_view};
+use super::{article_view, async_view, help_view::HasHelpView, text_view, traits::*, utils};
 use crate::prelude::*;
-use crate::view::text_view::StyledPaddingChar;
-use crate::view::text_view::TextPadding;
+use crate::view::text_view::{StyledPaddingChar, TextPadding};
 
 type CommentComponent = HideableView<PaddedView<text_view::TextView>>;
 

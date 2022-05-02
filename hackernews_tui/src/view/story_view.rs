@@ -1,9 +1,6 @@
-use super::article_view;
-use super::async_view;
-use super::comment_view;
-use super::help_view::HasHelpView;
-use super::text_view;
-use super::traits::*;
+use super::{
+    article_view, async_view, comment_view, help_view::HasHelpView, text_view, traits::*, utils,
+};
 use crate::client::StoryNumericFilters;
 use crate::prelude::*;
 
@@ -76,7 +73,7 @@ impl StoryView {
                 " ",
                 story.points,
                 story.author,
-                utils::get_elapsed_time_as_text(story.time),
+                crate::utils::get_elapsed_time_as_text(story.time),
                 story.num_comments,
                 width = max_id_width + 2,
             ),

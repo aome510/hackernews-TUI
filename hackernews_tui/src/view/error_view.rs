@@ -1,5 +1,5 @@
 use super::fn_view_wrapper::*;
-use super::help_view;
+use super::{help_view, utils};
 use crate::{impl_view_for_fn_wrapper, prelude::*};
 
 /// Return an ErrorView given an error

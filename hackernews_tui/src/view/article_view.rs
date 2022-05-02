@@ -1,6 +1,4 @@
-use super::help_view::HasHelpView;
-use super::traits::*;
-use super::{async_view, text_view};
+use super::{async_view, help_view::HasHelpView, text_view, traits::*, utils};
 use crate::prelude::*;
 
 /// ArticleView is a View used to display the content of a web page in reader mode
@@ -102,7 +100,7 @@ pub fn get_link_dialog(links: &[String]) -> impl View {
         links.iter().enumerate().for_each(|(id, link)| {
             let mut link_styled_string = StyledString::plain(format!("{}. ", id + 1));
             link_styled_string.append_styled(
-                utils::shorten_url(link),
+                crate::utils::shorten_url(link),
                 config::get_config_theme().component_style.link,
             );
             v.add_child(text_view::TextView::new(link_styled_string));

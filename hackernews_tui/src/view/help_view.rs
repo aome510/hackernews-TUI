@@ -1,6 +1,5 @@
-use crate::prelude::*;
-
 use super::{article_view, comment_view, search_view, story_view, traits::*};
+use crate::prelude::*;
 
 type HelpViewContent = ScrollView<LinearLayout>;
 
