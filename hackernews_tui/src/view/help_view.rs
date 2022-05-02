@@ -323,6 +323,7 @@ impl HasHelpView for story_view::StoryView {
         }
 
         help_view.command_groups(vec![
+            CommandGroup::new("Scrolling", default_scroll_commands()),
             CommandGroup::new(
                 "View navigation",
                 [

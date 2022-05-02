@@ -142,7 +142,10 @@ pub fn get_story_main_view(
                     }
                 }
             };
-            None
+
+            // don't allow the inner `LinearLayout` child view to handle the event
+            // because of its pre-defined `on_event` function
+            Some(EventResult::Ignored)
         })
         // story navigation shortcuts
         .on_pre_event_inner(story_view_keymap.prev_story, |s, _| {
@@ -210,6 +213,7 @@ pub fn get_story_main_view(
                 Err(_) => None,
             }
         })
+        .on_scroll_events()
 }
 
 fn get_story_view_title_bar(tag: &'static str) -> impl View {

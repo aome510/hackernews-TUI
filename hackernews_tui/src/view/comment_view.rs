@@ -265,7 +265,10 @@ fn get_comment_main_view(
                     }
                 }
             };
-            None
+
+            // don't allow the inner `LinearLayout` child view to handle the event
+            // because of its pre-defined `on_event` function
+            Some(EventResult::Ignored)
         })
         // comment navigation shortcuts
         .on_pre_event_inner(comment_view_keymap.prev_comment, |s, _| {
