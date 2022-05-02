@@ -122,21 +122,11 @@ pub fn get_link_dialog(links: &[String]) -> impl View {
     })
     .on_pre_event_inner(article_view_keymap.open_link_in_browser, {
         let links = links.to_owned();
-        move |s, _| {
-            let focus_id = s.get_focus_index();
-            utils::open_url_in_browser(&links[focus_id]);
-            Some(EventResult::Consumed(None))
-        }
+        move |s, _| utils::open_ith_link_in_browser(&links, s.get_focus_index())
     })
     .on_pre_event_inner(article_view_keymap.open_link_in_article_view, {
         let links = links.to_owned();
-        move |s, _| {
-            let focus_id = s.get_focus_index();
-            let url = links[focus_id].clone();
-            Some(EventResult::with_cb({
-                move |s| add_article_view_layer(s, &url)
-            }))
-        }
+        move |s, _| utils::open_ith_link_in_article_view(&links, s.get_focus_index())
     })
     .scrollable();
 
@@ -185,10 +175,7 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
             match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    if num > 0 && num <= s.article.links.len() {
-                        utils::open_url_in_browser(&s.article.links[num - 1]);
-                    }
-                    Some(EventResult::Consumed(None))
+                    utils::open_ith_link_in_browser(&s.article.links, num)
                 }
                 Err(_) => None,
             }
@@ -198,14 +185,7 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
             |s, _| match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    if num > 0 && num <= s.article.links.len() {
-                        let url = s.article.links[num - 1].clone();
-                        Some(EventResult::with_cb({
-                            move |s| add_article_view_layer(s, &url)
-                        }))
-                    } else {
-                        Some(EventResult::Consumed(None))
-                    }
+                    utils::open_ith_link_in_article_view(&s.article.links, num)
                 }
                 Err(_) => None,
             },

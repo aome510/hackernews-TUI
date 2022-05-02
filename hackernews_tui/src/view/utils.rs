@@ -1,4 +1,4 @@
-use super::help_view;
+use super::{article_view, help_view};
 use crate::prelude::*;
 
 /// Construct a simple footer view
@@ -40,7 +40,7 @@ pub fn construct_view_title_bar(desc: &str) -> impl View {
     )
 }
 
-/// open a given url using a specific command
+/// Open a given url using a specific command
 pub fn open_url_in_browser(url: &str) {
     if url.is_empty() {
         return;
@@ -70,4 +70,24 @@ pub fn open_url_in_browser(url: &str) {
             }
         }
     });
+}
+
+pub fn open_ith_link_in_article_view(links: &[String], i: usize) -> Option<EventResult> {
+    if i > 0 && i <= links.len() {
+        let url = links[i - 1].clone();
+        Some(EventResult::with_cb({
+            move |s| article_view::add_article_view_layer(s, &url)
+        }))
+    } else {
+        Some(EventResult::Consumed(None))
+    }
+}
+
+pub fn open_ith_link_in_browser(links: &[String], i: usize) -> Option<EventResult> {
+    if i > 0 && i <= links.len() {
+        open_url_in_browser(&links[i - 1]);
+        Some(EventResult::Consumed(None))
+    } else {
+        Some(EventResult::Consumed(None))
+    }
 }

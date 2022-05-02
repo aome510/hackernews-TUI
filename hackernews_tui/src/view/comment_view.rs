@@ -308,13 +308,7 @@ fn get_comment_main_view(
             match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    let id = s.get_focus_index();
-                    if num > 0 && num <= s.comments[id].links.len() {
-                        utils::open_url_in_browser(&s.comments[id].links[num - 1]);
-                        Some(EventResult::Consumed(None))
-                    } else {
-                        Some(EventResult::Consumed(None))
-                    }
+                    utils::open_ith_link_in_browser(&s.comments[s.get_focus_index()].links, num)
                 }
                 Err(_) => None,
             }
@@ -324,15 +318,10 @@ fn get_comment_main_view(
             |s, _| match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    let id = s.get_focus_index();
-                    if num > 0 && num <= s.comments[id].links.len() {
-                        let url = s.comments[id].links[num - 1].clone();
-                        Some(EventResult::with_cb({
-                            move |s| article_view::add_article_view_layer(s, &url)
-                        }))
-                    } else {
-                        Some(EventResult::Consumed(None))
-                    }
+                    utils::open_ith_link_in_article_view(
+                        &s.comments[s.get_focus_index()].links,
+                        num,
+                    )
                 }
                 Err(_) => None,
             },
