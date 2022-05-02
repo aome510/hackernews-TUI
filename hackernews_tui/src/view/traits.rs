@@ -1,6 +1,7 @@
 use crate::prelude::*;
 
-/// A trait defines methods to interact with the inner `LinearLayout` list
+/// A trait represents a list view container.
+/// It defines methods to interact with the inner `LinearLayout` list
 pub trait ListViewContainer {
     fn get_inner_list(&self) -> &LinearLayout;
     fn get_inner_list_mut(&mut self) -> &mut LinearLayout;
@@ -41,7 +42,7 @@ pub trait ListViewContainer {
     }
 }
 
-/// A trait defines a `ScrollView` container view.
+/// A trait represents a scroll view container.
 /// It defines methods to get the inner scroller view.
 pub trait ScrollViewContainer {
     type ScrollInner: View;
