@@ -96,6 +96,13 @@ impl ListViewContainer for StoryView {
     fn get_inner_list_mut(&mut self) -> &mut LinearLayout {
         self.get_inner_mut().get_inner_mut()
     }
+
+    fn on_set_focus_index(&mut self, old_id: usize, new_id: usize) {
+        let direction = old_id <= new_id;
+
+        // enable auto-scrolling when changing the focused index of the view
+        self.scroll(direction);
+    }
 }
 
 impl ScrollViewContainer for StoryView {

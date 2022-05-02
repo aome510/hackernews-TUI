@@ -84,8 +84,12 @@ impl CommentView {
         });
         self.comments.append(&mut new_comments);
 
-        // TODO: handle this
-        // self.layout(self.get_scroller().last_outer_size())
+        // update the view's layout
+        self.layout(
+            self.get_inner_scroller_view()
+                .get_scroller()
+                .last_outer_size(),
+        )
     }
 
     /// Return the id of the first comment (`direction` dependent)
@@ -211,6 +215,13 @@ impl ListViewContainer for CommentView {
 
     fn get_inner_list_mut(&mut self) -> &mut LinearLayout {
         self.get_inner_mut().get_inner_mut()
+    }
+
+    fn on_set_focus_index(&mut self, old_id: usize, new_id: usize) {
+        let direction = old_id <= new_id;
+
+        // enable auto-scrolling when changing the focused index of the view
+        self.scroll(direction);
     }
 }
 
