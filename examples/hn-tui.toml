@@ -79,6 +79,14 @@ move_cursor_to_begin = ["home", "C-a"]
 move_cursor_to_end = ["end", "C-e"]
 backward_delete_char = "backspace"
 
+[keymap.scroll_keymap]
+up = ["up", "k"]
+down = ["down", "j"]
+page_up = ["page_up", "u"]
+page_down = ["page_down", "d"]
+top = ["home", "g"]
+bottom = ["end", "G"]
+
 [keymap.story_view_keymap]
 next_story = "j"
 prev_story = "k"
@@ -105,24 +113,13 @@ prev_top_level_comment = "p"
 next_leq_level_comment = "l"
 prev_leq_level_comment = "h"
 parent_comment = "u"
-down = "down"
-up = "up"
-page_down = "page_down"
-page_up = "page_up"
 open_comment_in_browser = "c"
 open_link_in_browser = "f"
 open_link_in_article_view = "F"
 toggle_collapse_comment = "tab"
 
 [keymap.article_view_keymap]
-down = "j"
-up = "k"
-page_down = "d"
-page_up = "u"
-top = "g"
-bottom = "G"
 open_story_in_browser = "s"
-open_article_in_browser = "o"
 open_article_in_browser = "o"
 open_article_in_article_view = "O"
 open_link_in_browser = "f"
