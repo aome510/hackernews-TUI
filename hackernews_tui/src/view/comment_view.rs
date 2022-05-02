@@ -86,7 +86,7 @@ impl CommentView {
 
         // update the view's layout
         self.layout(
-            self.get_inner_scroller_view()
+            self.get_inner_scroll_view()
                 .get_scroller()
                 .last_outer_size(),
         )
@@ -228,11 +228,11 @@ impl ListViewContainer for CommentView {
 impl ScrollViewContainer for CommentView {
     type ScrollInner = LinearLayout;
 
-    fn get_inner_scroller_view(&self) -> &ScrollView<LinearLayout> {
+    fn get_inner_scroll_view(&self) -> &ScrollView<LinearLayout> {
         self.get_inner()
     }
 
-    fn get_inner_scroller_view_mut(&mut self) -> &mut ScrollView<LinearLayout> {
+    fn get_inner_scroll_view_mut(&mut self) -> &mut ScrollView<LinearLayout> {
         self.get_inner_mut()
     }
 }

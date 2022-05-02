@@ -146,11 +146,11 @@ impl ViewWrapper for HelpView {
 impl ScrollViewContainer for HelpView {
     type ScrollInner = LinearLayout;
 
-    fn get_inner_scroller_view(&self) -> &ScrollView<LinearLayout> {
+    fn get_inner_scroll_view(&self) -> &ScrollView<LinearLayout> {
         self.content()
     }
 
-    fn get_inner_scroller_view_mut(&mut self) -> &mut ScrollView<LinearLayout> {
+    fn get_inner_scroll_view_mut(&mut self) -> &mut ScrollView<LinearLayout> {
         self.content_mut()
     }
 }

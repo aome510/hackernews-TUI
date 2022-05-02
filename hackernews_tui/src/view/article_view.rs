@@ -85,11 +85,11 @@ impl ArticleView {
 impl ScrollViewContainer for ArticleView {
     type ScrollInner = LinearLayout;
 
-    fn get_inner_scroller_view(&self) -> &ScrollView<LinearLayout> {
+    fn get_inner_scroll_view(&self) -> &ScrollView<LinearLayout> {
         self.get_inner()
     }
 
-    fn get_inner_scroller_view_mut(&mut self) -> &mut ScrollView<LinearLayout> {
+    fn get_inner_scroll_view_mut(&mut self) -> &mut ScrollView<LinearLayout> {
         self.get_inner_mut()
     }
 }

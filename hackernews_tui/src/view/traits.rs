@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 /// A trait represents a list view container.
-/// It defines methods to interact with the inner `LinearLayout` list
+/// It defines methods to interact with the inner list view.
 pub trait ListViewContainer {
     fn get_inner_list(&self) -> &LinearLayout;
     fn get_inner_list_mut(&mut self) -> &mut LinearLayout;
@@ -43,11 +43,11 @@ pub trait ListViewContainer {
 }
 
 /// A trait represents a scroll view container.
-/// It defines methods to get the inner scroller view.
+/// It defines methods to get the inner scroll view.
 pub trait ScrollViewContainer {
     type ScrollInner: View;
-    fn get_inner_scroller_view(&self) -> &ScrollView<Self::ScrollInner>;
-    fn get_inner_scroller_view_mut(&mut self) -> &mut ScrollView<Self::ScrollInner>;
+    fn get_inner_scroll_view(&self) -> &ScrollView<Self::ScrollInner>;
+    fn get_inner_scroll_view_mut(&mut self) -> &mut ScrollView<Self::ScrollInner>;
 }
 
 /// A trait defines the `on_scroll_events` method that adds
@@ -71,45 +71,45 @@ where
         // The `on_scroll_events` is often placed at the end of an `OnEventView` construction
         // after specifying all `on_pre_event` callbacks.
         self.on_event_inner(scroll_keymap.up, |s, _| {
-            s.get_inner_scroller_view_mut()
+            s.get_inner_scroll_view_mut()
                 .get_scroller_mut()
                 .scroll_up(3);
             Some(EventResult::Consumed(None))
         })
         .on_event_inner(scroll_keymap.down, |s, _| {
-            s.get_inner_scroller_view_mut()
+            s.get_inner_scroll_view_mut()
                 .get_scroller_mut()
                 .scroll_down(3);
             Some(EventResult::Consumed(None))
         })
         .on_event_inner(scroll_keymap.page_up, |s, _| {
             let height = s
-                .get_inner_scroller_view()
+                .get_inner_scroll_view()
                 .get_scroller()
                 .last_available_size()
                 .y;
-            s.get_inner_scroller_view_mut()
+            s.get_inner_scroll_view_mut()
                 .get_scroller_mut()
                 .scroll_up(height / 2);
             Some(EventResult::Consumed(None))
         })
         .on_event_inner(scroll_keymap.page_down, |s, _| {
             let height = s
-                .get_inner_scroller_view()
+                .get_inner_scroll_view()
                 .get_scroller()
                 .last_available_size()
                 .y;
-            s.get_inner_scroller_view_mut()
+            s.get_inner_scroll_view_mut()
                 .get_scroller_mut()
                 .scroll_down(height / 2);
             Some(EventResult::Consumed(None))
         })
         .on_event_inner(scroll_keymap.top, |s, _| {
-            s.get_inner_scroller_view_mut().scroll_to_top();
+            s.get_inner_scroll_view_mut().scroll_to_top();
             Some(EventResult::Consumed(None))
         })
         .on_event_inner(scroll_keymap.bottom, |s, _| {
-            s.get_inner_scroller_view_mut().scroll_to_bottom();
+            s.get_inner_scroll_view_mut().scroll_to_bottom();
             Some(EventResult::Consumed(None))
         })
     }
@@ -132,17 +132,16 @@ where
     fn scroll(&mut self, direction: bool) {
         {
             if !config::get_config().use_page_scrolling {
-                self.get_inner_scroller_view_mut()
-                    .scroll_to_important_area();
+                self.get_inner_scroll_view_mut().scroll_to_important_area();
                 return;
             }
 
-            let important_area = self.get_inner_scroller_view().get_inner().important_area(
-                self.get_inner_scroller_view()
+            let important_area = self.get_inner_scroll_view().get_inner().important_area(
+                self.get_inner_scroll_view()
                     .get_scroller()
                     .last_outer_size(),
             );
-            let scroller = self.get_inner_scroller_view_mut().get_scroller_mut();
+            let scroller = self.get_inner_scroll_view_mut().get_scroller_mut();
 
             // the below implementation is based on `scroll_to_rect` function
             // defined in `Cursive::view::scroll::core.rs`.
