@@ -1,11 +1,8 @@
 use crate::prelude::*;
 
-use super::{
-    article_view, comment_view, search_view, story_view,
-    traits::{OnScrollEventView, ScrollViewContainer},
-};
+use super::{article_view, comment_view, search_view, story_view, traits::*};
 
-type CommandGroupsView = ScrollView<LinearLayout>;
+type HelpViewContent = ScrollView<LinearLayout>;
 
 /// A help item used to describe a command and its keybindings
 #[derive(Clone)]
@@ -111,13 +108,23 @@ impl HelpView {
         }
     }
 
+    pub fn content(&self) -> &HelpViewContent {
+        self.view
+            .get_content()
+            .downcast_ref::<HelpViewContent>()
+            .expect("the help dialog's content should have `HelpViewContent` type")
+    }
+
+    pub fn content_mut(&mut self) -> &mut HelpViewContent {
+        self.view
+            .get_content_mut()
+            .downcast_mut::<HelpViewContent>()
+            .expect("the help dialog's content should have `HelpViewContent` type")
+    }
+
     /// constructs a new help view from the current one by appending new key groups
     pub fn command_groups(mut self, groups: Vec<CommandGroup>) -> Self {
-        let content = self
-            .view
-            .get_content_mut()
-            .downcast_mut::<CommandGroupsView>()
-            .expect("the dialog's content should be a `CommandGroupsView`");
+        let content = self.content_mut();
 
         for group in groups {
             content.get_inner_mut().add_child(group.to_group_view());
@@ -140,17 +147,11 @@ impl ScrollViewContainer for HelpView {
     type ScrollInner = LinearLayout;
 
     fn get_inner_scroller_view(&self) -> &ScrollView<LinearLayout> {
-        self.view
-            .get_content()
-            .downcast_ref::<CommandGroupsView>()
-            .expect("the dialog's content should be a `CommandGroupsView`")
+        self.content()
     }
 
     fn get_inner_scroller_view_mut(&mut self) -> &mut ScrollView<LinearLayout> {
-        self.view
-            .get_content_mut()
-            .downcast_mut::<CommandGroupsView>()
-            .expect("the dialog's content should be a `CommandGroupsView`")
+        self.content_mut()
     }
 }
 
