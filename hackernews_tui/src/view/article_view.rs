@@ -1,4 +1,4 @@
-use super::{async_view, help_view::HasHelpView, text_view, traits::*, utils};
+use super::{async_view, help_view::HasHelpView, link_dialog, traits::*, utils};
 use crate::prelude::*;
 
 /// ArticleView is a View used to display the content of a web page in reader mode
@@ -92,52 +92,6 @@ impl ScrollViewContainer for ArticleView {
     }
 }
 
-/// Construct a help dialog from a list of URLs
-pub fn get_link_dialog(links: &[String]) -> impl View {
-    let article_view_keymap = config::get_article_view_keymap().clone();
-
-    let links_view = OnEventView::new(LinearLayout::vertical().with(|v| {
-        links.iter().enumerate().for_each(|(id, link)| {
-            let mut link_styled_string = StyledString::plain(format!("{}. ", id + 1));
-            link_styled_string.append_styled(
-                crate::utils::shorten_url(link),
-                config::get_config_theme().component_style.link,
-            );
-            v.add_child(text_view::TextView::new(link_styled_string));
-        })
-    }))
-    .on_pre_event_inner(article_view_keymap.link_dialog_focus_next, |s, _| {
-        let focus_id = s.get_focus_index();
-        s.set_focus_index(focus_id + 1)
-            .unwrap_or(EventResult::Consumed(None));
-        Some(EventResult::Consumed(None))
-    })
-    .on_pre_event_inner(article_view_keymap.link_dialog_focus_prev, |s, _| {
-        let focus_id = s.get_focus_index();
-        if focus_id > 0 {
-            s.set_focus_index(focus_id - 1)
-                .unwrap_or(EventResult::Consumed(None));
-        }
-        Some(EventResult::Consumed(None))
-    })
-    .on_pre_event_inner(article_view_keymap.open_link_in_browser, {
-        let links = links.to_owned();
-        move |s, _| utils::open_ith_link_in_browser(&links, s.get_focus_index())
-    })
-    .on_pre_event_inner(article_view_keymap.open_link_in_article_view, {
-        let links = links.to_owned();
-        move |s, _| utils::open_ith_link_in_article_view(&links, s.get_focus_index())
-    })
-    .scrollable();
-
-    OnEventView::new(Dialog::around(links_view).title("Link Dialog"))
-        .on_event(config::get_global_keymap().close_dialog.clone(), |s| {
-            s.pop_layer();
-        })
-        .max_height(32)
-        .max_width(64)
-}
-
 /// Return a main view of a ArticleView displaying an article in reader mode.
 /// The main view of a ArticleView is a View without status bar or footer.
 pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleView> {
@@ -167,7 +121,7 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
             Some(EventResult::with_cb({
                 let links = s.article.links.clone();
                 move |s| {
-                    s.add_layer(get_link_dialog(&links));
+                    s.add_layer(link_dialog::get_link_dialog(&links));
                 }
             }))
         })
