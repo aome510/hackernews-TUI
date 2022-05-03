@@ -114,19 +114,18 @@ next_leq_level_comment = "l"
 prev_leq_level_comment = "h"
 parent_comment = "u"
 open_comment_in_browser = "c"
-open_link_in_browser = "f"
-open_link_in_article_view = "F"
+open_story_in_browser = "s"
+open_article_in_browser = "a"
+open_article_in_article_view = "A"
+open_link_in_browser = "o"
+open_link_in_article_view = "O"
 toggle_collapse_comment = "tab"
 
 [keymap.article_view_keymap]
-open_story_in_browser = "s"
-open_article_in_browser = "o"
-open_article_in_article_view = "O"
-open_link_in_browser = "f"
-open_link_in_article_view = "F"
+open_article_in_browser = "a"
+open_link_in_browser = "o"
+open_link_in_article_view = "O"
 open_link_dialog = "l"
-link_dialog_focus_next = "j"
-link_dialog_focus_prev = "k"
 
 # ---------------------
 # custom keymap

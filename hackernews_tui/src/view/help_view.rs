@@ -456,7 +456,7 @@ impl HasHelpView for search_view::SearchView {
                 ],
             ),
             CommandGroup::new(
-                "Navigation Mode - Navigation",
+                "Navigation Mode - Story navigation",
                 vec![
                     Command::new(
                         story_view_keymap.next_story.to_string(),
