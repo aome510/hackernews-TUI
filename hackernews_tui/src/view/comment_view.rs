@@ -335,7 +335,7 @@ fn get_comment_main_view(story: &client::Story, receiver: client::CommentReceive
             Some(EventResult::Consumed(None))
         })
         .on_pre_event(comment_view_keymap.open_article_in_browser, {
-            let url = story.url.clone();
+            let url = story.get_url().into_owned();
             move |_| {
                 utils::open_url_in_browser(&url);
             }

@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use crate::prelude::*;
 use crate::utils;
 use lazy_static::lazy_static;
@@ -170,6 +172,18 @@ pub struct Article {
     pub parsed_content: StyledString,
     #[serde(skip)]
     pub links: Vec<String>,
+}
+
+impl Story {
+    /// get the story's article URL.
+    /// If the article URL is empty (in case of "AskHN" stories), fallback to the HN story's URL
+    pub fn get_url(&self) -> Cow<str> {
+        if self.url.is_empty() {
+            Cow::from(format!("{}/item?id={}", client::HN_HOST_URL, self.id))
+        } else {
+            Cow::from(&self.url)
+        }
+    }
 }
 
 impl From<StoriesResponse> for Vec<Story> {

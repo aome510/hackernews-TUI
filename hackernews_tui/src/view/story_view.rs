@@ -169,7 +169,7 @@ pub fn get_story_main_view(
         // open external link shortcuts
         .on_pre_event_inner(story_view_keymap.open_article_in_browser, move |s, _| {
             let id = s.get_focus_index();
-            utils::open_url_in_browser(&s.stories[id].url);
+            utils::open_url_in_browser(s.stories[id].get_url().as_ref());
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(
