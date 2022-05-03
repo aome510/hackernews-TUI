@@ -1,4 +1,4 @@
-use super::{article_view, comment_view, search_view, story_view, traits::*};
+use super::{article_view, comment_view, link_dialog, search_view, story_view, traits::*};
 use crate::prelude::*;
 
 type HelpViewContent = ScrollView<LinearLayout>;
@@ -162,6 +162,8 @@ pub trait HasHelpView {
             .on_pre_event(config::get_global_keymap().close_dialog.clone(), |s| {
                 s.pop_layer();
             })
+            // ignore the `open_help_dialog` to avoid multiple help views stacked on each other
+            .on_pre_event(config::get_global_keymap().open_help_dialog.clone(), |_| {})
             .on_scroll_events()
     }
 }
@@ -548,6 +550,36 @@ impl HasHelpView for article_view::ArticleView {
                     Command::new(
                         article_view_keymap.open_link_dialog.to_string(),
                         "Open a link dialog",
+                    ),
+                ],
+            ),
+            CommandGroup::new("View navigation", default_view_navigation_commands()),
+            CommandGroup::new("Others", default_other_commands()),
+        ])
+    }
+}
+
+impl HasHelpView for link_dialog::LinkDialog {
+    fn construct_help_view() -> HelpView {
+        let link_dialog_keymap = config::get_link_dialog_keymap().clone();
+        HelpView::new().command_groups(vec![
+            CommandGroup::new(
+                "Link navigation",
+                vec![
+                    Command::new(link_dialog_keymap.next.to_string(), "Focus next"),
+                    Command::new(link_dialog_keymap.prev.to_string(), "Focus prev"),
+                ],
+            ),
+            CommandGroup::new(
+                "Links",
+                vec![
+                    Command::new(
+                        link_dialog_keymap.open_link_in_browser.to_string(),
+                        "Open in browser the focused link",
+                    ),
+                    Command::new(
+                        link_dialog_keymap.open_link_in_article_view.to_string(),
+                        "Open in article view the focused link",
                     ),
                 ],
             ),

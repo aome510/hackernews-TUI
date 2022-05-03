@@ -1,4 +1,4 @@
-use super::{text_view, utils};
+use super::{help_view::HasHelpView, text_view, utils};
 use crate::prelude::*;
 
 type LinkDialogContent = ScrollView<LinearLayout>;
@@ -91,6 +91,9 @@ pub fn get_link_dialog(links: &[String]) -> impl View {
         })
         .on_pre_event(config::get_global_keymap().close_dialog.clone(), |s| {
             s.pop_layer();
+        })
+        .on_pre_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
+            s.add_layer(LinkDialog::construct_on_event_help_view())
         })
         .max_height(32)
         .max_width(64)
