@@ -159,7 +159,7 @@ pub trait HasHelpView {
 
     fn construct_on_event_help_view() -> OnEventView<HelpView> {
         OnEventView::new(Self::construct_help_view())
-            .on_event(config::get_global_keymap().close_dialog.clone(), |s| {
+            .on_pre_event(config::get_global_keymap().close_dialog.clone(), |s| {
                 s.pop_layer();
             })
             .on_scroll_events()

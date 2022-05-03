@@ -276,7 +276,7 @@ pub fn get_story_view(
         .on_pre_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
             s.add_layer(StoryView::construct_on_event_help_view())
         })
-        .on_event(story_view_keymap.toggle_sort_by_date, move |s| {
+        .on_pre_event(story_view_keymap.toggle_sort_by_date, move |s| {
             // disable "search_by_date" for front_page stories
             if tag == "front_page" {
                 return;
@@ -284,7 +284,7 @@ pub fn get_story_view(
             add_story_view_layer(s, client, tag, !by_date, 0, numeric_filters, true);
         })
         // story tag navigation
-        .on_event(story_view_keymap.next_story_tag, move |s| {
+        .on_pre_event(story_view_keymap.next_story_tag, move |s| {
             add_story_view_layer(
                 s,
                 client,
@@ -295,7 +295,7 @@ pub fn get_story_view(
                 false,
             );
         })
-        .on_event(story_view_keymap.prev_story_tag, move |s| {
+        .on_pre_event(story_view_keymap.prev_story_tag, move |s| {
             add_story_view_layer(
                 s,
                 client,
@@ -307,12 +307,12 @@ pub fn get_story_view(
             );
         })
         // paging
-        .on_event(story_view_keymap.prev_page, move |s| {
+        .on_pre_event(story_view_keymap.prev_page, move |s| {
             if page > 0 {
                 add_story_view_layer(s, client, tag, by_date, page - 1, numeric_filters, true);
             }
         })
-        .on_event(story_view_keymap.next_page, move |s| {
+        .on_pre_event(story_view_keymap.next_page, move |s| {
             add_story_view_layer(s, client, tag, by_date, page + 1, numeric_filters, true);
         })
 }

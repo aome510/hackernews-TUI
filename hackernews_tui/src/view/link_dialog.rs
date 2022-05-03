@@ -78,7 +78,7 @@ pub fn get_link_dialog(links: &[String]) -> impl View {
             let links = links.to_owned();
             move |s, _| utils::open_ith_link_in_article_view(&links, s.content().get_focus_index())
         })
-        .on_event(config::get_global_keymap().close_dialog.clone(), |s| {
+        .on_pre_event(config::get_global_keymap().close_dialog.clone(), |s| {
             s.pop_layer();
         })
         .max_height(32)

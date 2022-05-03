@@ -144,13 +144,20 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
                 Err(_) => None,
             },
         )
+        .on_pre_event_inner(article_view_keymap.open_article_in_browser, |s, _| {
+            utils::open_url_in_browser(&s.article.url);
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
+            s.add_layer(ArticleView::construct_on_event_help_view())
+        })
         .on_scroll_events()
 }
 
 /// Return a ArticleView constructed from a Article struct
 pub fn get_article_view(article: client::Article) -> impl View {
     let desc = format!("Article View - {}", article.title);
-    let main_view = get_article_main_view(article.clone()).full_height();
+    let main_view = get_article_main_view(article).full_height();
     let mut view = LinearLayout::vertical()
         .child(utils::construct_view_title_bar(&desc))
         .child(main_view)
@@ -158,17 +165,7 @@ pub fn get_article_view(article: client::Article) -> impl View {
     view.set_focus_index(1)
         .unwrap_or(EventResult::Consumed(None));
 
-    let article_view_keymap = config::get_article_view_keymap().clone();
-
-    OnEventView::new(view)
-        .on_event(article_view_keymap.open_article_in_browser, {
-            move |_| {
-                utils::open_url_in_browser(&article.url);
-            }
-        })
-        .on_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
-            s.add_layer(ArticleView::construct_on_event_help_view())
-        })
+    view
 }
 
 /// Add a ArticleView as a new layer to the main Cursive View
