@@ -77,7 +77,10 @@ pub fn get_link_dialog(links: &[String]) -> impl View {
         .on_pre_event_inner(link_dialog_keymap.open_link_in_browser, {
             let links = links.to_owned();
             move |s, _| {
-                utils::open_ith_link_in_browser(&links, s.content().get_inner().get_focus_index())
+                utils::open_ith_link_in_browser(
+                    &links,
+                    s.content().get_inner().get_focus_index() + 1,
+                )
             }
         })
         .on_pre_event_inner(link_dialog_keymap.open_link_in_article_view, {
@@ -85,7 +88,7 @@ pub fn get_link_dialog(links: &[String]) -> impl View {
             move |s, _| {
                 utils::open_ith_link_in_article_view(
                     &links,
-                    s.content().get_inner().get_focus_index(),
+                    s.content().get_inner().get_focus_index() + 1,
                 )
             }
         })

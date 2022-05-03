@@ -72,6 +72,8 @@ pub fn open_url_in_browser(url: &str) {
     });
 }
 
+/// open in article view the `i`-th link.
+/// Note that the link index starts with `1`.
 pub fn open_ith_link_in_article_view(links: &[String], i: usize) -> Option<EventResult> {
     if i > 0 && i <= links.len() {
         let url = links[i - 1].clone();
@@ -83,6 +85,8 @@ pub fn open_ith_link_in_article_view(links: &[String], i: usize) -> Option<Event
     }
 }
 
+/// open in browser the `i`-th link.
+/// Note that the link index starts with `1`.
 pub fn open_ith_link_in_browser(links: &[String], i: usize) -> Option<EventResult> {
     if i > 0 && i <= links.len() {
         open_url_in_browser(&links[i - 1]);
