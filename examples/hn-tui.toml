@@ -127,6 +127,13 @@ open_link_in_browser = "o"
 open_link_in_article_view = "O"
 open_link_dialog = "l"
 
+[keymap.link_dialog_keymap]
+next = ["j", "down"]
+prev = ["k", "up"]
+open_link_in_browser = ["o", "enter"]
+open_link_in_article_view = "O"
+
+
 # ---------------------
 # custom keymap
 # ---------------------
