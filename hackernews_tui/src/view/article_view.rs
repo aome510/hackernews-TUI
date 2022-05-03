@@ -95,13 +95,13 @@ impl ScrollViewContainer for ArticleView {
 /// Return a main view of a ArticleView displaying an article in reader mode.
 /// The main view of a ArticleView is a View without status bar or footer.
 pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleView> {
-    let article_view_keymap = config::get_article_view_keymap().clone();
-
     let is_suffix_key = |c: &Event| -> bool {
-        let article_view_keymap = config::get_article_view_keymap().clone();
+        let article_view_keymap = config::get_article_view_keymap();
         article_view_keymap.open_link_in_browser.has_event(c)
             || article_view_keymap.open_link_in_article_view.has_event(c)
     };
+
+    let article_view_keymap = config::get_article_view_keymap().clone();
 
     OnEventView::new(ArticleView::new(article))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {

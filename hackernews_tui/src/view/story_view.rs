@@ -121,10 +121,10 @@ pub fn get_story_main_view(
     client: &'static client::HNClient,
     starting_id: usize,
 ) -> OnEventView<StoryView> {
-    let story_view_keymap = config::get_story_view_keymap().clone();
-
     let is_suffix_key =
         |c: &Event| -> bool { config::get_story_view_keymap().goto_story.has_event(c) };
+
+    let story_view_keymap = config::get_story_view_keymap().clone();
 
     OnEventView::new(StoryView::new(stories, starting_id))
         // number parsing
