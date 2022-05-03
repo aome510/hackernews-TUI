@@ -136,9 +136,9 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 
 The below sections will list the application's default shortcuts, which can be customized by changing the [key mappings](https://github.com/aome510/hackernews-TUI/blob/main/doc/config.md#keymap) in the user's config file.
 
-For more information about configuring the key mapping or defining custom shortcuts, please refer to the [config documentation](https://github.com/aome510/hackernews-TUI/blob/main/doc/config.md#keymap).
+For more information about configuring the application's key mappings or defining custom shortcuts, please refer to the [config documentation](https://github.com/aome510/hackernews-TUI/blob/main/doc/config.md#keymap).
 
-### Global key shortcuts
+### Global shortcuts
 
 | Command                 | Description             | Default Shortcut   |
 | ----------------------- | ----------------------- | ------------------ |
@@ -153,7 +153,7 @@ For more information about configuring the key mapping or defining custom shortc
 | `goto_show_hn_view`     | Go to show HN view      | `F4`               |
 | `goto_jobs_view`        | Go to jobs view         | `F5`               |
 
-### Edit key shortcuts
+### Edit shortcuts
 
 | Command                | Description                      | Default Shortcut |
 | ---------------------- | -------------------------------- | ---------------- |
@@ -163,71 +163,72 @@ For more information about configuring the key mapping or defining custom shortc
 | `move_cursor_to_end`   | Move cursor to the end of line   | `[end, C-e]`     |
 | `backward_delete_char` | Delete backward a character      | `backspace`      |
 
-### Key shortcuts for each `View`
+## Scrolling shortcuts
+
+| Command     | Description             | Default Shortcut |
+| ----------- | ----------------------- | ---------------- |
+| `up`        | Scroll up               | `[k, up]`        |
+| `down`      | Scroll down             | `[j, down]`      |
+| `page_down` | Scroll up half a page   | `[d, page_down]` |
+| `page_up`   | Scroll down half a page | `[u, page_up]`   |
+| `top`       | Scroll to top           | `[g, home]`      |
+| `bottom`    | Scroll to bottom        | `[G, end]`       |
+
+### Shortcuts for each `View`
 
 #### Story View shortcuts
 
-| Command                        | Description                                                        | Default Shortcut |
-| ------------------------------ | ------------------------------------------------------------------ | ---------------- |
-| `next_story`                   | Focus the next story                                               | `j`              |
-| `prev_story`                   | Focus the previous story                                           | `k`              |
-| `next_story_tag`               | Go to the next story tag                                           | `l`              |
-| `previous_story_tag`           | Go to the previous story tag                                       | `h`              |
-| `goto_story`                   | Focus the {story_id}-th story                                      | `{story_id} g`   |
-| `goto_story_comment_view`      | Go the comment view associated with the focused story              | `enter`          |
-| `open_article_in_browser`      | Open in browser the article associated with the focused story      | `o`              |
-| `open_article_in_article_view` | Open in article view the article associated with the focused story | `O`              |
-| `open_story_in_browser`        | Open in browser the focused story                                  | `s`              |
-| `next_page`                    | Go to the next page                                                | `n`              |
-| `prev_page`                    | Go the previous page                                               | `p`              |
-| `toggle_sort_by_date`          | Toggle sort stories by date                                        | `d`              |
+| Command                        | Description                                           | Default Shortcut |
+| ------------------------------ | ----------------------------------------------------- | ---------------- |
+| `next_story`                   | Focus the next story                                  | `j`              |
+| `prev_story`                   | Focus the previous story                              | `k`              |
+| `next_story_tag`               | Go to the next story tag                              | `l`              |
+| `previous_story_tag`           | Go to the previous story tag                          | `h`              |
+| `goto_story`                   | Focus the {story_id}-th story                         | `{story_id} g`   |
+| `goto_story_comment_view`      | Go the comment view associated with the focused story | `enter`          |
+| `open_article_in_browser`      | Open in browser the focused story's article           | `o`              |
+| `open_article_in_article_view` | Open in article view the focused story's article      | `O`              |
+| `open_story_in_browser`        | Open in browser the focused story                     | `s`              |
+| `next_page`                    | Go to the next page                                   | `n`              |
+| `prev_page`                    | Go the previous page                                  | `p`              |
+| `toggle_sort_by_date`          | Toggle sort stories by date                           | `d`              |
 
 #### Article View shortcuts
 
 | Command                     | Description                            | Default Shortcut |
 | --------------------------- | -------------------------------------- | ---------------- |
-| `up`                        | Scroll up                              | `k`              |
-| `down`                      | Scroll down                            | `j`              |
-| `page_down`                 | Scroll up half a page                  | `u`              |
-| `page_up`                   | Scroll down half a page                | `d`              |
-| `top`                       | Scroll to top                          | `g`              |
-| `bottom`                    | Scroll to bottom                       | `G`              |
-| `open_article_in_browser`   | Open article in browser                | `o`              |
-| `open_link_in_browser`      | Open in browser {link_id}-th link      | `{link_id} f`    |
-| `open_link_in_article_view` | Open in article view {link_id}-th link | `{link_id} F`    |
+| `open_article_in_browser`   | Open article in browser                | `a`              |
+| `open_link_in_browser`      | Open in browser {link_id}-th link      | `{link_id} o`    |
+| `open_link_in_article_view` | Open in article view {link_id}-th link | `{link_id} O`    |
 | `open_link_dialog`          | Open link dialog                       | `l`              |
 
 ##### Link dialog shortcuts
 
 | Command                     | Description                           | Default Shortcut |
 | --------------------------- | ------------------------------------- | ---------------- |
-| `link_dialog_focus_next`    | Focus next link                       | `j`              |
-| `link_dialog_focus_prev`    | Focus previous link                   | `k`              |
-| `open_link_in_browser`      | Open in browser the focused link      | `f`              |
-| `open_link_in_article_view` | Open in article view the focused link | `F`              |
+| `next`                      | Focus next link                       | `[j, down]`      |
+| `prev`                      | Focus previous link                   | `[k, up]`        |
+| `open_link_in_browser`      | Open in browser the focused link      | `[o, enter]`     |
+| `open_link_in_article_view` | Open in article view the focused link | `O`              |
 
 #### Comment View shortcuts
 
-| Command                        | Description                                                          | Default Shortcut |
-| ------------------------------ | -------------------------------------------------------------------- | ---------------- |
-| `next_comment`                 | Focus the next comment                                               | `j`              |
-| `prev_comment`                 | Focus the previous comment                                           | `k`              |
-| `next_leq_level_comment`       | Focus the next comment with smaller or equal level                   | `l`              |
-| `prev_leq_level_comment`       | Focus the previous comment with smaller or equal level               | `h`              |
-| `next_top_level_comment`       | Focus the next top level comment                                     | `n`              |
-| `prev_top_level_comment`       | Focus the previous top level comment                                 | `p`              |
-| `parent_comment`               | Focus the parent comment (if exists)                                 | `u`              |
-| `toggle_collapse_comment`      | Toggle collapsing the focused comment                                | `tab`            |
-| `up`                           | Scroll up                                                            | `up`             |
-| `down`                         | Scroll down                                                          | `down`           |
-| `page_up`                      | Scroll up half a page                                                | `page_up`        |
-| `page_down`                    | Scroll down half a page                                              | `page_down`      |
-| `open_article_in_browser`      | Open in browser the article associated with the discussed story      | `o`              |
-| `open_article_in_article_view` | Open in article view the article associated with the discussed story | `O`              |
-| `open_story_in_browser`        | Open in browser the discussed story                                  | `s`              |
-| `open_comment_in_browser`      | Open in browser the focused comment                                  | `c`              |
-| `open_link_in_browser`         | Open in browser the {link_id}-th link in the focused comment         | `{link_id} f`    |
-| `open_link_in_article_view`    | Open in article view the {link_id}-th link in the focused comment    | `{link_id} F`    |
+| Command                        | Description                                                       | Default Shortcut |
+| ------------------------------ | ----------------------------------------------------------------- | ---------------- |
+| `next_comment`                 | Focus the next comment                                            | `j`              |
+| `prev_comment`                 | Focus the previous comment                                        | `k`              |
+| `next_leq_level_comment`       | Focus the next comment with smaller or equal level                | `l`              |
+| `prev_leq_level_comment`       | Focus the previous comment with smaller or equal level            | `h`              |
+| `next_top_level_comment`       | Focus the next top level comment                                  | `n`              |
+| `prev_top_level_comment`       | Focus the previous top level comment                              | `p`              |
+| `parent_comment`               | Focus the parent comment (if exists)                              | `u`              |
+| `toggle_collapse_comment`      | Toggle collapsing the focused comment                             | `tab`            |
+| `open_article_in_browser`      | Open in browser the discussed article                             | `a`              |
+| `open_article_in_article_view` | Open in article view the discussed article                        | `A`              |
+| `open_story_in_browser`        | Open in browser the discussed story                               | `s`              |
+| `open_comment_in_browser`      | Open in browser the focused comment                               | `c`              |
+| `open_link_in_browser`         | Open in browser the {link_id}-th link in the focused comment      | `{link_id} o`    |
+| `open_link_in_article_view`    | Open in article view the {link_id}-th link in the focused comment | `{link_id} O`    |
 
 #### Search View shortcuts
 
@@ -235,7 +236,7 @@ In `SearchView`, there are two modes: `Navigation` and `Search`. The default mod
 
 `Search` mode is similar to Vim's insert mode, in which users can input a query string.
 
-`Navigation` mode allows the `SearchView` to behave like a `StoryView` of matched stories with a subset of `StoryView` shortcuts enabled.
+`Navigation` mode allows the `SearchView` to behave like a `StoryView` of matched stories.
 
 `SearchView`-specific key shortcuts:
 

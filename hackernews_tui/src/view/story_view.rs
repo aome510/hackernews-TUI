@@ -1,9 +1,6 @@
-use super::article_view;
-use super::async_view;
-use super::comment_view;
-use super::help_view::HasHelpView;
-use super::text_view;
-use super::traits::*;
+use super::{
+    article_view, async_view, comment_view, help_view::HasHelpView, text_view, traits::*, utils,
+};
 use crate::client::StoryNumericFilters;
 use crate::prelude::*;
 
@@ -76,7 +73,7 @@ impl StoryView {
                 " ",
                 story.points,
                 story.author,
-                utils::get_elapsed_time_as_text(story.time),
+                crate::utils::get_elapsed_time_as_text(story.time),
                 story.num_comments,
                 width = max_id_width + 2,
             ),
@@ -124,10 +121,10 @@ pub fn get_story_main_view(
     client: &'static client::HNClient,
     starting_id: usize,
 ) -> OnEventView<StoryView> {
-    let story_view_keymap = config::get_story_view_keymap().clone();
-
     let is_suffix_key =
         |c: &Event| -> bool { config::get_story_view_keymap().goto_story.has_event(c) };
+
+    let story_view_keymap = config::get_story_view_keymap().clone();
 
     OnEventView::new(StoryView::new(stories, starting_id))
         // number parsing
@@ -172,7 +169,7 @@ pub fn get_story_main_view(
         // open external link shortcuts
         .on_pre_event_inner(story_view_keymap.open_article_in_browser, move |s, _| {
             let id = s.get_focus_index();
-            utils::open_url_in_browser(&s.stories[id].url);
+            utils::open_url_in_browser(s.stories[id].get_url().as_ref());
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(
@@ -190,8 +187,7 @@ pub fn get_story_main_view(
             },
         )
         .on_pre_event_inner(story_view_keymap.open_story_in_browser, move |s, _| {
-            let id = s.stories[s.get_focus_index()].id;
-            let url = format!("{}/item?id={}", client::HN_HOST_URL, id);
+            let url = s.stories[s.get_focus_index()].story_url();
             utils::open_url_in_browser(&url);
             Some(EventResult::Consumed(None))
         })
@@ -279,7 +275,7 @@ pub fn get_story_view(
         .on_pre_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
             s.add_layer(StoryView::construct_on_event_help_view())
         })
-        .on_event(story_view_keymap.toggle_sort_by_date, move |s| {
+        .on_pre_event(story_view_keymap.toggle_sort_by_date, move |s| {
             // disable "search_by_date" for front_page stories
             if tag == "front_page" {
                 return;
@@ -287,7 +283,7 @@ pub fn get_story_view(
             add_story_view_layer(s, client, tag, !by_date, 0, numeric_filters, true);
         })
         // story tag navigation
-        .on_event(story_view_keymap.next_story_tag, move |s| {
+        .on_pre_event(story_view_keymap.next_story_tag, move |s| {
             add_story_view_layer(
                 s,
                 client,
@@ -298,7 +294,7 @@ pub fn get_story_view(
                 false,
             );
         })
-        .on_event(story_view_keymap.prev_story_tag, move |s| {
+        .on_pre_event(story_view_keymap.prev_story_tag, move |s| {
             add_story_view_layer(
                 s,
                 client,
@@ -310,12 +306,12 @@ pub fn get_story_view(
             );
         })
         // paging
-        .on_event(story_view_keymap.prev_page, move |s| {
+        .on_pre_event(story_view_keymap.prev_page, move |s| {
             if page > 0 {
                 add_story_view_layer(s, client, tag, by_date, page - 1, numeric_filters, true);
             }
         })
-        .on_event(story_view_keymap.next_page, move |s| {
+        .on_pre_event(story_view_keymap.next_page, move |s| {
             add_story_view_layer(s, client, tag, by_date, page + 1, numeric_filters, true);
         })
 }

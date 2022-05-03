@@ -1,6 +1,4 @@
-use super::help_view::HasHelpView;
-use super::traits::*;
-use super::{async_view, text_view};
+use super::{async_view, help_view::HasHelpView, link_dialog, traits::*, utils};
 use crate::prelude::*;
 
 /// ArticleView is a View used to display the content of a web page in reader mode
@@ -94,72 +92,16 @@ impl ScrollViewContainer for ArticleView {
     }
 }
 
-/// Construct a help dialog from a list of URLs
-pub fn get_link_dialog(links: &[String]) -> impl View {
-    let article_view_keymap = config::get_article_view_keymap().clone();
-
-    let links_view = OnEventView::new(LinearLayout::vertical().with(|v| {
-        links.iter().enumerate().for_each(|(id, link)| {
-            let mut link_styled_string = StyledString::plain(format!("{}. ", id + 1));
-            link_styled_string.append_styled(
-                utils::shorten_url(link),
-                config::get_config_theme().component_style.link,
-            );
-            v.add_child(text_view::TextView::new(link_styled_string));
-        })
-    }))
-    .on_pre_event_inner(article_view_keymap.link_dialog_focus_next, |s, _| {
-        let focus_id = s.get_focus_index();
-        s.set_focus_index(focus_id + 1)
-            .unwrap_or(EventResult::Consumed(None));
-        Some(EventResult::Consumed(None))
-    })
-    .on_pre_event_inner(article_view_keymap.link_dialog_focus_prev, |s, _| {
-        let focus_id = s.get_focus_index();
-        if focus_id > 0 {
-            s.set_focus_index(focus_id - 1)
-                .unwrap_or(EventResult::Consumed(None));
-        }
-        Some(EventResult::Consumed(None))
-    })
-    .on_pre_event_inner(article_view_keymap.open_link_in_browser, {
-        let links = links.to_owned();
-        move |s, _| {
-            let focus_id = s.get_focus_index();
-            utils::open_url_in_browser(&links[focus_id]);
-            Some(EventResult::Consumed(None))
-        }
-    })
-    .on_pre_event_inner(article_view_keymap.open_link_in_article_view, {
-        let links = links.to_owned();
-        move |s, _| {
-            let focus_id = s.get_focus_index();
-            let url = links[focus_id].clone();
-            Some(EventResult::with_cb({
-                move |s| add_article_view_layer(s, &url)
-            }))
-        }
-    })
-    .scrollable();
-
-    OnEventView::new(Dialog::around(links_view).title("Link Dialog"))
-        .on_event(config::get_global_keymap().close_dialog.clone(), |s| {
-            s.pop_layer();
-        })
-        .max_height(32)
-        .max_width(64)
-}
-
 /// Return a main view of a ArticleView displaying an article in reader mode.
 /// The main view of a ArticleView is a View without status bar or footer.
 pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleView> {
-    let article_view_keymap = config::get_article_view_keymap().clone();
-
     let is_suffix_key = |c: &Event| -> bool {
-        let article_view_keymap = config::get_article_view_keymap().clone();
+        let article_view_keymap = config::get_article_view_keymap();
         article_view_keymap.open_link_in_browser.has_event(c)
             || article_view_keymap.open_link_in_article_view.has_event(c)
     };
+
+    let article_view_keymap = config::get_article_view_keymap().clone();
 
     OnEventView::new(ArticleView::new(article))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
@@ -179,7 +121,7 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
             Some(EventResult::with_cb({
                 let links = s.article.links.clone();
                 move |s| {
-                    s.add_layer(get_link_dialog(&links));
+                    s.add_layer(link_dialog::get_link_dialog(&links));
                 }
             }))
         })
@@ -187,10 +129,7 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
             match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    if num > 0 && num <= s.article.links.len() {
-                        utils::open_url_in_browser(&s.article.links[num - 1]);
-                    }
-                    Some(EventResult::Consumed(None))
+                    utils::open_ith_link_in_browser(&s.article.links, num)
                 }
                 Err(_) => None,
             }
@@ -200,25 +139,25 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
             |s, _| match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    if num > 0 && num <= s.article.links.len() {
-                        let url = s.article.links[num - 1].clone();
-                        Some(EventResult::with_cb({
-                            move |s| add_article_view_layer(s, &url)
-                        }))
-                    } else {
-                        Some(EventResult::Consumed(None))
-                    }
+                    utils::open_ith_link_in_article_view(&s.article.links, num)
                 }
                 Err(_) => None,
             },
         )
+        .on_pre_event_inner(article_view_keymap.open_article_in_browser, |s, _| {
+            utils::open_url_in_browser(&s.article.url);
+            Some(EventResult::Consumed(None))
+        })
+        .on_pre_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
+            s.add_layer(ArticleView::construct_on_event_help_view())
+        })
         .on_scroll_events()
 }
 
 /// Return a ArticleView constructed from a Article struct
 pub fn get_article_view(article: client::Article) -> impl View {
     let desc = format!("Article View - {}", article.title);
-    let main_view = get_article_main_view(article.clone()).full_height();
+    let main_view = get_article_main_view(article).full_height();
     let mut view = LinearLayout::vertical()
         .child(utils::construct_view_title_bar(&desc))
         .child(main_view)
@@ -226,17 +165,7 @@ pub fn get_article_view(article: client::Article) -> impl View {
     view.set_focus_index(1)
         .unwrap_or(EventResult::Consumed(None));
 
-    let article_view_keymap = config::get_article_view_keymap().clone();
-
-    OnEventView::new(view)
-        .on_event(article_view_keymap.open_article_in_browser, {
-            move |_| {
-                utils::open_url_in_browser(&article.url);
-            }
-        })
-        .on_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
-            s.add_layer(ArticleView::construct_on_event_help_view())
-        })
+    view
 }
 
 /// Add a ArticleView as a new layer to the main Cursive View

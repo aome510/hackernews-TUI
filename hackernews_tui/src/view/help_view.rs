@@ -1,6 +1,5 @@
+use super::{article_view, comment_view, link_dialog, search_view, story_view, traits::*};
 use crate::prelude::*;
-
-use super::{article_view, comment_view, search_view, story_view, traits::*};
 
 type HelpViewContent = ScrollView<LinearLayout>;
 
@@ -160,9 +159,11 @@ pub trait HasHelpView {
 
     fn construct_on_event_help_view() -> OnEventView<HelpView> {
         OnEventView::new(Self::construct_help_view())
-            .on_event(config::get_global_keymap().close_dialog.clone(), |s| {
+            .on_pre_event(config::get_global_keymap().close_dialog.clone(), |s| {
                 s.pop_layer();
             })
+            // ignore the `open_help_dialog` to avoid multiple help views stacked on each other
+            .on_pre_event(config::get_global_keymap().open_help_dialog.clone(), |_| {})
             .on_scroll_events()
     }
 }
@@ -275,15 +276,15 @@ impl HasHelpView for story_view::StoryView {
                 ],
             ),
             CommandGroup::new(
-                "Open external links",
+                "Links",
                 vec![
                     Command::new(
                         story_view_keymap.open_article_in_browser.to_string(),
-                        "Open in browser the article associated with the focused story",
+                        "Open in browser the focused story's article",
                     ),
                     Command::new(
                         story_view_keymap.open_article_in_article_view.to_string(),
-                        "Open in article view the article associated with the focused story",
+                        "Open in article view the focused story's article",
                     ),
                     Command::new(
                         story_view_keymap.open_story_in_browser.to_string(),
@@ -323,7 +324,6 @@ impl HasHelpView for story_view::StoryView {
         }
 
         help_view.command_groups(vec![
-            CommandGroup::new("Scrolling", default_scroll_commands()),
             CommandGroup::new(
                 "View navigation",
                 [
@@ -345,6 +345,7 @@ impl HasHelpView for story_view::StoryView {
                 ]
                 .concat(),
             ),
+            CommandGroup::new("Scrolling", default_scroll_commands()),
             CommandGroup::new("Others", default_other_commands()),
         ])
     }
@@ -353,7 +354,6 @@ impl HasHelpView for story_view::StoryView {
 impl HasHelpView for comment_view::CommentView {
     fn construct_help_view() -> HelpView {
         let comment_view_keymap = config::get_comment_view_keymap();
-        let story_view_keymap = config::get_story_view_keymap();
 
         HelpView::new().command_groups(vec![
             CommandGroup::new(
@@ -390,18 +390,18 @@ impl HasHelpView for comment_view::CommentView {
                 ],
             ),
             CommandGroup::new(
-                "Open external links",
+                "Links",
                 vec![
                     Command::new(
-                        story_view_keymap.open_article_in_browser.to_string(),
-                        "Open in browser the article associated with the discussed story",
+                        comment_view_keymap.open_article_in_browser.to_string(),
+                        "Open in browser the dicussed article",
                     ),
                     Command::new(
-                        story_view_keymap.open_article_in_article_view.to_string(),
-                        "Open in article view the article associated with the discussed story",
+                        comment_view_keymap.open_article_in_article_view.to_string(),
+                        "Open in article view the dicussed article",
                     ),
                     Command::new(
-                        story_view_keymap.open_story_in_browser.to_string(),
+                        comment_view_keymap.open_story_in_browser.to_string(),
                         "Open in browser the discussed story",
                     ),
                     Command::new(
@@ -458,7 +458,7 @@ impl HasHelpView for search_view::SearchView {
                 ],
             ),
             CommandGroup::new(
-                "Navigation Mode - Navigation",
+                "Navigation Mode - Story navigation",
                 vec![
                     Command::new(
                         story_view_keymap.next_story.to_string(),
@@ -492,15 +492,15 @@ impl HasHelpView for search_view::SearchView {
                 ],
             ),
             CommandGroup::new(
-                "Navigation Mode - Open external links",
+                "Navigation Mode - Links",
                 vec![
                     Command::new(
                         story_view_keymap.open_article_in_browser.to_string(),
-                        "Open in browser the link associated with the focused story",
+                        "Open in browser the focused story's article",
                     ),
                     Command::new(
                         story_view_keymap.open_article_in_article_view.to_string(),
-                        "Open in article view the link associated with the focused story",
+                        "Open in article view the focused story's article",
                     ),
                     Command::new(
                         story_view_keymap.open_story_in_browser.to_string(),
@@ -530,46 +530,55 @@ impl HasHelpView for article_view::ArticleView {
         HelpView::new().command_groups(vec![
             CommandGroup::new("Scrolling", default_scroll_commands()),
             CommandGroup::new(
-                "Open external links",
+                "Links",
                 vec![
                     Command::new(
                         article_view_keymap.open_article_in_browser.to_string(),
-                        "Open article in browser",
+                        "Open the current article in browser",
                     ),
                     Command::new(
                         format!("{{link_id}} {}", article_view_keymap.open_link_in_browser),
-                        "Open in browser {link_id}-th link",
+                        "Open in browser the {link_id}-th link",
                     ),
                     Command::new(
                         format!(
                             "{{link_id}} {}",
                             article_view_keymap.open_link_in_article_view
                         ),
-                        "Open in article view {link_id}-th link",
+                        "Open in article view the {link_id}-th link",
+                    ),
+                    Command::new(
+                        article_view_keymap.open_link_dialog.to_string(),
+                        "Open a link dialog",
                     ),
                 ],
             ),
+            CommandGroup::new("View navigation", default_view_navigation_commands()),
+            CommandGroup::new("Others", default_other_commands()),
+        ])
+    }
+}
+
+impl HasHelpView for link_dialog::LinkDialog {
+    fn construct_help_view() -> HelpView {
+        let link_dialog_keymap = config::get_link_dialog_keymap().clone();
+        HelpView::new().command_groups(vec![
             CommandGroup::new(
-                "Link dialog",
+                "Link navigation",
+                vec![
+                    Command::new(link_dialog_keymap.next.to_string(), "Focus next"),
+                    Command::new(link_dialog_keymap.prev.to_string(), "Focus prev"),
+                ],
+            ),
+            CommandGroup::new(
+                "Links",
                 vec![
                     Command::new(
-                        article_view_keymap.open_link_dialog.to_string(),
-                        "Open link dialog",
-                    ),
-                    Command::new(
-                        article_view_keymap.link_dialog_focus_next.to_string(),
-                        "Focus next link",
-                    ),
-                    Command::new(
-                        article_view_keymap.link_dialog_focus_prev.to_string(),
-                        "Focus previous link",
-                    ),
-                    Command::new(
-                        article_view_keymap.open_link_in_browser.to_string(),
+                        link_dialog_keymap.open_link_in_browser.to_string(),
                         "Open in browser the focused link",
                     ),
                     Command::new(
-                        article_view_keymap.open_link_in_article_view.to_string(),
+                        link_dialog_keymap.open_link_in_article_view.to_string(),
                         "Open in article view the focused link",
                     ),
                 ],

@@ -1,10 +1,6 @@
-use super::help_view::HasHelpView;
-use super::text_view;
-use super::traits::*;
-use super::{article_view, async_view};
+use super::{article_view, async_view, help_view::HasHelpView, text_view, traits::*, utils};
 use crate::prelude::*;
-use crate::view::text_view::StyledPaddingChar;
-use crate::view::text_view::TextPadding;
+use crate::view::text_view::{StyledPaddingChar, TextPadding};
 
 type CommentComponent = HideableView<PaddedView<text_view::TextView>>;
 
@@ -23,18 +19,18 @@ impl ViewWrapper for CommentView {
 
 impl CommentView {
     /// Return a new CommentView given a comment list and the discussed story url
-    pub fn new(main_text: client::HnText, receiver: client::CommentReceiver) -> Self {
+    pub fn new(story_text: client::HnText, receiver: client::CommentReceiver) -> Self {
         let mut view = CommentView {
             view: LinearLayout::vertical()
                 .child(HideableView::new(PaddedView::lrtb(
-                    main_text.level * 2 + 1,
+                    story_text.level * 2 + 1,
                     1,
                     0,
                     1,
-                    text_view::TextView::new(main_text.text.clone()),
+                    text_view::TextView::new(story_text.text.clone()),
                 )))
                 .scrollable(),
-            comments: vec![main_text],
+            comments: vec![story_text],
             raw_command: String::new(),
             receiver,
         };
@@ -239,19 +235,16 @@ impl ScrollViewContainer for CommentView {
 
 /// Return a main view of a CommentView displaying the comment list.
 /// The main view of a CommentView is a View without status bar or footer.
-fn get_comment_main_view(
-    main_text: client::HnText,
-    receiver: client::CommentReceiver,
-) -> impl View {
-    let comment_view_keymap = config::get_comment_view_keymap().clone();
-
+fn get_comment_main_view(story: &client::Story, receiver: client::CommentReceiver) -> impl View {
     let is_suffix_key = |c: &Event| -> bool {
-        let comment_view_keymap = config::get_comment_view_keymap().clone();
+        let comment_view_keymap = config::get_comment_view_keymap();
         comment_view_keymap.open_link_in_browser.has_event(c)
             || comment_view_keymap.open_link_in_article_view.has_event(c)
     };
 
-    OnEventView::new(CommentView::new(main_text, receiver))
+    let comment_view_keymap = config::get_comment_view_keymap().clone();
+
+    OnEventView::new(CommentView::new(story.text.clone(), receiver))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
             s.try_update_comments();
 
@@ -312,13 +305,7 @@ fn get_comment_main_view(
             match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    let id = s.get_focus_index();
-                    if num > 0 && num <= s.comments[id].links.len() {
-                        utils::open_url_in_browser(&s.comments[id].links[num - 1]);
-                        Some(EventResult::Consumed(None))
-                    } else {
-                        Some(EventResult::Consumed(None))
-                    }
+                    utils::open_ith_link_in_browser(&s.comments[s.get_focus_index()].links, num)
                 }
                 Err(_) => None,
             }
@@ -328,15 +315,10 @@ fn get_comment_main_view(
             |s, _| match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    let id = s.get_focus_index();
-                    if num > 0 && num <= s.comments[id].links.len() {
-                        let url = s.comments[id].links[num - 1].clone();
-                        Some(EventResult::with_cb({
-                            move |s| article_view::add_article_view_layer(s, &url)
-                        }))
-                    } else {
-                        Some(EventResult::Consumed(None))
-                    }
+                    utils::open_ith_link_in_article_view(
+                        &s.comments[s.get_focus_index()].links,
+                        num,
+                    )
                 }
                 Err(_) => None,
             },
@@ -352,6 +334,29 @@ fn get_comment_main_view(
             s.toggle_collapse_focused_comment();
             Some(EventResult::Consumed(None))
         })
+        .on_pre_event(comment_view_keymap.open_article_in_browser, {
+            let url = story.get_url().into_owned();
+            move |_| {
+                utils::open_url_in_browser(&url);
+            }
+        })
+        .on_pre_event(comment_view_keymap.open_article_in_article_view, {
+            let url = story.url.clone();
+            move |s| {
+                if !url.is_empty() {
+                    article_view::add_article_view_layer(s, &url)
+                }
+            }
+        })
+        .on_pre_event(comment_view_keymap.open_story_in_browser, {
+            let url = story.story_url();
+            move |_| {
+                utils::open_url_in_browser(&url);
+            }
+        })
+        .on_pre_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
+            s.add_layer(CommentView::construct_on_event_help_view());
+        })
         .on_scroll_events()
         .full_height()
 }
@@ -361,7 +366,7 @@ pub fn get_comment_view(story: &client::Story, receiver: client::CommentReceiver
     let status_bar =
         utils::construct_view_title_bar(&format!("Comment View - {}", story.title.source()));
 
-    let main_view = get_comment_main_view(story.text.clone(), receiver);
+    let main_view = get_comment_main_view(story, receiver);
 
     let mut view = LinearLayout::vertical()
         .child(status_bar)
@@ -370,45 +375,7 @@ pub fn get_comment_view(story: &client::Story, receiver: client::CommentReceiver
     view.set_focus_index(1)
         .unwrap_or(EventResult::Consumed(None));
 
-    let id = story.id;
-
-    OnEventView::new(view)
-        .on_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
-            s.add_layer(CommentView::construct_on_event_help_view());
-        })
-        .on_event(
-            config::get_story_view_keymap()
-                .open_article_in_browser
-                .clone(),
-            {
-                let url = story.url.clone();
-                move |_| {
-                    utils::open_url_in_browser(&url);
-                }
-            },
-        )
-        .on_event(
-            config::get_story_view_keymap()
-                .open_article_in_article_view
-                .clone(),
-            {
-                let url = story.url.clone();
-                move |s| {
-                    if !url.is_empty() {
-                        article_view::add_article_view_layer(s, &url)
-                    }
-                }
-            },
-        )
-        .on_event(
-            config::get_story_view_keymap()
-                .open_story_in_browser
-                .clone(),
-            move |_| {
-                let url = format!("{}/item?id={}", client::HN_HOST_URL, id);
-                utils::open_url_in_browser(&url);
-            },
-        )
+    view
 }
 
 /// Add a CommentView as a new layer to the main Cursive View

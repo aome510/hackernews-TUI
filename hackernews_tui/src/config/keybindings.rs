@@ -12,6 +12,7 @@ pub struct KeyMap {
     pub search_view_keymap: SearchViewKeyMap,
     pub comment_view_keymap: CommentViewKeyMap,
     pub article_view_keymap: ArticleViewKeyMap,
+    pub link_dialog_keymap: LinkDialogKeyMap,
 
     pub custom_keymaps: Vec<CustomKeyMap>,
 }
@@ -134,7 +135,7 @@ pub struct StoryViewKeyMap {
     pub prev_page: Keys,
     pub toggle_sort_by_date: Keys,
 
-    // link opening keymaps
+    // link keymaps
     pub open_article_in_browser: Keys,
     pub open_article_in_article_view: Keys,
     pub open_story_in_browser: Keys,
@@ -191,8 +192,11 @@ pub struct CommentViewKeyMap {
     pub prev_leq_level_comment: Keys,
     pub parent_comment: Keys,
 
-    // link opening keymaps
+    // link keymaps
+    pub open_story_in_browser: Keys,
     pub open_comment_in_browser: Keys,
+    pub open_article_in_browser: Keys,
+    pub open_article_in_article_view: Keys,
     pub open_link_in_browser: Keys,
     pub open_link_in_article_view: Keys,
 
@@ -211,8 +215,11 @@ impl Default for CommentViewKeyMap {
             parent_comment: Keys::new(vec!['u'.into()]),
 
             open_comment_in_browser: Keys::new(vec!['c'.into()]),
-            open_link_in_browser: Keys::new(vec!['f'.into()]),
-            open_link_in_article_view: Keys::new(vec!['F'.into()]),
+            open_story_in_browser: Keys::new(vec!['s'.into()]),
+            open_article_in_browser: Keys::new(vec!['a'.into()]),
+            open_article_in_article_view: Keys::new(vec!['A'.into()]),
+            open_link_in_browser: Keys::new(vec!['o'.into()]),
+            open_link_in_article_view: Keys::new(vec!['O'.into()]),
 
             toggle_collapse_comment: Keys::new(vec![event::Key::Tab.into()]),
         }
@@ -222,9 +229,6 @@ impl Default for CommentViewKeyMap {
 #[derive(Debug, Clone, Deserialize, ConfigParse)]
 pub struct ArticleViewKeyMap {
     pub open_link_dialog: Keys,
-    pub link_dialog_focus_next: Keys,
-    pub link_dialog_focus_prev: Keys,
-
     pub open_article_in_browser: Keys,
     pub open_link_in_browser: Keys,
     pub open_link_in_article_view: Keys,
@@ -234,12 +238,28 @@ impl Default for ArticleViewKeyMap {
     fn default() -> Self {
         ArticleViewKeyMap {
             open_link_dialog: Keys::new(vec!['l'.into()]),
-            link_dialog_focus_next: Keys::new(vec!['j'.into()]),
-            link_dialog_focus_prev: Keys::new(vec!['k'.into()]),
+            open_article_in_browser: Keys::new(vec!['a'.into()]),
+            open_link_in_browser: Keys::new(vec!['o'.into()]),
+            open_link_in_article_view: Keys::new(vec!['O'.into()]),
+        }
+    }
+}
 
-            open_article_in_browser: Keys::new(vec!['o'.into()]),
-            open_link_in_browser: Keys::new(vec!['f'.into()]),
-            open_link_in_article_view: Keys::new(vec!['F'.into()]),
+#[derive(Debug, Clone, Deserialize, ConfigParse)]
+pub struct LinkDialogKeyMap {
+    pub next: Keys,
+    pub prev: Keys,
+    pub open_link_in_browser: Keys,
+    pub open_link_in_article_view: Keys,
+}
+
+impl Default for LinkDialogKeyMap {
+    fn default() -> Self {
+        LinkDialogKeyMap {
+            next: Keys::new(vec!['j'.into(), event::Key::Down.into()]),
+            prev: Keys::new(vec!['k'.into(), event::Key::Up.into()]),
+            open_link_in_browser: Keys::new(vec!['o'.into(), event::Key::Enter.into()]),
+            open_link_in_article_view: Keys::new(vec!['O'.into()]),
         }
     }
 }
@@ -453,4 +473,8 @@ pub fn get_comment_view_keymap() -> &'static CommentViewKeyMap {
 
 pub fn get_article_view_keymap() -> &'static ArticleViewKeyMap {
     &super::get_config().keymap.article_view_keymap
+}
+
+pub fn get_link_dialog_keymap() -> &'static LinkDialogKeyMap {
+    &super::get_config().keymap.link_dialog_keymap
 }

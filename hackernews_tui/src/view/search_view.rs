@@ -1,4 +1,4 @@
-use super::{help_view::*, story_view, text_view::EditableTextView};
+use super::{help_view::*, story_view, text_view::EditableTextView, utils};
 use crate::prelude::*;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -240,6 +240,9 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
             }
             SearchViewMode::Search => Some(EventResult::Ignored),
         })
+        .on_pre_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
+            s.add_layer(SearchView::construct_on_event_help_view());
+        })
 }
 
 /// Return a view representing a SearchView that searches stories with queries
@@ -252,9 +255,7 @@ pub fn get_search_view(client: &'static client::HNClient, cb_sink: CbSink) -> im
     view.set_focus_index(1)
         .unwrap_or(EventResult::Consumed(None));
 
-    OnEventView::new(view).on_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
-        s.add_layer(SearchView::construct_on_event_help_view());
-    })
+    view
 }
 
 /// Add a SearchView as a new layer to the main Cursive View

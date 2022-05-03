@@ -3,7 +3,7 @@
 **/*.rs.bk
 
 # Log files
-*log.*
+log.*
 
 # Temp files
 *.tmp
