@@ -32,20 +32,18 @@ impl LinkDialog {
         Self { view }
     }
 
-    pub fn content(&self) -> &LinearLayout {
+    pub fn content(&self) -> &LinkDialogContent {
         self.view
             .get_content()
             .downcast_ref::<LinkDialogContent>()
             .expect("the help dialog's content should have `LinkDialogContent` type")
-            .get_inner()
     }
 
-    pub fn content_mut(&mut self) -> &mut LinearLayout {
+    pub fn content_mut(&mut self) -> &mut LinkDialogContent {
         self.view
             .get_content_mut()
             .downcast_mut::<LinkDialogContent>()
             .expect("the help dialog's content should have `LinkDialogContent` type")
-            .get_inner_mut()
     }
 }
 
@@ -55,28 +53,41 @@ pub fn get_link_dialog(links: &[String]) -> impl View {
 
     OnEventView::new(view)
         .on_pre_event_inner(link_dialog_keymap.next, |s, _| {
-            let focus_id = s.content().get_focus_index();
-            s.content_mut()
+            let focus_id = s.content().get_inner().get_focus_index();
+            let content = s.content_mut();
+            content
+                .get_inner_mut()
                 .set_focus_index(focus_id + 1)
                 .unwrap_or(EventResult::Consumed(None));
+            content.scroll_to_important_area();
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(link_dialog_keymap.prev, |s, _| {
-            let focus_id = s.content().get_focus_index();
+            let focus_id = s.content().get_inner().get_focus_index();
             if focus_id > 0 {
-                s.content_mut()
+                let content = s.content_mut();
+                content
+                    .get_inner_mut()
                     .set_focus_index(focus_id - 1)
                     .unwrap_or(EventResult::Consumed(None));
+                content.scroll_to_important_area();
             }
             Some(EventResult::Consumed(None))
         })
         .on_pre_event_inner(link_dialog_keymap.open_link_in_browser, {
             let links = links.to_owned();
-            move |s, _| utils::open_ith_link_in_browser(&links, s.content().get_focus_index())
+            move |s, _| {
+                utils::open_ith_link_in_browser(&links, s.content().get_inner().get_focus_index())
+            }
         })
         .on_pre_event_inner(link_dialog_keymap.open_link_in_article_view, {
             let links = links.to_owned();
-            move |s, _| utils::open_ith_link_in_article_view(&links, s.content().get_focus_index())
+            move |s, _| {
+                utils::open_ith_link_in_article_view(
+                    &links,
+                    s.content().get_inner().get_focus_index(),
+                )
+            }
         })
         .on_pre_event(config::get_global_keymap().close_dialog.clone(), |s| {
             s.pop_layer();
