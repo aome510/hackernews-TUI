@@ -179,10 +179,14 @@ impl Story {
     /// If the article URL is empty (in case of "AskHN" stories), fallback to the HN story's URL
     pub fn get_url(&self) -> Cow<str> {
         if self.url.is_empty() {
-            Cow::from(format!("{}/item?id={}", client::HN_HOST_URL, self.id))
+            Cow::from(self.story_url())
         } else {
             Cow::from(&self.url)
         }
+    }
+
+    pub fn story_url(&self) -> String {
+        format!("{}/item?id={}", client::HN_HOST_URL, self.id)
     }
 }
 

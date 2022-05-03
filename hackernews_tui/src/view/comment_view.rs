@@ -349,7 +349,7 @@ fn get_comment_main_view(story: &client::Story, receiver: client::CommentReceive
             }
         })
         .on_pre_event(comment_view_keymap.open_story_in_browser, {
-            let url = format!("{}/item?id={}", client::HN_HOST_URL, story.id);
+            let url = story.story_url();
             move |_| {
                 utils::open_url_in_browser(&url);
             }

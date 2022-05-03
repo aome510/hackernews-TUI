@@ -187,8 +187,7 @@ pub fn get_story_main_view(
             },
         )
         .on_pre_event_inner(story_view_keymap.open_story_in_browser, move |s, _| {
-            let id = s.stories[s.get_focus_index()].id;
-            let url = format!("{}/item?id={}", client::HN_HOST_URL, id);
+            let url = s.stories[s.get_focus_index()].story_url();
             utils::open_url_in_browser(&url);
             Some(EventResult::Consumed(None))
         })
