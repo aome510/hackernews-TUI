@@ -87,7 +87,13 @@ pub fn get_article_view_async(siv: &mut Cursive, article_url: &str) -> impl View
         {
             move |result| {
                 ErrorViewWrapper::new(match result {
-                    Ok(article) => ErrorViewEnum::Ok(article_view::get_article_view(article)),
+                    Ok(mut article) => {
+                        // Replace a tab character by 4 spaces as it's possible
+                        // that the terminal cannot render the tab character.
+                        article.content = article.content.replace('\t', "    ");
+
+                        ErrorViewEnum::Ok(article_view::get_article_view(article))
+                    }
                     Err(err) => {
                         ErrorViewEnum::Err(error_view::get_error_view(&err_desc, &err.to_string()))
                     }

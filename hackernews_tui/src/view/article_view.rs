@@ -4,8 +4,10 @@ use crate::prelude::*;
 /// ArticleView is a View used to display the content of a web page in reader mode
 pub struct ArticleView {
     article: client::Article,
-    view: ScrollView<LinearLayout>,
+    links: Vec<String>,
     width: usize,
+
+    view: ScrollView<LinearLayout>,
 
     raw_command: String,
 }
@@ -21,14 +23,16 @@ impl ViewWrapper for ArticleView {
             self.width = size.x;
 
             match self.article.parse(self.width.saturating_sub(5)) {
-                Ok(article) => {
-                    self.set_article_content(article);
+                Ok(result) => {
+                    self.set_article_content(result.s);
+                    self.links = result.links;
                 }
                 Err(err) => {
                     warn!("failed to parse the article: {}", err);
                 }
             }
         }
+
         self.with_view_mut(|v| v.layout(size));
     }
 
@@ -59,8 +63,10 @@ impl ArticleView {
 
         ArticleView {
             article,
-            view,
+            links: vec![],
             width: 0,
+
+            view,
             raw_command: "".to_string(),
         }
     }
@@ -119,7 +125,7 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
         })
         .on_pre_event_inner(article_view_keymap.open_link_dialog, |s, _| {
             Some(EventResult::with_cb({
-                let links = s.article.links.clone();
+                let links = s.links.clone();
                 move |s| {
                     s.add_layer(link_dialog::get_link_dialog(&links));
                 }
@@ -129,7 +135,7 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
             match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    utils::open_ith_link_in_browser(&s.article.links, num)
+                    utils::open_ith_link_in_browser(&s.links, num)
                 }
                 Err(_) => None,
             }
@@ -139,7 +145,7 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
             |s, _| match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    utils::open_ith_link_in_article_view(&s.article.links, num)
+                    utils::open_ith_link_in_article_view(&s.links, num)
                 }
                 Err(_) => None,
             },
