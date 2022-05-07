@@ -381,7 +381,7 @@ pub fn add_comment_view_layer(
     story: &client::Story,
     pop_layer: bool,
 ) {
-    let async_view = async_view::construct_comment_view_async(s, client, story);
+    let async_view = async_view::get_comment_view_async(s, client, story);
     if pop_layer {
         s.pop_layer();
     }

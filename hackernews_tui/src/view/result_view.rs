@@ -52,11 +52,11 @@ impl ErrorView {
         Self {
             view: LinearLayout::vertical()
                 .child(utils::construct_view_title_bar("Error View"))
-                .child(
-                    Dialog::around(TextView::new(format!("ERROR: {}", err)))
+                .child(Dialog::around(
+                    TextView::new(format!("ERROR: {:?}", err))
                         .scrollable()
                         .full_height(),
-                )
+                ))
                 .child(utils::construct_footer_view::<help_view::DefaultHelpView>()),
         }
     }
