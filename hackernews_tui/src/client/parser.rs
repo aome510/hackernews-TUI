@@ -191,7 +191,7 @@ impl Story {
 impl From<StoriesResponse> for Vec<Story> {
     fn from(s: StoriesResponse) -> Vec<Story> {
         s.hits
-            .into_iter()
+            .into_par_iter()
             .filter(|story| story.highlight_result.is_some())
             .map(|story| story.into())
             .collect()
