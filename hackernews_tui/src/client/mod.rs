@@ -298,6 +298,10 @@ impl HNClient {
         if output.status.success() {
             match serde_json::from_slice::<Article>(&output.stdout) {
                 Ok(mut article) => {
+                    // Replace a tab character by 4 spaces as it's possible
+                    // that the terminal cannot render the tab character.
+                    article.content = article.content.replace('\t', "    ");
+
                     article.url = url.to_string();
                     Ok(article)
                 }
