@@ -239,7 +239,7 @@ impl From<StoryResponse> for Story {
         // parse the story title that may contain search matches wrapped inside `<em>` tags
         // The matches are decorated with a corresponding style.
         {
-            // an index such that `title[curr_pos..]` represents the suffix of the
+            // an index such that `title[curr_pos..]` represents the part of the
             // text that hasn't been parsed.
             let mut curr_pos = 0;
             for caps in MATCH_RE.captures_iter(title) {
@@ -763,7 +763,7 @@ fn parse_hn_html_text(text: String, style: Style, base_link_id: usize) -> HTMLPa
     debug!("parse hn html text: {}", text);
 
     let mut result = HTMLParsedResult::default();
-    // an index such that `text[curr_pos..]` represents the suffix of the
+    // an index such that `text[curr_pos..]` represents the part of the
     // text that hasn't been parsed.
     let mut curr_pos = 0;
 
