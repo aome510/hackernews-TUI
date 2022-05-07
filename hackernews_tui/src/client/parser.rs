@@ -294,8 +294,8 @@ impl From<StoryResponse> for Story {
             };
 
             let mut text = metadata;
-            let mut links = vec![];
-            parse_hn_html_text(story_text, Style::default(), &mut text, &mut links);
+            let result = parse_hn_html_text(story_text, Style::default());
+            text.append(result.s);
 
             HnText {
                 id: s.id,
@@ -303,7 +303,7 @@ impl From<StoryResponse> for Story {
                 state: CollapseState::Normal,
                 minimized_text,
                 text,
-                links,
+                links: result.links,
             }
         };
 
@@ -323,7 +323,7 @@ impl From<StoryResponse> for Story {
 impl From<CommentResponse> for Vec<HnText> {
     fn from(c: CommentResponse) -> Self {
         // recursively parse child comments of the current comment
-        let mut children = c
+        let children = c
             .children
             .into_par_iter()
             .filter(|comment| comment.author.is_some() && comment.text.is_some())
@@ -349,14 +349,10 @@ impl From<CommentResponse> for Vec<HnText> {
 
             let mut text =
                 utils::combine_styled_strings(vec![metadata.clone(), StyledString::plain("\n")]);
-            let mut links = vec![];
 
-            parse_hn_html_text(
-                decode_html(&c.text.unwrap_or_default()),
-                Style::default(),
-                &mut text,
-                &mut links,
-            );
+            let result =
+                parse_hn_html_text(decode_html(&c.text.unwrap_or_default()), Style::default());
+            text.append(result.s);
 
             HnText {
                 id: c.id,
@@ -370,13 +366,30 @@ impl From<CommentResponse> for Vec<HnText> {
                     ),
                 ]),
                 text,
-                links,
+                links: result.links,
             }
         };
 
-        let mut comments = vec![comment];
-        comments.append(&mut children);
-        comments
+        [vec![comment], children].concat()
+    }
+}
+
+struct HTMLParsedResult {
+    pub s: StyledString,
+    pub links: Vec<String>,
+}
+
+impl HTMLParsedResult {
+    pub fn new() -> Self {
+        Self {
+            s: StyledString::new(),
+            links: vec![],
+        }
+    }
+
+    pub fn merge(&mut self, mut other: HTMLParsedResult) {
+        self.s.append(other.s);
+        self.links.append(&mut other.links);
     }
 }
 
@@ -703,9 +716,10 @@ fn decode_html(s: &str) -> String {
 }
 
 /// parse a Hacker News HTML text
-fn parse_hn_html_text(text: String, style: Style, s: &mut StyledString, links: &mut Vec<String>) {
+fn parse_hn_html_text(text: String, style: Style) -> HTMLParsedResult {
     debug!("parse hn html text: {}", text);
 
+    let mut result = HTMLParsedResult::new();
     let mut curr_pos = 0;
 
     // This variable indicates whether we have parsed the first paragraph of the current text.
@@ -716,7 +730,9 @@ fn parse_hn_html_text(text: String, style: Style, s: &mut StyledString, links: &
         // the part that doesn't match any patterns is rendered in the default style
         let whole_match = caps.get(0).unwrap();
         if curr_pos < whole_match.start() {
-            s.append_styled(&text[curr_pos..whole_match.start()], style);
+            result
+                .s
+                .append_styled(&text[curr_pos..whole_match.start()], style);
         }
         curr_pos = whole_match.end();
 
@@ -724,62 +740,66 @@ fn parse_hn_html_text(text: String, style: Style, s: &mut StyledString, links: &
 
         if let (Some(m_quote), Some(m_text)) = (caps.name("quote"), caps.name("text")) {
             if seen_first_paragraph {
-                s.append_plain("\n");
+                result.s.append_plain("\n");
             } else {
                 seen_first_paragraph = true;
             }
 
             // render quote character `>` as indentation character
-            s.append_styled(
+            result.s.append_styled(
                 "▎"
                     .to_string()
                     .repeat(m_quote.as_str().matches('>').count()),
                 style,
             );
-            parse_hn_html_text(
+            result.merge(parse_hn_html_text(
                 m_text.as_str().to_string(),
                 component_style.quote.into(),
-                s,
-                links,
-            );
+            ));
 
-            s.append_plain("\n");
+            result.s.append_plain("\n");
         } else if let Some(m) = caps.name("paragraph") {
             if seen_first_paragraph {
-                s.append_plain("\n");
+                result.s.append_plain("\n");
             } else {
                 seen_first_paragraph = true;
             }
 
-            parse_hn_html_text(m.as_str().to_string(), style, s, links);
+            result.merge(parse_hn_html_text(m.as_str().to_string(), style));
 
-            s.append_plain("\n");
+            result.s.append_plain("\n");
         } else if let Some(m) = caps.name("link") {
-            links.push(m.as_str().to_string());
+            result.links.push(m.as_str().to_string());
 
-            s.append_styled(
+            result.s.append_styled(
                 utils::shorten_url(m.as_str()),
                 style.combine(component_style.link),
             );
-            s.append_styled(" ", style);
-            s.append_styled(
-                format!("[{}]", links.len()),
+            result.s.append_styled(" ", style);
+            result.s.append_styled(
+                format!("[{}]", result.links.len()),
                 style.combine(component_style.link_id),
             );
         } else if let Some(m) = caps.name("multiline_code") {
-            s.append_styled(
+            result.s.append_styled(
                 m.as_str(),
                 style.combine(component_style.multiline_code_block),
             );
-            s.append_plain("\n");
+            result.s.append_plain("\n");
         } else if let Some(m) = caps.name("code") {
-            s.append_styled(m.as_str(), style.combine(component_style.single_code_block));
+            result
+                .s
+                .append_styled(m.as_str(), style.combine(component_style.single_code_block));
         } else if let Some(m) = caps.name("italic") {
-            s.append_styled(m.as_str(), style.combine(component_style.italic));
+            result
+                .s
+                .append_styled(m.as_str(), style.combine(component_style.italic));
         }
     }
 
     if curr_pos < text.len() {
-        s.append_styled(&text[curr_pos..text.len()], style);
+        result.s.append_styled(&text[curr_pos..text.len()], style);
     }
+
+    result
 }
