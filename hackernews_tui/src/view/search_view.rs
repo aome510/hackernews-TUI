@@ -155,8 +155,6 @@ impl ViewWrapper for SearchView {
     }
 }
 
-/// Return a main view of a SearchView displaying the matched story list with a search bar.
-/// The main view of a SearchView is a View without status bar or footer.
 fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> impl View {
     let story_view_keymap = config::get_story_view_keymap().clone();
     let search_view_keymap = config::get_search_view_keymap().clone();
@@ -246,7 +244,6 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
         })
 }
 
-/// Return a view representing a SearchView that searches stories with queries
 pub fn get_search_view(client: &'static client::HNClient, cb_sink: CbSink) -> impl View {
     let main_view = get_search_main_view(client, cb_sink);
     let mut view = LinearLayout::vertical()
@@ -259,7 +256,6 @@ pub fn get_search_view(client: &'static client::HNClient, cb_sink: CbSink) -> im
     view
 }
 
-/// Add a SearchView as a new layer to the main Cursive View
 pub fn add_search_view_layer(s: &mut Cursive, client: &'static client::HNClient) {
     let cb_sink = s.cb_sink().clone();
     s.screen_mut()

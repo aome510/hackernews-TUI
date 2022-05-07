@@ -98,8 +98,6 @@ impl ScrollViewContainer for ArticleView {
     }
 }
 
-/// Return a main view of a ArticleView displaying an article in reader mode.
-/// The main view of a ArticleView is a View without status bar or footer.
 pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleView> {
     let is_suffix_key = |c: &Event| -> bool {
         let article_view_keymap = config::get_article_view_keymap();
@@ -160,7 +158,6 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
         .on_scroll_events()
 }
 
-/// Return a ArticleView constructed from a Article struct
 pub fn get_article_view(article: client::Article) -> impl View {
     let desc = format!("Article View - {}", article.title);
     let main_view = get_article_main_view(article).full_height();
@@ -174,7 +171,6 @@ pub fn get_article_view(article: client::Article) -> impl View {
     view
 }
 
-/// Add a ArticleView as a new layer to the main Cursive View
 pub fn add_article_view_layer(s: &mut Cursive, url: &str) {
     let async_view = async_view::get_article_view_async(s, url);
     s.screen_mut().add_transparent_layer(Layer::new(async_view))

@@ -233,8 +233,6 @@ impl ScrollViewContainer for CommentView {
     }
 }
 
-/// Return a main view of a CommentView displaying the comment list.
-/// The main view of a CommentView is a View without status bar or footer.
 fn get_comment_main_view(story: &client::Story, receiver: client::CommentReceiver) -> impl View {
     let is_suffix_key = |c: &Event| -> bool {
         let comment_view_keymap = config::get_comment_view_keymap();
@@ -361,7 +359,6 @@ fn get_comment_main_view(story: &client::Story, receiver: client::CommentReceive
         .full_height()
 }
 
-/// Return a CommentView given a comment list and the discussed story's url/title
 pub fn get_comment_view(story: &client::Story, receiver: client::CommentReceiver) -> impl View {
     let status_bar =
         utils::construct_view_title_bar(&format!("Comment View - {}", story.title.source()));
@@ -378,14 +375,13 @@ pub fn get_comment_view(story: &client::Story, receiver: client::CommentReceiver
     view
 }
 
-/// Add a CommentView as a new layer to the main Cursive View
 pub fn add_comment_view_layer(
     s: &mut Cursive,
     client: &'static client::HNClient,
     story: &client::Story,
     pop_layer: bool,
 ) {
-    let async_view = async_view::get_comment_view_async(s, client, story);
+    let async_view = async_view::construct_comment_view_async(s, client, story);
     if pop_layer {
         s.pop_layer();
     }

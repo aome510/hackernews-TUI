@@ -1,18 +1,15 @@
 use crate::prelude::*;
 
-/// FnViewWrapper is a required trait to implement a wrapped View object
-/// by providing methods that returns a pointer to a View object
+/// A trait that represents a wrapper view.
+/// It requires to implement functions that return (mutable) pointer
+/// to the inner view object.
 pub trait FnViewWrapper {
-    fn get_view(&self) -> &dyn View {
-        panic!("not implemented");
-    }
-    fn get_view_mut(&mut self) -> &mut dyn View {
-        panic!("not implemented");
-    }
+    fn get_view(&self) -> &dyn View;
+    fn get_view_mut(&mut self) -> &mut dyn View;
 }
 
 #[macro_export]
-macro_rules! impl_view_for_fn_wrapper {
+macro_rules! impl_view_fns_for_fn_view_wrapper {
     () => {
         fn draw(&self, printer: &Printer) {
             self.get_view().draw(printer);
