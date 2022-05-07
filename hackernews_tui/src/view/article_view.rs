@@ -20,14 +20,14 @@ impl ViewWrapper for ArticleView {
 
             self.width = size.x;
 
-            // we need some spacings (at the end) for the table
-            self.article
-                .parse(self.width.saturating_sub(5))
-                .unwrap_or_else(|err| {
+            match self.article.parse(self.width.saturating_sub(5)) {
+                Ok(article) => {
+                    self.set_article_content(article);
+                }
+                Err(err) => {
                     warn!("failed to parse the article: {}", err);
-                });
-
-            self.set_article_content(self.article.parsed_content.clone());
+                }
+            }
         }
         self.with_view_mut(|v| v.layout(size));
     }

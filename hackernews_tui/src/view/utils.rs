@@ -76,8 +76,8 @@ pub fn open_url_in_browser(url: &str) {
 /// Note that the link index starts with `1`.
 pub fn open_ith_link_in_article_view(links: &[String], i: usize) -> Option<EventResult> {
     if i > 0 && i <= links.len() {
-        let url = links[i - 1].clone();
         Some(EventResult::with_cb({
+            let url = links[i - 1].clone();
             move |s| article_view::add_article_view_layer(s, &url)
         }))
     } else {

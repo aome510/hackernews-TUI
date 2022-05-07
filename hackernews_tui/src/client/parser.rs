@@ -169,8 +169,6 @@ pub struct Article {
     pub date_published: Option<String>,
 
     #[serde(skip)]
-    pub parsed_content: StyledString,
-    #[serde(skip)]
     pub links: Vec<String>,
 }
 
@@ -385,7 +383,7 @@ impl From<CommentResponse> for Vec<HnText> {
 impl Article {
     /// Parse article's content (in HTML) into a styled text depending on
     /// the application's component styles and the HTML tags
-    pub fn parse(&mut self, width: usize) -> Result<()> {
+    pub fn parse(&mut self, width: usize) -> Result<StyledString> {
         // replace a tab character by 4 spaces
         // as it's possible that the terminal cannot render the tab character
         self.content = self.content.replace('\t', "    ");
@@ -413,8 +411,6 @@ impl Article {
             String::new(),
         );
 
-        self.parsed_content = s;
-
         // process the links inside the article
         self.links = links
             .into_iter()
@@ -430,7 +426,7 @@ impl Article {
             })
             .collect();
 
-        Ok(())
+        Ok(s)
     }
 
     #[allow(clippy::too_many_arguments)]

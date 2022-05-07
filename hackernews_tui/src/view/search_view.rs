@@ -74,16 +74,17 @@ impl SearchView {
             None => return,
             Some(view) => view.get_text(),
         };
-        let sender = self.sender.clone();
-        let client = self.client.clone();
-        let by_date = self.by_date;
-        let page = self.page;
 
-        // use a `cb_sink` to notify the `Cursive` renderer to re-draw the application
-        // after successfully retrieving matched stories
-        let cb_sink = self.cb_sink.clone();
+        std::thread::spawn({
+            let sender = self.sender.clone();
+            let client = self.client.clone();
+            let by_date = self.by_date;
+            let page = self.page;
 
-        std::thread::spawn(
+            // use a `cb_sink` to notify the `Cursive` renderer to re-draw the application
+            // after successfully retrieving matched stories
+            let cb_sink = self.cb_sink.clone();
+
             move || match client.get_matched_stories(&query, by_date, page) {
                 Ok(stories) => {
                     sender
@@ -103,8 +104,8 @@ impl SearchView {
                         query, by_date, page, err
                     );
                 }
-            },
-        );
+            }
+        });
     }
 
     /// tries to update the Story View representing matched stories based on

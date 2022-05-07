@@ -380,10 +380,10 @@ impl<'de> de::Deserialize<'de> for Keys {
                     'C' => event::Event::CtrlChar(chars[2]),
                     'M' => event::Event::AltChar(chars[2]),
                     _ => {
-                        return Err(anyhow::anyhow!(format!(
+                        return Err(anyhow::anyhow!(
                             "failed to parse key: unknown/invalid key {}",
                             ks
-                        )))
+                        ))
                     }
                 }
             } else {
@@ -419,10 +419,10 @@ impl<'de> de::Deserialize<'de> for Keys {
                     "f12" => event::Key::F12,
 
                     _ => {
-                        return Err(anyhow::anyhow!(format!(
+                        return Err(anyhow::anyhow!(
                             "failed to parse key: unknown/invalid key {}",
                             ks
-                        )))
+                        ))
                     }
                 };
 
