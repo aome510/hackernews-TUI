@@ -151,14 +151,6 @@ impl EditableTextView {
         format!("{} ", self.text)
     }
 
-    pub fn clone(&self) -> Self {
-        EditableTextView {
-            view: TextView::new(self.get_content()),
-            text: self.text.clone(),
-            cursor: self.cursor,
-        }
-    }
-
     pub fn get_text(&self) -> String {
         self.text.clone()
     }

@@ -21,37 +21,48 @@ impl ViewWrapper for StoryView {
 
 impl StoryView {
     pub fn new(stories: Vec<client::Story>, starting_id: usize) -> Self {
-        // `max_id_width` is equal to the width of the string representation of `max_id`,
-        // which is the maximum story's id that current story view will display
-        let max_id = starting_id + stories.len() + 1;
-        let mut max_id_width = 0;
-        let mut pw = 1;
-        while pw <= max_id {
-            pw *= 10;
-            max_id_width += 1;
-        }
-
-        let view = LinearLayout::vertical()
-            .with(|s| {
-                stories.iter().enumerate().for_each(|(i, story)| {
-                    let mut story_text = StyledString::styled(
-                        format!("{1:>0$}. ", max_id_width, starting_id + i + 1),
-                        config::get_config_theme().component_style.metadata,
-                    );
-                    story_text.append(Self::get_story_text(max_id_width, story));
-                    s.add_child(text_view::TextView::new(story_text));
-                })
-            })
-            .scrollable();
         StoryView {
-            view,
+            view: Self::construct_story_view(&stories, starting_id),
             stories,
             raw_command: String::new(),
         }
     }
 
-    /// Get the description text summarizing basic information about a story
-    fn get_story_text(max_id_width: usize, story: &client::Story) -> StyledString {
+    fn construct_story_view(
+        stories: &[client::Story],
+        starting_id: usize,
+    ) -> ScrollView<LinearLayout> {
+        // Determine the maximum length of a story's ID string.
+        // This maximum length is used to align the display of the story IDs.
+        let max_id_len = {
+            let max_id = starting_id + stories.len() + 1;
+            let mut width = 0;
+            let mut pw = 1;
+            while pw <= max_id {
+                pw *= 10;
+                width += 1;
+            }
+
+            width
+        };
+
+        LinearLayout::vertical()
+            .with(|s| {
+                stories.iter().enumerate().for_each(|(i, story)| {
+                    let mut story_text = StyledString::styled(
+                        format!("{1:>0$}. ", max_id_len, starting_id + i + 1),
+                        config::get_config_theme().component_style.metadata,
+                    );
+                    story_text.append(Self::get_story_text(max_id_len, story));
+
+                    s.add_child(text_view::TextView::new(story_text));
+                })
+            })
+            .scrollable()
+    }
+
+    /// Get the text summarizing basic information about a story
+    fn get_story_text(max_id_len: usize, story: &client::Story) -> StyledString {
         let mut story_text = story.title.clone();
 
         if let Ok(url) = url::Url::parse(&story.url) {
@@ -66,7 +77,7 @@ impl StoryView {
         story_text.append_plain("\n");
 
         story_text.append_styled(
-            // left-align the story's metadata by `max_id_width+2`
+            // left-align the story's metadata by `max_id_len+2`
             // which is the width of the string "{max_story_id}. "
             format!(
                 "{:width$}{} points | by {} | {} ago | {} comments",
@@ -75,7 +86,7 @@ impl StoryView {
                 story.author,
                 crate::utils::get_elapsed_time_as_text(story.time),
                 story.num_comments,
-                width = max_id_width + 2,
+                width = max_id_len + 2,
             ),
             config::get_config_theme().component_style.metadata,
         );
@@ -114,8 +125,6 @@ impl ScrollViewContainer for StoryView {
     }
 }
 
-/// Return a main view of a StoryView displaying the story list.
-/// The main view of a StoryView is a View without status bar or footer.
 pub fn get_story_main_view(
     stories: Vec<client::Story>,
     client: &'static client::HNClient,
@@ -245,7 +254,6 @@ fn get_story_view_title_bar(tag: &'static str) -> impl View {
     )
 }
 
-/// Return a StoryView given a story list and the view description
 pub fn get_story_view(
     stories: Vec<client::Story>,
     client: &'static client::HNClient,
@@ -316,7 +324,6 @@ pub fn get_story_view(
         })
 }
 
-/// Add a StoryView as a new layer to the main Cursive View
 pub fn add_story_view_layer(
     s: &mut Cursive,
     client: &'static client::HNClient,

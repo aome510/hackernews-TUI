@@ -4,8 +4,10 @@ use crate::prelude::*;
 /// ArticleView is a View used to display the content of a web page in reader mode
 pub struct ArticleView {
     article: client::Article,
-    view: ScrollView<LinearLayout>,
+    links: Vec<String>,
     width: usize,
+
+    view: ScrollView<LinearLayout>,
 
     raw_command: String,
 }
@@ -20,15 +22,17 @@ impl ViewWrapper for ArticleView {
 
             self.width = size.x;
 
-            // we need some spacings (at the end) for the table
-            self.article
-                .parse(self.width.saturating_sub(5))
-                .unwrap_or_else(|err| {
+            match self.article.parse(self.width.saturating_sub(5)) {
+                Ok(result) => {
+                    self.set_article_content(result.s);
+                    self.links = result.links;
+                }
+                Err(err) => {
                     warn!("failed to parse the article: {}", err);
-                });
-
-            self.set_article_content(self.article.parsed_content.clone());
+                }
+            }
         }
+
         self.with_view_mut(|v| v.layout(size));
     }
 
@@ -59,8 +63,10 @@ impl ArticleView {
 
         ArticleView {
             article,
-            view,
+            links: vec![],
             width: 0,
+
+            view,
             raw_command: "".to_string(),
         }
     }
@@ -92,8 +98,6 @@ impl ScrollViewContainer for ArticleView {
     }
 }
 
-/// Return a main view of a ArticleView displaying an article in reader mode.
-/// The main view of a ArticleView is a View without status bar or footer.
 pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleView> {
     let is_suffix_key = |c: &Event| -> bool {
         let article_view_keymap = config::get_article_view_keymap();
@@ -119,7 +123,7 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
         })
         .on_pre_event_inner(article_view_keymap.open_link_dialog, |s, _| {
             Some(EventResult::with_cb({
-                let links = s.article.links.clone();
+                let links = s.links.clone();
                 move |s| {
                     s.add_layer(link_dialog::get_link_dialog(&links));
                 }
@@ -129,7 +133,7 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
             match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    utils::open_ith_link_in_browser(&s.article.links, num)
+                    utils::open_ith_link_in_browser(&s.links, num)
                 }
                 Err(_) => None,
             }
@@ -139,7 +143,7 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
             |s, _| match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    utils::open_ith_link_in_article_view(&s.article.links, num)
+                    utils::open_ith_link_in_article_view(&s.links, num)
                 }
                 Err(_) => None,
             },
@@ -154,7 +158,6 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
         .on_scroll_events()
 }
 
-/// Return a ArticleView constructed from a Article struct
 pub fn get_article_view(article: client::Article) -> impl View {
     let desc = format!("Article View - {}", article.title);
     let main_view = get_article_main_view(article).full_height();
@@ -168,7 +171,6 @@ pub fn get_article_view(article: client::Article) -> impl View {
     view
 }
 
-/// Add a ArticleView as a new layer to the main Cursive View
 pub fn add_article_view_layer(s: &mut Cursive, url: &str) {
     let async_view = async_view::get_article_view_async(s, url);
     s.screen_mut().add_transparent_layer(Layer::new(async_view))

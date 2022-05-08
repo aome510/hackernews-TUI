@@ -167,11 +167,6 @@ pub struct Article {
     pub content: String,
     pub author: Option<String>,
     pub date_published: Option<String>,
-
-    #[serde(skip)]
-    pub parsed_content: StyledString,
-    #[serde(skip)]
-    pub links: Vec<String>,
 }
 
 impl Story {
@@ -193,7 +188,7 @@ impl Story {
 impl From<StoriesResponse> for Vec<Story> {
     fn from(s: StoriesResponse) -> Vec<Story> {
         s.hits
-            .into_iter()
+            .into_par_iter()
             .filter(|story| story.highlight_result.is_some())
             .map(|story| story.into())
             .collect()
@@ -212,8 +207,8 @@ impl From<StoryResponse> for Story {
 
         let mut parsed_title = StyledString::new();
 
+        // parse the story title and decorate it based on the story category
         let title = {
-            // parse story title based on the post's category
             if let Some(title) = title.strip_prefix("Ask HN") {
                 parsed_title
                     .append_styled("Ask HN", config::get_config_theme().component_style.ask_hn);
@@ -241,23 +236,28 @@ impl From<StoryResponse> for Story {
             }
         };
 
-        // parse story title that may contain search matches wrapped inside `<em>` tags
-        let mut curr_pos = 0;
-        for caps in MATCH_RE.captures_iter(title) {
-            let whole_match = caps.get(0).unwrap();
-            // the part that doesn't match any patterns should be rendered in the default style
-            if curr_pos < whole_match.start() {
-                parsed_title.append_plain(&title[curr_pos..whole_match.start()]);
-            }
-            curr_pos = whole_match.end();
+        // parse the story title that may contain search matches wrapped inside `<em>` tags
+        // The matches are decorated with a corresponding style.
+        {
+            // an index such that `title[curr_pos..]` represents the part of the
+            // text that hasn't been parsed.
+            let mut curr_pos = 0;
+            for caps in MATCH_RE.captures_iter(title) {
+                let whole_match = caps.get(0).unwrap();
+                // the part that doesn't match any patterns should be rendered in the default style
+                if curr_pos < whole_match.start() {
+                    parsed_title.append_plain(&title[curr_pos..whole_match.start()]);
+                }
+                curr_pos = whole_match.end();
 
-            parsed_title.append_styled(
-                caps.name("match").unwrap().as_str(),
-                config::get_config_theme().component_style.matched_highlight,
-            );
-        }
-        if curr_pos < title.len() {
-            parsed_title.append_plain(&title[curr_pos..title.len()]);
+                parsed_title.append_styled(
+                    caps.name("match").unwrap().as_str(),
+                    config::get_config_theme().component_style.matched_highlight,
+                );
+            }
+            if curr_pos < title.len() {
+                parsed_title.append_plain(&title[curr_pos..title.len()]);
+            }
         }
 
         let author = s.author.unwrap_or_else(|| String::from("[deleted]"));
@@ -296,8 +296,8 @@ impl From<StoryResponse> for Story {
             };
 
             let mut text = metadata;
-            let mut links = vec![];
-            parse_hn_html_text(story_text, Style::default(), &mut text, &mut links);
+            let result = parse_hn_html_text(story_text, Style::default(), 0);
+            text.append(result.s);
 
             HnText {
                 id: s.id,
@@ -305,7 +305,7 @@ impl From<StoryResponse> for Story {
                 state: CollapseState::Normal,
                 minimized_text,
                 text,
-                links,
+                links: result.links,
             }
         };
 
@@ -325,7 +325,7 @@ impl From<StoryResponse> for Story {
 impl From<CommentResponse> for Vec<HnText> {
     fn from(c: CommentResponse) -> Self {
         // recursively parse child comments of the current comment
-        let mut children = c
+        let children = c
             .children
             .into_par_iter()
             .filter(|comment| comment.author.is_some() && comment.text.is_some())
@@ -351,14 +351,13 @@ impl From<CommentResponse> for Vec<HnText> {
 
             let mut text =
                 utils::combine_styled_strings(vec![metadata.clone(), StyledString::plain("\n")]);
-            let mut links = vec![];
 
-            parse_hn_html_text(
+            let result = parse_hn_html_text(
                 decode_html(&c.text.unwrap_or_default()),
                 Style::default(),
-                &mut text,
-                &mut links,
+                0,
             );
+            text.append(result.s);
 
             HnText {
                 id: c.id,
@@ -372,116 +371,159 @@ impl From<CommentResponse> for Vec<HnText> {
                     ),
                 ]),
                 text,
-                links,
+                links: result.links,
             }
         };
 
-        let mut comments = vec![comment];
-        comments.append(&mut children);
-        comments
+        [vec![comment], children].concat()
+    }
+}
+
+/// A HTML parsed result.
+#[derive(Debug, Default)]
+pub struct HTMLParsedResult {
+    /// a styled string representing the decorated HTML content
+    pub s: StyledString,
+    /// a list of links inside the HTML document
+    pub links: Vec<String>,
+}
+
+/// A HTML table parsed result.
+#[derive(Debug, Default)]
+pub struct HTMLTableParsedResult {
+    /// a list of links inside the HTML document
+    pub links: Vec<String>,
+    /// parsed table headers
+    pub headers: Vec<StyledString>,
+    /// parsed table rows
+    pub rows: Vec<Vec<StyledString>>,
+}
+
+impl HTMLParsedResult {
+    pub fn merge(&mut self, mut other: HTMLParsedResult) {
+        self.s.append(other.s);
+        self.links.append(&mut other.links);
+    }
+}
+
+#[derive(Debug, Clone)]
+/// Additional arguments of the article parse function [`Article::parse()`]
+struct ArticleParseArgs {
+    /// A value indicates whether the current node is inside a `<pre>` tag.
+    pub in_pre_node: bool,
+    /// A value indicates whether a node is the first element of a block tag.
+    /// This is mostly used to add newlines separating two consecutive elements in a block node.
+    pub is_first_element_in_block: bool,
+    /// A prefix string appended to each line of the current node's inner text.
+    /// This is mostly used to decorate or indent elements inside specific nodes.
+    pub prefix: String,
+}
+
+impl Default for ArticleParseArgs {
+    fn default() -> Self {
+        Self {
+            in_pre_node: false,
+            is_first_element_in_block: true,
+            prefix: String::new(),
+        }
     }
 }
 
 impl Article {
-    /// Parse article's content (in HTML) into a styled text depending on
-    /// the application's component styles and the HTML tags
-    pub fn parse(&mut self, width: usize) -> Result<()> {
-        // replace a tab character by 4 spaces
-        // as it's possible that the terminal cannot render the tab character
-        self.content = self.content.replace('\t', "    ");
-
-        debug!(
-            "parse article (url={}), width: {}, content: {}",
-            self.url, width, self.content
-        );
+    /// Parses the article's HTML content
+    ///
+    /// # Arguments:
+    /// * `max_width`: the maximum width of the parsed content. This is mostly used
+    /// to construct a HTML table using `comfy_table`.
+    pub fn parse(&self, max_width: usize) -> Result<HTMLParsedResult> {
+        debug!("parse article ({:?})", self);
 
         // parse HTML content into DOM node(s)
         let dom = parse_document(RcDom::default(), Default::default())
             .from_utf8()
             .read_from(&mut (self.content.as_bytes()))?;
 
-        let mut s = StyledString::new();
-        let mut links = vec![];
-        Self::parse_dom_node(
+        let (mut result, _) = Self::parse_dom_node(
             dom.document,
-            width,
-            &mut s,
-            &mut links,
+            max_width,
+            0,
             Style::default(),
-            false,
-            true,
-            String::new(),
+            ArticleParseArgs::default(),
         );
 
-        self.parsed_content = s;
-
-        // process the links inside the article
-        self.links = links
+        // process the links
+        result.links = result
+            .links
             .into_iter()
             .map(|l| {
                 match url::Url::parse(&l) {
-                    // failed to parse the link, possibly a relative link, (e.g `/a/b`)
-                    Err(_) => match url::Url::parse(&self.url).unwrap().join(&l) {
-                        Ok(url) => url.to_string(),
-                        Err(_) => String::new(),
-                    },
+                    // Failed to parse the link, possibly because it's a relative link, (e.g `/a/b`).
+                    // Try to convert the relative link into an absolute link.
+                    Err(err) => {
+                        debug!("failed to parse url {l}: {err}");
+                        match url::Url::parse(&self.url).unwrap().join(&l) {
+                            Ok(url) => url.to_string(),
+                            Err(_) => l,
+                        }
+                    }
                     Ok(_) => l,
                 }
             })
             .collect();
 
-        Ok(())
+        Ok(result)
     }
 
-    #[allow(clippy::too_many_arguments)]
+    /// Parses a HTML DOM node.
+    ///
+    /// # Returns
+    /// The function returns a HTML parsed result and a boolean value
+    /// indicating whether the current node has a non-whitespace text.
     fn parse_dom_node(
         node: Handle,
-        width: usize,
-        s: &mut StyledString,
-        links: &mut Vec<String>,
+        max_width: usize,
+        base_link_id: usize,
         mut style: Style,
-        // indicates whether a node is inside a <pre> tag
-        mut in_pre: bool,
-        // indicates whether a node is the first element of a block tag
-        // this is mostly used to add newlines separating a block tag and its sibling tags
-        mut is_first_element_in_block: bool,
-        // a string added to non-first children of the current block element,
-        // the first child must be handled separately
-        mut prefix: String,
-    ) -> bool {
+        mut args: ArticleParseArgs,
+    ) -> (HTMLParsedResult, bool) {
         // TODO: handle parsing <ol> tags correctly
-        debug!("parse dom node: {:?}", node);
 
+        debug!(
+            "parse dom node: {:?}, style: {:?}, args: {:?}",
+            node, style, args
+        );
+
+        let mut result = HTMLParsedResult::default();
         let mut suffix = StyledString::new();
+
         let mut visit_block_element_cb = || {
-            if !is_first_element_in_block {
-                s.append_plain("\n\n");
-                s.append_styled(&prefix, style);
+            if !args.is_first_element_in_block {
+                result.s.append_plain("\n\n");
+                result.s.append_styled(&args.prefix, style);
             }
-            is_first_element_in_block = true;
+            args.is_first_element_in_block = true;
         };
 
-        // `found_text` is the return value of the function.
-        // It is used to indicate whether the current node has renderable and non-whitespace text inside.
-        let mut found_text = false;
+        let mut has_non_ws_text = false;
 
         match &node.data {
             NodeData::Text { contents } => {
                 let content = contents.borrow().to_string();
 
-                let text = if in_pre {
+                let text = if args.in_pre_node {
                     // add `prefix` to each line of the text inside the `<pre>` tag
-                    content.replace('\n', &format!("\n{}", prefix))
+                    content.replace('\n', &format!("\n{}", args.prefix))
                 } else {
-                    // for non-pre element, consecutive whitespaces are ignored.
+                    // Otherwise, consecutive whitespaces are ignored for non-pre elements.
                     // This is to prevent reader-mode engine from adding unneccesary line wraps/indents in a paragraph.
                     WS_RE.replace_all(&content, " ").to_string()
                 };
-
-                found_text |= !text.trim().is_empty();
-
+                let text = decode_html(&text);
                 debug!("visit text: {}", text);
-                s.append_styled(decode_html(&text), style);
+
+                has_non_ws_text |= !text.trim().is_empty();
+
+                result.s.append_styled(text, style);
             }
             NodeData::Element {
                 ref name,
@@ -504,78 +546,82 @@ impl Article {
                         style = style.combine(component_style.header);
                     }
                     expanded_name!(html "br") => {
-                        s.append_styled(format!("\n{}", prefix), style);
+                        result.s.append_styled(format!("\n{}", args.prefix), style);
                     }
                     expanded_name!(html "p") => visit_block_element_cb(),
                     expanded_name!(html "code") => {
-                        if !in_pre {
-                            // we don't want to mix the `single_code_block` and `multiline_code_block` styles
-                            // if the multiline code block is inside <pre><code>...</code></pre>
+                        if !args.in_pre_node {
+                            // this assumes that `<code>` element that is not inside a pre node
+                            // is a single-line code block.
                             style = style.combine(component_style.single_code_block);
                         }
                     }
                     expanded_name!(html "pre") => {
                         visit_block_element_cb();
 
-                        in_pre = true;
+                        args.in_pre_node = true;
+                        args.prefix = format!("{}  ", args.prefix);
+
                         style = style.combine(component_style.multiline_code_block);
-                        prefix = format!("{}  ", prefix);
-                        s.append_styled("  ", style);
+
+                        result.s.append_styled("  ", style);
                     }
                     expanded_name!(html "blockquote") => {
                         visit_block_element_cb();
 
+                        args.prefix = format!("{}▎ ", args.prefix);
                         style = style.combine(component_style.quote);
-                        prefix = format!("{}▎ ", prefix);
-                        s.append_styled("▎ ", style);
+
+                        result.s.append_styled("▎ ", style);
                     }
                     expanded_name!(html "table") => {
-                        let mut headers = vec![];
-                        let mut rows = vec![];
+                        let mut table_result = HTMLTableParsedResult::default();
+                        Self::parse_html_table(
+                            node.clone(),
+                            max_width,
+                            base_link_id + result.links.len(),
+                            style,
+                            false,
+                            &mut table_result,
+                        );
 
-                        node.children.borrow().iter().for_each(|node| {
-                            Self::parse_html_table(
-                                node.clone(),
-                                width,
-                                links,
-                                &mut headers,
-                                &mut rows,
-                                style,
-                                false,
-                            );
-                        });
+                        result.links.append(&mut table_result.links);
 
                         let mut table = comfy_table::Table::new();
                         table
                             .set_content_arrangement(comfy_table::ContentArrangement::Dynamic)
-                            .set_table_width(width as u16)
+                            .set_table_width(max_width as u16)
                             .load_preset(comfy_table::presets::UTF8_FULL)
                             .apply_modifier(comfy_table::modifiers::UTF8_ROUND_CORNERS)
                             .apply_modifier(comfy_table::modifiers::UTF8_SOLID_INNER_BORDERS)
                             .set_header(
-                                headers
+                                table_result
+                                    .headers
                                     .into_iter()
                                     .map(|h| comfy_table::Cell::new(h.source()))
                                     .collect::<Vec<_>>(),
                             );
 
-                        for row in rows {
+                        for row in table_result.rows {
                             table.add_row(row.into_iter().map(|c| c.source().to_owned()));
                         }
 
-                        s.append_styled(format!("\n\n{}", table), style);
+                        result.s.append_styled(format!("\n\n{}", table), style);
 
-                        return true;
+                        return (result, true);
                     }
                     expanded_name!(html "menu")
                     | expanded_name!(html "ul")
                     | expanded_name!(html "ol") => {
                         // currently, <ol> tag is treated the same as <ul> tag
-                        prefix = format!("{}  ", prefix);
+                        args.prefix = format!("{}  ", args.prefix);
                     }
                     expanded_name!(html "li") => {
-                        s.append_styled(format!("\n{}• ", prefix), style);
-                        is_first_element_in_block = true;
+                        args.is_first_element_in_block = true;
+
+                        result
+                            .s
+                            .append_styled(format!("\n{}• ", args.prefix), style);
                     }
                     expanded_name!(html "img") => {
                         let img_desc = if let Some(attr) = attrs
@@ -588,11 +634,11 @@ impl Article {
                             String::new()
                         };
 
-                        if !is_first_element_in_block {
-                            s.append_plain("\n\n");
+                        if !args.is_first_element_in_block {
+                            result.s.append_plain("\n\n");
                         }
-                        s.append_styled(&img_desc, style);
-                        s.append_styled(" (image)", component_style.metadata);
+                        result.s.append_styled(&img_desc, style);
+                        result.s.append_styled(" (image)", component_style.metadata);
                     }
                     expanded_name!(html "a") => {
                         // find `href` attribute of an <a> tag
@@ -601,11 +647,11 @@ impl Article {
                             .iter()
                             .find(|&attr| attr.name.expanded() == expanded_name!("", "href"))
                         {
-                            links.push(attr.value.clone().to_string());
+                            result.links.push(attr.value.clone().to_string());
 
                             suffix.append_styled(" ", style);
                             suffix.append_styled(
-                                format!("[{}]", links.len()),
+                                format!("[{}]", result.links.len() + base_link_id),
                                 component_style.link_id,
                             );
                         }
@@ -625,33 +671,32 @@ impl Article {
         }
 
         node.children.borrow().iter().for_each(|node| {
-            found_text |= Self::parse_dom_node(
+            let (child_result, child_has_non_ws_text) = Self::parse_dom_node(
                 node.clone(),
-                width,
-                s,
-                links,
+                max_width,
+                base_link_id + result.links.len(),
                 style,
-                in_pre,
-                is_first_element_in_block,
-                prefix.clone(),
+                args.clone(),
             );
-            if found_text {
-                is_first_element_in_block = false;
+
+            result.merge(child_result);
+            has_non_ws_text |= child_has_non_ws_text;
+            if has_non_ws_text {
+                args.is_first_element_in_block = false;
             }
         });
 
-        s.append(suffix);
-        found_text
+        result.s.append(suffix);
+        (result, has_non_ws_text)
     }
 
     fn parse_html_table(
         node: Handle,
-        width: usize,
-        links: &mut Vec<String>,
-        headers: &mut Vec<StyledString>,
-        rows: &mut Vec<Vec<StyledString>>,
+        max_width: usize,
+        base_link_id: usize,
         style: Style,
         mut is_header: bool,
+        result: &mut HTMLTableParsedResult,
     ) {
         debug!("parse html table: {:?}", node);
 
@@ -665,30 +710,31 @@ impl Article {
                 }
                 expanded_name!(html "tr") => {
                     if !is_header {
-                        rows.push(vec![]);
+                        result.rows.push(vec![]);
                     }
                 }
                 expanded_name!(html "td") | expanded_name!(html "th") => {
                     let mut s = StyledString::new();
 
                     node.children.borrow().iter().for_each(|node| {
-                        Self::parse_dom_node(
+                        let (mut child_result, _) = Self::parse_dom_node(
                             node.clone(),
-                            width,
-                            &mut s,
-                            links,
+                            max_width,
+                            base_link_id + result.links.len(),
                             style,
-                            false,
-                            true,
-                            String::new(),
+                            ArticleParseArgs::default(),
                         );
+
+                        result.links.append(&mut child_result.links);
+                        s.append(child_result.s);
                     });
 
                     if !is_header {
-                        rows.last_mut().unwrap().push(s);
+                        result.rows.last_mut().unwrap().push(s);
                     } else {
-                        headers.push(s);
+                        result.headers.push(s);
                     }
+
                     return;
                 }
                 _ => {}
@@ -696,7 +742,14 @@ impl Article {
         }
 
         node.children.borrow().iter().for_each(|node| {
-            Self::parse_html_table(node.clone(), width, links, headers, rows, style, is_header);
+            Self::parse_html_table(
+                node.clone(),
+                max_width,
+                base_link_id + result.links.len(),
+                style,
+                is_header,
+                result,
+            );
         });
     }
 }
@@ -707,9 +760,12 @@ fn decode_html(s: &str) -> String {
 }
 
 /// parse a Hacker News HTML text
-fn parse_hn_html_text(text: String, style: Style, s: &mut StyledString, links: &mut Vec<String>) {
+fn parse_hn_html_text(text: String, style: Style, base_link_id: usize) -> HTMLParsedResult {
     debug!("parse hn html text: {}", text);
 
+    let mut result = HTMLParsedResult::default();
+    // an index such that `text[curr_pos..]` represents the part of the
+    // text that hasn't been parsed.
     let mut curr_pos = 0;
 
     // This variable indicates whether we have parsed the first paragraph of the current text.
@@ -720,7 +776,9 @@ fn parse_hn_html_text(text: String, style: Style, s: &mut StyledString, links: &
         // the part that doesn't match any patterns is rendered in the default style
         let whole_match = caps.get(0).unwrap();
         if curr_pos < whole_match.start() {
-            s.append_styled(&text[curr_pos..whole_match.start()], style);
+            result
+                .s
+                .append_styled(&text[curr_pos..whole_match.start()], style);
         }
         curr_pos = whole_match.end();
 
@@ -728,62 +786,71 @@ fn parse_hn_html_text(text: String, style: Style, s: &mut StyledString, links: &
 
         if let (Some(m_quote), Some(m_text)) = (caps.name("quote"), caps.name("text")) {
             if seen_first_paragraph {
-                s.append_plain("\n");
+                result.s.append_plain("\n");
             } else {
                 seen_first_paragraph = true;
             }
 
             // render quote character `>` as indentation character
-            s.append_styled(
+            result.s.append_styled(
                 "▎"
                     .to_string()
                     .repeat(m_quote.as_str().matches('>').count()),
                 style,
             );
-            parse_hn_html_text(
+            result.merge(parse_hn_html_text(
                 m_text.as_str().to_string(),
                 component_style.quote.into(),
-                s,
-                links,
-            );
+                base_link_id + result.links.len(),
+            ));
 
-            s.append_plain("\n");
+            result.s.append_plain("\n");
         } else if let Some(m) = caps.name("paragraph") {
             if seen_first_paragraph {
-                s.append_plain("\n");
+                result.s.append_plain("\n");
             } else {
                 seen_first_paragraph = true;
             }
 
-            parse_hn_html_text(m.as_str().to_string(), style, s, links);
+            result.merge(parse_hn_html_text(
+                m.as_str().to_string(),
+                style,
+                base_link_id + result.links.len(),
+            ));
 
-            s.append_plain("\n");
+            result.s.append_plain("\n");
         } else if let Some(m) = caps.name("link") {
-            links.push(m.as_str().to_string());
+            result.links.push(m.as_str().to_string());
 
-            s.append_styled(
+            result.s.append_styled(
                 utils::shorten_url(m.as_str()),
                 style.combine(component_style.link),
             );
-            s.append_styled(" ", style);
-            s.append_styled(
-                format!("[{}]", links.len()),
+            result.s.append_styled(" ", style);
+            result.s.append_styled(
+                format!("[{}]", result.links.len() + base_link_id),
                 style.combine(component_style.link_id),
             );
         } else if let Some(m) = caps.name("multiline_code") {
-            s.append_styled(
+            result.s.append_styled(
                 m.as_str(),
                 style.combine(component_style.multiline_code_block),
             );
-            s.append_plain("\n");
+            result.s.append_plain("\n");
         } else if let Some(m) = caps.name("code") {
-            s.append_styled(m.as_str(), style.combine(component_style.single_code_block));
+            result
+                .s
+                .append_styled(m.as_str(), style.combine(component_style.single_code_block));
         } else if let Some(m) = caps.name("italic") {
-            s.append_styled(m.as_str(), style.combine(component_style.italic));
+            result
+                .s
+                .append_styled(m.as_str(), style.combine(component_style.italic));
         }
     }
 
     if curr_pos < text.len() {
-        s.append_styled(&text[curr_pos..text.len()], style);
+        result.s.append_styled(&text[curr_pos..text.len()], style);
     }
+
+    result
 }
