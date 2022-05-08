@@ -407,6 +407,7 @@ impl HTMLParsedResult {
 }
 
 #[derive(Debug, Clone)]
+/// Additional arguments of the article parse function [`Article::parse()`]
 struct ArticleParseArgs {
     /// A value indicates whether the current node is inside a `<pre>` tag.
     pub in_pre_node: bool,
