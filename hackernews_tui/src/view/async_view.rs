@@ -40,7 +40,7 @@ pub fn get_story_view_async(
             ResultView::new(
                 result.with_context(|| {
                     format!(
-                        "failed to get stories (tag={}, by_date={}, page={}, numeric_filters={:#?}):",
+                        "failed to get stories (tag={}, by_date={}, page={}, numeric_filters={{{}}})",
                         tag, by_date, page, numeric_filters,
                     )
                 }),

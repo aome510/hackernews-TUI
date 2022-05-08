@@ -29,6 +29,7 @@ pub struct HNClient {
     client: ureq::Agent,
 }
 
+/// A macro to log the runtime of an epxression
 macro_rules! log {
     ($e:expr, $desc:expr) => {{
         let time = std::time::SystemTime::now();
@@ -81,8 +82,6 @@ impl HNClient {
 
         // loads first 5 comments to ensure the corresponding `CommentView` has data to render
         self.load_comments(&sender, &mut ids, 5)?;
-        // used to test loading bar
-        // std::thread::sleep(std::time::Duration::from_secs(1000));
         std::thread::spawn({
             let client = self.clone();
             let sleep_dur = std::time::Duration::from_millis(1000);
@@ -256,6 +255,7 @@ impl HNClient {
         page: usize,
         numeric_filters: query::StoryNumericFilters,
     ) -> Result<Vec<Story>> {
+        return Err(anyhow::anyhow!("error..."));
         if tag == "front_page" {
             return self.get_front_page_stories(page, numeric_filters);
         }
