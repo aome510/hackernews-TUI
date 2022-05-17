@@ -255,7 +255,6 @@ impl HNClient {
         page: usize,
         numeric_filters: query::StoryNumericFilters,
     ) -> Result<Vec<Story>> {
-        return Err(anyhow::anyhow!("error..."));
         if tag == "front_page" {
             return self.get_front_page_stories(page, numeric_filters);
         }

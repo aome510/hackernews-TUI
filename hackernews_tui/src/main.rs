@@ -128,7 +128,7 @@ fn run() {
 /// initialize application logging
 fn init_logging(log_dir_str: &str) {
     if std::env::var("RUST_LOG").is_err() {
-        std::env::set_var("RUST_LOG", "info")
+        std::env::set_var("RUST_LOG", "hackernews_tui=info")
     }
 
     let log_dir = std::path::PathBuf::from(log_dir_str);
