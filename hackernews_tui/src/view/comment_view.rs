@@ -13,12 +13,16 @@ pub struct CommentView {
     raw_command: String,
 }
 
+pub enum NavigationDirection {
+    Next,
+    Previous,
+}
+
 impl ViewWrapper for CommentView {
     wrap_impl!(self.view: ScrollView<LinearLayout>);
 }
 
 impl CommentView {
-    /// Return a new CommentView given a comment list and the discussed story url
     pub fn new(story_text: client::HnText, receiver: client::CommentReceiver) -> Self {
         let mut view = CommentView {
             view: LinearLayout::vertical()
@@ -39,7 +43,7 @@ impl CommentView {
         view
     }
 
-    /// Check the `CommentReceiver` channel if there are new comments loaded
+    /// Check the comment receiver channel if there are new comments loaded
     /// then update the internal comment data accordingly.
     pub fn try_update_comments(&mut self) {
         let mut new_comments = vec![];
@@ -94,33 +98,31 @@ impl CommentView {
         &self,
         start_id: usize,
         max_level: usize,
-        direction: bool,
+        direction: NavigationDirection,
     ) -> usize {
-        if direction {
-            // ->
-            (start_id + 1..self.len())
+        match direction {
+            NavigationDirection::Next => (start_id + 1..self.len())
                 .find(|&id| self.comments[id].level <= max_level)
-                .unwrap_or_else(|| self.len())
-        } else {
-            // <-
-            (0..start_id)
+                .unwrap_or_else(|| self.len()),
+            NavigationDirection::Previous => (0..start_id)
                 .rfind(|&id| self.comments[id].level <= max_level)
-                .unwrap_or(start_id)
+                .unwrap_or(start_id),
         }
     }
 
     /// Return the id of the next visible comment
-    pub fn find_next_visible_comment(&self, start_id: usize, direction: bool) -> usize {
-        if direction {
-            // ->
-            (start_id + 1..self.len())
+    pub fn find_next_visible_comment(
+        &self,
+        start_id: usize,
+        direction: NavigationDirection,
+    ) -> usize {
+        match direction {
+            NavigationDirection::Next => (start_id + 1..self.len())
                 .find(|&id| self.get_comment_component(id).is_visible())
-                .unwrap_or_else(|| self.len())
-        } else {
-            // <-
-            (0..start_id)
+                .unwrap_or_else(|| self.len()),
+            NavigationDirection::Previous => (0..start_id)
                 .rfind(|&id| self.get_comment_component(id).is_visible())
-                .unwrap_or(start_id)
+                .unwrap_or(start_id),
         }
     }
 
@@ -166,7 +168,11 @@ impl CommentView {
                 }
 
                 // skip toggling all child comments of the current comment
-                let next_id = self.find_comment_id_by_max_level(i, self.comments[i].level, true);
+                let next_id = self.find_comment_id_by_max_level(
+                    i,
+                    self.comments[i].level,
+                    NavigationDirection::Next,
+                );
                 self.toggle_comment_collapse_state(next_id, min_height)
             }
         };
@@ -266,36 +272,48 @@ fn construct_comment_main_view(
         })
         // comment navigation shortcuts
         .on_pre_event_inner(comment_view_keymap.prev_comment, |s, _| {
-            s.set_focus_index(s.find_next_visible_comment(s.get_focus_index(), false))
+            s.set_focus_index(
+                s.find_next_visible_comment(s.get_focus_index(), NavigationDirection::Previous),
+            )
         })
         .on_pre_event_inner(comment_view_keymap.next_comment, |s, _| {
-            let next_id = s.find_next_visible_comment(s.get_focus_index(), true);
+            let next_id =
+                s.find_next_visible_comment(s.get_focus_index(), NavigationDirection::Next);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.next_leq_level_comment, move |s, _| {
             let id = s.get_focus_index();
-            let next_id = s.find_comment_id_by_max_level(id, s.comments[id].level, true);
+            let next_id =
+                s.find_comment_id_by_max_level(id, s.comments[id].level, NavigationDirection::Next);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.prev_leq_level_comment, move |s, _| {
             let id = s.get_focus_index();
-            let next_id = s.find_comment_id_by_max_level(id, s.comments[id].level, false);
+            let next_id = s.find_comment_id_by_max_level(
+                id,
+                s.comments[id].level,
+                NavigationDirection::Previous,
+            );
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.next_top_level_comment, move |s, _| {
             let id = s.get_focus_index();
-            let next_id = s.find_comment_id_by_max_level(id, 0, true);
+            let next_id = s.find_comment_id_by_max_level(id, 0, NavigationDirection::Next);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.prev_top_level_comment, move |s, _| {
             let id = s.get_focus_index();
-            let next_id = s.find_comment_id_by_max_level(id, 0, false);
+            let next_id = s.find_comment_id_by_max_level(id, 0, NavigationDirection::Previous);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.parent_comment, move |s, _| {
             let id = s.get_focus_index();
             if s.comments[id].level > 0 {
-                let next_id = s.find_comment_id_by_max_level(id, s.comments[id].level - 1, false);
+                let next_id = s.find_comment_id_by_max_level(
+                    id,
+                    s.comments[id].level - 1,
+                    NavigationDirection::Previous,
+                );
                 s.set_focus_index(next_id)
             } else {
                 Some(EventResult::Consumed(None))
