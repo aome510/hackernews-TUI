@@ -110,7 +110,7 @@ impl CommentView {
         }
     }
 
-    /// Return the id of the next visible comment
+    /// Return the id of the next visible comment (`direction` dependent)
     pub fn find_next_visible_comment(
         &self,
         start_id: usize,
@@ -140,27 +140,29 @@ impl CommentView {
             .unwrap()
     }
 
-    /// Toggle the collapsing state of comments whose height is greater
-    /// than the `min_height`.
-    /// **Note** `PartiallyCollapsed` comment's state is unchanged, only toggle its visibility.
-    /// Also, the state and visibility of such comment's children are unaffected.
-    fn toggle_comment_collapse_state(&mut self, i: usize, min_height: usize) {
-        if i == self.len() || self.comments[i].level <= min_height {
+    /// Toggle the collapsing state of comments whose level is greater than the `min_level`.
+    fn toggle_comment_collapse_state(&mut self, start_id: usize, min_level: usize) {
+        // This function will be called recursively until it's unable to find any comments.
+        //
+        // **Note**: `PartiallyCollapsed` comment's state is unchanged, we only toggle its visibility.
+        // Also, the state and visibility of such comment's children are unaffected as they should already
+        // be in a collapsed state.
+        if start_id == self.len() || self.comments[start_id].level <= min_level {
             return;
         }
-        match self.comments[i].state {
+        match self.comments[start_id].state {
             client::CollapseState::Collapsed => {
-                self.comments[i].state = client::CollapseState::Normal;
-                self.get_comment_component_mut(i).unhide();
-                self.toggle_comment_collapse_state(i + 1, min_height)
+                self.comments[start_id].state = client::CollapseState::Normal;
+                self.get_comment_component_mut(start_id).unhide();
+                self.toggle_comment_collapse_state(start_id + 1, min_level)
             }
             client::CollapseState::Normal => {
-                self.comments[i].state = client::CollapseState::Collapsed;
-                self.get_comment_component_mut(i).hide();
-                self.toggle_comment_collapse_state(i + 1, min_height)
+                self.comments[start_id].state = client::CollapseState::Collapsed;
+                self.get_comment_component_mut(start_id).hide();
+                self.toggle_comment_collapse_state(start_id + 1, min_level)
             }
             client::CollapseState::PartiallyCollapsed => {
-                let component = self.get_comment_component_mut(i);
+                let component = self.get_comment_component_mut(start_id);
                 if component.is_visible() {
                     component.hide();
                 } else {
@@ -169,11 +171,11 @@ impl CommentView {
 
                 // skip toggling all child comments of the current comment
                 let next_id = self.find_comment_id_by_max_level(
-                    i,
-                    self.comments[i].level,
+                    start_id,
+                    self.comments[start_id].level,
                     NavigationDirection::Next,
                 );
-                self.toggle_comment_collapse_state(next_id, min_height)
+                self.toggle_comment_collapse_state(next_id, min_level)
             }
         };
     }
@@ -185,7 +187,7 @@ impl CommentView {
         match comment.state {
             client::CollapseState::Collapsed => {
                 panic!(
-                    "invalid comment state `Collapsed` when calling `toggle_collapse_focused_comment`"
+                    "invalid collapse state `Collapsed` when calling `toggle_collapse_focused_comment`"
                 );
             }
             client::CollapseState::PartiallyCollapsed => {
