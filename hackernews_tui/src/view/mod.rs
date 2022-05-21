@@ -16,20 +16,24 @@ use crate::view::help_view::HasHelpView;
 
 use super::prelude::*;
 
-macro_rules! set_up_switch_view_shortcut {
-    ($key:expr,$tag:expr,$s:expr,$client:expr) => {
-        $s.set_on_post_event($key, move |s| {
-            story_view::add_story_view_layer(
-                s,
-                $client,
-                $tag,
-                true,
-                0,
-                client::StoryNumericFilters::default(),
-                false,
-            );
-        });
-    };
+fn set_up_switch_story_view_shortcut(
+    keys: config::Keys,
+    tag: &'static str,
+    s: &mut Cursive,
+    client: &'static client::HNClient,
+    numeric_filters: Option<client::StoryNumericFilters>,
+) {
+    s.set_on_post_event(keys, move |s| {
+        story_view::add_story_view_layer(
+            s,
+            client,
+            tag,
+            true,
+            0,
+            numeric_filters.unwrap_or_default(),
+            false,
+        );
+    });
 }
 
 fn set_up_global_callbacks(s: &mut Cursive, client: &'static client::HNClient) {
@@ -41,11 +45,23 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &'static client::HNClient) {
     // global shortcuts for switching between different Story Views
     // .............................................................
 
-    set_up_switch_view_shortcut!(global_keymap.goto_front_page_view, "front_page", s, client);
-    set_up_switch_view_shortcut!(global_keymap.goto_all_stories_view, "story", s, client);
-    set_up_switch_view_shortcut!(global_keymap.goto_ask_hn_view, "ask_hn", s, client);
-    set_up_switch_view_shortcut!(global_keymap.goto_show_hn_view, "show_hn", s, client);
-    set_up_switch_view_shortcut!(global_keymap.goto_jobs_view, "job", s, client);
+    set_up_switch_story_view_shortcut(
+        global_keymap.goto_front_page_view,
+        "front_page",
+        s,
+        client,
+        None,
+    );
+    set_up_switch_story_view_shortcut(
+        global_keymap.goto_all_stories_view,
+        "story",
+        s,
+        client,
+        None,
+    );
+    set_up_switch_story_view_shortcut(global_keymap.goto_ask_hn_view, "ask_hn", s, client, None);
+    set_up_switch_story_view_shortcut(global_keymap.goto_show_hn_view, "show_hn", s, client, None);
+    set_up_switch_story_view_shortcut(global_keymap.goto_jobs_view, "job", s, client, None);
 
     // custom navigation shortcuts
     config::get_config()

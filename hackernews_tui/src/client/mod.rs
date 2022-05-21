@@ -29,7 +29,7 @@ pub struct HNClient {
     client: ureq::Agent,
 }
 
-/// A macro to log the runtime of an epxression
+/// A macro to log the runtime of an expression
 macro_rules! log {
     ($e:expr, $desc:expr) => {{
         let time = std::time::SystemTime::now();
