@@ -24,7 +24,7 @@ fn set_up_switch_story_view_shortcut(
     numeric_filters: Option<client::StoryNumericFilters>,
 ) {
     s.set_on_post_event(keys, move |s| {
-        story_view::add_story_view_layer(
+        story_view::construct_and_add_new_story_view(
             s,
             client,
             tag,
@@ -70,7 +70,7 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &'static client::HNClient) {
         .iter()
         .for_each(|data| {
             s.set_on_post_event(data.key.clone(), move |s| {
-                story_view::add_story_view_layer(
+                story_view::construct_and_add_new_story_view(
                     s,
                     client,
                     &data.tag,
@@ -93,7 +93,7 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &'static client::HNClient) {
     });
 
     s.set_on_post_event(global_keymap.goto_search_view, move |s| {
-        search_view::add_search_view_layer(s, client);
+        search_view::construct_and_add_new_search_view(s, client);
     });
 
     s.set_on_post_event(global_keymap.open_help_dialog, |s| {
@@ -124,7 +124,7 @@ pub fn init_ui(client: &'static client::HNClient) -> cursive::CursiveRunnable {
     set_up_global_callbacks(&mut s, client);
 
     // render `front_page` story view as the application's startup view
-    story_view::add_story_view_layer(
+    story_view::construct_and_add_new_story_view(
         &mut s,
         client,
         "front_page",

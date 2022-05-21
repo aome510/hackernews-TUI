@@ -233,7 +233,10 @@ impl ScrollViewContainer for CommentView {
     }
 }
 
-fn get_comment_main_view(story: &client::Story, receiver: client::CommentReceiver) -> impl View {
+fn construct_comment_main_view(
+    story: &client::Story,
+    receiver: client::CommentReceiver,
+) -> impl View {
     let is_suffix_key = |c: &Event| -> bool {
         let comment_view_keymap = config::get_comment_view_keymap();
         comment_view_keymap.open_link_in_browser.has_event(c)
@@ -342,7 +345,7 @@ fn get_comment_main_view(story: &client::Story, receiver: client::CommentReceive
             let url = story.url.clone();
             move |s| {
                 if !url.is_empty() {
-                    article_view::add_article_view_layer(s, &url)
+                    article_view::construct_and_add_new_article_view(s, &url)
                 }
             }
         })
@@ -359,14 +362,22 @@ fn get_comment_main_view(story: &client::Story, receiver: client::CommentReceive
         .full_height()
 }
 
-pub fn get_comment_view(story: &client::Story, receiver: client::CommentReceiver) -> impl View {
-    let status_bar =
-        utils::construct_view_title_bar(&format!("Comment View - {}", story.title.source()));
-
-    let main_view = get_comment_main_view(story, receiver);
+/// Construct a comment view of a given story.
+///
+/// # Arguments:
+/// * `story`: a Hacker News story
+/// * `receiver`: a "subscriber" channel that gets comments asynchronously from another thread
+pub fn construct_comment_view(
+    story: &client::Story,
+    receiver: client::CommentReceiver,
+) -> impl View {
+    let main_view = construct_comment_main_view(story, receiver);
 
     let mut view = LinearLayout::vertical()
-        .child(status_bar)
+        .child(utils::construct_view_title_bar(&format!(
+            "Comment View - {}",
+            story.title.source()
+        )))
         .child(main_view)
         .child(utils::construct_footer_view::<CommentView>());
     view.set_focus_index(1)
@@ -375,13 +386,14 @@ pub fn get_comment_view(story: &client::Story, receiver: client::CommentReceiver
     view
 }
 
-pub fn add_comment_view_layer(
+/// Retrieve comments of a story and construct a comment view of that story
+pub fn construct_and_add_new_comment_view(
     s: &mut Cursive,
     client: &'static client::HNClient,
     story: &client::Story,
     pop_layer: bool,
 ) {
-    let async_view = async_view::get_comment_view_async(s, client, story);
+    let async_view = async_view::construct_comment_view_async(s, client, story);
     if pop_layer {
         s.pop_layer();
     }
