@@ -98,7 +98,7 @@ impl ScrollViewContainer for ArticleView {
     }
 }
 
-pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleView> {
+fn construct_article_main_view(article: client::Article) -> OnEventView<ArticleView> {
     let is_suffix_key = |c: &Event| -> bool {
         let article_view_keymap = config::get_article_view_keymap();
         article_view_keymap.open_link_in_browser.has_event(c)
@@ -158,9 +158,11 @@ pub fn get_article_main_view(article: client::Article) -> OnEventView<ArticleVie
         .on_scroll_events()
 }
 
-pub fn get_article_view(article: client::Article) -> impl View {
+/// Construct an article view of an article
+pub fn construct_article_view(article: client::Article) -> impl View {
     let desc = format!("Article View - {}", article.title);
-    let main_view = get_article_main_view(article).full_height();
+    let main_view = construct_article_main_view(article).full_height();
+
     let mut view = LinearLayout::vertical()
         .child(utils::construct_view_title_bar(&desc))
         .child(main_view)
@@ -171,7 +173,8 @@ pub fn get_article_view(article: client::Article) -> impl View {
     view
 }
 
-pub fn add_article_view_layer(s: &mut Cursive, url: &str) {
-    let async_view = async_view::get_article_view_async(s, url);
+/// Retrieve an article from a given `url` and construct an article view of that article
+pub fn construct_and_add_new_article_view(s: &mut Cursive, url: &str) {
+    let async_view = async_view::construct_article_view_async(s, url);
     s.screen_mut().add_transparent_layer(Layer::new(async_view))
 }

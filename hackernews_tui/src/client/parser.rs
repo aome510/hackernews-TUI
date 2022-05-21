@@ -147,12 +147,13 @@ pub struct HnText {
     pub level: usize,
     pub state: CollapseState,
     pub text: StyledString,
+    /// The minimized version of the text used to display the text component when it's partially collapsed.
     pub minimized_text: StyledString,
     pub links: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-/// The collapse state of a text component
+/// The collapse state of a HN text component
 pub enum CollapseState {
     Collapsed,
     PartiallyCollapsed,

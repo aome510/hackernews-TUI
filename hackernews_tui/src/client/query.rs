@@ -7,15 +7,15 @@ pub struct FilterInterval<T> {
     end: Option<T>,
 }
 
-impl<T: std::fmt::Display + Copy> FilterInterval<T> {
+impl<T: std::fmt::Display> FilterInterval<T> {
     pub fn query(&self, field: &str) -> String {
         format!(
             "{}{}",
-            match self.start {
+            match self.start.as_ref() {
                 Some(x) => format!(",{}>={}", field, x),
                 None => "".to_string(),
             },
-            match self.end {
+            match self.end.as_ref() {
                 Some(x) => format!(",{}<{}", field, x),
                 None => "".to_string(),
             },
@@ -26,11 +26,11 @@ impl<T: std::fmt::Display + Copy> FilterInterval<T> {
         format!(
             "{}: [{}:{}]",
             field,
-            match self.start {
+            match self.start.as_ref() {
                 Some(x) => x.to_string(),
                 None => "".to_string(),
             },
-            match self.end {
+            match self.end.as_ref() {
                 Some(x) => x.to_string(),
                 None => "".to_string(),
             }
@@ -91,5 +91,11 @@ impl StoryNumericFilters {
         } else {
             "".to_string()
         }
+    }
+}
+
+impl std::fmt::Display for StoryNumericFilters {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.desc())
     }
 }

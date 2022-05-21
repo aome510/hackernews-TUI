@@ -78,7 +78,7 @@ pub fn open_ith_link_in_article_view(links: &[String], i: usize) -> Option<Event
     if i > 0 && i <= links.len() {
         Some(EventResult::with_cb({
             let url = links[i - 1].clone();
-            move |s| article_view::add_article_view_layer(s, &url)
+            move |s| article_view::construct_and_add_new_article_view(s, &url)
         }))
     } else {
         Some(EventResult::Consumed(None))
