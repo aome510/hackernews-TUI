@@ -151,7 +151,7 @@ fn init_logging(log_dir_str: &str) {
 /// parse command line arguments
 fn parse_args(config_dir: &std::path::Path, cache_dir: &std::path::Path) -> ArgMatches {
     Command::new("hackernews-tui")
-        .version("0.9.1")
+        .version("0.10.0")
         .author("Thang Pham <phamducthang1234@gmail>")
         .about("A Terminal UI to browse Hacker News")
         .arg(

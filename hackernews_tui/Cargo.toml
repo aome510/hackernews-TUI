@@ -1,6 +1,6 @@
 [package]
 name = "hackernews_tui"
-version = "0.9.1"
+version = "0.10.0"
 authors = ["Thang Pham <phamducthang1234@gmail.com>"]
 edition = "2021"
 license = "MIT"
