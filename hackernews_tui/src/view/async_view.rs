@@ -4,7 +4,7 @@ use anyhow::Context;
 use cursive_aligned_view::Alignable;
 use cursive_async_view::AsyncView;
 
-pub fn get_comment_view_async(
+pub fn construct_comment_view_async(
     siv: &mut Cursive,
     client: &'static client::HNClient,
     story: &client::Story,
@@ -16,7 +16,7 @@ pub fn get_comment_view_async(
         move |result: Result<_>| {
             ResultView::new(
                 result.with_context(|| format!("failed to load comments from story (id={})", id)),
-                |receiver| comment_view::get_comment_view(&story, receiver),
+                |receiver| comment_view::construct_comment_view(&story, receiver),
             )
         }
     })
@@ -25,7 +25,7 @@ pub fn get_comment_view_async(
     .full_screen()
 }
 
-pub fn get_story_view_async(
+pub fn construct_story_view_async(
     siv: &mut Cursive,
     client: &'static client::HNClient,
     tag: &'static str,
@@ -40,12 +40,12 @@ pub fn get_story_view_async(
             ResultView::new(
                 result.with_context(|| {
                     format!(
-                        "failed to get stories (tag={}, by_date={}, page={}, numeric_filters={:#?}):",
+                        "failed to get stories (tag={}, by_date={}, page={}, numeric_filters={{{}}})",
                         tag, by_date, page, numeric_filters,
                     )
                 }),
                 |stories| {
-                    story_view::get_story_view(stories, client, tag, by_date, page, numeric_filters)
+                    story_view::construct_story_view(stories, client, tag, by_date, page, numeric_filters)
                 },
             )
         },
@@ -55,7 +55,7 @@ pub fn get_story_view_async(
     .full_screen()
 }
 
-pub fn get_article_view_async(siv: &mut Cursive, article_url: &str) -> impl View {
+pub fn construct_article_view_async(siv: &mut Cursive, article_url: &str) -> impl View {
     let err_context = format!(
         "Failed to execute the command:\n\
          `{} {}`.\n\n\
@@ -73,7 +73,7 @@ pub fn get_article_view_async(siv: &mut Cursive, article_url: &str) -> impl View
         move |result| {
             let err_context = err_context.clone();
             ResultView::new(result.with_context(|| err_context), |article| {
-                article_view::get_article_view(article)
+                article_view::construct_article_view(article)
             })
         },
     )

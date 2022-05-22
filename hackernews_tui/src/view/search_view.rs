@@ -44,7 +44,7 @@ impl SearchView {
                     )))
                     .child(EditableTextView::new()),
             )
-            .child(story_view::get_story_main_view(vec![], client, 0).full_height());
+            .child(story_view::construct_story_main_view(vec![], client, 0).full_height());
 
         Self {
             mode: SearchViewMode::Search,
@@ -131,7 +131,7 @@ impl SearchView {
         self.view.remove_child(1);
         let starting_id = client::SEARCH_LIMIT * self.page;
         self.view.add_child(
-            story_view::get_story_main_view(stories, self.client, starting_id).full_height(),
+            story_view::construct_story_main_view(stories, self.client, starting_id).full_height(),
         );
         // the old Story View is deleted hence losing the current focus,
         // we need to place the focus back to the new Story View
@@ -155,7 +155,7 @@ impl ViewWrapper for SearchView {
     }
 }
 
-fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> impl View {
+fn construct_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> impl View {
     let story_view_keymap = config::get_story_view_keymap().clone();
     let search_view_keymap = config::get_search_view_keymap().clone();
 
@@ -211,7 +211,8 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
                 Some(EventResult::Consumed(None))
             }
         })
-        // paging/filtering while in NavigationMode
+        // paging/filtering commands while in NavigationMode
+        // Those commands need to be handled differently from the story view.
         .on_pre_event_inner(story_view_keymap.toggle_sort_by_date, |s, _| match s.mode {
             SearchViewMode::Navigation => {
                 s.page = 0;
@@ -244,20 +245,22 @@ fn get_search_main_view(client: &'static client::HNClient, cb_sink: CbSink) -> i
         })
 }
 
-pub fn get_search_view(client: &'static client::HNClient, cb_sink: CbSink) -> impl View {
-    let main_view = get_search_main_view(client, cb_sink);
+fn construct_search_view(client: &'static client::HNClient, cb_sink: CbSink) -> impl View {
+    let main_view = construct_search_main_view(client, cb_sink);
+
     let mut view = LinearLayout::vertical()
         .child(utils::construct_view_title_bar("Search View"))
         .child(main_view)
         .child(utils::construct_footer_view::<SearchView>());
+
     view.set_focus_index(1)
         .unwrap_or(EventResult::Consumed(None));
 
     view
 }
 
-pub fn add_search_view_layer(s: &mut Cursive, client: &'static client::HNClient) {
+pub fn construct_and_add_new_search_view(s: &mut Cursive, client: &'static client::HNClient) {
     let cb_sink = s.cb_sink().clone();
     s.screen_mut()
-        .add_transparent_layer(Layer::new(get_search_view(client, cb_sink)));
+        .add_transparent_layer(Layer::new(construct_search_view(client, cb_sink)));
 }

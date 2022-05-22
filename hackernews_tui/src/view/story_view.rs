@@ -125,7 +125,7 @@ impl ScrollViewContainer for StoryView {
     }
 }
 
-pub fn get_story_main_view(
+pub fn construct_story_main_view(
     stories: Vec<client::Story>,
     client: &'static client::HNClient,
     starting_id: usize,
@@ -172,7 +172,7 @@ pub fn get_story_main_view(
             // so it can be cloned without greatly affecting performance
             let story = s.stories[id].clone();
             Some(EventResult::with_cb({
-                move |s| comment_view::add_comment_view_layer(s, client, &story, false)
+                move |s| comment_view::construct_and_add_new_comment_view(s, client, &story, false)
             }))
         })
         // open external link shortcuts
@@ -188,7 +188,7 @@ pub fn get_story_main_view(
                 let url = s.stories[id].url.clone();
                 if !url.is_empty() {
                     Some(EventResult::with_cb({
-                        move |s| article_view::add_article_view_layer(s, &url)
+                        move |s| article_view::construct_and_add_new_article_view(s, &url)
                     }))
                 } else {
                     Some(EventResult::Consumed(None))
@@ -254,7 +254,8 @@ fn get_story_view_title_bar(tag: &'static str) -> impl View {
     )
 }
 
-pub fn get_story_view(
+/// Construct a story view given a list of stories.
+pub fn construct_story_view(
     stories: Vec<client::Story>,
     client: &'static client::HNClient,
     tag: &'static str,
@@ -263,7 +264,7 @@ pub fn get_story_view(
     numeric_filters: client::StoryNumericFilters,
 ) -> impl View {
     let starting_id = client::STORY_LIMIT * page;
-    let main_view = get_story_main_view(stories, client, starting_id).full_height();
+    let main_view = construct_story_main_view(stories, client, starting_id).full_height();
 
     let mut view = LinearLayout::vertical()
         .child(get_story_view_title_bar(tag))
@@ -279,6 +280,10 @@ pub fn get_story_view(
 
     let story_view_keymap = config::get_story_view_keymap().clone();
 
+    // Because we re-use the story main view to construct a search view,
+    // some of the story keymaps need to be handled here instead of by the main view like
+    // for comment views or article views.
+
     OnEventView::new(view)
         .on_pre_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
             s.add_layer(StoryView::construct_on_event_help_view())
@@ -288,11 +293,11 @@ pub fn get_story_view(
             if tag == "front_page" {
                 return;
             }
-            add_story_view_layer(s, client, tag, !by_date, 0, numeric_filters, true);
+            construct_and_add_new_story_view(s, client, tag, !by_date, 0, numeric_filters, true);
         })
         // story tag navigation
         .on_pre_event(story_view_keymap.next_story_tag, move |s| {
-            add_story_view_layer(
+            construct_and_add_new_story_view(
                 s,
                 client,
                 STORY_TAGS[(current_tag_pos + 1) % STORY_TAGS.len()],
@@ -303,7 +308,7 @@ pub fn get_story_view(
             );
         })
         .on_pre_event(story_view_keymap.prev_story_tag, move |s| {
-            add_story_view_layer(
+            construct_and_add_new_story_view(
                 s,
                 client,
                 STORY_TAGS[(current_tag_pos + STORY_TAGS.len() - 1) % STORY_TAGS.len()],
@@ -316,15 +321,32 @@ pub fn get_story_view(
         // paging
         .on_pre_event(story_view_keymap.prev_page, move |s| {
             if page > 0 {
-                add_story_view_layer(s, client, tag, by_date, page - 1, numeric_filters, true);
+                construct_and_add_new_story_view(
+                    s,
+                    client,
+                    tag,
+                    by_date,
+                    page - 1,
+                    numeric_filters,
+                    true,
+                );
             }
         })
         .on_pre_event(story_view_keymap.next_page, move |s| {
-            add_story_view_layer(s, client, tag, by_date, page + 1, numeric_filters, true);
+            construct_and_add_new_story_view(
+                s,
+                client,
+                tag,
+                by_date,
+                page + 1,
+                numeric_filters,
+                true,
+            );
         })
 }
 
-pub fn add_story_view_layer(
+/// Retrieve a list of stories satisfying some conditions and construct a story view displaying them.
+pub fn construct_and_add_new_story_view(
     s: &mut Cursive,
     client: &'static client::HNClient,
     tag: &'static str,
@@ -334,7 +356,7 @@ pub fn add_story_view_layer(
     pop_layer: bool,
 ) {
     let async_view =
-        async_view::get_story_view_async(s, client, tag, by_date, page, numeric_filters);
+        async_view::construct_story_view_async(s, client, tag, by_date, page, numeric_filters);
     if pop_layer {
         s.pop_layer();
     }

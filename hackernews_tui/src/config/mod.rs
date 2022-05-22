@@ -80,10 +80,8 @@ pub fn load_config(config_file_str: &str) {
     let config = match Config::from_config_file(&config_file) {
         Err(err) => {
             tracing::error!(
-                "failed to load configurations from the file {}: {} \
-                     \n...Use the default configurations instead",
-                config_file_str,
-                err
+                "failed to load configurations from the file {config_file_str}: {err:#}\
+                 \nUse the default configurations instead",
             );
             Config::default()
         }

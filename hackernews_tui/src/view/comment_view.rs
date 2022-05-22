@@ -13,12 +13,16 @@ pub struct CommentView {
     raw_command: String,
 }
 
+pub enum NavigationDirection {
+    Next,
+    Previous,
+}
+
 impl ViewWrapper for CommentView {
     wrap_impl!(self.view: ScrollView<LinearLayout>);
 }
 
 impl CommentView {
-    /// Return a new CommentView given a comment list and the discussed story url
     pub fn new(story_text: client::HnText, receiver: client::CommentReceiver) -> Self {
         let mut view = CommentView {
             view: LinearLayout::vertical()
@@ -39,7 +43,7 @@ impl CommentView {
         view
     }
 
-    /// Check the `CommentReceiver` channel if there are new comments loaded
+    /// Check the comment receiver channel if there are new comments loaded
     /// then update the internal comment data accordingly.
     pub fn try_update_comments(&mut self) {
         let mut new_comments = vec![];
@@ -94,33 +98,31 @@ impl CommentView {
         &self,
         start_id: usize,
         max_level: usize,
-        direction: bool,
+        direction: NavigationDirection,
     ) -> usize {
-        if direction {
-            // ->
-            (start_id + 1..self.len())
+        match direction {
+            NavigationDirection::Next => (start_id + 1..self.len())
                 .find(|&id| self.comments[id].level <= max_level)
-                .unwrap_or_else(|| self.len())
-        } else {
-            // <-
-            (0..start_id)
+                .unwrap_or_else(|| self.len()),
+            NavigationDirection::Previous => (0..start_id)
                 .rfind(|&id| self.comments[id].level <= max_level)
-                .unwrap_or(start_id)
+                .unwrap_or(start_id),
         }
     }
 
-    /// Return the id of the next visible comment
-    pub fn find_next_visible_comment(&self, start_id: usize, direction: bool) -> usize {
-        if direction {
-            // ->
-            (start_id + 1..self.len())
+    /// Return the id of the next visible comment (`direction` dependent)
+    pub fn find_next_visible_comment(
+        &self,
+        start_id: usize,
+        direction: NavigationDirection,
+    ) -> usize {
+        match direction {
+            NavigationDirection::Next => (start_id + 1..self.len())
                 .find(|&id| self.get_comment_component(id).is_visible())
-                .unwrap_or_else(|| self.len())
-        } else {
-            // <-
-            (0..start_id)
+                .unwrap_or_else(|| self.len()),
+            NavigationDirection::Previous => (0..start_id)
                 .rfind(|&id| self.get_comment_component(id).is_visible())
-                .unwrap_or(start_id)
+                .unwrap_or(start_id),
         }
     }
 
@@ -138,27 +140,29 @@ impl CommentView {
             .unwrap()
     }
 
-    /// Toggle the collapsing state of comments whose height is greater
-    /// than the `min_height`.
-    /// **Note** `PartiallyCollapsed` comment's state is unchanged, only toggle its visibility.
-    /// Also, the state and visibility of such comment's children are unaffected.
-    fn toggle_comment_collapse_state(&mut self, i: usize, min_height: usize) {
-        if i == self.len() || self.comments[i].level <= min_height {
+    /// Toggle the collapsing state of comments whose level is greater than the `min_level`.
+    fn toggle_comment_collapse_state(&mut self, start_id: usize, min_level: usize) {
+        // This function will be called recursively until it's unable to find any comments.
+        //
+        // **Note**: `PartiallyCollapsed` comment's state is unchanged, we only toggle its visibility.
+        // Also, the state and visibility of such comment's children are unaffected as they should already
+        // be in a collapsed state.
+        if start_id == self.len() || self.comments[start_id].level <= min_level {
             return;
         }
-        match self.comments[i].state {
+        match self.comments[start_id].state {
             client::CollapseState::Collapsed => {
-                self.comments[i].state = client::CollapseState::Normal;
-                self.get_comment_component_mut(i).unhide();
-                self.toggle_comment_collapse_state(i + 1, min_height)
+                self.comments[start_id].state = client::CollapseState::Normal;
+                self.get_comment_component_mut(start_id).unhide();
+                self.toggle_comment_collapse_state(start_id + 1, min_level)
             }
             client::CollapseState::Normal => {
-                self.comments[i].state = client::CollapseState::Collapsed;
-                self.get_comment_component_mut(i).hide();
-                self.toggle_comment_collapse_state(i + 1, min_height)
+                self.comments[start_id].state = client::CollapseState::Collapsed;
+                self.get_comment_component_mut(start_id).hide();
+                self.toggle_comment_collapse_state(start_id + 1, min_level)
             }
             client::CollapseState::PartiallyCollapsed => {
-                let component = self.get_comment_component_mut(i);
+                let component = self.get_comment_component_mut(start_id);
                 if component.is_visible() {
                     component.hide();
                 } else {
@@ -166,8 +170,12 @@ impl CommentView {
                 }
 
                 // skip toggling all child comments of the current comment
-                let next_id = self.find_comment_id_by_max_level(i, self.comments[i].level, true);
-                self.toggle_comment_collapse_state(next_id, min_height)
+                let next_id = self.find_comment_id_by_max_level(
+                    start_id,
+                    self.comments[start_id].level,
+                    NavigationDirection::Next,
+                );
+                self.toggle_comment_collapse_state(next_id, min_level)
             }
         };
     }
@@ -179,7 +187,7 @@ impl CommentView {
         match comment.state {
             client::CollapseState::Collapsed => {
                 panic!(
-                    "invalid comment state `Collapsed` when calling `toggle_collapse_focused_comment`"
+                    "invalid collapse state `Collapsed` when calling `toggle_collapse_focused_comment`"
                 );
             }
             client::CollapseState::PartiallyCollapsed => {
@@ -233,7 +241,10 @@ impl ScrollViewContainer for CommentView {
     }
 }
 
-fn get_comment_main_view(story: &client::Story, receiver: client::CommentReceiver) -> impl View {
+fn construct_comment_main_view(
+    story: &client::Story,
+    receiver: client::CommentReceiver,
+) -> impl View {
     let is_suffix_key = |c: &Event| -> bool {
         let comment_view_keymap = config::get_comment_view_keymap();
         comment_view_keymap.open_link_in_browser.has_event(c)
@@ -263,36 +274,48 @@ fn get_comment_main_view(story: &client::Story, receiver: client::CommentReceive
         })
         // comment navigation shortcuts
         .on_pre_event_inner(comment_view_keymap.prev_comment, |s, _| {
-            s.set_focus_index(s.find_next_visible_comment(s.get_focus_index(), false))
+            s.set_focus_index(
+                s.find_next_visible_comment(s.get_focus_index(), NavigationDirection::Previous),
+            )
         })
         .on_pre_event_inner(comment_view_keymap.next_comment, |s, _| {
-            let next_id = s.find_next_visible_comment(s.get_focus_index(), true);
+            let next_id =
+                s.find_next_visible_comment(s.get_focus_index(), NavigationDirection::Next);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.next_leq_level_comment, move |s, _| {
             let id = s.get_focus_index();
-            let next_id = s.find_comment_id_by_max_level(id, s.comments[id].level, true);
+            let next_id =
+                s.find_comment_id_by_max_level(id, s.comments[id].level, NavigationDirection::Next);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.prev_leq_level_comment, move |s, _| {
             let id = s.get_focus_index();
-            let next_id = s.find_comment_id_by_max_level(id, s.comments[id].level, false);
+            let next_id = s.find_comment_id_by_max_level(
+                id,
+                s.comments[id].level,
+                NavigationDirection::Previous,
+            );
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.next_top_level_comment, move |s, _| {
             let id = s.get_focus_index();
-            let next_id = s.find_comment_id_by_max_level(id, 0, true);
+            let next_id = s.find_comment_id_by_max_level(id, 0, NavigationDirection::Next);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.prev_top_level_comment, move |s, _| {
             let id = s.get_focus_index();
-            let next_id = s.find_comment_id_by_max_level(id, 0, false);
+            let next_id = s.find_comment_id_by_max_level(id, 0, NavigationDirection::Previous);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.parent_comment, move |s, _| {
             let id = s.get_focus_index();
             if s.comments[id].level > 0 {
-                let next_id = s.find_comment_id_by_max_level(id, s.comments[id].level - 1, false);
+                let next_id = s.find_comment_id_by_max_level(
+                    id,
+                    s.comments[id].level - 1,
+                    NavigationDirection::Previous,
+                );
                 s.set_focus_index(next_id)
             } else {
                 Some(EventResult::Consumed(None))
@@ -342,7 +365,7 @@ fn get_comment_main_view(story: &client::Story, receiver: client::CommentReceive
             let url = story.url.clone();
             move |s| {
                 if !url.is_empty() {
-                    article_view::add_article_view_layer(s, &url)
+                    article_view::construct_and_add_new_article_view(s, &url)
                 }
             }
         })
@@ -359,14 +382,22 @@ fn get_comment_main_view(story: &client::Story, receiver: client::CommentReceive
         .full_height()
 }
 
-pub fn get_comment_view(story: &client::Story, receiver: client::CommentReceiver) -> impl View {
-    let status_bar =
-        utils::construct_view_title_bar(&format!("Comment View - {}", story.title.source()));
-
-    let main_view = get_comment_main_view(story, receiver);
+/// Construct a comment view of a given story.
+///
+/// # Arguments:
+/// * `story`: a Hacker News story
+/// * `receiver`: a "subscriber" channel that gets comments asynchronously from another thread
+pub fn construct_comment_view(
+    story: &client::Story,
+    receiver: client::CommentReceiver,
+) -> impl View {
+    let main_view = construct_comment_main_view(story, receiver);
 
     let mut view = LinearLayout::vertical()
-        .child(status_bar)
+        .child(utils::construct_view_title_bar(&format!(
+            "Comment View - {}",
+            story.title.source()
+        )))
         .child(main_view)
         .child(utils::construct_footer_view::<CommentView>());
     view.set_focus_index(1)
@@ -375,13 +406,14 @@ pub fn get_comment_view(story: &client::Story, receiver: client::CommentReceiver
     view
 }
 
-pub fn add_comment_view_layer(
+/// Retrieve comments of a story and construct a comment view of that story
+pub fn construct_and_add_new_comment_view(
     s: &mut Cursive,
     client: &'static client::HNClient,
     story: &client::Story,
     pop_layer: bool,
 ) {
-    let async_view = async_view::get_comment_view_async(s, client, story);
+    let async_view = async_view::construct_comment_view_async(s, client, story);
     if pop_layer {
         s.pop_layer();
     }
