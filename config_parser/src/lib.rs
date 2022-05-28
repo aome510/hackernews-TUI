@@ -20,6 +20,18 @@ macro_rules! config_parser_impl {
     };
 }
 
+impl<'de, T> ConfigParser for Option<T>
+where
+    T: serde::de::Deserialize<'de>,
+{
+    fn parse(&mut self, value: toml::Value) -> Result<()> {
+        if let Ok(value) = value.try_into::<T>() {
+            *self = Some(value);
+        }
+        Ok(())
+    }
+}
+
 impl<'de, T> ConfigParser for Vec<T>
 where
     T: serde::de::Deserialize<'de>,

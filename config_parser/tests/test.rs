@@ -3,32 +3,114 @@ use serde::Deserialize;
 
 #[derive(ConfigParse, Deserialize, Default, Debug, PartialEq)]
 struct A {
-    pub field_1: String,
-    pub field_2: u32,
-    pub field_3: bool,
-    pub field_4: Vec<B>,
-    pub field_5: C,
+    pub a1: String,
+    pub a2: u32,
+    pub a3: bool,
+    pub a4: Vec<B>,
+    pub a5: C,
 }
 
 #[derive(ConfigParse, Deserialize, Default, Debug, PartialEq)]
 struct B {
     #[serde(default)]
-    pub field_1: String,
+    pub b1: String,
     #[serde(default)]
-    pub field_2: String,
+    pub b2: String,
 }
 
 #[derive(ConfigParse, Deserialize, Default, Debug, PartialEq)]
 struct C {
-    pub field_1: B,
-    pub field_2: bool,
-    pub field_3: bool,
+    pub c1: B,
+    pub c2: bool,
+    pub c3: bool,
+}
+
+#[derive(ConfigParse, Deserialize, Default, Debug, PartialEq)]
+struct D {
+    pub d1: Option<B>,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use config_parser2::ConfigParser;
+
+    #[test]
+    fn option_test_none_to_none() {
+        let mut value = D { d1: None };
+        let toml = "".parse::<toml::Value>().unwrap();
+        let expected_value = D { d1: None };
+
+        value.parse(toml).unwrap();
+        assert!(value == expected_value);
+    }
+
+    #[test]
+    fn option_test_none_to_some() {
+        let mut value = D { d1: None };
+        let toml = "
+[d1]
+b1 = 'd1.b1'
+b2 = 'd1.b2'
+"
+        .parse::<toml::Value>()
+        .unwrap();
+        let expected_value = D {
+            d1: Some(B {
+                b1: "d1.b1".to_owned(),
+                b2: "d1.b2".to_owned(),
+            }),
+        };
+
+        value.parse(toml).unwrap();
+        assert!(value == expected_value);
+    }
+
+    #[test]
+    fn option_test_some_to_none() {
+        let mut value = D {
+            d1: Some(B {
+                b1: "d1.b1".to_owned(),
+                b2: "d1.b2".to_owned(),
+            }),
+        };
+        let toml = "".parse::<toml::Value>().unwrap();
+        let expected_value = D {
+            d1: Some(B {
+                b1: "d1.b1".to_owned(),
+                b2: "d1.b2".to_owned(),
+            }),
+        };
+
+        value.parse(toml).unwrap();
+        assert!(value == expected_value);
+    }
+
+    #[test]
+    fn option_test_some_to_some() {
+        let mut value = D {
+            d1: Some(B {
+                b1: "d1.b1".to_owned(),
+                b2: "d1.b2".to_owned(),
+            }),
+        };
+        let toml = "
+[d1]
+b1 = 'd1.b1_new'
+b2 = 'd1.b2_new'
+"
+        .parse::<toml::Value>()
+        .unwrap();
+        let expected_value = D {
+            d1: Some(B {
+                b1: "d1.b1_new".to_owned(),
+                b2: "d1.b2_new".to_owned(),
+            }),
+        };
+
+        value.parse(toml).unwrap();
+        assert!(value == expected_value);
+    }
 
     #[test]
     fn simple_test() {
@@ -41,65 +123,65 @@ mod tests {
     #[test]
     fn complex_test() {
         let mut value = A {
-            field_1: "field_1".to_owned(),
-            field_2: 510,
-            field_3: false,
-            field_4: vec![B {
-                field_1: "b_field_1".to_owned(),
-                field_2: "b_field_2".to_owned(),
+            a1: "a1".to_owned(),
+            a2: 510,
+            a3: false,
+            a4: vec![B {
+                b1: "a4.b1".to_owned(),
+                b2: "a4.b2".to_owned(),
             }],
-            field_5: C {
-                field_1: B {
-                    field_1: "cb_field_1".to_owned(),
-                    field_2: "cb_field_2".to_owned(),
+            a5: C {
+                c1: B {
+                    b1: "a5.c1.b1".to_owned(),
+                    b2: "a5.c1.b2".to_owned(),
                 },
-                field_2: true,
-                field_3: false,
+                c2: true,
+                c3: false,
             },
         };
 
         let toml = "
-field_1 = 'new_field_1'
-field_2 = 150
+a1 = 'a1_new'
+a2 = 150
 
-[[field_4]]
-field_2 = 'new_field_2'
+[[a4]]
+b2 = 'a4.b2'
 
-[[field_4]]
-field_1 = 'new_field_1'
+[[a4]]
+b1 = 'a4.b1'
 
-[field_5.field_1]
-field_1 = 'new_field_1'
-field_2 = 'new_field_2'
+[a5.c1]
+b1 = 'a5.c1.b1_new'
+b2 = 'a5.c1.b2_new'
 
-[field_5]
-field_2 = false
-field_3 = true
+[a5]
+c2 = false
+c3 = true
 "
         .parse::<toml::Value>()
         .unwrap();
 
         let expected_value = A {
-            field_1: "new_field_1".to_owned(),
-            field_2: 150,
-            field_3: false,
-            field_4: vec![
+            a1: "a1_new".to_owned(),
+            a2: 150,
+            a3: false,
+            a4: vec![
                 B {
-                    field_1: "".to_owned(),
-                    field_2: "new_field_2".to_owned(),
+                    b1: "".to_owned(),
+                    b2: "a4.b2".to_owned(),
                 },
                 B {
-                    field_1: "new_field_1".to_owned(),
-                    field_2: "".to_owned(),
+                    b1: "a4.b1".to_owned(),
+                    b2: "".to_owned(),
                 },
             ],
-            field_5: C {
-                field_1: B {
-                    field_1: "new_field_1".to_owned(),
-                    field_2: "new_field_2".to_owned(),
+            a5: C {
+                c1: B {
+                    b1: "a5.c1.b1_new".to_owned(),
+                    b2: "a5.c1.b2_new".to_owned(),
                 },
-                field_2: false,
-                field_3: true,
+                c2: false,
+                c3: true,
             },
         };
 

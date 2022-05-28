@@ -134,7 +134,7 @@ dependencies = [
 
 [[package]]
 name = "config_parser2"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "anyhow",
  "config_parser_derive",
