@@ -35,5 +35,5 @@ crossbeam-channel = "0.5.6"
 unicode-width = "0.1.9"
 comfy-table = "6.0.0"
 html-escape = "0.2.11"
-html5ever = "0.25.1"
-markup5ever_rcdom = "0.1.0"
+html5ever = { git = "https://github.com/servo/html5ever" }
+markup5ever_rcdom = { git = "https://github.com/servo/html5ever" }
