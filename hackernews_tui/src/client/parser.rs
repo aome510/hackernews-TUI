@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use crate::prelude::*;
 use crate::utils;
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use regex::Regex;
 use serde::{de, Deserialize, Deserializer};
@@ -11,16 +11,16 @@ use html5ever::tendril::TendrilSink;
 use html5ever::*;
 use markup5ever_rcdom::{Handle, NodeData, RcDom};
 
-lazy_static! {
-    /// a regex that matches a search match in the response from HN Algolia search API
-    static ref MATCH_RE: Regex = Regex::new(r"<em>(?P<match>.*?)</em>").unwrap();
+/// a regex that matches a search match in the response from HN Algolia search API
+static MATCH_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"<em>(?P<match>.*?)</em>").unwrap());
 
-    /// a regex that matches whitespace character(s)
-    static ref WS_RE: Regex = Regex::new(r"\s+").unwrap();
+/// a regex that matches whitespace character(s)
+static WS_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\s+").unwrap());
 
-    /// a regex used to parse a HN text (in HTML format)
-    /// It consists of multiple regex(s) representing different elements
-    static ref HN_TEXT_RE: Regex = Regex::new(&format!(
+/// a regex used to parse a HN text (in HTML format)
+/// It consists of multiple regex(s) representing different elements
+static HN_TEXT_RE: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(&format!(
         "(({})|({})|({})|({})|({})|({}))",
         // a regex that matches a HTML paragraph
         r"<p>(?s)(?P<paragraph>(|[^>].*?))</p>",
@@ -34,8 +34,9 @@ lazy_static! {
         r"`(?P<code>[^`]+?)`",
         // a regex that matches a HTML link
         r#"<a\s+?href="(?P<link>.*?)"(?s).+?</a>"#,
-    )).unwrap();
-}
+    ))
+    .unwrap()
+});
 
 // serde helper functions
 
@@ -591,7 +592,7 @@ impl Article {
                         let mut table = comfy_table::Table::new();
                         table
                             .set_content_arrangement(comfy_table::ContentArrangement::Dynamic)
-                            .set_table_width(max_width as u16)
+                            .set_width(max_width as u16)
                             .load_preset(comfy_table::presets::UTF8_FULL)
                             .apply_modifier(comfy_table::modifiers::UTF8_ROUND_CORNERS)
                             .apply_modifier(comfy_table::modifiers::UTF8_SOLID_INNER_BORDERS)
