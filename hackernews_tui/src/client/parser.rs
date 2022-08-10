@@ -591,7 +591,7 @@ impl Article {
                         let mut table = comfy_table::Table::new();
                         table
                             .set_content_arrangement(comfy_table::ContentArrangement::Dynamic)
-                            .set_table_width(max_width as u16)
+                            .set_width(max_width as u16)
                             .load_preset(comfy_table::presets::UTF8_FULL)
                             .apply_modifier(comfy_table::modifiers::UTF8_ROUND_CORNERS)
                             .apply_modifier(comfy_table::modifiers::UTF8_SOLID_INNER_BORDERS)
