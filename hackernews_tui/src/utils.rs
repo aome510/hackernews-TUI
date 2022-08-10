@@ -1,8 +1,5 @@
 use crate::prelude::*;
 use std::time::{Duration, SystemTime};
-use substring::*;
-
-const MAX_URL_LEN: usize = 50;
 
 fn format_plural(amount: u64, time: &str) -> String {
     format!("{} {}{}", amount, time, if amount == 1 { "" } else { "s" })
@@ -43,9 +40,10 @@ pub fn get_elapsed_time_as_text(time: u64) -> String {
 /// A simple URL shortening function that reduces the
 /// URL length if it exceeds a given threshold
 pub fn shorten_url(url: &str) -> String {
-    let len = url.chars().count();
-    if len > MAX_URL_LEN {
-        url.substring(0, 40).to_string() + "..." + url.substring(len - 10, len)
+    let chars = url.chars().collect::<Vec<_>>();
+    let len = chars.len();
+    if len > 50 {
+        String::from_iter(chars[..40].iter()) + "..." + &String::from_iter(chars[len - 10..].iter())
     } else {
         url.to_string()
     }
