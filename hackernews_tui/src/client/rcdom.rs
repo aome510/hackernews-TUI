@@ -48,7 +48,7 @@ use std::collections::{HashSet, VecDeque};
 use std::default::Default;
 use std::fmt;
 use std::io;
-use std::mem;
+
 use std::rc::{Rc, Weak};
 
 use tendril::StrTendril;
@@ -130,9 +130,9 @@ impl Node {
 
 impl Drop for Node {
     fn drop(&mut self) {
-        let mut nodes = mem::replace(&mut *self.children.borrow_mut(), vec![]);
+        let mut nodes = std::mem::take(&mut *self.children.borrow_mut());
         while let Some(node) = nodes.pop() {
-            let children = mem::replace(&mut *node.children.borrow_mut(), vec![]);
+            let children = std::mem::take(&mut *node.children.borrow_mut());
             nodes.extend(children.into_iter());
             if let NodeData::Element {
                 ref template_contents,
@@ -180,7 +180,7 @@ fn get_parent_and_index(target: &Handle) -> Option<(Handle, usize)> {
             .borrow()
             .iter()
             .enumerate()
-            .find(|&(_, child)| Rc::ptr_eq(&child, &target))
+            .find(|&(_, child)| Rc::ptr_eq(child, target))
         {
             Some((i, _)) => i,
             None => panic!("have parent but couldn't find in parent's children!"),
@@ -298,20 +298,16 @@ impl TreeSink for RcDom {
 
     fn append(&mut self, parent: &Handle, child: NodeOrText<Handle>) {
         // Append to an existing Text node if we have one.
-        match child {
-            NodeOrText::AppendText(ref text) => match parent.children.borrow().last() {
-                Some(h) => {
-                    if append_to_existing_text(h, &text) {
-                        return;
-                    }
+        if let NodeOrText::AppendText(ref text) = child {
+            if let Some(h) = parent.children.borrow().last() {
+                if append_to_existing_text(h, text) {
+                    return;
                 }
-                _ => (),
-            },
-            _ => (),
+            }
         }
 
         append(
-            &parent,
+            parent,
             match child {
                 NodeOrText::AppendText(text) => Node::new(NodeData::Text {
                     contents: RefCell::new(text),
@@ -322,7 +318,7 @@ impl TreeSink for RcDom {
     }
 
     fn append_before_sibling(&mut self, sibling: &Handle, child: NodeOrText<Handle>) {
-        let (parent, i) = get_parent_and_index(&sibling)
+        let (parent, i) = get_parent_and_index(sibling)
             .expect("append_before_sibling called on node without parent");
 
         let child = match (child, i) {
@@ -408,20 +404,20 @@ impl TreeSink for RcDom {
     }
 
     fn remove_from_parent(&mut self, target: &Handle) {
-        remove_from_parent(&target);
+        remove_from_parent(target);
     }
 
     fn reparent_children(&mut self, node: &Handle, new_parent: &Handle) {
         let mut children = node.children.borrow_mut();
         let mut new_children = new_parent.children.borrow_mut();
         for child in children.iter() {
-            let previous_parent = child.parent.replace(Some(Rc::downgrade(&new_parent)));
+            let previous_parent = child.parent.replace(Some(Rc::downgrade(new_parent)));
             assert!(Rc::ptr_eq(
-                &node,
+                node,
                 &previous_parent.unwrap().upgrade().expect("dangling weak")
             ))
         }
-        new_children.extend(mem::replace(&mut *children, Vec::new()));
+        new_children.extend(std::mem::take(&mut *children));
     }
 
     fn is_mathml_annotation_xml_integration_point(&self, target: &Handle) -> bool {
@@ -498,11 +494,11 @@ impl Serialize for SerializableHandle {
                         }
                     }
 
-                    NodeData::Doctype { ref name, .. } => serializer.write_doctype(&name)?,
+                    NodeData::Doctype { ref name, .. } => serializer.write_doctype(name)?,
 
                     NodeData::Text { ref contents } => serializer.write_text(&contents.borrow())?,
 
-                    NodeData::Comment { ref contents } => serializer.write_comment(&contents)?,
+                    NodeData::Comment { ref contents } => serializer.write_comment(contents)?,
 
                     NodeData::ProcessingInstruction {
                         ref target,
