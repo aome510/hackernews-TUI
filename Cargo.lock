@@ -520,12 +520,13 @@ dependencies = [
  "html-escape",
  "html5ever",
  "log",
- "markup5ever_rcdom",
+ "markup5ever",
  "once_cell",
  "rayon",
  "regex",
  "serde",
  "serde_json",
+ "tendril",
  "toml",
  "tracing",
  "tracing-subscriber",
@@ -567,7 +568,8 @@ dependencies = [
 [[package]]
 name = "html5ever"
 version = "0.26.0"
-source = "git+https://github.com/servo/html5ever#429f23943b24f739b78f4d703620d7b1b526475b"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bea68cab48b8459f17cf1c944c67ddc572d272d9f2b274140f223ecb1da4a3b7"
 dependencies = [
  "log",
  "mac",
@@ -665,7 +667,8 @@ checksum = "c41e0c4fef86961ac6d6f8a82609f55f31b05e4fce149ac5710e439df7619ba4"
 [[package]]
 name = "markup5ever"
 version = "0.11.0"
-source = "git+https://github.com/servo/html5ever#429f23943b24f739b78f4d703620d7b1b526475b"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a2629bb1404f3d34c2e921f21fd34ba00b206124c81f65c50b43b6aaefeb016"
 dependencies = [
  "log",
  "phf",
@@ -673,17 +676,6 @@ dependencies = [
  "string_cache",
  "string_cache_codegen",
  "tendril",
-]
-
-[[package]]
-name = "markup5ever_rcdom"
-version = "0.2.0"
-source = "git+https://github.com/servo/html5ever#429f23943b24f739b78f4d703620d7b1b526475b"
-dependencies = [
- "html5ever",
- "markup5ever",
- "tendril",
- "xml5ever",
 ]
 
 [[package]]
@@ -1693,13 +1685,3 @@ name = "xi-unicode"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a67300977d3dc3f8034dae89778f502b6ba20b269527b3223ba59c0cf393bb8a"
-
-[[package]]
-name = "xml5ever"
-version = "0.17.0"
-source = "git+https://github.com/servo/html5ever#429f23943b24f739b78f4d703620d7b1b526475b"
-dependencies = [
- "log",
- "mac",
- "markup5ever",
-]

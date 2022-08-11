@@ -1,6 +1,7 @@
 // modules
 mod parser;
 mod query;
+mod rcdom;
 
 // re-export
 pub use parser::{Article, CollapseState, HnText, Story};

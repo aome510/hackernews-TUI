@@ -7,9 +7,9 @@ use rayon::prelude::*;
 use regex::Regex;
 use serde::{de, Deserialize, Deserializer};
 
+use super::rcdom::{Handle, NodeData, RcDom};
 use html5ever::tendril::TendrilSink;
 use html5ever::*;
-use markup5ever_rcdom::{Handle, NodeData, RcDom};
 
 /// a regex that matches a search match in the response from HN Algolia search API
 static MATCH_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"<em>(?P<match>.*?)</em>").unwrap());
