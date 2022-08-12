@@ -7,6 +7,7 @@
 ## Table of Contents
 
 - [Install](#install)
+  - [Binaries](#binaries)
   - [Using Cargo](#using-cargo)
   - [Docker Image](#docker-image)
   - [Building from source](#building-from-source)
@@ -28,6 +29,10 @@
 - [Roadmap](#roadmap)
 
 ## Install
+
+### Binaries
+
+Application's prebuilt binaries can be found in the [Releases Page](https://github.com/aome510/hackernews-TUI/releases).
 
 ### Using cargo
 
