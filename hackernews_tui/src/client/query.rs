@@ -1,6 +1,40 @@
 use crate::utils;
 use serde::Deserialize;
 
+#[derive(Debug, Eq, PartialEq)]
+pub enum StorySortMode {
+    None,
+    Date,
+    Points,
+}
+
+impl StorySortMode {
+    /// cycle the next story sort mode of a story tag
+    pub fn next(self, tag: &str) -> Self {
+        if tag == "front_page" {
+            assert!(
+                self == Self::None,
+                "`front_page` stories should have no sort mode"
+            );
+            return Self::None;
+        }
+        match self {
+            Self::None => {
+                assert!(tag != "story", "`story` stories should have a sort mode");
+                return Self::Date;
+            }
+            Self::Date => Self::Points,
+            Self::Points => {
+                if tag == "story" {
+                    Self::Date
+                } else {
+                    Self::None
+                }
+            }
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, Default, Deserialize)]
 pub struct FilterInterval<T> {
     start: Option<T>,
