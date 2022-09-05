@@ -221,7 +221,7 @@ pub fn construct_story_main_view(
         .on_scroll_events()
 }
 
-fn get_story_view_title_bar(tag: &'static str) -> impl View {
+fn get_story_view_title_bar(tag: &'static str, sort_mode: client::StorySortMode) -> impl View {
     let style = config::get_config_theme().component_style.title_bar;
     let mut title = StyledString::styled(
         "[Y]",
@@ -234,8 +234,13 @@ fn get_story_view_title_bar(tag: &'static str) -> impl View {
     for (i, item) in STORY_TAGS.iter().enumerate() {
         title.append_styled(" | ", style);
         if *item == tag {
+            let sort_mode_desc = match sort_mode {
+                client::StorySortMode::None => "",
+                client::StorySortMode::Date => " (by_date)",
+                client::StorySortMode::Points => " (by_point)",
+            };
             title.append_styled(
-                format!("{}.{}", i + 1, item),
+                format!("{}.{}{}", i + 1, item, sort_mode_desc),
                 Style::from(style)
                     .combine(config::get_config_theme().component_style.current_story_tag),
             );
@@ -259,7 +264,7 @@ pub fn construct_story_view(
     stories: Vec<client::Story>,
     client: &'static client::HNClient,
     tag: &'static str,
-    by_date: bool,
+    sort_mode: client::StorySortMode,
     page: usize,
     numeric_filters: client::StoryNumericFilters,
 ) -> impl View {
@@ -267,7 +272,7 @@ pub fn construct_story_view(
     let main_view = construct_story_main_view(stories, client, starting_id).full_height();
 
     let mut view = LinearLayout::vertical()
-        .child(get_story_view_title_bar(tag))
+        .child(get_story_view_title_bar(tag, sort_mode))
         .child(main_view)
         .child(utils::construct_footer_view::<StoryView>());
     view.set_focus_index(1)
@@ -288,31 +293,49 @@ pub fn construct_story_view(
         .on_pre_event(config::get_global_keymap().open_help_dialog.clone(), |s| {
             s.add_layer(StoryView::construct_on_event_help_view())
         })
-        .on_pre_event(story_view_keymap.toggle_sort_by_date, move |s| {
+        .on_pre_event(story_view_keymap.cycle_sort_mode, move |s| {
             // disable "search_by_date" for front_page stories
             if tag == "front_page" {
                 return;
             }
-            construct_and_add_new_story_view(s, client, tag, !by_date, 0, numeric_filters, true);
-        })
-        // story tag navigation
-        .on_pre_event(story_view_keymap.next_story_tag, move |s| {
             construct_and_add_new_story_view(
                 s,
                 client,
-                STORY_TAGS[(current_tag_pos + 1) % STORY_TAGS.len()],
+                tag,
+                sort_mode.next(tag),
+                0,
+                numeric_filters,
                 true,
+            );
+        })
+        // story tag navigation
+        .on_pre_event(story_view_keymap.next_story_tag, move |s| {
+            let next_tag = STORY_TAGS[(current_tag_pos + 1) % STORY_TAGS.len()];
+            construct_and_add_new_story_view(
+                s,
+                client,
+                next_tag,
+                if next_tag == "story" || next_tag == "job" {
+                    client::StorySortMode::Date
+                } else {
+                    client::StorySortMode::None
+                },
                 0,
                 StoryNumericFilters::default(),
                 false,
             );
         })
         .on_pre_event(story_view_keymap.prev_story_tag, move |s| {
+            let prev_tag = STORY_TAGS[(current_tag_pos + STORY_TAGS.len() - 1) % STORY_TAGS.len()];
             construct_and_add_new_story_view(
                 s,
                 client,
-                STORY_TAGS[(current_tag_pos + STORY_TAGS.len() - 1) % STORY_TAGS.len()],
-                true,
+                prev_tag,
+                if prev_tag == "story" || prev_tag == "job" {
+                    client::StorySortMode::Date
+                } else {
+                    client::StorySortMode::None
+                },
                 0,
                 StoryNumericFilters::default(),
                 false,
@@ -325,7 +348,7 @@ pub fn construct_story_view(
                     s,
                     client,
                     tag,
-                    by_date,
+                    sort_mode,
                     page - 1,
                     numeric_filters,
                     true,
@@ -337,7 +360,7 @@ pub fn construct_story_view(
                 s,
                 client,
                 tag,
-                by_date,
+                sort_mode,
                 page + 1,
                 numeric_filters,
                 true,
@@ -350,13 +373,13 @@ pub fn construct_and_add_new_story_view(
     s: &mut Cursive,
     client: &'static client::HNClient,
     tag: &'static str,
-    by_date: bool,
+    sort_mode: client::StorySortMode,
     page: usize,
     numeric_filters: client::StoryNumericFilters,
     pop_layer: bool,
 ) {
     let async_view =
-        async_view::construct_story_view_async(s, client, tag, by_date, page, numeric_filters);
+        async_view::construct_story_view_async(s, client, tag, sort_mode, page, numeric_filters);
     if pop_layer {
         s.pop_layer();
     }

@@ -5,7 +5,7 @@ mod rcdom;
 
 // re-export
 pub use parser::{Article, CollapseState, HnText, Story};
-pub use query::StoryNumericFilters;
+pub use query::{StoryNumericFilters, StorySortMode};
 
 use crate::prelude::*;
 use parser::*;
@@ -174,11 +174,12 @@ impl HNClient {
         Ok(response.into())
     }
 
-    // reorder the front_page stories to follow the same order
-    // as in the official Hacker News site.
-    // Needs to do this because stories returned by Algolia APIs
-    // are sorted by `points`.
-    fn reoder_front_page_stories(&self, stories: Vec<Story>, ids: &[u32]) -> Vec<Story> {
+    /// reorder a list of stories to follow the same order as another list of story IDs.
+    ///
+    /// Needs to do this because stories returned by Algolia APIs are sorted by `points`,
+    /// reoder those stories to match the list shown up in the HackerNews website,
+    /// which has the same order as the list of IDs returned from the official API.
+    fn reorder_stories_based_on_ids(&self, stories: Vec<Story>, ids: &[u32]) -> Vec<Story> {
         let mut stories = stories;
         stories.sort_by(|story_x, story_y| {
             let story_x_pos = ids
@@ -199,20 +200,30 @@ impl HNClient {
         stories
     }
 
-    // retrieve a list of front_page story ids using HN Official API then
-    // compose a HN Algolia API to retrieve the corresponding stories.
-    fn get_front_page_stories(
+    /// retrieve a list of story IDs given a story tag using the HN Official API
+    /// then compose a HN Algolia API to retrieve the corresponding stories' data.
+    fn get_stories_no_sort(
         &self,
+        tag: &str,
         page: usize,
         numeric_filters: query::StoryNumericFilters,
     ) -> Result<Vec<Story>> {
-        let request_url = format!("{}/topstories.json", HN_OFFICIAL_PREFIX);
+        // get the HN official API's endpoint based on query's story tag
+        let endpoint = match tag {
+            "front_page" => "/topstories.json",
+            "ask_hn" => "/askstories.json",
+            "show_hn" => "/showstories.json",
+            _ => {
+                anyhow::bail!("unsupported story tag {tag}");
+            }
+        };
+        let request_url = format!("{HN_OFFICIAL_PREFIX}{endpoint}");
         let stories = log!(
             self.client
                 .get(&request_url)
                 .call()?
                 .into_json::<Vec<u32>>()?,
-            format!("get front page stories using {}", request_url)
+            format!("get {tag} story' IDs using {request_url}")
         );
 
         let start_id = STORY_LIMIT * page;
@@ -239,30 +250,35 @@ impl HNClient {
                 .get(&request_url)
                 .call()?
                 .into_json::<StoriesResponse>()?,
-            format!(
-                "get stories (tag=front_page, by_date=false, page={}) using {}",
-                page, request_url
-            )
+            format!("get stories (tag={tag}, page={page}) using {request_url}",)
         );
 
-        Ok(self.reoder_front_page_stories(response.into(), ids))
+        Ok(self.reorder_stories_based_on_ids(response.into(), ids))
     }
 
-    /// Get a list of stories filtering on a specific tag
+    /// Get a list of stories filtering on a specific tag.
+    ///
+    /// Depending on the specifed `sort_mode`, stories are retrieved based on
+    /// the Algolia API or a combination of Algolia API and the Official API.
     pub fn get_stories_by_tag(
         &self,
         tag: &str,
-        by_date: bool,
+        sort_mode: StorySortMode,
         page: usize,
         numeric_filters: query::StoryNumericFilters,
     ) -> Result<Vec<Story>> {
-        if tag == "front_page" {
-            return self.get_front_page_stories(page, numeric_filters);
-        }
+        let search_op = match sort_mode {
+            StorySortMode::None => {
+                return self.get_stories_no_sort(tag, page, numeric_filters);
+            }
+            StorySortMode::Date => "search_by_date",
+            StorySortMode::Points => "search", // Algolia API default search is sorted by points
+        };
+
         let request_url = format!(
             "{}/{}?tags={}&hitsPerPage={}&page={}{}",
             HN_ALGOLIA_PREFIX,
-            if by_date { "search_by_date" } else { "search" },
+            search_op,
             tag,
             STORY_LIMIT,
             page,
@@ -275,9 +291,9 @@ impl HNClient {
                 .call()?
                 .into_json::<StoriesResponse>()?,
             format!(
-                "get stories (tag={}, by_date={}, page={}, numeric_filters={}) using {}",
+                "get stories (tag={}, sort_mode={:?}, page={}, numeric_filters={}) using {}",
                 tag,
-                by_date,
+                sort_mode,
                 page,
                 numeric_filters.query(),
                 request_url

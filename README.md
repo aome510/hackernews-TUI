@@ -196,7 +196,7 @@ For more information about configuring the application's key mappings or definin
 | `open_story_in_browser`        | Open in browser the focused story                     | `s`              |
 | `next_page`                    | Go to the next page                                   | `n`              |
 | `prev_page`                    | Go the previous page                                  | `p`              |
-| `toggle_sort_by_date`          | Toggle sort stories by date                           | `d`              |
+| `cycle_sort_mode`              | Cycle story sort mode                                 | `d`              |
 
 #### Article View shortcuts
 

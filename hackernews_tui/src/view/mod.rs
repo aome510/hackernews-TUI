@@ -28,7 +28,11 @@ fn set_up_switch_story_view_shortcut(
             s,
             client,
             tag,
-            true,
+            if tag == "story" || tag == "job" {
+                client::StorySortMode::Date
+            } else {
+                client::StorySortMode::None
+            },
             0,
             numeric_filters.unwrap_or_default(),
             false,
@@ -74,7 +78,11 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &'static client::HNClient) {
                     s,
                     client,
                     &data.tag,
-                    data.by_date,
+                    if data.by_date {
+                        client::StorySortMode::Date
+                    } else {
+                        client::StorySortMode::Points
+                    },
                     0,
                     data.numeric_filters,
                     false,
@@ -128,7 +136,7 @@ pub fn init_ui(client: &'static client::HNClient) -> cursive::CursiveRunnable {
         &mut s,
         client,
         "front_page",
-        false,
+        client::StorySortMode::None,
         0,
         client::StoryNumericFilters::default(),
         false,

@@ -29,23 +29,23 @@ pub fn construct_story_view_async(
     siv: &mut Cursive,
     client: &'static client::HNClient,
     tag: &'static str,
-    by_date: bool,
+    sort_mode: client::StorySortMode,
     page: usize,
     numeric_filters: client::StoryNumericFilters,
 ) -> impl View {
     AsyncView::new_with_bg_creator(
         siv,
-        move || Ok(client.get_stories_by_tag(tag, by_date, page, numeric_filters)),
+        move || Ok(client.get_stories_by_tag(tag, sort_mode, page, numeric_filters)),
         move |result| {
             ResultView::new(
                 result.with_context(|| {
                     format!(
-                        "failed to get stories (tag={}, by_date={}, page={}, numeric_filters={{{}}})",
-                        tag, by_date, page, numeric_filters,
+                        "failed to get stories (tag={}, sort_mode={:?}, page={}, numeric_filters={{{}}})",
+                        tag, sort_mode, page, numeric_filters,
                     )
                 }),
                 |stories| {
-                    story_view::construct_story_view(stories, client, tag, by_date, page, numeric_filters)
+                    story_view::construct_story_view(stories, client, tag, sort_mode, page, numeric_filters)
                 },
             )
         },
