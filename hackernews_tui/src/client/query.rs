@@ -1,7 +1,7 @@
 use crate::utils;
 use serde::Deserialize;
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum StorySortMode {
     None,
     Date,

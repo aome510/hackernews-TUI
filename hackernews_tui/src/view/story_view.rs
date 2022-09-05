@@ -259,7 +259,7 @@ pub fn construct_story_view(
     stories: Vec<client::Story>,
     client: &'static client::HNClient,
     tag: &'static str,
-    by_date: bool,
+    sort_mode: client::StorySortMode,
     page: usize,
     numeric_filters: client::StoryNumericFilters,
 ) -> impl View {
@@ -293,26 +293,44 @@ pub fn construct_story_view(
             if tag == "front_page" {
                 return;
             }
-            construct_and_add_new_story_view(s, client, tag, !by_date, 0, numeric_filters, true);
-        })
-        // story tag navigation
-        .on_pre_event(story_view_keymap.next_story_tag, move |s| {
             construct_and_add_new_story_view(
                 s,
                 client,
-                STORY_TAGS[(current_tag_pos + 1) % STORY_TAGS.len()],
+                tag,
+                sort_mode.next(tag),
+                0,
+                numeric_filters,
                 true,
+            );
+        })
+        // story tag navigation
+        .on_pre_event(story_view_keymap.next_story_tag, move |s| {
+            let next_tag = STORY_TAGS[(current_tag_pos + 1) % STORY_TAGS.len()];
+            construct_and_add_new_story_view(
+                s,
+                client,
+                next_tag,
+                if next_tag == "story" {
+                    client::StorySortMode::Date
+                } else {
+                    client::StorySortMode::None
+                },
                 0,
                 StoryNumericFilters::default(),
                 false,
             );
         })
         .on_pre_event(story_view_keymap.prev_story_tag, move |s| {
+            let prev_tag = STORY_TAGS[(current_tag_pos + STORY_TAGS.len() - 1) % STORY_TAGS.len()];
             construct_and_add_new_story_view(
                 s,
                 client,
-                STORY_TAGS[(current_tag_pos + STORY_TAGS.len() - 1) % STORY_TAGS.len()],
-                true,
+                prev_tag,
+                if prev_tag == "story" {
+                    client::StorySortMode::Date
+                } else {
+                    client::StorySortMode::None
+                },
                 0,
                 StoryNumericFilters::default(),
                 false,
@@ -325,7 +343,7 @@ pub fn construct_story_view(
                     s,
                     client,
                     tag,
-                    by_date,
+                    sort_mode,
                     page - 1,
                     numeric_filters,
                     true,
@@ -337,7 +355,7 @@ pub fn construct_story_view(
                 s,
                 client,
                 tag,
-                by_date,
+                sort_mode,
                 page + 1,
                 numeric_filters,
                 true,
@@ -350,13 +368,13 @@ pub fn construct_and_add_new_story_view(
     s: &mut Cursive,
     client: &'static client::HNClient,
     tag: &'static str,
-    by_date: bool,
+    sort_mode: client::StorySortMode,
     page: usize,
     numeric_filters: client::StoryNumericFilters,
     pop_layer: bool,
 ) {
     let async_view =
-        async_view::construct_story_view_async(s, client, tag, by_date, page, numeric_filters);
+        async_view::construct_story_view_async(s, client, tag, sort_mode, page, numeric_filters);
     if pop_layer {
         s.pop_layer();
     }
