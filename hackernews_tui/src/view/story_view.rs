@@ -221,7 +221,7 @@ pub fn construct_story_main_view(
         .on_scroll_events()
 }
 
-fn get_story_view_title_bar(tag: &'static str) -> impl View {
+fn get_story_view_title_bar(tag: &'static str, sort_mode: client::StorySortMode) -> impl View {
     let style = config::get_config_theme().component_style.title_bar;
     let mut title = StyledString::styled(
         "[Y]",
@@ -234,8 +234,13 @@ fn get_story_view_title_bar(tag: &'static str) -> impl View {
     for (i, item) in STORY_TAGS.iter().enumerate() {
         title.append_styled(" | ", style);
         if *item == tag {
+            let sort_mode_desc = match sort_mode {
+                client::StorySortMode::None => "",
+                client::StorySortMode::Date => " (by_date)",
+                client::StorySortMode::Points => " (by_point)",
+            };
             title.append_styled(
-                format!("{}.{}", i + 1, item),
+                format!("{}.{}{}", i + 1, item, sort_mode_desc),
                 Style::from(style)
                     .combine(config::get_config_theme().component_style.current_story_tag),
             );
@@ -267,7 +272,7 @@ pub fn construct_story_view(
     let main_view = construct_story_main_view(stories, client, starting_id).full_height();
 
     let mut view = LinearLayout::vertical()
-        .child(get_story_view_title_bar(tag))
+        .child(get_story_view_title_bar(tag, sort_mode))
         .child(main_view)
         .child(utils::construct_footer_view::<StoryView>());
     view.set_focus_index(1)
