@@ -213,7 +213,6 @@ impl HNClient {
             "front_page" => "/topstories.json",
             "ask_hn" => "/askstories.json",
             "show_hn" => "/showstories.json",
-            "job" => "/jobstories.json",
             _ => {
                 anyhow::bail!("unsupported story tag {tag}");
             }

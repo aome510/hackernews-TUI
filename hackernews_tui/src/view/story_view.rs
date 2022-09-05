@@ -310,7 +310,7 @@ pub fn construct_story_view(
                 s,
                 client,
                 next_tag,
-                if next_tag == "story" {
+                if next_tag == "story" || next_tag == "job" {
                     client::StorySortMode::Date
                 } else {
                     client::StorySortMode::None
@@ -326,7 +326,7 @@ pub fn construct_story_view(
                 s,
                 client,
                 prev_tag,
-                if prev_tag == "story" {
+                if prev_tag == "story" || prev_tag == "job" {
                     client::StorySortMode::Date
                 } else {
                     client::StorySortMode::None

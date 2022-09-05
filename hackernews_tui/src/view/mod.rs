@@ -28,7 +28,7 @@ fn set_up_switch_story_view_shortcut(
             s,
             client,
             tag,
-            if tag == "story" {
+            if tag == "story" || tag == "job" {
                 client::StorySortMode::Date
             } else {
                 client::StorySortMode::None

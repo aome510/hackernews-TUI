@@ -20,12 +20,15 @@ impl StorySortMode {
         }
         match self {
             Self::None => {
-                assert!(tag != "story", "`story` stories should have a sort mode");
-                return Self::Date;
+                assert!(
+                    tag != "story" && tag != "job",
+                    "`story`/`job` stories should have a sort mode"
+                );
+                Self::Date
             }
             Self::Date => Self::Points,
             Self::Points => {
-                if tag == "story" {
+                if tag == "story" || tag == "job" {
                     Self::Date
                 } else {
                     Self::None
