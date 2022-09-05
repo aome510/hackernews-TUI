@@ -270,8 +270,8 @@ impl HasHelpView for story_view::StoryView {
                         "Go the previous page",
                     ),
                     Command::new(
-                        story_view_keymap.toggle_sort_by_date.to_string(),
-                        "Toggle sort by date (only for non `Front Page` views)",
+                        story_view_keymap.cycle_sort_mode.to_string(),
+                        "Cycle story sort mode (not for `front_page` story views)",
                     ),
                 ],
             ),
@@ -486,8 +486,8 @@ impl HasHelpView for search_view::SearchView {
                         "Go the previous page",
                     ),
                     Command::new(
-                        story_view_keymap.toggle_sort_by_date.to_string(),
-                        "Toggle sort by date",
+                        story_view_keymap.cycle_sort_mode.to_string(),
+                        "Cycle story sort mode",
                     ),
                 ],
             ),

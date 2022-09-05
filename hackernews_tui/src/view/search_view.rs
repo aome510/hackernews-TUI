@@ -213,7 +213,7 @@ fn construct_search_main_view(client: &'static client::HNClient, cb_sink: CbSink
         })
         // paging/filtering commands while in NavigationMode
         // Those commands need to be handled differently from the story view.
-        .on_pre_event_inner(story_view_keymap.toggle_sort_by_date, |s, _| match s.mode {
+        .on_pre_event_inner(story_view_keymap.cycle_sort_mode, |s, _| match s.mode {
             SearchViewMode::Navigation => {
                 s.page = 0;
                 s.by_date = !s.by_date;
