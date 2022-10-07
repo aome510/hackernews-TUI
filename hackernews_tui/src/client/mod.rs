@@ -223,7 +223,7 @@ impl HNClient {
                 .get(&request_url)
                 .call()?
                 .into_json::<Vec<u32>>()?,
-            format!("get {tag} story' IDs using {request_url}")
+            format!("get {tag} story IDs using {request_url}")
         );
 
         let start_id = STORY_LIMIT * page;

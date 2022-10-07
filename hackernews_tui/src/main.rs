@@ -53,9 +53,9 @@ fn init_logging(log_dir_str: &str) {
 }
 
 /// parse command line arguments
-fn parse_args(config_dir: &std::path::Path, cache_dir: &std::path::Path) -> ArgMatches {
+fn parse_args(config_dir: std::path::PathBuf, cache_dir: std::path::PathBuf) -> ArgMatches {
     Command::new("hackernews-tui")
-        .version("0.10.2")
+        .version("0.11.0")
         .author("Thang Pham <phamducthang1234@gmail>")
         .about("A Terminal UI to browse Hacker News")
         .arg(
@@ -63,12 +63,7 @@ fn parse_args(config_dir: &std::path::Path, cache_dir: &std::path::Path) -> ArgM
                 .short('c')
                 .long("config")
                 .value_name("FILE")
-                .default_value(
-                    config_dir
-                        .join(DEFAULT_CONFIG_FILE)
-                        .to_str()
-                        .expect("failed to config file `Path` to str"),
-                )
+                .default_value(config_dir.join(DEFAULT_CONFIG_FILE).into_os_string())
                 .help("Path to the application's config file")
                 .next_line_help(true),
         )
@@ -77,11 +72,7 @@ fn parse_args(config_dir: &std::path::Path, cache_dir: &std::path::Path) -> ArgM
                 .short('l')
                 .long("log")
                 .value_name("FOLDER")
-                .default_value(
-                    cache_dir
-                        .to_str()
-                        .expect("failed to convert cache dir `Path` to str"),
-                )
+                .default_value(cache_dir.into_os_string())
                 .help("Path to a folder to store application's logs")
                 .next_line_help(true),
         )
@@ -104,14 +95,14 @@ fn init_app_dirs() -> (std::path::PathBuf, std::path::PathBuf) {
 
 fn main() {
     let (config_dir, cache_dir) = init_app_dirs();
-    let args = parse_args(&config_dir, &cache_dir);
+    let args = parse_args(config_dir, cache_dir);
 
     init_logging(
-        args.value_of("log")
+        args.get_one::<String>("log")
             .expect("`log` argument should have a default value"),
     );
     config::load_config(
-        args.value_of("config")
+        args.get_one::<String>("config")
             .expect("`config` argument should have a default value"),
     );
     run();
