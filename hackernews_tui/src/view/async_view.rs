@@ -11,6 +11,11 @@ pub fn construct_comment_view_async(
 ) -> impl View {
     let id = story.id;
 
+    // try to test upvote function
+    if let Err(err) = client.upvote(id) {
+        log::info!("Got an error {err}");
+    }
+
     AsyncView::new_with_bg_creator(siv, move || Ok(client.lazy_load_story_comments(id)), {
         let story = story.clone();
         move |result: Result<_>| {

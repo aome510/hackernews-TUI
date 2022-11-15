@@ -332,6 +332,52 @@ impl HNClient {
             Err(anyhow::anyhow!(stderr))
         }
     }
+
+    pub fn login(&self, username: &str, password: &str) -> Result<()> {
+        info!("trying to login...");
+
+        let res = self
+            .client
+            .post(&format!("{HN_HOST_URL}/login"))
+            .set("mode", "no-cors")
+            .set("credentials", "include")
+            .set("Access-Control-Allow-Origin", "*")
+            .send_form(&[("acct", username), ("pw", password), ("goto", "news")])?
+            .into_string()?;
+
+        info!("get response: {res}");
+        Ok(())
+    }
+
+    pub fn upvote(&self, story_id: u32) -> Result<()> {
+        info!("trying to upvote...");
+
+        let upvote_rg = regex::Regex::new(&format!(
+            "<a.*?id='up_{story_id}'.*?href='(?P<link>.*?)'.*?>"
+        ))?;
+
+        let page_content = self
+            .client
+            .get(&format!("{HN_HOST_URL}/item?id={story_id}"))
+            .call()?
+            .into_string()?;
+
+        info!("page content: {page_content}");
+        let caps = upvote_rg.captures(&page_content).unwrap();
+        let link = caps.name("link").unwrap().as_str().replace("&amp;", "&");
+        info!("caps: {caps:?}, link: {link}");
+
+        info!("upvote link: {}", format!("{HN_HOST_URL}/{link}"));
+
+        let content = self
+            .client
+            .get(&format!("{HN_HOST_URL}/{link}"))
+            .call()?
+            .into_string()?;
+        info!("content: {content}");
+
+        Ok(())
+    }
 }
 
 pub fn init_client() -> &'static HNClient {
