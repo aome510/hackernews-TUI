@@ -10,6 +10,7 @@ pub use query::{StoryNumericFilters, StorySortMode};
 use crate::prelude::*;
 use parser::*;
 use rayon::prelude::*;
+use std::collections::HashMap;
 
 const HN_ALGOLIA_PREFIX: &str = "https://hn.algolia.com/api/v1";
 const HN_OFFICIAL_PREFIX: &str = "https://hacker-news.firebaseio.com/v0";
@@ -354,32 +355,41 @@ impl HNClient {
         }
     }
 
-    pub fn upvote(&self, story_id: u32) -> Result<()> {
-        info!("trying to upvote...");
-
-        let upvote_rg = regex::Regex::new(&format!(
-            "<a.*?id='up_{story_id}'.*?href='(?P<link>.*?)'.*?>"
-        ))?;
-
-        let page_content = self
+    fn get_story_page_content(&self, story_id: u32) -> Result<String> {
+        // TODO: handle cases when the story has multiple pages
+        let content = self
             .client
             .get(&format!("{HN_HOST_URL}/item?id={story_id}"))
             .call()?
             .into_string()?;
 
-        info!("page content: {page_content}");
-        let caps = upvote_rg.captures(&page_content).unwrap();
-        let link = caps.name("link").unwrap().as_str().replace("&amp;", "&");
-        info!("caps: {caps:?}, link: {link}");
+        Ok(content)
+    }
 
-        info!("upvote link: {}", format!("{HN_HOST_URL}/{link}"));
+    fn parse_vote_links(&self, page_content: &str) -> Result<HashMap<String, (String, bool)>> {
+        info!("page_content: {page_content}");
 
-        let content = self
-            .client
-            .get(&format!("{HN_HOST_URL}/{link}"))
-            .call()?
-            .into_string()?;
-        info!("content: {content}");
+        let upvote_rg = regex::Regex::new("<a.*?id='up_(?P<id>.*?)'.*?href='(?P<link>.*?)'.*?>")?;
+        let unvote_rg = regex::Regex::new("<a.*?id='un_(?P<id>.*?)'.*?href='(?P<link>.*?)'.*?>")?;
+
+        let up_caps = upvote_rg.captures(page_content);
+        let un_caps = unvote_rg.captures(page_content);
+
+        info!("up_caps: {up_caps:?}, un_caps: {un_caps:?}");
+
+        Ok(HashMap::new())
+    }
+
+    pub fn upvote(&self, story_id: u32) -> Result<()> {
+        info!("trying to upvote...");
+
+        log!(
+            {
+                let page_content = self.get_story_page_content(story_id)?;
+                self.parse_vote_links(&page_content)?;
+            },
+            "upvote"
+        );
 
         Ok(())
     }
