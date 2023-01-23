@@ -333,8 +333,9 @@ impl HNClient {
         }
     }
 
+    /// login a HackerNews user
     pub fn login(&self, username: &str, password: &str) -> Result<()> {
-        info!("trying to login...");
+        info!("Trying to login, user={username}...");
 
         let res = self
             .client
@@ -342,11 +343,15 @@ impl HNClient {
             .set("mode", "no-cors")
             .set("credentials", "include")
             .set("Access-Control-Allow-Origin", "*")
-            .send_form(&[("acct", username), ("pw", password), ("goto", "news")])?
+            .send_form(&[("acct", username), ("pw", password)])?
             .into_string()?;
 
-        info!("get response: {res}");
-        Ok(())
+        // determine that a login is successful by finding the logout button
+        if res.contains("href=\"logout") {
+            Ok(())
+        } else {
+            Err(anyhow::anyhow!("Bad login"))
+        }
     }
 
     pub fn upvote(&self, story_id: u32) -> Result<()> {

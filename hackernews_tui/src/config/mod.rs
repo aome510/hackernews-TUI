@@ -22,9 +22,16 @@ pub struct Config {
     pub keymap: keybindings::KeyMap,
 }
 
+#[derive(Debug, Deserialize)]
+/// HackerNews user's authentication data
+pub struct Auth {
+    pub username: String,
+    pub password: String,
+}
+
 impl Config {
     /// parse config from a file
-    pub fn from_config_file<P>(file: P) -> anyhow::Result<Self>
+    pub fn from_file<P>(file: P) -> anyhow::Result<Self>
     where
         P: AsRef<std::path::Path>,
     {
@@ -56,6 +63,17 @@ impl Default for Config {
     }
 }
 
+impl Auth {
+    /// parse auth from a file
+    pub fn from_file<P>(file: P) -> anyhow::Result<Self>
+    where
+        P: AsRef<std::path::Path>,
+    {
+        let auth_str = std::fs::read_to_string(file)?;
+        Ok(toml::from_str::<Self>(&auth_str)?)
+    }
+}
+
 #[derive(Debug, Deserialize, Clone)]
 pub struct Command {
     pub command: String,
@@ -77,7 +95,7 @@ static CONFIG: once_cell::sync::OnceCell<Config> = once_cell::sync::OnceCell::ne
 pub fn load_config(config_file_str: &str) {
     let config_file = std::path::PathBuf::from(config_file_str);
 
-    let config = match Config::from_config_file(config_file) {
+    let config = match Config::from_file(config_file) {
         Err(err) => {
             tracing::error!(
                 "failed to load configurations from the file {config_file_str}: {err:#}\
