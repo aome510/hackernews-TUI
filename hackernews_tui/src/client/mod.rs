@@ -355,7 +355,7 @@ impl HNClient {
         }
     }
 
-    fn get_story_page_content(&self, story_id: u32) -> Result<String> {
+    pub fn get_story_page_content(&self, story_id: u32) -> Result<String> {
         // TODO: handle cases when the story has multiple pages
         let content = self
             .client
@@ -366,32 +366,27 @@ impl HNClient {
         Ok(content)
     }
 
-    fn parse_vote_links(&self, page_content: &str) -> Result<HashMap<String, (String, bool)>> {
-        info!("page_content: {page_content}");
+    pub fn parse_vote_links(&self, page_content: &str) -> Result<HashMap<String, (String, bool)>> {
+        let upvote_rg =
+            regex::Regex::new("<a.*?id='up_(?P<id>.*?)'.*?auth=(?P<auth>[0-9a-z]*).*?>")?;
+        let unvote_rg =
+            regex::Regex::new("<a.*?id='un_(?P<id>.*?)'.*?auth=(?P<auth>[0-9a-z]*).*?>")?;
 
-        let upvote_rg = regex::Regex::new("<a.*?id='up_(?P<id>.*?)'.*?href='(?P<link>.*?)'.*?>")?;
-        let unvote_rg = regex::Regex::new("<a.*?id='un_(?P<id>.*?)'.*?href='(?P<link>.*?)'.*?>")?;
+        let mut hm = HashMap::new();
 
-        let up_caps = upvote_rg.captures(page_content);
-        let un_caps = unvote_rg.captures(page_content);
+        upvote_rg.captures_iter(page_content).for_each(|c| {
+            let id = c.name("id").unwrap().as_str().to_owned();
+            let auth = c.name("auth").unwrap().as_str().to_owned();
+            hm.insert(id, (auth, true));
+        });
 
-        info!("up_caps: {up_caps:?}, un_caps: {un_caps:?}");
+        unvote_rg.captures_iter(page_content).for_each(|c| {
+            let id = c.name("id").unwrap().as_str().to_owned();
+            let auth = c.name("auth").unwrap().as_str().to_owned();
+            hm.insert(id, (auth, false));
+        });
 
-        Ok(HashMap::new())
-    }
-
-    pub fn upvote(&self, story_id: u32) -> Result<()> {
-        info!("trying to upvote...");
-
-        log!(
-            {
-                let page_content = self.get_story_page_content(story_id)?;
-                self.parse_vote_links(&page_content)?;
-            },
-            "upvote"
-        );
-
-        Ok(())
+        Ok(hm)
     }
 }
 
