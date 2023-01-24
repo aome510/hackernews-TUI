@@ -27,11 +27,15 @@ pub type CommentReceiver = crossbeam_channel::Receiver<Vec<HnText>>;
 
 /// A HackerNews story data
 pub struct StoryData {
+    /// story's page content in raw HTML
     pub raw_html: String,
+    /// a channel for lazily loading the story's comments,
+    /// which is used to reduce the loading latency of a large story.
+    /// See `client::lazy_load_story_comments` for more details.
     pub receiver: CommentReceiver,
-    // <id, (auth, vote_status)>
-    // See `Client::parse_story_vote_data` for more details
-    // on the data representation of the `vote_state` field.
+    /// vote_state: id -> (auth, vote_status)
+    /// See `Client::parse_story_vote_data` for more details
+    /// on the data representation of the `vote_state` field.
     pub vote_state: HashMap<String, (String, bool)>,
 }
 
