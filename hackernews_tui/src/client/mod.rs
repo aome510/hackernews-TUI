@@ -25,6 +25,16 @@ static CLIENT: once_cell::sync::OnceCell<HNClient> = once_cell::sync::OnceCell::
 pub type CommentSender = crossbeam_channel::Sender<Vec<HnText>>;
 pub type CommentReceiver = crossbeam_channel::Receiver<Vec<HnText>>;
 
+/// A HackerNews story data
+pub struct StoryData {
+    pub raw_html: String,
+    pub receiver: CommentReceiver,
+    // <id, (auth, vote_status)>
+    // See `Client::parse_story_vote_data` for more details
+    // on the data representation of the `vote_state` field.
+    pub vote_state: HashMap<String, (String, bool)>,
+}
+
 /// HNClient is a HTTP client to communicate with Hacker News APIs.
 #[derive(Clone)]
 pub struct HNClient {
@@ -66,6 +76,19 @@ impl HNClient {
             format!("get HN item (id={}) using {}", id, request_url)
         );
         Ok(item)
+    }
+
+    /// Get a HackerNews story data
+    pub fn get_story_data(&self, story_id: u32) -> Result<StoryData> {
+        let raw_html = self.get_story_page_content(story_id)?;
+        let vote_state = self.parse_story_vote_data(&raw_html)?;
+        let receiver = self.lazy_load_story_comments(story_id)?;
+
+        Ok(StoryData {
+            raw_html,
+            receiver,
+            vote_state,
+        })
     }
 
     /// Lazily load a story's comments
@@ -175,7 +198,7 @@ impl HNClient {
         Ok(response.into())
     }
 
-    /// reorder a list of stories to follow the same order as another list of story IDs.
+    /// Reorder a list of stories to follow the same order as another list of story IDs.
     ///
     /// Needs to do this because stories returned by Algolia APIs are sorted by `points`,
     /// reoder those stories to match the list shown up in the HackerNews website,
@@ -201,7 +224,7 @@ impl HNClient {
         stories
     }
 
-    /// retrieve a list of story IDs given a story tag using the HN Official API
+    /// Retrieve a list of story IDs given a story tag using the HN Official API
     /// then compose a HN Algolia API to retrieve the corresponding stories' data.
     fn get_stories_no_sort(
         &self,
@@ -304,7 +327,7 @@ impl HNClient {
         Ok(response.into())
     }
 
-    /// gets a web article from a URL
+    /// Get a web article from a URL
     pub fn get_article(url: &str) -> Result<Article> {
         let article_parse_command = &config::get_config().article_parse_command;
         let output = std::process::Command::new(&article_parse_command.command)
@@ -334,7 +357,7 @@ impl HNClient {
         }
     }
 
-    /// login a HackerNews user
+    /// Login a HackerNews user
     pub fn login(&self, username: &str, password: &str) -> Result<()> {
         info!("Trying to login, user={username}...");
 
@@ -355,6 +378,7 @@ impl HNClient {
         }
     }
 
+    /// Gets a story's page content (in HTML)
     pub fn get_story_page_content(&self, story_id: u32) -> Result<String> {
         // TODO: handle cases when the story has multiple pages
         let content = self
@@ -366,7 +390,16 @@ impl HNClient {
         Ok(content)
     }
 
-    pub fn parse_vote_links(&self, page_content: &str) -> Result<HashMap<String, (String, bool)>> {
+    /// Parse a story's vote data
+    ///
+    /// The data is represented by a hashmap from `id` to
+    /// a tuple of `auth` and `vote_status` (false=no vote, true=has vote),
+    /// in which `id` is is an item's id and `auth` is a string for
+    /// authentication purpose when voting.
+    pub fn parse_story_vote_data(
+        &self,
+        page_content: &str,
+    ) -> Result<HashMap<String, (String, bool)>> {
         let upvote_rg =
             regex::Regex::new("<a.*?id='up_(?P<id>.*?)'.*?auth=(?P<auth>[0-9a-z]*).*?>")?;
         let unvote_rg =
@@ -377,13 +410,13 @@ impl HNClient {
         upvote_rg.captures_iter(page_content).for_each(|c| {
             let id = c.name("id").unwrap().as_str().to_owned();
             let auth = c.name("auth").unwrap().as_str().to_owned();
-            hm.insert(id, (auth, true));
+            hm.insert(id, (auth, false));
         });
 
         unvote_rg.captures_iter(page_content).for_each(|c| {
             let id = c.name("id").unwrap().as_str().to_owned();
             let auth = c.name("auth").unwrap().as_str().to_owned();
-            hm.insert(id, (auth, false));
+            hm.insert(id, (auth, true));
         });
 
         Ok(hm)
