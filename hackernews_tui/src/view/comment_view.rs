@@ -269,6 +269,7 @@ fn construct_comment_main_view(story: &client::Story, data: client::StoryData) -
             // because of its pre-defined `on_event` function
             Some(EventResult::Ignored)
         })
+        .on_pre_event_inner(comment_view_keymap.vote, |s, _| unimplemented!())
         // comment navigation shortcuts
         .on_pre_event_inner(comment_view_keymap.prev_comment, |s, _| {
             s.set_focus_index(
