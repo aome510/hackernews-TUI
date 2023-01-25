@@ -135,15 +135,15 @@ pub struct Story {
     pub title: StyledString,
     pub url: String,
     pub author: String,
-    pub text: HnText,
+    pub text: HnItem,
     pub points: u32,
     pub num_comments: usize,
     pub time: u64,
 }
 
-/// A parsed Hacker News text
+/// A parsed Hacker News item
 #[derive(Debug, Clone)]
-pub struct HnText {
+pub struct HnItem {
     pub id: u32,
     pub level: usize,
     pub state: CollapseState,
@@ -301,7 +301,7 @@ impl From<StoryResponse> for Story {
             let result = parse_hn_html_text(story_text, Style::default(), 0);
             text.append(result.s);
 
-            HnText {
+            HnItem {
                 id: s.id,
                 level: 0,
                 state: CollapseState::Normal,
@@ -324,14 +324,14 @@ impl From<StoryResponse> for Story {
     }
 }
 
-impl From<CommentResponse> for Vec<HnText> {
+impl From<CommentResponse> for Vec<HnItem> {
     fn from(c: CommentResponse) -> Self {
         // recursively parse child comments of the current comment
         let children = c
             .children
             .into_par_iter()
             .filter(|comment| comment.author.is_some() && comment.text.is_some())
-            .flat_map(<Vec<HnText>>::from)
+            .flat_map(<Vec<HnItem>>::from)
             .map(|mut c| {
                 c.level += 1; // update the level of every children comments
                 c
@@ -361,7 +361,7 @@ impl From<CommentResponse> for Vec<HnText> {
             );
             text.append(result.s);
 
-            HnText {
+            HnItem {
                 id: c.id,
                 level: 0,
                 state: CollapseState::Normal,

@@ -4,7 +4,7 @@ mod query;
 mod rcdom;
 
 // re-export
-pub use parser::{Article, CollapseState, HnText, Story};
+pub use parser::{Article, CollapseState, HnItem, Story};
 pub use query::{StoryNumericFilters, StorySortMode};
 
 use crate::prelude::*;
@@ -22,8 +22,8 @@ pub const SEARCH_LIMIT: usize = 15;
 
 static CLIENT: once_cell::sync::OnceCell<HNClient> = once_cell::sync::OnceCell::new();
 
-pub type CommentSender = crossbeam_channel::Sender<Vec<HnText>>;
-pub type CommentReceiver = crossbeam_channel::Receiver<Vec<HnText>>;
+pub type CommentSender = crossbeam_channel::Sender<Vec<HnItem>>;
+pub type CommentReceiver = crossbeam_channel::Receiver<Vec<HnItem>>;
 
 /// A HackerNews story data
 pub struct StoryData {
