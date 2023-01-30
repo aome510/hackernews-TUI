@@ -9,7 +9,7 @@ repository = "https://github.com/aome510/hackernews-TUI"
 keywords = ["config", "parser", "toml"]
 
 [dependencies]
-toml = "0.5.8"
-serde = { version = "1.0.126", features = ["derive"] }
-anyhow = "1.0.40"
+toml = "0.5.11"
+serde = { version = "1.0.152", features = ["derive"] }
+anyhow = "1.0.68"
 config_parser_derive = { version = "0.1.1", path = "../config_parser_derive" }
