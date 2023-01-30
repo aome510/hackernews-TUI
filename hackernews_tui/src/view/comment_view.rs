@@ -7,8 +7,8 @@ type CommentComponent = HideableView<PaddedView<text_view::TextView>>;
 /// CommentView is a View displaying a list of comments in a HN story
 pub struct CommentView {
     view: ScrollView<LinearLayout>,
-    comments: Vec<client::HnText>,
-    receiver: client::CommentReceiver,
+    comments: Vec<client::HnItem>,
+    data: client::StoryData,
 
     raw_command: String,
 }
@@ -23,7 +23,7 @@ impl ViewWrapper for CommentView {
 }
 
 impl CommentView {
-    pub fn new(story_text: client::HnText, receiver: client::CommentReceiver) -> Self {
+    pub fn new(story_text: client::HnItem, data: client::StoryData) -> Self {
         let mut view = CommentView {
             view: LinearLayout::vertical()
                 .child(HideableView::new(PaddedView::lrtb(
@@ -36,7 +36,7 @@ impl CommentView {
                 .scrollable(),
             comments: vec![story_text],
             raw_command: String::new(),
-            receiver,
+            data,
         };
 
         view.try_update_comments();
@@ -49,8 +49,8 @@ impl CommentView {
         let mut new_comments = vec![];
         // limit the number of top comments updated each time
         let mut limit = 5;
-        while !self.receiver.is_empty() && limit > 0 {
-            if let Ok(mut comments) = self.receiver.try_recv() {
+        while !self.data.receiver.is_empty() && limit > 0 {
+            if let Ok(mut comments) = self.data.receiver.try_recv() {
                 new_comments.append(&mut comments);
             }
             limit -= 1;
@@ -242,8 +242,9 @@ impl ScrollViewContainer for CommentView {
 }
 
 fn construct_comment_main_view(
+    client: &'static client::HNClient,
     story: &client::Story,
-    receiver: client::CommentReceiver,
+    data: client::StoryData,
 ) -> impl View {
     let is_suffix_key = |c: &Event| -> bool {
         let comment_view_keymap = config::get_comment_view_keymap();
@@ -253,7 +254,7 @@ fn construct_comment_main_view(
 
     let comment_view_keymap = config::get_comment_view_keymap().clone();
 
-    OnEventView::new(CommentView::new(story.text.clone(), receiver))
+    OnEventView::new(CommentView::new(story.text.clone(), data))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
             s.try_update_comments();
 
@@ -271,6 +272,22 @@ fn construct_comment_main_view(
             // don't allow the inner `LinearLayout` child view to handle the event
             // because of its pre-defined `on_event` function
             Some(EventResult::Ignored)
+        })
+        .on_pre_event_inner(comment_view_keymap.vote, |s, _| {
+            let id = s.get_focus_index();
+            let comment = &s.comments[id];
+            if let Some((auth, upvoted)) = s.data.vote_state.get_mut(&comment.id.to_string()) {
+                match client.vote(comment.id, auth, *upvoted) {
+                    Err(err) => {
+                        tracing::error!("Failed to vote HN item (id={id}): {err}");
+                    }
+                    Ok(_) => {
+                        // update the focused item's vote status if the request succeeds
+                        *upvoted = !(*upvoted);
+                    }
+                }
+            }
+            Some(EventResult::Consumed(None))
         })
         // comment navigation shortcuts
         .on_pre_event_inner(comment_view_keymap.prev_comment, |s, _| {
@@ -388,10 +405,11 @@ fn construct_comment_main_view(
 /// * `story`: a Hacker News story
 /// * `receiver`: a "subscriber" channel that gets comments asynchronously from another thread
 pub fn construct_comment_view(
+    client: &'static client::HNClient,
     story: &client::Story,
-    receiver: client::CommentReceiver,
+    data: client::StoryData,
 ) -> impl View {
-    let main_view = construct_comment_main_view(story, receiver);
+    let main_view = construct_comment_main_view(client, story, data);
 
     let mut view = LinearLayout::vertical()
         .child(utils::construct_view_title_bar(&format!(

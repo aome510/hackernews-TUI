@@ -200,6 +200,8 @@ pub struct CommentViewKeyMap {
     pub open_link_in_browser: Keys,
     pub open_link_in_article_view: Keys,
 
+    pub vote: Keys,
+
     pub toggle_collapse_comment: Keys,
 }
 
@@ -220,6 +222,8 @@ impl Default for CommentViewKeyMap {
             open_article_in_article_view: Keys::new(vec!['A'.into()]),
             open_link_in_browser: Keys::new(vec!['o'.into()]),
             open_link_in_article_view: Keys::new(vec!['O'.into()]),
+
+            vote: Keys::new(vec!['v'.into()]),
 
             toggle_collapse_comment: Keys::new(vec![event::Key::Tab.into()]),
         }

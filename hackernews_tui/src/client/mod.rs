@@ -4,12 +4,13 @@ mod query;
 mod rcdom;
 
 // re-export
-pub use parser::{Article, CollapseState, HnText, Story};
+pub use parser::{Article, CollapseState, HnItem, Story};
 pub use query::{StoryNumericFilters, StorySortMode};
 
 use crate::prelude::*;
 use parser::*;
 use rayon::prelude::*;
+use std::collections::HashMap;
 
 const HN_ALGOLIA_PREFIX: &str = "https://hn.algolia.com/api/v1";
 const HN_OFFICIAL_PREFIX: &str = "https://hacker-news.firebaseio.com/v0";
@@ -21,8 +22,22 @@ pub const SEARCH_LIMIT: usize = 15;
 
 static CLIENT: once_cell::sync::OnceCell<HNClient> = once_cell::sync::OnceCell::new();
 
-pub type CommentSender = crossbeam_channel::Sender<Vec<HnText>>;
-pub type CommentReceiver = crossbeam_channel::Receiver<Vec<HnText>>;
+pub type CommentSender = crossbeam_channel::Sender<Vec<HnItem>>;
+pub type CommentReceiver = crossbeam_channel::Receiver<Vec<HnItem>>;
+
+/// A HackerNews story data
+pub struct StoryData {
+    /// story's page content in raw HTML
+    pub raw_html: String,
+    /// a channel for lazily loading the story's comments,
+    /// which is used to reduce the loading latency of a large story.
+    /// See `client::lazy_load_story_comments` for more details.
+    pub receiver: CommentReceiver,
+    /// vote_state: id -> (auth, upvoted)
+    /// See `Client::parse_story_vote_data` for more details
+    /// on the data representation of the `vote_state` field.
+    pub vote_state: HashMap<String, (String, bool)>,
+}
 
 /// HNClient is a HTTP client to communicate with Hacker News APIs.
 #[derive(Clone)]
@@ -65,6 +80,19 @@ impl HNClient {
             format!("get HN item (id={id}) using {request_url}")
         );
         Ok(item)
+    }
+
+    /// Get a HackerNews story data
+    pub fn get_story_data(&self, story_id: u32) -> Result<StoryData> {
+        let raw_html = self.get_story_page_content(story_id)?;
+        let vote_state = self.parse_story_vote_data(&raw_html)?;
+        let receiver = self.lazy_load_story_comments(story_id)?;
+
+        Ok(StoryData {
+            raw_html,
+            receiver,
+            vote_state,
+        })
     }
 
     /// Lazily load a story's comments
@@ -173,7 +201,7 @@ impl HNClient {
         Ok(response.into())
     }
 
-    /// reorder a list of stories to follow the same order as another list of story IDs.
+    /// Reorder a list of stories to follow the same order as another list of story IDs.
     ///
     /// Needs to do this because stories returned by Algolia APIs are sorted by `points`,
     /// reoder those stories to match the list shown up in the HackerNews website,
@@ -199,7 +227,7 @@ impl HNClient {
         stories
     }
 
-    /// retrieve a list of story IDs given a story tag using the HN Official API
+    /// Retrieve a list of story IDs given a story tag using the HN Official API
     /// then compose a HN Algolia API to retrieve the corresponding stories' data.
     fn get_stories_no_sort(
         &self,
@@ -301,7 +329,7 @@ impl HNClient {
         Ok(response.into())
     }
 
-    /// gets a web article from a URL
+    /// Get a web article from a URL
     pub fn get_article(url: &str) -> Result<Article> {
         let article_parse_command = &config::get_config().article_parse_command;
         let output = std::process::Command::new(&article_parse_command.command)
@@ -329,6 +357,89 @@ impl HNClient {
             let stderr = std::str::from_utf8(&output.stderr)?.to_string();
             Err(anyhow::anyhow!(stderr))
         }
+    }
+
+    /// Login a HackerNews user
+    pub fn login(&self, username: &str, password: &str) -> Result<()> {
+        info!("Trying to login, user={username}...");
+
+        let res = self
+            .client
+            .post(&format!("{HN_HOST_URL}/login"))
+            .set("mode", "no-cors")
+            .set("credentials", "include")
+            .set("Access-Control-Allow-Origin", "*")
+            .send_form(&[("acct", username), ("pw", password)])?
+            .into_string()?;
+
+        // determine that a login is successful by finding the logout button
+        if res.contains("href=\"logout") {
+            Ok(())
+        } else {
+            Err(anyhow::anyhow!("Bad login"))
+        }
+    }
+
+    /// Gets a story's page content (in HTML)
+    pub fn get_story_page_content(&self, story_id: u32) -> Result<String> {
+        // TODO: handle cases when the story has multiple pages
+        let content = self
+            .client
+            .get(&format!("{HN_HOST_URL}/item?id={story_id}"))
+            .call()?
+            .into_string()?;
+
+        Ok(content)
+    }
+
+    /// Parse a story's vote data
+    ///
+    /// The data is represented by a hashmap from `id` to
+    /// a tuple of `auth` and `upvoted` (false=no vote, true=has vote),
+    /// in which `id` is is an item's id and `auth` is a string for
+    /// authentication purpose when voting.
+    pub fn parse_story_vote_data(
+        &self,
+        page_content: &str,
+    ) -> Result<HashMap<String, (String, bool)>> {
+        let upvote_rg =
+            regex::Regex::new("<a.*?id='up_(?P<id>.*?)'.*?auth=(?P<auth>[0-9a-z]*).*?>")?;
+        let unvote_rg =
+            regex::Regex::new("<a.*?id='un_(?P<id>.*?)'.*?auth=(?P<auth>[0-9a-z]*).*?>")?;
+
+        let mut hm = HashMap::new();
+
+        upvote_rg.captures_iter(page_content).for_each(|c| {
+            let id = c.name("id").unwrap().as_str().to_owned();
+            let auth = c.name("auth").unwrap().as_str().to_owned();
+            hm.insert(id, (auth, false));
+        });
+
+        unvote_rg.captures_iter(page_content).for_each(|c| {
+            let id = c.name("id").unwrap().as_str().to_owned();
+            let auth = c.name("auth").unwrap().as_str().to_owned();
+            hm.insert(id, (auth, true));
+        });
+
+        Ok(hm)
+    }
+
+    /// Vote a HN item.
+    ///
+    /// Depending on the vote status (`upvoted`), the function will make
+    /// either an "upvote" or "unvote" request.
+    pub fn vote(&self, id: u32, auth: &str, upvoted: bool) -> Result<()> {
+        log!(
+            {
+                let vote_url = format!(
+                    "{HN_HOST_URL}/vote?id={id}&how={}&auth={auth}",
+                    if !upvoted { "up" } else { "un" }
+                );
+                self.client.get(&vote_url).call()?;
+            },
+            format!("vote HN item (id={id})")
+        );
+        Ok(())
     }
 }
 

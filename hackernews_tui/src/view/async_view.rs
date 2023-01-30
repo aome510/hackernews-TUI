@@ -11,12 +11,12 @@ pub fn construct_comment_view_async(
 ) -> impl View {
     let id = story.id;
 
-    AsyncView::new_with_bg_creator(siv, move || Ok(client.lazy_load_story_comments(id)), {
+    AsyncView::new_with_bg_creator(siv, move || Ok(client.get_story_data(id)), {
         let story = story.clone();
         move |result: Result<_>| {
             ResultView::new(
                 result.with_context(|| format!("failed to load comments from story (id={id})")),
-                |receiver| comment_view::construct_comment_view(&story, receiver),
+                |receiver| comment_view::construct_comment_view(client, &story, receiver),
             )
         }
     })

@@ -88,7 +88,7 @@ impl View for TextView {
             }
 
             self.rows.iter().enumerate().for_each(|(y, row)| {
-                let y = y + if self.padding.top.is_some() { 1 } else { 0 };
+                let y = y + usize::from(self.padding.top.is_some());
                 let mut x: usize = 0;
 
                 // print the left padding
@@ -244,11 +244,7 @@ impl TextPadding {
     }
 
     pub fn height(&self) -> usize {
-        if self.top.is_some() {
-            1
-        } else {
-            0
-        }
+        usize::from(self.top.is_some())
     }
 }
 

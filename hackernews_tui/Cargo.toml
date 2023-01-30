@@ -14,6 +14,9 @@ include = ["src/**/*", "LICENSE", "../README.*", "!**/examples/**/*"]
 
 # cursive related deps
 cursive = { version = "0.20.0", default-features = false, features = ["crossterm-backend"] }
+# Pin `cursive_core` to `0.3.5` because `0.3.6` implements `ColorStyle::invert` for
+# highlighted items, which is not configurable from the `theme::Palette` struct.
+cursive_core = "=0.3.5"
 cursive-async-view = "0.6.0"
 cursive_buffered_backend = "0.6.1"
 cursive-aligned-view = "0.6.0"
@@ -33,7 +36,7 @@ serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.91"
 
 # others
-ureq = { version = "2.6.2", features = ["json"] }
+ureq = { version = "2.6.2", features = ["json", "cookies"] }
 anyhow = "1.0.68"
 rayon = "1.6.1"
 regex = "1.7.1"

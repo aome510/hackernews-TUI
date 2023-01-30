@@ -6,14 +6,22 @@ pub mod utils;
 pub mod view;
 
 const DEFAULT_CONFIG_FILE: &str = "hn-tui.toml";
+const DEFAULT_AUTH_FILE: &str = "hn-auth.toml";
 const DEFAULT_LOG_FILE: &str = "hn-tui.log";
 
 use clap::*;
 use prelude::*;
 
-fn run() {
+fn run(auth: Option<config::Auth>) {
     // setup HN Client
     let client = client::init_client();
+
+    // login if authentication is specified
+    if let Some(auth) = auth {
+        if let Err(err) = client.login(&auth.username, &auth.password) {
+            tracing::warn!("Failed to login, user={}: {err}", auth.username);
+        }
+    }
 
     // setup the application's UI
     let s = view::init_ui(client);
@@ -59,6 +67,15 @@ fn parse_args(config_dir: std::path::PathBuf, cache_dir: std::path::PathBuf) -> 
         .author("Thang Pham <phamducthang1234@gmail>")
         .about("A Terminal UI to browse Hacker News")
         .arg(
+            Arg::new("auth")
+                .short('a')
+                .long("auth")
+                .value_name("FILE")
+                .default_value(config_dir.join(DEFAULT_AUTH_FILE).into_os_string())
+                .help("Path to the application's authentication file")
+                .next_line_help(true),
+        )
+        .arg(
             Arg::new("config")
                 .short('c')
                 .long("config")
@@ -93,6 +110,16 @@ fn init_app_dirs() -> (std::path::PathBuf, std::path::PathBuf) {
     (config_dir, cache_dir)
 }
 
+fn init_auth(auth_file_str: &str) -> Option<config::Auth> {
+    match config::Auth::from_file(auth_file_str) {
+        Ok(auth) => Some(auth),
+        Err(err) => {
+            tracing::warn!("Failed to get authentication from {}: {err}", auth_file_str);
+            None
+        }
+    }
+}
+
 fn main() {
     let (config_dir, cache_dir) = init_app_dirs();
     let args = parse_args(config_dir, cache_dir);
@@ -101,9 +128,15 @@ fn main() {
         args.get_one::<String>("log")
             .expect("`log` argument should have a default value"),
     );
+
     config::load_config(
         args.get_one::<String>("config")
             .expect("`config` argument should have a default value"),
     );
-    run();
+
+    let auth = init_auth(
+        args.get_one::<String>("auth")
+            .expect("`auth` argument should have a default value"),
+    );
+    run(auth);
 }
