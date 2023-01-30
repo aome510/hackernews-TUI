@@ -56,7 +56,7 @@ impl ErrorView {
             view: LinearLayout::vertical()
                 .child(utils::construct_view_title_bar("Error View"))
                 .child(Dialog::around(
-                    TextView::new(format!("Error: {:?}", err))
+                    TextView::new(format!("Error: {err:?}"))
                         .scrollable()
                         .full_height(),
                 ))

@@ -49,11 +49,11 @@ impl<T: std::fmt::Display> FilterInterval<T> {
         format!(
             "{}{}",
             match self.start.as_ref() {
-                Some(x) => format!(",{}>={}", field, x),
+                Some(x) => format!(",{field}>={x}"),
                 None => "".to_string(),
             },
             match self.end.as_ref() {
-                Some(x) => format!(",{}<{}", field, x),
+                Some(x) => format!(",{field}<{x}"),
                 None => "".to_string(),
             },
         )
@@ -124,7 +124,7 @@ impl StoryNumericFilters {
         );
         if !query.is_empty() {
             query.remove(0); // remove trailing ,
-            format!("&numericFilters={}", query)
+            format!("&numericFilters={query}")
         } else {
             "".to_string()
         }
