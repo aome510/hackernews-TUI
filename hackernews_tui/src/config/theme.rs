@@ -209,7 +209,7 @@ impl Color {
     }
 
     pub fn parse(c: &str) -> Self {
-        Self::try_parse(c).unwrap_or_else(|| panic!("failed to parse color: {}", c))
+        Self::try_parse(c).unwrap_or_else(|| panic!("failed to parse color: {c}"))
     }
 }
 
@@ -272,7 +272,7 @@ impl<'de> Deserialize<'de> for Color {
     {
         let s = String::deserialize(deserializer)?;
         match Self::try_parse(&s) {
-            None => Err(de::Error::custom(format!("failed to parse color: {}", s))),
+            None => Err(de::Error::custom(format!("failed to parse color: {s}"))),
             Some(color) => Ok(color),
         }
     }

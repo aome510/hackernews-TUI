@@ -68,7 +68,7 @@ impl StoryView {
         if let Ok(url) = url::Url::parse(&story.url) {
             if let Some(domain) = url.domain() {
                 story_text.append_styled(
-                    format!(" ({})", domain),
+                    format!(" ({domain})"),
                     config::get_config_theme().component_style.link,
                 );
             }
@@ -281,7 +281,7 @@ pub fn construct_story_view(
     let current_tag_pos = STORY_TAGS
         .iter()
         .position(|t| *t == tag)
-        .unwrap_or_else(|| panic!("unkwnown tag {}", tag));
+        .unwrap_or_else(|| panic!("unkwnown tag {tag}"));
 
     let story_view_keymap = config::get_story_view_keymap().clone();
 

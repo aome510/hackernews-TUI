@@ -42,7 +42,7 @@ fn init_logging(log_dir_str: &str) {
     }
 
     let log_file = std::fs::File::create(log_dir.join(DEFAULT_LOG_FILE)).unwrap_or_else(|err| {
-        panic!("failed to create application's log file: {}", err);
+        panic!("failed to create application's log file: {err}");
     });
 
     tracing_subscriber::fmt::fmt()

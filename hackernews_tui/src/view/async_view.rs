@@ -15,7 +15,7 @@ pub fn construct_comment_view_async(
         let story = story.clone();
         move |result: Result<_>| {
             ResultView::new(
-                result.with_context(|| format!("failed to load comments from story (id={})", id)),
+                result.with_context(|| format!("failed to load comments from story (id={id})")),
                 |receiver| comment_view::construct_comment_view(&story, receiver),
             )
         }
@@ -40,8 +40,7 @@ pub fn construct_story_view_async(
             ResultView::new(
                 result.with_context(|| {
                     format!(
-                        "failed to get stories (tag={}, sort_mode={:?}, page={}, numeric_filters={{{}}})",
-                        tag, sort_mode, page, numeric_filters,
+                        "failed to get stories (tag={tag}, sort_mode={sort_mode:?}, page={page}, numeric_filters={{{numeric_filters}}})",
                     )
                 }),
                 |stories| {
