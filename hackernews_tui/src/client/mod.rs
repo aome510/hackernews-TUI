@@ -424,6 +424,10 @@ impl HNClient {
         Ok(hm)
     }
 
+    /// Vote a HN item.
+    ///
+    /// Depending on the vote status (`upvoted`), the function will make
+    /// either an "upvote" or "unvote" request.
     pub fn vote(&self, id: u32, auth: &str, upvoted: bool) -> Result<()> {
         log!(
             {
@@ -431,7 +435,6 @@ impl HNClient {
                     "{HN_HOST_URL}/vote?id={id}&how={}&auth={auth}",
                     if !upvoted { "up" } else { "un" }
                 );
-                tracing::info!("vote_url: {vote_url}");
                 self.client.get(&vote_url).call()?;
             },
             format!("vote HN item (id={id})")
