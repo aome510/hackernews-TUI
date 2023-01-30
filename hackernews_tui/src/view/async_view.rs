@@ -16,7 +16,7 @@ pub fn construct_comment_view_async(
         move |result: Result<_>| {
             ResultView::new(
                 result.with_context(|| format!("failed to load comments from story (id={})", id)),
-                |data| comment_view::construct_comment_view(&story, data),
+                |data| comment_view::construct_comment_view(client, &story, data),
             )
         }
     })

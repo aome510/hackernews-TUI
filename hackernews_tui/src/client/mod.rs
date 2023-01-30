@@ -33,7 +33,7 @@ pub struct StoryData {
     /// which is used to reduce the loading latency of a large story.
     /// See `client::lazy_load_story_comments` for more details.
     pub receiver: CommentReceiver,
-    /// vote_state: id -> (auth, vote_status)
+    /// vote_state: id -> (auth, upvoted)
     /// See `Client::parse_story_vote_data` for more details
     /// on the data representation of the `vote_state` field.
     pub vote_state: HashMap<String, (String, bool)>,
@@ -397,7 +397,7 @@ impl HNClient {
     /// Parse a story's vote data
     ///
     /// The data is represented by a hashmap from `id` to
-    /// a tuple of `auth` and `vote_status` (false=no vote, true=has vote),
+    /// a tuple of `auth` and `upvoted` (false=no vote, true=has vote),
     /// in which `id` is is an item's id and `auth` is a string for
     /// authentication purpose when voting.
     pub fn parse_story_vote_data(
@@ -424,6 +424,21 @@ impl HNClient {
         });
 
         Ok(hm)
+    }
+
+    pub fn vote(&self, id: u32, auth: &str, upvoted: bool) -> Result<()> {
+        log!(
+            {
+                let vote_url = format!(
+                    "{HN_HOST_URL}/vote?id={id}&how={}&auth={auth}",
+                    if !upvoted { "up" } else { "un" }
+                );
+                tracing::info!("vote_url: {vote_url}");
+                self.client.get(&vote_url).call()?;
+            },
+            format!("vote HN item (id={id})")
+        );
+        Ok(())
     }
 }
 
