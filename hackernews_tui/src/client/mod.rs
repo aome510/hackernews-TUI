@@ -74,10 +74,10 @@ impl HNClient {
     where
         T: serde::de::DeserializeOwned,
     {
-        let request_url = format!("{}/items/{}", HN_ALGOLIA_PREFIX, id);
+        let request_url = format!("{HN_ALGOLIA_PREFIX}/items/{id}");
         let item = log!(
             self.client.get(&request_url).call()?.into_json::<T>()?,
-            format!("get HN item (id={}) using {}", id, request_url)
+            format!("get HN item (id={id}) using {request_url}")
         );
         Ok(item)
     }
@@ -97,14 +97,14 @@ impl HNClient {
 
     /// Lazily load a story's comments
     pub fn lazy_load_story_comments(&self, story_id: u32) -> Result<CommentReceiver> {
-        let request_url = format!("{}/item/{}.json", HN_OFFICIAL_PREFIX, story_id);
+        let request_url = format!("{HN_OFFICIAL_PREFIX}/item/{story_id}.json");
         let mut ids = log!(
             self.client
                 .get(&request_url)
                 .call()?
                 .into_json::<HNStoryResponse>()?
                 .kids,
-            format!("get story (id={}) using {}", story_id, request_url)
+            format!("get story (id={story_id}) using {request_url}")
         );
 
         let (sender, receiver) = crossbeam_channel::bounded(32);
@@ -157,13 +157,13 @@ impl HNClient {
 
     /// Get a story based on its id
     pub fn get_story_from_story_id(&self, id: u32) -> Result<Story> {
-        let request_url = format!("{}/search?tags=story,story_{}", HN_ALGOLIA_PREFIX, id);
+        let request_url = format!("{HN_ALGOLIA_PREFIX}/search?tags=story,story_{id}");
         let response = log!(
             self.client
                 .get(&request_url)
                 .call()?
                 .into_json::<StoriesResponse>()?,
-            format!("get story (id={}) using {}", id, request_url)
+            format!("get story (id={id}) using {request_url}")
         );
 
         match <Vec<Story>>::from(response).pop() {
@@ -194,8 +194,7 @@ impl HNClient {
                 .call()?
                 .into_json::<StoriesResponse>()?,
             format!(
-                "get matched stories with query {} (by_date={}, page={}) using {}",
-                query, by_date, page, request_url
+                "get matched stories with query {query} (by_date={by_date}, page={page}) using {request_url}"
             )
         );
 
@@ -266,8 +265,7 @@ impl HNClient {
             "{}/search?tags=story,({}){}&hitsPerPage={}",
             HN_ALGOLIA_PREFIX,
             ids.iter().fold("".to_owned(), |tags, story_id| format!(
-                "{}story_{},",
-                tags, story_id
+                "{tags}story_{story_id},"
             )),
             numeric_filters.query(),
             STORY_LIMIT,

@@ -283,9 +283,9 @@ impl std::fmt::Display for Keys {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         fn fmt_event(e: &event::Event, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match e {
-                event::Event::Char(c) => write!(f, "{}", c),
-                event::Event::CtrlChar(c) => write!(f, "C-{}", c),
-                event::Event::AltChar(c) => write!(f, "M-{}", c),
+                event::Event::Char(c) => write!(f, "{c}"),
+                event::Event::CtrlChar(c) => write!(f, "C-{c}"),
+                event::Event::AltChar(c) => write!(f, "M-{c}"),
                 event::Event::Key(k) => match k {
                     event::Key::Enter => write!(f, "enter"),
                     event::Key::Tab => write!(f, "tab"),
@@ -317,9 +317,9 @@ impl std::fmt::Display for Keys {
                     event::Key::F11 => write!(f, "f11"),
                     event::Key::F12 => write!(f, "f12"),
 
-                    _ => panic!("unknown key: {:?}", k),
+                    _ => panic!("unknown key: {k:?}"),
                 },
-                _ => panic!("unknown event: {:?}", e),
+                _ => panic!("unknown event: {e:?}"),
             }
         }
 

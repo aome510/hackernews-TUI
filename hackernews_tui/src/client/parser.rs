@@ -289,7 +289,7 @@ impl From<StoryResponse> for Story {
             let minimized_text = if story_text.is_empty() {
                 metadata.clone()
             } else {
-                story_text = format!("\n{}", story_text);
+                story_text = format!("\n{story_text}");
 
                 utils::combine_styled_strings(vec![
                     metadata.clone(),
@@ -608,7 +608,7 @@ impl Article {
                             table.add_row(row.into_iter().map(|c| c.source().to_owned()));
                         }
 
-                        result.s.append_styled(format!("\n\n{}", table), style);
+                        result.s.append_styled(format!("\n\n{table}"), style);
 
                         return (result, true);
                     }
