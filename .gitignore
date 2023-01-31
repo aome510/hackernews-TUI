@@ -12,3 +12,6 @@ log.*
 # Benchmark results
 *.svg
 perf.*
+
+# MacOS files
+.DS_Store
