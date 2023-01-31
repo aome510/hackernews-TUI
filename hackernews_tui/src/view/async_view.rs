@@ -7,7 +7,7 @@ use cursive_async_view::AsyncView;
 pub fn construct_comment_view_async(
     siv: &mut Cursive,
     client: &'static client::HNClient,
-    story: &client::Story,
+    story: &Story,
 ) -> impl View {
     let id = story.id;
 

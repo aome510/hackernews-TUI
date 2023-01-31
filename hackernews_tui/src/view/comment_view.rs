@@ -7,8 +7,8 @@ type CommentComponent = HideableView<PaddedView<text_view::TextView>>;
 /// CommentView is a View displaying a list of comments in a HN story
 pub struct CommentView {
     view: ScrollView<LinearLayout>,
-    comments: Vec<client::HnItem>,
-    data: client::StoryData,
+    comments: Vec<HnItem>,
+    data: StoryData,
 
     raw_command: String,
 }
@@ -23,7 +23,7 @@ impl ViewWrapper for CommentView {
 }
 
 impl CommentView {
-    pub fn new(story_text: client::HnItem, data: client::StoryData) -> Self {
+    pub fn new(story_text: HnItem, data: StoryData) -> Self {
         let mut view = CommentView {
             view: LinearLayout::vertical()
                 .child(HideableView::new(PaddedView::lrtb(
@@ -151,17 +151,17 @@ impl CommentView {
             return;
         }
         match self.comments[start_id].state {
-            client::CollapseState::Collapsed => {
-                self.comments[start_id].state = client::CollapseState::Normal;
+            CollapseState::Collapsed => {
+                self.comments[start_id].state = CollapseState::Normal;
                 self.get_comment_component_mut(start_id).unhide();
                 self.toggle_comment_collapse_state(start_id + 1, min_level)
             }
-            client::CollapseState::Normal => {
-                self.comments[start_id].state = client::CollapseState::Collapsed;
+            CollapseState::Normal => {
+                self.comments[start_id].state = CollapseState::Collapsed;
                 self.get_comment_component_mut(start_id).hide();
                 self.toggle_comment_collapse_state(start_id + 1, min_level)
             }
-            client::CollapseState::PartiallyCollapsed => {
+            CollapseState::PartiallyCollapsed => {
                 let component = self.get_comment_component_mut(start_id);
                 if component.is_visible() {
                     component.hide();
@@ -185,26 +185,26 @@ impl CommentView {
         let id = self.get_focus_index();
         let comment = self.comments[id].clone();
         match comment.state {
-            client::CollapseState::Collapsed => {
+            CollapseState::Collapsed => {
                 panic!(
                     "invalid collapse state `Collapsed` when calling `toggle_collapse_focused_comment`"
                 );
             }
-            client::CollapseState::PartiallyCollapsed => {
+            CollapseState::PartiallyCollapsed => {
                 self.get_comment_component_mut(id)
                     .get_inner_mut()
                     .get_inner_mut()
                     .set_content(comment.text);
                 self.toggle_comment_collapse_state(id + 1, self.comments[id].level);
-                self.comments[id].state = client::CollapseState::Normal;
+                self.comments[id].state = CollapseState::Normal;
             }
-            client::CollapseState::Normal => {
+            CollapseState::Normal => {
                 self.get_comment_component_mut(id)
                     .get_inner_mut()
                     .get_inner_mut()
                     .set_content(comment.minimized_text);
                 self.toggle_comment_collapse_state(id + 1, self.comments[id].level);
-                self.comments[id].state = client::CollapseState::PartiallyCollapsed;
+                self.comments[id].state = CollapseState::PartiallyCollapsed;
             }
         };
     }
@@ -243,8 +243,8 @@ impl ScrollViewContainer for CommentView {
 
 fn construct_comment_main_view(
     client: &'static client::HNClient,
-    story: &client::Story,
-    data: client::StoryData,
+    story: &Story,
+    data: StoryData,
 ) -> impl View {
     let is_suffix_key = |c: &Event| -> bool {
         let comment_view_keymap = config::get_comment_view_keymap();
@@ -406,8 +406,8 @@ fn construct_comment_main_view(
 /// * `receiver`: a "subscriber" channel that gets comments asynchronously from another thread
 pub fn construct_comment_view(
     client: &'static client::HNClient,
-    story: &client::Story,
-    data: client::StoryData,
+    story: &Story,
+    data: StoryData,
 ) -> impl View {
     let main_view = construct_comment_main_view(client, story, data);
 
@@ -428,7 +428,7 @@ pub fn construct_comment_view(
 pub fn construct_and_add_new_comment_view(
     s: &mut Cursive,
     client: &'static client::HNClient,
-    story: &client::Story,
+    story: &Story,
     pop_layer: bool,
 ) {
     let async_view = async_view::construct_comment_view_async(s, client, story);

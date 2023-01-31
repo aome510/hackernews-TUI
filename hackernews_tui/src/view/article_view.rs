@@ -3,7 +3,7 @@ use crate::prelude::*;
 
 /// ArticleView is a View used to display the content of a web page in reader mode
 pub struct ArticleView {
-    article: client::Article,
+    article: Article,
     links: Vec<String>,
     width: usize,
 
@@ -42,7 +42,7 @@ impl ViewWrapper for ArticleView {
 }
 
 impl ArticleView {
-    pub fn new(article: client::Article) -> Self {
+    pub fn new(article: Article) -> Self {
         let component_style = &config::get_config_theme().component_style;
         let unknown = "[unknown]".to_string();
         let desc = format!(
@@ -98,7 +98,7 @@ impl ScrollViewContainer for ArticleView {
     }
 }
 
-fn construct_article_main_view(article: client::Article) -> OnEventView<ArticleView> {
+fn construct_article_main_view(article: Article) -> OnEventView<ArticleView> {
     let is_suffix_key = |c: &Event| -> bool {
         let article_view_keymap = config::get_article_view_keymap();
         article_view_keymap.open_link_in_browser.has_event(c)
@@ -159,7 +159,7 @@ fn construct_article_main_view(article: client::Article) -> OnEventView<ArticleV
 }
 
 /// Construct an article view of an article
-pub fn construct_article_view(article: client::Article) -> impl View {
+pub fn construct_article_view(article: Article) -> impl View {
     let desc = format!("Article View - {}", article.title);
     let main_view = construct_article_main_view(article).full_height();
 

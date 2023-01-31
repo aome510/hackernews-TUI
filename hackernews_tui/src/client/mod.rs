@@ -3,14 +3,14 @@ mod parser;
 mod query;
 mod rcdom;
 
+use std::collections::HashMap;
+
 // re-export
-pub use parser::{Article, CollapseState, HnItem, Story};
 pub use query::{StoryNumericFilters, StorySortMode};
 
 use crate::prelude::*;
 use parser::*;
 use rayon::prelude::*;
-use std::collections::HashMap;
 
 const HN_ALGOLIA_PREFIX: &str = "https://hn.algolia.com/api/v1";
 const HN_OFFICIAL_PREFIX: &str = "https://hacker-news.firebaseio.com/v0";
@@ -21,23 +21,6 @@ pub const STORY_LIMIT: usize = 20;
 pub const SEARCH_LIMIT: usize = 15;
 
 static CLIENT: once_cell::sync::OnceCell<HNClient> = once_cell::sync::OnceCell::new();
-
-pub type CommentSender = crossbeam_channel::Sender<Vec<HnItem>>;
-pub type CommentReceiver = crossbeam_channel::Receiver<Vec<HnItem>>;
-
-/// A HackerNews story data
-pub struct StoryData {
-    /// story's page content in raw HTML
-    pub raw_html: String,
-    /// a channel for lazily loading the story's comments,
-    /// which is used to reduce the loading latency of a large story.
-    /// See `client::lazy_load_story_comments` for more details.
-    pub receiver: CommentReceiver,
-    /// vote_state: id -> (auth, upvoted)
-    /// See `Client::parse_story_vote_data` for more details
-    /// on the data representation of the `vote_state` field.
-    pub vote_state: HashMap<String, (String, bool)>,
-}
 
 /// HNClient is a HTTP client to communicate with Hacker News APIs.
 #[derive(Clone)]
