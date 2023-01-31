@@ -1,9 +1,5 @@
-use std::borrow::Cow;
-
-use crate::prelude::*;
-use crate::utils;
+use super::*;
 use once_cell::sync::Lazy;
-use rayon::prelude::*;
 use regex::Regex;
 use serde::{de, Deserialize, Deserializer};
 
@@ -124,67 +120,6 @@ pub struct CommentResponse {
 /// StoriesResponse represents the stories data received from HN_ALGOLIA APIs
 pub struct StoriesResponse {
     pub hits: Vec<StoryResponse>,
-}
-
-// parsed structs
-
-/// A parsed Hacker News story
-#[derive(Debug, Clone)]
-pub struct Story {
-    pub id: u32,
-    pub title: StyledString,
-    pub url: String,
-    pub author: String,
-    pub text: HnItem,
-    pub points: u32,
-    pub num_comments: usize,
-    pub time: u64,
-}
-
-/// A parsed Hacker News item
-#[derive(Debug, Clone)]
-pub struct HnItem {
-    pub id: u32,
-    pub level: usize,
-    pub state: CollapseState,
-    pub text: StyledString,
-    /// The minimized version of the text used to display the text component when it's partially collapsed.
-    pub minimized_text: StyledString,
-    pub links: Vec<String>,
-}
-
-#[derive(Debug, Clone)]
-/// The collapse state of a HN text component
-pub enum CollapseState {
-    Collapsed,
-    PartiallyCollapsed,
-    Normal,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-/// A web article in a reader mode
-pub struct Article {
-    pub title: String,
-    pub url: String,
-    pub content: String,
-    pub author: Option<String>,
-    pub date_published: Option<String>,
-}
-
-impl Story {
-    /// get the story's article URL.
-    /// If the article URL is empty (in case of "AskHN" stories), fallback to the HN story's URL
-    pub fn get_url(&self) -> Cow<str> {
-        if self.url.is_empty() {
-            Cow::from(self.story_url())
-        } else {
-            Cow::from(&self.url)
-        }
-    }
-
-    pub fn story_url(&self) -> String {
-        format!("{}/item?id={}", client::HN_HOST_URL, self.id)
-    }
 }
 
 impl From<StoriesResponse> for Vec<Story> {
