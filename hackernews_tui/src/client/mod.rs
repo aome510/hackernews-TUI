@@ -66,14 +66,13 @@ impl HNClient {
     }
 
     /// Get a HackerNews story data
-    pub fn get_story_data(&self, story_id: u32) -> Result<StoryData> {
-        let raw_html = self.get_story_page_content(story_id)?;
-        let vote_state = self.parse_story_vote_data(&raw_html)?;
-        let receiver = self.lazy_load_story_comments(story_id)?;
+    pub fn get_story_hidden_data(&self, story_id: u32) -> Result<StoryHiddenData> {
+        let content = self.get_story_page_content(story_id)?;
+        let vote_state = self.parse_story_vote_data(&content)?;
+        let comment_receiver = self.lazy_load_story_comments(story_id)?;
 
-        Ok(StoryData {
-            raw_html,
-            receiver,
+        Ok(StoryHiddenData {
+            comment_receiver,
             vote_state,
         })
     }
@@ -381,10 +380,7 @@ impl HNClient {
     /// a tuple of `auth` and `upvoted` (false=no vote, true=has vote),
     /// in which `id` is is an item's id and `auth` is a string for
     /// authentication purpose when voting.
-    pub fn parse_story_vote_data(
-        &self,
-        page_content: &str,
-    ) -> Result<HashMap<String, (String, bool)>> {
+    pub fn parse_story_vote_data(&self, page_content: &str) -> Result<HashMap<String, VoteData>> {
         let upvote_rg =
             regex::Regex::new("<a.*?id='up_(?P<id>.*?)'.*?auth=(?P<auth>[0-9a-z]*).*?>")?;
         let unvote_rg =
@@ -395,13 +391,25 @@ impl HNClient {
         upvote_rg.captures_iter(page_content).for_each(|c| {
             let id = c.name("id").unwrap().as_str().to_owned();
             let auth = c.name("auth").unwrap().as_str().to_owned();
-            hm.insert(id, (auth, false));
+            hm.insert(
+                id,
+                VoteData {
+                    auth,
+                    upvoted: false,
+                },
+            );
         });
 
         unvote_rg.captures_iter(page_content).for_each(|c| {
             let id = c.name("id").unwrap().as_str().to_owned();
             let auth = c.name("auth").unwrap().as_str().to_owned();
-            hm.insert(id, (auth, true));
+            hm.insert(
+                id,
+                VoteData {
+                    auth,
+                    upvoted: true,
+                },
+            );
         });
 
         Ok(hm)

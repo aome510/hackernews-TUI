@@ -8,12 +8,12 @@ type CommentComponent = HideableView<PaddedView<text_view::TextView>>;
 pub struct CommentView {
     view: ScrollView<LinearLayout>,
     comments: Vec<HnItem>,
-    data: StoryData,
+    data: StoryHiddenData,
 
     raw_command: String,
 }
 
-pub enum NavigationDirection {
+enum NavigationDirection {
     Next,
     Previous,
 }
@@ -23,7 +23,7 @@ impl ViewWrapper for CommentView {
 }
 
 impl CommentView {
-    pub fn new(story_text: HnItem, data: StoryData) -> Self {
+    pub fn new(story_text: HnItem, data: StoryHiddenData) -> Self {
         let mut view = CommentView {
             view: LinearLayout::vertical()
                 .child(HideableView::new(PaddedView::lrtb(
@@ -49,8 +49,8 @@ impl CommentView {
         let mut new_comments = vec![];
         // limit the number of top comments updated each time
         let mut limit = 5;
-        while !self.data.receiver.is_empty() && limit > 0 {
-            if let Ok(mut comments) = self.data.receiver.try_recv() {
+        while !self.data.comment_receiver.is_empty() && limit > 0 {
+            if let Ok(mut comments) = self.data.comment_receiver.try_recv() {
                 new_comments.append(&mut comments);
             }
             limit -= 1;
@@ -150,14 +150,14 @@ impl CommentView {
         if start_id == self.len() || self.comments[start_id].level <= min_level {
             return;
         }
-        match self.comments[start_id].state {
+        match self.comments[start_id].display_state {
             DisplayState::Hidden => {
-                self.comments[start_id].state = DisplayState::Normal;
+                self.comments[start_id].display_state = DisplayState::Normal;
                 self.get_comment_component_mut(start_id).unhide();
                 self.toggle_comment_collapse_state(start_id + 1, min_level)
             }
             DisplayState::Normal => {
-                self.comments[start_id].state = DisplayState::Hidden;
+                self.comments[start_id].display_state = DisplayState::Hidden;
                 self.get_comment_component_mut(start_id).hide();
                 self.toggle_comment_collapse_state(start_id + 1, min_level)
             }
@@ -184,7 +184,7 @@ impl CommentView {
     pub fn toggle_collapse_focused_comment(&mut self) {
         let id = self.get_focus_index();
         let comment = self.comments[id].clone();
-        match comment.state {
+        match comment.display_state {
             DisplayState::Hidden => {
                 panic!(
                     "invalid collapse state `Collapsed` when calling `toggle_collapse_focused_comment`"
@@ -196,7 +196,7 @@ impl CommentView {
                     .get_inner_mut()
                     .set_content(comment.text);
                 self.toggle_comment_collapse_state(id + 1, self.comments[id].level);
-                self.comments[id].state = DisplayState::Normal;
+                self.comments[id].display_state = DisplayState::Normal;
             }
             DisplayState::Normal => {
                 self.get_comment_component_mut(id)
@@ -204,7 +204,7 @@ impl CommentView {
                     .get_inner_mut()
                     .set_content(comment.minimized_text);
                 self.toggle_comment_collapse_state(id + 1, self.comments[id].level);
-                self.comments[id].state = DisplayState::Minimized;
+                self.comments[id].display_state = DisplayState::Minimized;
             }
         };
     }
@@ -244,7 +244,7 @@ impl ScrollViewContainer for CommentView {
 fn construct_comment_main_view(
     client: &'static client::HNClient,
     story: &Story,
-    data: StoryData,
+    data: StoryHiddenData,
 ) -> impl View {
     let is_suffix_key = |c: &Event| -> bool {
         let comment_view_keymap = config::get_comment_view_keymap();
@@ -407,7 +407,7 @@ fn construct_comment_main_view(
 pub fn construct_comment_view(
     client: &'static client::HNClient,
     story: &Story,
-    data: StoryData,
+    data: StoryHiddenData,
 ) -> impl View {
     let main_view = construct_comment_main_view(client, story, data);
 

@@ -2,7 +2,10 @@ use serde::Deserialize;
 
 use crate::prelude::*;
 
-use std::borrow::Cow;
+use std::{borrow::Cow, collections::HashMap};
+
+pub type CommentSender = crossbeam_channel::Sender<Vec<Comment>>;
+pub type CommentReceiver = crossbeam_channel::Receiver<Vec<Comment>>;
 
 #[derive(Debug, Clone)]
 pub struct Story {
@@ -23,6 +26,11 @@ pub struct Comment {
     pub author: String,
     pub time: u64,
     pub content: StyledString,
+}
+
+pub struct StoryHiddenData {
+    pub comment_receiver: CommentReceiver,
+    pub vote_state: HashMap<String, VoteData>,
 }
 
 #[derive(Debug, Clone)]
