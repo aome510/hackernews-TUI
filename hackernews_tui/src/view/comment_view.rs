@@ -151,17 +151,17 @@ impl CommentView {
             return;
         }
         match self.comments[start_id].state {
-            CollapseState::Collapsed => {
-                self.comments[start_id].state = CollapseState::Normal;
+            DisplayState::Hidden => {
+                self.comments[start_id].state = DisplayState::Normal;
                 self.get_comment_component_mut(start_id).unhide();
                 self.toggle_comment_collapse_state(start_id + 1, min_level)
             }
-            CollapseState::Normal => {
-                self.comments[start_id].state = CollapseState::Collapsed;
+            DisplayState::Normal => {
+                self.comments[start_id].state = DisplayState::Hidden;
                 self.get_comment_component_mut(start_id).hide();
                 self.toggle_comment_collapse_state(start_id + 1, min_level)
             }
-            CollapseState::PartiallyCollapsed => {
+            DisplayState::Minimized => {
                 let component = self.get_comment_component_mut(start_id);
                 if component.is_visible() {
                     component.hide();
@@ -185,26 +185,26 @@ impl CommentView {
         let id = self.get_focus_index();
         let comment = self.comments[id].clone();
         match comment.state {
-            CollapseState::Collapsed => {
+            DisplayState::Hidden => {
                 panic!(
                     "invalid collapse state `Collapsed` when calling `toggle_collapse_focused_comment`"
                 );
             }
-            CollapseState::PartiallyCollapsed => {
+            DisplayState::Minimized => {
                 self.get_comment_component_mut(id)
                     .get_inner_mut()
                     .get_inner_mut()
                     .set_content(comment.text);
                 self.toggle_comment_collapse_state(id + 1, self.comments[id].level);
-                self.comments[id].state = CollapseState::Normal;
+                self.comments[id].state = DisplayState::Normal;
             }
-            CollapseState::Normal => {
+            DisplayState::Normal => {
                 self.get_comment_component_mut(id)
                     .get_inner_mut()
                     .get_inner_mut()
                     .set_content(comment.minimized_text);
                 self.toggle_comment_collapse_state(id + 1, self.comments[id].level);
-                self.comments[id].state = CollapseState::PartiallyCollapsed;
+                self.comments[id].state = DisplayState::Minimized;
             }
         };
     }

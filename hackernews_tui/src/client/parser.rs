@@ -240,7 +240,7 @@ impl From<StoryResponse> for Story {
             HnItem {
                 id: s.id,
                 level: 0,
-                state: CollapseState::Normal,
+                state: DisplayState::Normal,
                 minimized_text,
                 text,
                 links: result.links,
@@ -300,7 +300,7 @@ impl From<CommentResponse> for Vec<HnItem> {
             HnItem {
                 id: c.id,
                 level: 0,
-                state: CollapseState::Normal,
+                state: DisplayState::Normal,
                 minimized_text: utils::combine_styled_strings(vec![
                     metadata,
                     StyledString::styled(
