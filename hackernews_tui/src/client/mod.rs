@@ -65,7 +65,6 @@ impl HNClient {
         Ok(item)
     }
 
-    /// Get a HackerNews story data
     pub fn get_story_hidden_data(&self, story_id: u32) -> Result<StoryHiddenData> {
         let content = self.get_story_page_content(story_id)?;
         let vote_state = self.parse_story_vote_data(&content)?;
@@ -77,7 +76,6 @@ impl HNClient {
         })
     }
 
-    /// Lazily load a story's comments
     pub fn lazy_load_story_comments(&self, story_id: u32) -> Result<CommentReceiver> {
         let request_url = format!("{HN_OFFICIAL_PREFIX}/item/{story_id}.json");
         let mut ids = log!(
@@ -311,7 +309,6 @@ impl HNClient {
         Ok(response.into())
     }
 
-    /// Get a web article from a URL
     pub fn get_article(url: &str) -> Result<Article> {
         let article_parse_command = &config::get_config().article_parse_command;
         let output = std::process::Command::new(&article_parse_command.command)
@@ -341,7 +338,6 @@ impl HNClient {
         }
     }
 
-    /// Login a HackerNews user
     pub fn login(&self, username: &str, password: &str) -> Result<()> {
         info!("Trying to login, user={username}...");
 
@@ -362,7 +358,6 @@ impl HNClient {
         }
     }
 
-    /// Gets a story's page content (in HTML)
     pub fn get_story_page_content(&self, story_id: u32) -> Result<String> {
         // TODO: handle cases when the story has multiple pages
         let content = self
