@@ -77,6 +77,7 @@ impl HNClient {
     }
 
     pub fn lazy_load_story_comments(&self, story_id: u32) -> Result<CommentReceiver> {
+        // retrieve the top comments of a story
         let request_url = format!("{HN_OFFICIAL_PREFIX}/item/{story_id}.json");
         let mut ids = log!(
             self.client
@@ -89,7 +90,7 @@ impl HNClient {
 
         let (sender, receiver) = crossbeam_channel::bounded(32);
 
-        // loads first 5 comments to ensure the corresponding `CommentView` has data to render
+        // loads the first 5 top comments to ensure the corresponding `CommentView` has data to render
         self.load_comments(&sender, &mut ids, 5)?;
         std::thread::spawn({
             let client = self.clone();
