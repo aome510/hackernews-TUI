@@ -1,8 +1,7 @@
-use once_cell::sync::Lazy;
-use regex::Regex;
-
 use crate::prelude::*;
 use crate::utils;
+use once_cell::sync::Lazy;
+use regex::Regex;
 
 /// A regex to parse a HN text (in HTML).
 /// It consists of multiple regex(s) representing different elements.
@@ -51,6 +50,7 @@ impl HTMLParsedResult {
         self.links.append(&mut other.links);
     }
 }
+
 /// parse a Hacker News HTML text
 pub fn parse_hn_html_text(text: String, style: Style, base_link_id: usize) -> HTMLParsedResult {
     debug!("parse hn html text: {}", text);

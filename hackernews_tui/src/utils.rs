@@ -55,3 +55,8 @@ pub fn combine_styled_strings(strings: Vec<StyledString>) -> StyledString {
         acc
     })
 }
+
+/// decode a HTML encoded string
+pub fn decode_html(s: &str) -> String {
+    html_escape::decode_html_entities(s).into()
+}

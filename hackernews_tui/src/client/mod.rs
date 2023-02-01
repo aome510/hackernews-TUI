@@ -1,7 +1,6 @@
 // modules
-mod parser;
+mod model;
 mod query;
-mod rcdom;
 
 use std::collections::HashMap;
 
@@ -9,7 +8,7 @@ use std::collections::HashMap;
 pub use query::{StoryNumericFilters, StorySortMode};
 
 use crate::prelude::*;
-use parser::*;
+use model::*;
 use rayon::prelude::*;
 
 const HN_ALGOLIA_PREFIX: &str = "https://hn.algolia.com/api/v1";
