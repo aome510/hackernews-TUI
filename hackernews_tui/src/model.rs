@@ -31,6 +31,7 @@ pub struct Story {
 pub struct Comment {
     pub id: u32,
     pub level: usize,
+    pub n_children: usize,
     pub author: String,
     pub time: u64,
     pub content: String,
@@ -77,8 +78,7 @@ impl From<Story> for HnItem {
     fn from(story: Story) -> Self {
         let mut parsed_title = StyledString::new();
 
-        let theme = config::get_config_theme();
-        let component_style = &theme.component_style;
+        let component_style = &config::get_config_theme().component_style;
 
         // decorate the story title based on the story category
         {
@@ -94,8 +94,7 @@ impl From<Story> for HnItem {
 
             for i in 0..story_categories.len() {
                 if let Some(title) = story.title.strip_prefix("Ask HN") {
-                    parsed_title
-                        .append_styled("Ask HN", config::get_config_theme().component_style.ask_hn);
+                    parsed_title.append_styled("Ask HN", component_style.ask_hn);
                     story.title = title.to_string();
                 }
             }
@@ -116,7 +115,7 @@ impl From<Story> for HnItem {
 
                 parsed_title.append_styled(
                     caps.name("match").unwrap().as_str(),
-                    config::get_config_theme().component_style.matched_highlight,
+                    component_style.matched_highlight,
                 );
             }
             if curr_pos < story.title.len() {
@@ -136,7 +135,7 @@ impl From<Story> for HnItem {
                         utils::get_elapsed_time_as_text(story.time),
                         story.num_comments,
                     ),
-                    config::get_config_theme().component_style.metadata,
+                    component_style.metadata,
                 ),
             ]);
 
@@ -173,6 +172,41 @@ impl From<Story> for HnItem {
     }
 }
 
+impl From<Comment> for HnItem {
+    fn from(comment: Comment) -> Self {
+        let component_style = &config::get_config_theme().component_style;
+
+        let metadata = utils::combine_styled_strings(vec![
+            StyledString::styled(comment.author, component_style.username),
+            StyledString::styled(
+                format!(" {} ago ", utils::get_elapsed_time_as_text(comment.time)),
+                component_style.metadata,
+            ),
+        ]);
+
+        let mut text =
+            utils::combine_styled_strings(vec![metadata.clone(), StyledString::plain("\n")]);
+        let minimized_text = utils::combine_styled_strings(vec![
+            metadata,
+            StyledString::styled(
+                format!("({} more)", comment.n_children + 1),
+                component_style.metadata,
+            ),
+        ]);
+
+        let result = parse_hn_html_text(comment.content, Style::default(), 0);
+        text.append(result.s);
+
+        HnItem {
+            level: comment.level,
+            display_state: DisplayState::Normal,
+            links: result.links,
+            text,
+            minimized_text,
+        }
+    }
+}
+
 impl Story {
     /// get the story's article URL.
     /// If the article URL is empty (in case of "AskHN" stories), fallback to the HN story's URL
@@ -188,25 +222,3 @@ impl Story {
         format!("{}/item?id={}", client::HN_HOST_URL, self.id)
     }
 }
-
-// // parse comment
-// let metadata = utils::combine_styled_strings(vec![
-//     StyledString::styled(
-//         c.author.unwrap_or_default(),
-//         config::get_config_theme().component_style.username,
-//     ),
-//     StyledString::styled(
-//         format!(" {} ago ", utils::get_elapsed_time_as_text(c.time)),
-//         config::get_config_theme().component_style.metadata,
-//     ),
-// ]);
-
-// let mut text =
-//     utils::combine_styled_strings(vec![metadata.clone(), StyledString::plain("\n")]);
-
-// let result = parse_hn_html_text(
-//     decode_html(&c.text.unwrap_or_default()),
-//     Style::default(),
-//     0,
-// );
-// text.append(result.s);

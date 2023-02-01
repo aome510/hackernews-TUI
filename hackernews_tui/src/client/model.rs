@@ -141,6 +141,7 @@ impl From<CommentResponse> for Vec<Comment> {
             Comment {
                 id: c.id,
                 level: 0,
+                n_children: children.len(),
                 time: c.time,
                 author: c.author.unwrap_or_default(),
                 content: c.text.unwrap_or_default(),
