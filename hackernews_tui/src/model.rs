@@ -5,7 +5,6 @@ use serde::Deserialize;
 use crate::parser::parse_hn_html_text;
 use crate::prelude::*;
 use crate::utils;
-use crate::utils::decode_html;
 
 use std::{borrow::Cow, collections::HashMap};
 
@@ -51,6 +50,7 @@ pub struct VoteData {
 #[derive(Debug, Clone)]
 /// A HackerNews item which can be either a story or a comment.
 pub struct HnItem {
+    pub id: u32,
     pub level: usize,
     pub display_state: DisplayState,
     pub text: StyledString,
@@ -75,14 +75,14 @@ pub struct Article {
 }
 
 impl From<Story> for HnItem {
-    fn from(story: Story) -> Self {
+    fn from(mut story: Story) -> Self {
         let mut parsed_title = StyledString::new();
 
         let component_style = &config::get_config_theme().component_style;
 
         // decorate the story title based on the story category
         {
-            let story_categories = ["Ask HN", "Tell HN", "Show HN", "Launch HN"];
+            let categories = ["Ask HN", "Tell HN", "Show HN", "Launch HN"];
             let styles = [
                 component_style.ask_hn,
                 component_style.tell_hn,
@@ -90,11 +90,11 @@ impl From<Story> for HnItem {
                 component_style.launch_hn,
             ];
 
-            assert!(story_categories.len() == styles.len());
+            assert!(categories.len() == styles.len());
 
-            for i in 0..story_categories.len() {
-                if let Some(title) = story.title.strip_prefix("Ask HN") {
-                    parsed_title.append_styled("Ask HN", component_style.ask_hn);
+            for i in 0..categories.len() {
+                if let Some(title) = story.title.strip_prefix(categories[i]) {
+                    parsed_title.append_styled(categories[i], styles[i]);
                     story.title = title.to_string();
                 }
             }
@@ -163,6 +163,7 @@ impl From<Story> for HnItem {
         };
 
         HnItem {
+            id: story.id,
             level: 0, // story is at level 0 by default
             display_state: DisplayState::Normal,
             text,
@@ -198,6 +199,7 @@ impl From<Comment> for HnItem {
         text.append(result.s);
 
         HnItem {
+            id: comment.id,
             level: comment.level,
             display_state: DisplayState::Normal,
             links: result.links,
@@ -220,5 +222,10 @@ impl Story {
 
     pub fn story_url(&self) -> String {
         format!("{}/item?id={}", client::HN_HOST_URL, self.id)
+    }
+
+    /// Get the story's title without any HTML elements
+    pub fn no_html_title(&self) -> String {
+        self.title.replace("<em>", "").replace("</em>", "") // story's title from the search view can have `<em>` inside it
     }
 }

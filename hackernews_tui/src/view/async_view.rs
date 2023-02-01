@@ -11,7 +11,7 @@ pub fn construct_comment_view_async(
 ) -> impl View {
     let id = story.id;
 
-    AsyncView::new_with_bg_creator(siv, move || Ok(client.get_story_data(id)), {
+    AsyncView::new_with_bg_creator(siv, move || Ok(client.get_story_hidden_data(id)), {
         let story = story.clone();
         move |result: Result<_>| {
             ResultView::new(

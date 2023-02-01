@@ -2,18 +2,18 @@ use super::{article_view, async_view, help_view::HasHelpView, text_view, traits:
 use crate::prelude::*;
 use crate::view::text_view::{StyledPaddingChar, TextPadding};
 
-type CommentComponent = HideableView<PaddedView<text_view::TextView>>;
+type SingleItemView = HideableView<PaddedView<text_view::TextView>>;
 
 /// CommentView is a View displaying a list of comments in a HN story
 pub struct CommentView {
     view: ScrollView<LinearLayout>,
-    comments: Vec<HnItem>,
+    items: Vec<HnItem>,
     data: StoryHiddenData,
 
     raw_command: String,
 }
 
-enum NavigationDirection {
+pub enum NavigationDirection {
     Next,
     Previous,
 }
@@ -23,18 +23,21 @@ impl ViewWrapper for CommentView {
 }
 
 impl CommentView {
-    pub fn new(story_text: HnItem, data: StoryHiddenData) -> Self {
+    pub fn new(story: &Story, data: StoryHiddenData) -> Self {
+        // story as the first item in the comment view
+        let item: HnItem = story.clone().into();
+
         let mut view = CommentView {
             view: LinearLayout::vertical()
                 .child(HideableView::new(PaddedView::lrtb(
-                    story_text.level * 2 + 1,
+                    item.level * 2 + 1,
                     1,
                     0,
                     1,
-                    text_view::TextView::new(story_text.text.clone()),
+                    text_view::TextView::new(item.text.clone()),
                 )))
                 .scrollable(),
-            comments: vec![story_text],
+            items: vec![item],
             raw_command: String::new(),
             data,
         };
@@ -60,18 +63,23 @@ impl CommentView {
             return;
         }
 
-        new_comments.iter().for_each(|comment| {
-            let text_view = text_view::TextView::new(comment.text.clone());
+        let mut new_items = new_comments
+            .into_iter()
+            .map(Into::<HnItem>::into)
+            .collect::<Vec<_>>();
+
+        new_items.iter().for_each(|item| {
+            let text_view = text_view::TextView::new(item.text.clone());
             self.add_item(HideableView::new(PaddedView::lrtb(
-                comment.level * 2 + 1,
+                item.level * 2 + 1,
                 1,
                 0,
                 1,
-                if comment.level > 0 {
+                if item.level > 0 {
                     // get the padding style (color) based on the comment's height
                     //
                     // We use base 16 colors to display the comment's padding
-                    let c = config::Color::from((comment.level % 16) as u8);
+                    let c = config::Color::from((item.level % 16) as u8);
                     text_view
                         .padding(TextPadding::default().left(StyledPaddingChar::new('▎', c.into())))
                 } else {
@@ -82,7 +90,7 @@ impl CommentView {
                 },
             )));
         });
-        self.comments.append(&mut new_comments);
+        self.items.append(&mut new_items);
 
         // update the view's layout
         self.layout(
@@ -92,9 +100,9 @@ impl CommentView {
         )
     }
 
-    /// Return the id of the first comment (`direction` dependent)
+    /// Return the id of the first item (`direction` dependent),
     /// whose level is less than or equal `max_level`.
-    pub fn find_comment_id_by_max_level(
+    pub fn find_item_id_by_max_level(
         &self,
         start_id: usize,
         max_level: usize,
@@ -102,109 +110,105 @@ impl CommentView {
     ) -> usize {
         match direction {
             NavigationDirection::Next => (start_id + 1..self.len())
-                .find(|&id| self.comments[id].level <= max_level)
+                .find(|&id| self.items[id].level <= max_level)
                 .unwrap_or_else(|| self.len()),
             NavigationDirection::Previous => (0..start_id)
-                .rfind(|&id| self.comments[id].level <= max_level)
+                .rfind(|&id| self.items[id].level <= max_level)
                 .unwrap_or(start_id),
         }
     }
 
-    /// Return the id of the next visible comment (`direction` dependent)
-    pub fn find_next_visible_comment(
-        &self,
-        start_id: usize,
-        direction: NavigationDirection,
-    ) -> usize {
+    /// Return the id of the next visible item (`direction` dependent)
+    pub fn find_next_visible_item(&self, start_id: usize, direction: NavigationDirection) -> usize {
         match direction {
             NavigationDirection::Next => (start_id + 1..self.len())
-                .find(|&id| self.get_comment_component(id).is_visible())
+                .find(|&id| self.get_item_view(id).is_visible())
                 .unwrap_or_else(|| self.len()),
             NavigationDirection::Previous => (0..start_id)
-                .rfind(|&id| self.get_comment_component(id).is_visible())
+                .rfind(|&id| self.get_item_view(id).is_visible())
                 .unwrap_or(start_id),
         }
     }
 
-    fn get_comment_component(&self, id: usize) -> &CommentComponent {
+    fn get_item_view(&self, id: usize) -> &SingleItemView {
         self.get_item(id)
             .unwrap()
-            .downcast_ref::<CommentComponent>()
+            .downcast_ref::<SingleItemView>()
             .unwrap()
     }
 
-    fn get_comment_component_mut(&mut self, id: usize) -> &mut CommentComponent {
+    fn get_item_view_mut(&mut self, id: usize) -> &mut SingleItemView {
         self.get_item_mut(id)
             .unwrap()
-            .downcast_mut::<CommentComponent>()
+            .downcast_mut::<SingleItemView>()
             .unwrap()
     }
 
-    /// Toggle the collapsing state of comments whose level is greater than the `min_level`.
-    fn toggle_comment_collapse_state(&mut self, start_id: usize, min_level: usize) {
-        // This function will be called recursively until it's unable to find any comments.
+    /// Toggle the collapsing state of items whose level is greater than the `min_level`.
+    fn toggle_item_collapse_state(&mut self, start_id: usize, min_level: usize) {
+        // This function will be called recursively until it's unable to find any items.
         //
-        // **Note**: `PartiallyCollapsed` comment's state is unchanged, we only toggle its visibility.
-        // Also, the state and visibility of such comment's children are unaffected as they should already
+        // **Note**: `PartiallyCollapsed` item's state is unchanged, we only toggle its visibility.
+        // Also, the state and visibility of such item's children are unaffected as they should already
         // be in a collapsed state.
-        if start_id == self.len() || self.comments[start_id].level <= min_level {
+        if start_id == self.len() || self.items[start_id].level <= min_level {
             return;
         }
-        match self.comments[start_id].display_state {
+        match self.items[start_id].display_state {
             DisplayState::Hidden => {
-                self.comments[start_id].display_state = DisplayState::Normal;
-                self.get_comment_component_mut(start_id).unhide();
-                self.toggle_comment_collapse_state(start_id + 1, min_level)
+                self.items[start_id].display_state = DisplayState::Normal;
+                self.get_item_view_mut(start_id).unhide();
+                self.toggle_item_collapse_state(start_id + 1, min_level)
             }
             DisplayState::Normal => {
-                self.comments[start_id].display_state = DisplayState::Hidden;
-                self.get_comment_component_mut(start_id).hide();
-                self.toggle_comment_collapse_state(start_id + 1, min_level)
+                self.items[start_id].display_state = DisplayState::Hidden;
+                self.get_item_view_mut(start_id).hide();
+                self.toggle_item_collapse_state(start_id + 1, min_level)
             }
             DisplayState::Minimized => {
-                let component = self.get_comment_component_mut(start_id);
+                let component = self.get_item_view_mut(start_id);
                 if component.is_visible() {
                     component.hide();
                 } else {
                     component.unhide();
                 }
 
-                // skip toggling all child comments of the current comment
-                let next_id = self.find_comment_id_by_max_level(
+                // skip toggling all children of the current item
+                let next_id = self.find_item_id_by_max_level(
                     start_id,
-                    self.comments[start_id].level,
+                    self.items[start_id].level,
                     NavigationDirection::Next,
                 );
-                self.toggle_comment_collapse_state(next_id, min_level)
+                self.toggle_item_collapse_state(next_id, min_level)
             }
         };
     }
 
-    /// Toggle the collapsing state of currently focused comment and its children
-    pub fn toggle_collapse_focused_comment(&mut self) {
+    /// Toggle the collapsing state of currently focused item and its children
+    pub fn toggle_collapse_focused_item(&mut self) {
         let id = self.get_focus_index();
-        let comment = self.comments[id].clone();
-        match comment.display_state {
+        let item = self.items[id].clone();
+        match item.display_state {
             DisplayState::Hidden => {
                 panic!(
-                    "invalid collapse state `Collapsed` when calling `toggle_collapse_focused_comment`"
+                    "invalid collapse state `Collapsed` when calling `toggle_collapse_focused_item`"
                 );
             }
             DisplayState::Minimized => {
-                self.get_comment_component_mut(id)
+                self.get_item_view_mut(id)
                     .get_inner_mut()
                     .get_inner_mut()
-                    .set_content(comment.text);
-                self.toggle_comment_collapse_state(id + 1, self.comments[id].level);
-                self.comments[id].display_state = DisplayState::Normal;
+                    .set_content(item.text);
+                self.toggle_item_collapse_state(id + 1, self.items[id].level);
+                self.items[id].display_state = DisplayState::Normal;
             }
             DisplayState::Normal => {
-                self.get_comment_component_mut(id)
+                self.get_item_view_mut(id)
                     .get_inner_mut()
                     .get_inner_mut()
-                    .set_content(comment.minimized_text);
-                self.toggle_comment_collapse_state(id + 1, self.comments[id].level);
-                self.comments[id].display_state = DisplayState::Minimized;
+                    .set_content(item.minimized_text);
+                self.toggle_item_collapse_state(id + 1, self.items[id].level);
+                self.items[id].display_state = DisplayState::Minimized;
             }
         };
     }
@@ -254,7 +258,7 @@ fn construct_comment_main_view(
 
     let comment_view_keymap = config::get_comment_view_keymap().clone();
 
-    OnEventView::new(CommentView::new(story.text.clone(), data))
+    OnEventView::new(CommentView::new(story, data))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
             s.try_update_comments();
 
@@ -275,9 +279,11 @@ fn construct_comment_main_view(
         })
         .on_pre_event_inner(comment_view_keymap.vote, |s, _| {
             let id = s.get_focus_index();
-            let comment = &s.comments[id];
-            if let Some((auth, upvoted)) = s.data.vote_state.get_mut(&comment.id.to_string()) {
-                match client.vote(comment.id, auth, *upvoted) {
+            let item = &s.items[id];
+            if let Some(VoteData { auth, upvoted }) =
+                s.data.vote_state.get_mut(&item.id.to_string())
+            {
+                match client.vote(item.id, auth, *upvoted) {
                     Err(err) => {
                         tracing::error!("Failed to vote HN item (id={id}): {err}");
                     }
@@ -292,45 +298,41 @@ fn construct_comment_main_view(
         // comment navigation shortcuts
         .on_pre_event_inner(comment_view_keymap.prev_comment, |s, _| {
             s.set_focus_index(
-                s.find_next_visible_comment(s.get_focus_index(), NavigationDirection::Previous),
+                s.find_next_visible_item(s.get_focus_index(), NavigationDirection::Previous),
             )
         })
         .on_pre_event_inner(comment_view_keymap.next_comment, |s, _| {
-            let next_id =
-                s.find_next_visible_comment(s.get_focus_index(), NavigationDirection::Next);
+            let next_id = s.find_next_visible_item(s.get_focus_index(), NavigationDirection::Next);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.next_leq_level_comment, move |s, _| {
             let id = s.get_focus_index();
             let next_id =
-                s.find_comment_id_by_max_level(id, s.comments[id].level, NavigationDirection::Next);
+                s.find_item_id_by_max_level(id, s.items[id].level, NavigationDirection::Next);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.prev_leq_level_comment, move |s, _| {
             let id = s.get_focus_index();
-            let next_id = s.find_comment_id_by_max_level(
-                id,
-                s.comments[id].level,
-                NavigationDirection::Previous,
-            );
+            let next_id =
+                s.find_item_id_by_max_level(id, s.items[id].level, NavigationDirection::Previous);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.next_top_level_comment, move |s, _| {
             let id = s.get_focus_index();
-            let next_id = s.find_comment_id_by_max_level(id, 0, NavigationDirection::Next);
+            let next_id = s.find_item_id_by_max_level(id, 0, NavigationDirection::Next);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.prev_top_level_comment, move |s, _| {
             let id = s.get_focus_index();
-            let next_id = s.find_comment_id_by_max_level(id, 0, NavigationDirection::Previous);
+            let next_id = s.find_item_id_by_max_level(id, 0, NavigationDirection::Previous);
             s.set_focus_index(next_id)
         })
         .on_pre_event_inner(comment_view_keymap.parent_comment, move |s, _| {
             let id = s.get_focus_index();
-            if s.comments[id].level > 0 {
-                let next_id = s.find_comment_id_by_max_level(
+            if s.items[id].level > 0 {
+                let next_id = s.find_item_id_by_max_level(
                     id,
-                    s.comments[id].level - 1,
+                    s.items[id].level - 1,
                     NavigationDirection::Previous,
                 );
                 s.set_focus_index(next_id)
@@ -343,7 +345,7 @@ fn construct_comment_main_view(
             match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    utils::open_ith_link_in_browser(&s.comments[s.get_focus_index()].links, num)
+                    utils::open_ith_link_in_browser(&s.items[s.get_focus_index()].links, num)
                 }
                 Err(_) => None,
             }
@@ -353,23 +355,20 @@ fn construct_comment_main_view(
             |s, _| match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    utils::open_ith_link_in_article_view(
-                        &s.comments[s.get_focus_index()].links,
-                        num,
-                    )
+                    utils::open_ith_link_in_article_view(&s.items[s.get_focus_index()].links, num)
                 }
                 Err(_) => None,
             },
         )
         .on_pre_event_inner(comment_view_keymap.open_comment_in_browser, move |s, _| {
-            let id = s.comments[s.get_focus_index()].id;
+            let id = s.items[s.get_focus_index()].id;
             let url = format!("{}/item?id={}", client::HN_HOST_URL, id);
             utils::open_url_in_browser(&url);
             Some(EventResult::Consumed(None))
         })
         // other commands
         .on_pre_event_inner(comment_view_keymap.toggle_collapse_comment, move |s, _| {
-            s.toggle_collapse_focused_comment();
+            s.toggle_collapse_focused_item();
             Some(EventResult::Consumed(None))
         })
         .on_pre_event(comment_view_keymap.open_article_in_browser, {
@@ -414,7 +413,7 @@ pub fn construct_comment_view(
     let mut view = LinearLayout::vertical()
         .child(utils::construct_view_title_bar(&format!(
             "Comment View - {}",
-            story.title.source()
+            story.no_html_title()
         )))
         .child(main_view)
         .child(utils::construct_footer_view::<CommentView>());
