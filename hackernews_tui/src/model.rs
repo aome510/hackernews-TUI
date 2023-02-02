@@ -49,6 +49,9 @@ pub struct VoteData {
 
 #[derive(Debug, Clone)]
 /// A HackerNews item which can be either a story or a comment.
+///
+/// This struct is a shared representation between a story and
+/// a comment for rendering the item's content.
 pub struct HnItem {
     pub id: u32,
     pub level: usize,
@@ -114,9 +117,9 @@ impl From<Story> for HnItem {
             id: story.id,
             level: 0, // story is at level 0 by default
             display_state: DisplayState::Normal,
+            links: result.links,
             text,
             minimized_text,
-            links: result.links,
         }
     }
 }
@@ -202,7 +205,7 @@ impl Story {
         // The story title may contain search matches wrapped inside `<em>` tags.
         // The matches are decorated with a corresponding style.
         {
-            // an index represents the part of the text that hasn't been parsed (e.g `story.title[curr_pos..]` )
+            // an index represents the part of the text that hasn't been parsed (e.g `title[curr_pos..]` )
             let mut curr_pos = 0;
             for caps in MATCH_RE.captures_iter(&title) {
                 let whole_match = caps.get(0).unwrap();

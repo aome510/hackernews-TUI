@@ -371,10 +371,9 @@ impl HNClient {
 
     /// Parse a story's vote data
     ///
-    /// The data is represented by a hashmap from `id` to
-    /// a tuple of `auth` and `upvoted` (false=no vote, true=has vote),
-    /// in which `id` is is an item's id and `auth` is a string for
-    /// authentication purpose when voting.
+    /// The vote data is represented by a hashmap from `id` to a struct consisting of
+    /// `auth` and `upvoted` (false=no vote, true=has vote), in which `id` is
+    /// is an item's id and `auth` is a string for authentication purpose when voting.
     pub fn parse_story_vote_data(&self, page_content: &str) -> Result<HashMap<String, VoteData>> {
         let upvote_rg =
             regex::Regex::new("<a.*?id='up_(?P<id>.*?)'.*?auth=(?P<auth>[0-9a-z]*).*?>")?;

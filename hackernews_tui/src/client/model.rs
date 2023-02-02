@@ -131,7 +131,7 @@ impl From<CommentResponse> for Vec<Comment> {
             .filter(|comment| comment.author.is_some() && comment.text.is_some())
             .flat_map(<Vec<Comment>>::from)
             .map(|mut c| {
-                c.level += 1; // update the level of every children comments
+                c.level += 1; // update the level of every child comment
                 c
             })
             .collect::<Vec<_>>();
