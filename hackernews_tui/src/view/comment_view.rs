@@ -413,7 +413,7 @@ pub fn construct_comment_view(
     let mut view = LinearLayout::vertical()
         .child(utils::construct_view_title_bar(&format!(
             "Comment View - {}",
-            story.no_html_title()
+            story.plain_title()
         )))
         .child(main_view)
         .child(utils::construct_footer_view::<CommentView>());

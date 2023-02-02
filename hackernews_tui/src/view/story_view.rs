@@ -61,7 +61,7 @@ impl StoryView {
 
     /// Get the text summarizing basic information about a story
     fn get_story_text(max_id_len: usize, story: &Story) -> StyledString {
-        let mut story_text = StyledString::plain(story.no_html_title());
+        let mut story_text = story.styled_title();
 
         if let Ok(url) = url::Url::parse(&story.url) {
             if let Some(domain) = url.domain() {
