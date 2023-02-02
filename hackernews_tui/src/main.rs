@@ -1,6 +1,8 @@
 // modules
 pub mod client;
 pub mod config;
+pub mod model;
+pub mod parser;
 pub mod prelude;
 pub mod utils;
 pub mod view;

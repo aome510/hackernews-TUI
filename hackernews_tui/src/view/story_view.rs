@@ -9,7 +9,7 @@ static STORY_TAGS: [&str; 5] = ["front_page", "story", "ask_hn", "show_hn", "job
 /// StoryView is a View displaying a list stories corresponding
 /// to a particular category (top stories, newest stories, most popular stories, etc).
 pub struct StoryView {
-    pub stories: Vec<client::Story>,
+    pub stories: Vec<Story>,
 
     view: ScrollView<LinearLayout>,
     raw_command: String,
@@ -20,7 +20,7 @@ impl ViewWrapper for StoryView {
 }
 
 impl StoryView {
-    pub fn new(stories: Vec<client::Story>, starting_id: usize) -> Self {
+    pub fn new(stories: Vec<Story>, starting_id: usize) -> Self {
         StoryView {
             view: Self::construct_story_view(&stories, starting_id),
             stories,
@@ -28,11 +28,8 @@ impl StoryView {
         }
     }
 
-    fn construct_story_view(
-        stories: &[client::Story],
-        starting_id: usize,
-    ) -> ScrollView<LinearLayout> {
-        // Determine the maximum length of a story's ID string.
+    fn construct_story_view(stories: &[Story], starting_id: usize) -> ScrollView<LinearLayout> {
+        // Determine the maximum length of a story's ID.
         // This maximum length is used to align the display of the story IDs.
         let max_id_len = {
             let max_id = starting_id + stories.len() + 1;
@@ -49,6 +46,7 @@ impl StoryView {
         LinearLayout::vertical()
             .with(|s| {
                 stories.iter().enumerate().for_each(|(i, story)| {
+                    // initialize the story text with its ID
                     let mut story_text = StyledString::styled(
                         format!("{1:>0$}. ", max_id_len, starting_id + i + 1),
                         config::get_config_theme().component_style.metadata,
@@ -62,8 +60,8 @@ impl StoryView {
     }
 
     /// Get the text summarizing basic information about a story
-    fn get_story_text(max_id_len: usize, story: &client::Story) -> StyledString {
-        let mut story_text = story.title.clone();
+    fn get_story_text(max_id_len: usize, story: &Story) -> StyledString {
+        let mut story_text = story.styled_title();
 
         if let Ok(url) = url::Url::parse(&story.url) {
             if let Some(domain) = url.domain() {
@@ -77,8 +75,8 @@ impl StoryView {
         story_text.append_plain("\n");
 
         story_text.append_styled(
-            // left-align the story's metadata by `max_id_len+2`
-            // which is the width of the string "{max_story_id}. "
+            // left-align the story's metadata by `max_id_len+2`,
+            // which is the maximum width of a string `{story_id}. `
             format!(
                 "{:width$}{} points | by {} | {} ago | {} comments",
                 " ",
@@ -126,7 +124,7 @@ impl ScrollViewContainer for StoryView {
 }
 
 pub fn construct_story_main_view(
-    stories: Vec<client::Story>,
+    stories: Vec<Story>,
     client: &'static client::HNClient,
     starting_id: usize,
 ) -> OnEventView<StoryView> {
@@ -261,7 +259,7 @@ fn get_story_view_title_bar(tag: &'static str, sort_mode: client::StorySortMode)
 
 /// Construct a story view given a list of stories.
 pub fn construct_story_view(
-    stories: Vec<client::Story>,
+    stories: Vec<Story>,
     client: &'static client::HNClient,
     tag: &'static str,
     sort_mode: client::StorySortMode,

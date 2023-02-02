@@ -11,7 +11,7 @@ struct MatchedStories {
     pub query: String,
     pub page: usize,
     pub by_date: bool,
-    pub stories: Vec<client::Story>,
+    pub stories: Vec<Story>,
 }
 
 /// SearchView is a View used to search stories
@@ -127,7 +127,7 @@ impl SearchView {
     }
 
     /// updates the Story View with new matched stories
-    fn update_stories_view(&mut self, stories: Vec<client::Story>) {
+    fn update_stories_view(&mut self, stories: Vec<Story>) {
         self.view.remove_child(1);
         let starting_id = client::SEARCH_LIMIT * self.page;
         self.view.add_child(

@@ -14,7 +14,7 @@ pub mod story_view;
 
 use crate::view::help_view::HasHelpView;
 
-use super::prelude::*;
+use crate::prelude::*;
 
 fn set_up_switch_story_view_shortcut(
     keys: config::Keys,

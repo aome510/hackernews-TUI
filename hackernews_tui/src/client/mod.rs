@@ -1,16 +1,15 @@
 // modules
-mod parser;
+mod model;
 mod query;
-mod rcdom;
+
+use std::collections::HashMap;
 
 // re-export
-pub use parser::{Article, CollapseState, HnItem, Story};
 pub use query::{StoryNumericFilters, StorySortMode};
 
 use crate::prelude::*;
-use parser::*;
+use model::*;
 use rayon::prelude::*;
-use std::collections::HashMap;
 
 const HN_ALGOLIA_PREFIX: &str = "https://hn.algolia.com/api/v1";
 const HN_OFFICIAL_PREFIX: &str = "https://hacker-news.firebaseio.com/v0";
@@ -21,23 +20,6 @@ pub const STORY_LIMIT: usize = 20;
 pub const SEARCH_LIMIT: usize = 15;
 
 static CLIENT: once_cell::sync::OnceCell<HNClient> = once_cell::sync::OnceCell::new();
-
-pub type CommentSender = crossbeam_channel::Sender<Vec<HnItem>>;
-pub type CommentReceiver = crossbeam_channel::Receiver<Vec<HnItem>>;
-
-/// A HackerNews story data
-pub struct StoryData {
-    /// story's page content in raw HTML
-    pub raw_html: String,
-    /// a channel for lazily loading the story's comments,
-    /// which is used to reduce the loading latency of a large story.
-    /// See `client::lazy_load_story_comments` for more details.
-    pub receiver: CommentReceiver,
-    /// vote_state: id -> (auth, upvoted)
-    /// See `Client::parse_story_vote_data` for more details
-    /// on the data representation of the `vote_state` field.
-    pub vote_state: HashMap<String, (String, bool)>,
-}
 
 /// HNClient is a HTTP client to communicate with Hacker News APIs.
 #[derive(Clone)]
@@ -82,21 +64,19 @@ impl HNClient {
         Ok(item)
     }
 
-    /// Get a HackerNews story data
-    pub fn get_story_data(&self, story_id: u32) -> Result<StoryData> {
-        let raw_html = self.get_story_page_content(story_id)?;
-        let vote_state = self.parse_story_vote_data(&raw_html)?;
-        let receiver = self.lazy_load_story_comments(story_id)?;
+    pub fn get_story_hidden_data(&self, story_id: u32) -> Result<StoryHiddenData> {
+        let content = self.get_story_page_content(story_id)?;
+        let vote_state = self.parse_story_vote_data(&content)?;
+        let comment_receiver = self.lazy_load_story_comments(story_id)?;
 
-        Ok(StoryData {
-            raw_html,
-            receiver,
+        Ok(StoryHiddenData {
+            comment_receiver,
             vote_state,
         })
     }
 
-    /// Lazily load a story's comments
     pub fn lazy_load_story_comments(&self, story_id: u32) -> Result<CommentReceiver> {
+        // retrieve the top comments of a story
         let request_url = format!("{HN_OFFICIAL_PREFIX}/item/{story_id}.json");
         let mut ids = log!(
             self.client
@@ -109,7 +89,7 @@ impl HNClient {
 
         let (sender, receiver) = crossbeam_channel::bounded(32);
 
-        // loads first 5 comments to ensure the corresponding `CommentView` has data to render
+        // loads the first 5 top comments to ensure the corresponding `CommentView` has data to render
         self.load_comments(&sender, &mut ids, 5)?;
         std::thread::spawn({
             let client = self.clone();
@@ -329,7 +309,6 @@ impl HNClient {
         Ok(response.into())
     }
 
-    /// Get a web article from a URL
     pub fn get_article(url: &str) -> Result<Article> {
         let article_parse_command = &config::get_config().article_parse_command;
         let output = std::process::Command::new(&article_parse_command.command)
@@ -359,7 +338,6 @@ impl HNClient {
         }
     }
 
-    /// Login a HackerNews user
     pub fn login(&self, username: &str, password: &str) -> Result<()> {
         info!("Trying to login, user={username}...");
 
@@ -380,7 +358,6 @@ impl HNClient {
         }
     }
 
-    /// Gets a story's page content (in HTML)
     pub fn get_story_page_content(&self, story_id: u32) -> Result<String> {
         // TODO: handle cases when the story has multiple pages
         let content = self
@@ -394,14 +371,10 @@ impl HNClient {
 
     /// Parse a story's vote data
     ///
-    /// The data is represented by a hashmap from `id` to
-    /// a tuple of `auth` and `upvoted` (false=no vote, true=has vote),
-    /// in which `id` is is an item's id and `auth` is a string for
-    /// authentication purpose when voting.
-    pub fn parse_story_vote_data(
-        &self,
-        page_content: &str,
-    ) -> Result<HashMap<String, (String, bool)>> {
+    /// The vote data is represented by a hashmap from `id` to a struct consisting of
+    /// `auth` and `upvoted` (false=no vote, true=has vote), in which `id` is
+    /// is an item's id and `auth` is a string for authentication purpose when voting.
+    pub fn parse_story_vote_data(&self, page_content: &str) -> Result<HashMap<String, VoteData>> {
         let upvote_rg =
             regex::Regex::new("<a.*?id='up_(?P<id>.*?)'.*?auth=(?P<auth>[0-9a-z]*).*?>")?;
         let unvote_rg =
@@ -412,13 +385,25 @@ impl HNClient {
         upvote_rg.captures_iter(page_content).for_each(|c| {
             let id = c.name("id").unwrap().as_str().to_owned();
             let auth = c.name("auth").unwrap().as_str().to_owned();
-            hm.insert(id, (auth, false));
+            hm.insert(
+                id,
+                VoteData {
+                    auth,
+                    upvoted: false,
+                },
+            );
         });
 
         unvote_rg.captures_iter(page_content).for_each(|c| {
             let id = c.name("id").unwrap().as_str().to_owned();
             let auth = c.name("auth").unwrap().as_str().to_owned();
-            hm.insert(id, (auth, true));
+            hm.insert(
+                id,
+                VoteData {
+                    auth,
+                    upvoted: true,
+                },
+            );
         });
 
         Ok(hm)

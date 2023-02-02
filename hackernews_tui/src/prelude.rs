@@ -1,4 +1,4 @@
-pub use crate::{client, config};
+pub use crate::{client, config, model::*};
 pub use anyhow::{Error, Result};
 pub use cursive::{
     direction::*,
