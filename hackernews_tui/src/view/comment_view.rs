@@ -34,7 +34,14 @@ impl CommentView {
                     1,
                     0,
                     1,
-                    text_view::TextView::new(item.text.clone()),
+                    text_view::TextView::new(
+                        item.text(
+                            data.vote_state
+                                .get(&item.id.to_string())
+                                .map(|v| v.upvoted)
+                                .clone(),
+                        ),
+                    ),
                 )))
                 .scrollable(),
             items: vec![item],
@@ -69,7 +76,7 @@ impl CommentView {
             .collect::<Vec<_>>();
 
         new_items.iter().for_each(|item| {
-            let text_view = text_view::TextView::new(item.text.clone());
+            let text_view = text_view::TextView::new(item.text(self.get_vote_status(item.id)));
             self.add_item(HideableView::new(PaddedView::lrtb(
                 item.level * 2 + 1,
                 1,
@@ -128,6 +135,14 @@ impl CommentView {
                 .rfind(|&id| self.get_item_view(id).is_visible())
                 .unwrap_or(start_id),
         }
+    }
+
+    fn get_vote_status(&self, item_id: u32) -> Option<bool> {
+        self.data
+            .vote_state
+            .get(&item_id.to_string())
+            .map(|v| v.upvoted)
+            .clone()
     }
 
     fn get_item_view(&self, id: usize) -> &SingleItemView {
@@ -195,22 +210,18 @@ impl CommentView {
                 );
             }
             DisplayState::Minimized => {
-                self.get_item_view_mut(id)
-                    .get_inner_mut()
-                    .get_inner_mut()
-                    .set_content(item.text);
                 self.toggle_item_collapse_state(id + 1, self.items[id].level);
                 self.items[id].display_state = DisplayState::Normal;
             }
             DisplayState::Normal => {
-                self.get_item_view_mut(id)
-                    .get_inner_mut()
-                    .get_inner_mut()
-                    .set_content(item.minimized_text);
-                self.toggle_item_collapse_state(id + 1, self.items[id].level);
                 self.items[id].display_state = DisplayState::Minimized;
             }
         };
+        let new_content = item.text(self.get_vote_status(item.id));
+        self.get_item_view_mut(id)
+            .get_inner_mut()
+            .get_inner_mut()
+            .set_content(new_content);
     }
 
     inner_getters!(self.view: ScrollView<LinearLayout>);
