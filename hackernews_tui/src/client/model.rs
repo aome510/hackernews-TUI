@@ -144,7 +144,7 @@ impl From<CommentResponse> for Vec<Comment> {
                 n_children: children.len(),
                 time: c.time,
                 author: c.author.unwrap_or_default(),
-                content: c.text.unwrap_or_default(),
+                content: decode_html(&c.text.unwrap_or_default()),
             }
         };
 
