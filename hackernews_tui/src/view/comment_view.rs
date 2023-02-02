@@ -293,16 +293,22 @@ fn construct_comment_main_view(
             if let Some(VoteData { auth, upvoted }) =
                 s.data.vote_state.get_mut(&item.id.to_string())
             {
-                match client.vote(item.id, auth, *upvoted) {
-                    Err(err) => {
-                        tracing::error!("Failed to vote HN item (id={id}): {err}");
+                std::thread::spawn({
+                    let id = item.id;
+                    let upvoted = *upvoted;
+                    let auth = auth.clone();
+                    let client = client.clone();
+                    move || {
+                        if let Err(err) = client.vote(id, &auth, upvoted) {
+                            tracing::error!("Failed to vote HN item (id={id}): {err}");
+                        }
                     }
-                    Ok(_) => {
-                        // update the focused item's vote status if the request succeeds
-                        *upvoted = !(*upvoted);
-                        s.update_item_text_content(id);
-                    }
-                }
+                });
+
+                // assume the vote request always succeed because we don't want users
+                // to feel a delay as a result of the request's latency when voting.
+                *upvoted = !(*upvoted);
+                s.update_item_text_content(id);
             }
             Some(EventResult::Consumed(None))
         })
