@@ -35,12 +35,7 @@ impl CommentView {
                     0,
                     1,
                     text_view::TextView::new(
-                        item.text(
-                            data.vote_state
-                                .get(&item.id.to_string())
-                                .map(|v| v.upvoted)
-                                .clone(),
-                        ),
+                        item.text(data.vote_state.get(&item.id.to_string()).map(|v| v.upvoted)),
                     ),
                 )))
                 .scrollable(),
@@ -142,7 +137,6 @@ impl CommentView {
             .vote_state
             .get(&item_id.to_string())
             .map(|v| v.upvoted)
-            .clone()
     }
 
     fn get_item_view(&self, id: usize) -> &SingleItemView {
@@ -202,8 +196,7 @@ impl CommentView {
     /// Toggle the collapsing state of currently focused item and its children
     pub fn toggle_collapse_focused_item(&mut self) {
         let id = self.get_focus_index();
-        let item = self.items[id].clone();
-        match item.display_state {
+        match self.items[id].display_state {
             DisplayState::Hidden => {
                 panic!(
                     "invalid collapse state `Collapsed` when calling `toggle_collapse_focused_item`"
@@ -217,7 +210,13 @@ impl CommentView {
                 self.items[id].display_state = DisplayState::Minimized;
             }
         };
-        let new_content = item.text(self.get_vote_status(item.id));
+        self.update_item_text_content(id);
+    }
+
+    /// Update the `id`-th item's text content based on its state-based text,
+    /// which changes depending on the item's state.
+    pub fn update_item_text_content(&mut self, id: usize) {
+        let new_content = self.items[id].text(self.get_vote_status(self.items[id].id));
         self.get_item_view_mut(id)
             .get_inner_mut()
             .get_inner_mut()
@@ -301,6 +300,7 @@ fn construct_comment_main_view(
                     Ok(_) => {
                         // update the focused item's vote status if the request succeeds
                         *upvoted = !(*upvoted);
+                        s.update_item_text_content(id);
                     }
                 }
             }
