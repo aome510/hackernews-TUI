@@ -153,13 +153,13 @@ impl CommentView {
             .unwrap()
     }
 
-    /// Toggle the collapsing state of items whose level is greater than the `min_level`.
-    fn toggle_item_collapse_state(&mut self, start_id: usize, min_level: usize) {
+    /// Toggle the collapsing state of items whose levels are greater than the `min_level`.
+    fn toggle_items_collapse_state(&mut self, start_id: usize, min_level: usize) {
         // This function will be called recursively until it's unable to find any items.
         //
-        // **Note**: `PartiallyCollapsed` item's state is unchanged, we only toggle its visibility.
+        // Note: collapsed item's state is unchanged, we only toggle its visibility.
         // Also, the state and visibility of such item's children are unaffected as they should already
-        // be in a collapsed state.
+        // be in a hidden state (as result of that item's collapsed state).
         if start_id == self.len() || self.items[start_id].level <= min_level {
             return;
         }
@@ -167,12 +167,12 @@ impl CommentView {
             DisplayState::Hidden => {
                 self.items[start_id].display_state = DisplayState::Normal;
                 self.get_item_view_mut(start_id).unhide();
-                self.toggle_item_collapse_state(start_id + 1, min_level)
+                self.toggle_items_collapse_state(start_id + 1, min_level)
             }
             DisplayState::Normal => {
                 self.items[start_id].display_state = DisplayState::Hidden;
                 self.get_item_view_mut(start_id).hide();
-                self.toggle_item_collapse_state(start_id + 1, min_level)
+                self.toggle_items_collapse_state(start_id + 1, min_level)
             }
             DisplayState::Minimized => {
                 let component = self.get_item_view_mut(start_id);
@@ -188,7 +188,7 @@ impl CommentView {
                     self.items[start_id].level,
                     NavigationDirection::Next,
                 );
-                self.toggle_item_collapse_state(next_id, min_level)
+                self.toggle_items_collapse_state(next_id, min_level)
             }
         };
     }
@@ -203,10 +203,11 @@ impl CommentView {
                 );
             }
             DisplayState::Minimized => {
-                self.toggle_item_collapse_state(id + 1, self.items[id].level);
+                self.toggle_items_collapse_state(id + 1, self.items[id].level);
                 self.items[id].display_state = DisplayState::Normal;
             }
             DisplayState::Normal => {
+                self.toggle_items_collapse_state(id + 1, self.items[id].level);
                 self.items[id].display_state = DisplayState::Minimized;
             }
         };
