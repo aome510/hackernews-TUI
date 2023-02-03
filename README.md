@@ -298,10 +298,11 @@ By default, the application creates the `hn-tui.log` log file inside the [user's
   - [ ] real-time updating
 - [x] implement smarter lazy-loading comment functionality
 - add crediential support to allow
-  - [ ] upvote/downvote
+  - [x] authentication
+  - [x] upvote/downvote
   - [ ] add comment
   - [ ] post
-- improve application's theme
+- improve application's UI
   - [x] improve the application's overall look
   - [x] include useful font-highliting
   - [x] rewrite the theme parser to support more themes and allow to parse themes from known colorschemes
@@ -309,5 +310,3 @@ By default, the application creates the `hn-tui.log` log file inside the [user's
 - improve the keybinding handler
   - [x] allow to bind multiple keys to a single command
   - [ ] add prefix key support (emacs-like key chaining - `C-x C-c ...`)
-- [ ] improve the loading progress bar
-- [ ] snipe-like navigation, inspired by [vim-snipe](https://github.com/yangmillstheory/vim-snipe)
