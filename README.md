@@ -25,6 +25,7 @@
     - [Comment View](#comment-view-shortcuts)
     - [Search View](#search-view-shortcuts)
 - [Configuration](#configuration)
+- [Authentication](#authentication)
 - [Logging](#logging)
 - [Roadmap](#roadmap)
 
@@ -267,6 +268,17 @@ hackernews_tui -c ~/.config/hn-tui.toml
 ```
 
 For further information about the application's configurations, please refer to the [example config file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml) and the [config documentation](https://github.com/aome510/hackernews-TUI/blob/main/config.md).
+
+## Authentication
+
+Users can authenticate their account by specifying `username` and `password` inside the `hn-auth.toml` file:
+
+```toml
+username=""
+password=""
+```
+
+By default, the authentication file should be inside the same folder as the the general configuration file (`hn-tui.toml`), which can be configured by specifying the `-a` or `--auth` option.
 
 ## Logging
 
