@@ -34,7 +34,9 @@ impl CommentView {
                     1,
                     0,
                     1,
-                    text_view::TextView::new(item.text.clone()),
+                    text_view::TextView::new(
+                        item.text(data.vote_state.get(&item.id.to_string()).map(|v| v.upvoted)),
+                    ),
                 )))
                 .scrollable(),
             items: vec![item],
@@ -69,7 +71,7 @@ impl CommentView {
             .collect::<Vec<_>>();
 
         new_items.iter().for_each(|item| {
-            let text_view = text_view::TextView::new(item.text.clone());
+            let text_view = text_view::TextView::new(item.text(self.get_vote_status(item.id)));
             self.add_item(HideableView::new(PaddedView::lrtb(
                 item.level * 2 + 1,
                 1,
@@ -130,6 +132,13 @@ impl CommentView {
         }
     }
 
+    fn get_vote_status(&self, item_id: u32) -> Option<bool> {
+        self.data
+            .vote_state
+            .get(&item_id.to_string())
+            .map(|v| v.upvoted)
+    }
+
     fn get_item_view(&self, id: usize) -> &SingleItemView {
         self.get_item(id)
             .unwrap()
@@ -144,13 +153,13 @@ impl CommentView {
             .unwrap()
     }
 
-    /// Toggle the collapsing state of items whose level is greater than the `min_level`.
-    fn toggle_item_collapse_state(&mut self, start_id: usize, min_level: usize) {
+    /// Toggle the collapsing state of items whose levels are greater than the `min_level`.
+    fn toggle_items_collapse_state(&mut self, start_id: usize, min_level: usize) {
         // This function will be called recursively until it's unable to find any items.
         //
-        // **Note**: `PartiallyCollapsed` item's state is unchanged, we only toggle its visibility.
+        // Note: collapsed item's state is unchanged, we only toggle its visibility.
         // Also, the state and visibility of such item's children are unaffected as they should already
-        // be in a collapsed state.
+        // be in a hidden state (as result of that item's collapsed state).
         if start_id == self.len() || self.items[start_id].level <= min_level {
             return;
         }
@@ -158,12 +167,12 @@ impl CommentView {
             DisplayState::Hidden => {
                 self.items[start_id].display_state = DisplayState::Normal;
                 self.get_item_view_mut(start_id).unhide();
-                self.toggle_item_collapse_state(start_id + 1, min_level)
+                self.toggle_items_collapse_state(start_id + 1, min_level)
             }
             DisplayState::Normal => {
                 self.items[start_id].display_state = DisplayState::Hidden;
                 self.get_item_view_mut(start_id).hide();
-                self.toggle_item_collapse_state(start_id + 1, min_level)
+                self.toggle_items_collapse_state(start_id + 1, min_level)
             }
             DisplayState::Minimized => {
                 let component = self.get_item_view_mut(start_id);
@@ -179,7 +188,7 @@ impl CommentView {
                     self.items[start_id].level,
                     NavigationDirection::Next,
                 );
-                self.toggle_item_collapse_state(next_id, min_level)
+                self.toggle_items_collapse_state(next_id, min_level)
             }
         };
     }
@@ -187,30 +196,31 @@ impl CommentView {
     /// Toggle the collapsing state of currently focused item and its children
     pub fn toggle_collapse_focused_item(&mut self) {
         let id = self.get_focus_index();
-        let item = self.items[id].clone();
-        match item.display_state {
+        match self.items[id].display_state {
             DisplayState::Hidden => {
                 panic!(
                     "invalid collapse state `Collapsed` when calling `toggle_collapse_focused_item`"
                 );
             }
             DisplayState::Minimized => {
-                self.get_item_view_mut(id)
-                    .get_inner_mut()
-                    .get_inner_mut()
-                    .set_content(item.text);
-                self.toggle_item_collapse_state(id + 1, self.items[id].level);
+                self.toggle_items_collapse_state(id + 1, self.items[id].level);
                 self.items[id].display_state = DisplayState::Normal;
             }
             DisplayState::Normal => {
-                self.get_item_view_mut(id)
-                    .get_inner_mut()
-                    .get_inner_mut()
-                    .set_content(item.minimized_text);
-                self.toggle_item_collapse_state(id + 1, self.items[id].level);
+                self.toggle_items_collapse_state(id + 1, self.items[id].level);
                 self.items[id].display_state = DisplayState::Minimized;
             }
         };
+        self.update_item_text_content(id);
+    }
+
+    /// Update the `id`-th item's text content based on its state-based text
+    pub fn update_item_text_content(&mut self, id: usize) {
+        let new_content = self.items[id].text(self.get_vote_status(self.items[id].id));
+        self.get_item_view_mut(id)
+            .get_inner_mut()
+            .get_inner_mut()
+            .set_content(new_content);
     }
 
     inner_getters!(self.view: ScrollView<LinearLayout>);
@@ -283,15 +293,22 @@ fn construct_comment_main_view(
             if let Some(VoteData { auth, upvoted }) =
                 s.data.vote_state.get_mut(&item.id.to_string())
             {
-                match client.vote(item.id, auth, *upvoted) {
-                    Err(err) => {
-                        tracing::error!("Failed to vote HN item (id={id}): {err}");
+                std::thread::spawn({
+                    let id = item.id;
+                    let upvoted = *upvoted;
+                    let auth = auth.clone();
+                    let client = client.clone();
+                    move || {
+                        if let Err(err) = client.vote(id, &auth, upvoted) {
+                            tracing::error!("Failed to vote HN item (id={id}): {err}");
+                        }
                     }
-                    Ok(_) => {
-                        // update the focused item's vote status if the request succeeds
-                        *upvoted = !(*upvoted);
-                    }
-                }
+                });
+
+                // assume the vote request always succeeds because we don't want users
+                // to feel a delay as a result of the request's latency when voting.
+                *upvoted = !(*upvoted);
+                s.update_item_text_content(id);
             }
             Some(EventResult::Consumed(None))
         })

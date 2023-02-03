@@ -426,10 +426,16 @@ impl HasHelpView for comment_view::CommentView {
             CommandGroup::new(
                 "Others",
                 [
-                    vec![Command::new(
-                        comment_view_keymap.toggle_collapse_comment.to_string(),
-                        "Toggle collapsing the focused comment",
-                    )],
+                    vec![
+                        Command::new(
+                            comment_view_keymap.toggle_collapse_comment.to_string(),
+                            "Toggle collapsing the focused item",
+                        ),
+                        Command::new(
+                            comment_view_keymap.vote.to_string(),
+                            "Toggle voting the focused item",
+                        ),
+                    ],
                     default_other_commands(),
                 ]
                 .concat(),

@@ -25,6 +25,7 @@
     - [Comment View](#comment-view-shortcuts)
     - [Search View](#search-view-shortcuts)
 - [Configuration](#configuration)
+- [Authentication](#authentication)
 - [Logging](#logging)
 - [Roadmap](#roadmap)
 
@@ -218,22 +219,23 @@ For more information about configuring the application's key mappings or definin
 
 #### Comment View shortcuts
 
-| Command                        | Description                                                       | Default Shortcut |
-| ------------------------------ | ----------------------------------------------------------------- | ---------------- |
-| `next_comment`                 | Focus the next comment                                            | `j`              |
-| `prev_comment`                 | Focus the previous comment                                        | `k`              |
-| `next_leq_level_comment`       | Focus the next comment with smaller or equal level                | `l`              |
-| `prev_leq_level_comment`       | Focus the previous comment with smaller or equal level            | `h`              |
-| `next_top_level_comment`       | Focus the next top level comment                                  | `n`              |
-| `prev_top_level_comment`       | Focus the previous top level comment                              | `p`              |
-| `parent_comment`               | Focus the parent comment (if exists)                              | `u`              |
-| `toggle_collapse_comment`      | Toggle collapsing the focused comment                             | `tab`            |
-| `open_article_in_browser`      | Open in browser the discussed article                             | `a`              |
-| `open_article_in_article_view` | Open in article view the discussed article                        | `A`              |
-| `open_story_in_browser`        | Open in browser the discussed story                               | `s`              |
-| `open_comment_in_browser`      | Open in browser the focused comment                               | `c`              |
-| `open_link_in_browser`         | Open in browser the {link_id}-th link in the focused comment      | `{link_id} o`    |
-| `open_link_in_article_view`    | Open in article view the {link_id}-th link in the focused comment | `{link_id} O`    |
+| Command                        | Description                                                                     | Default Shortcut |
+| ------------------------------ | ------------------------------------------------------------------------------- | ---------------- |
+| `next_comment`                 | Focus the next comment                                                          | `j`              |
+| `prev_comment`                 | Focus the previous comment                                                      | `k`              |
+| `next_leq_level_comment`       | Focus the next comment with smaller or equal level                              | `l`              |
+| `prev_leq_level_comment`       | Focus the previous comment with smaller or equal level                          | `h`              |
+| `next_top_level_comment`       | Focus the next top level comment                                                | `n`              |
+| `prev_top_level_comment`       | Focus the previous top level comment                                            | `p`              |
+| `parent_comment`               | Focus the parent comment (if exists)                                            | `u`              |
+| `toggle_collapse_comment`      | Toggle collapsing the focused item                                              | `tab`            |
+| `vote`                         | Toggle voting the focused item (**requires [authentication](#authentication)**) | `v`              |
+| `open_article_in_browser`      | Open in browser the discussed article                                           | `a`              |
+| `open_article_in_article_view` | Open in article view the discussed article                                      | `A`              |
+| `open_story_in_browser`        | Open in browser the discussed story                                             | `s`              |
+| `open_comment_in_browser`      | Open in browser the focused comment                                             | `c`              |
+| `open_link_in_browser`         | Open in browser the {link_id}-th link in the focused comment                    | `{link_id} o`    |
+| `open_link_in_article_view`    | Open in article view the {link_id}-th link in the focused comment               | `{link_id} O`    |
 
 #### Search View shortcuts
 
@@ -266,6 +268,17 @@ hackernews_tui -c ~/.config/hn-tui.toml
 ```
 
 For further information about the application's configurations, please refer to the [example config file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml) and the [config documentation](https://github.com/aome510/hackernews-TUI/blob/main/config.md).
+
+## Authentication
+
+Users can authenticate their account by specifying `username` and `password` inside the `hn-auth.toml` file:
+
+```toml
+username=""
+password=""
+```
+
+By default, the authentication file should be inside the same folder as the the general configuration file (`hn-tui.toml`), which can be configured by specifying the `-a` or `--auth` option.
 
 ## Logging
 

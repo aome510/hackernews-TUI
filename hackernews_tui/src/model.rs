@@ -56,9 +56,9 @@ pub struct HnItem {
     pub id: u32,
     pub level: usize,
     pub display_state: DisplayState,
-    pub text: StyledString,
-    pub minimized_text: StyledString,
     pub links: Vec<String>,
+    text: StyledString,
+    minimized_text: StyledString,
 }
 
 #[derive(Debug, Clone)]
@@ -81,7 +81,7 @@ impl From<Story> for HnItem {
     fn from(story: Story) -> Self {
         let component_style = &config::get_config_theme().component_style;
 
-        let metadata = utils::combine_styled_strings(vec![
+        let metadata = utils::combine_styled_strings([
             story.styled_title(),
             StyledString::plain("\n"),
             StyledString::styled(
@@ -106,7 +106,7 @@ impl From<Story> for HnItem {
         } else {
             story_text = format!("\n{story_text}");
 
-            utils::combine_styled_strings(vec![metadata.clone(), StyledString::plain("... (more)")])
+            utils::combine_styled_strings([metadata.clone(), StyledString::plain("... (more)")])
         };
 
         let mut text = metadata;
@@ -128,7 +128,7 @@ impl From<Comment> for HnItem {
     fn from(comment: Comment) -> Self {
         let component_style = &config::get_config_theme().component_style;
 
-        let metadata = utils::combine_styled_strings(vec![
+        let metadata = utils::combine_styled_strings([
             StyledString::styled(comment.author, component_style.username),
             StyledString::styled(
                 format!(" {} ago ", utils::get_elapsed_time_as_text(comment.time)),
@@ -136,9 +136,8 @@ impl From<Comment> for HnItem {
             ),
         ]);
 
-        let mut text =
-            utils::combine_styled_strings(vec![metadata.clone(), StyledString::plain("\n")]);
-        let minimized_text = utils::combine_styled_strings(vec![
+        let mut text = utils::combine_styled_strings([metadata.clone(), StyledString::plain("\n")]);
+        let minimized_text = utils::combine_styled_strings([
             metadata,
             StyledString::styled(
                 format!("({} more)", comment.n_children + 1),
@@ -231,5 +230,26 @@ impl Story {
     /// Get the story's plain title
     pub fn plain_title(&self) -> String {
         self.title.replace("<em>", "").replace("</em>", "") // story's title from the search view can have `<em>` inside it
+    }
+}
+
+impl HnItem {
+    /// gets the dispay text of the item, which depends on the item's states
+    /// (e.g `vote_status`, `display_state`, etc)
+    pub fn text(&self, vote_status: Option<bool>) -> StyledString {
+        let theme = config::get_config_theme();
+
+        let text = match self.display_state {
+            DisplayState::Hidden => unreachable!("Hidden item's text shouldn't be accessed"),
+            DisplayState::Minimized => self.minimized_text.clone(),
+            DisplayState::Normal => self.text.clone(),
+        };
+        let vote_text = match vote_status {
+            Some(true) => StyledString::styled("▲ ", theme.palette.green),
+            Some(false) => StyledString::plain("▲ "),
+            None => StyledString::plain(""),
+        };
+
+        utils::combine_styled_strings([vote_text, text])
     }
 }

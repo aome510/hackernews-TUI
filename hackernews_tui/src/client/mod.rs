@@ -65,9 +65,20 @@ impl HNClient {
     }
 
     pub fn get_story_hidden_data(&self, story_id: u32) -> Result<StoryHiddenData> {
-        let content = self.get_story_page_content(story_id)?;
+        // Parallelize two tasks using [`rayon::join`](https://docs.rs/rayon/latest/rayon/fn.join.html)
+        let (content, comment_receiver) = rayon::join(
+            || {
+                log!(
+                    self.get_story_page_content(story_id),
+                    format!("get story (id={story_id}) page content")
+                )
+            },
+            || self.lazy_load_story_comments(story_id),
+        );
+        let content = content?;
+        let comment_receiver = comment_receiver?;
+
         let vote_state = self.parse_story_vote_data(&content)?;
-        let comment_receiver = self.lazy_load_story_comments(story_id)?;
 
         Ok(StoryHiddenData {
             comment_receiver,
@@ -359,12 +370,31 @@ impl HNClient {
     }
 
     pub fn get_story_page_content(&self, story_id: u32) -> Result<String> {
-        // TODO: handle cases when the story has multiple pages
-        let content = self
+        let morelink_rg = regex::Regex::new("<a.*?href='(?P<link>.*?)'.*class='morelink'.*?>")?;
+
+        let mut content = self
             .client
             .get(&format!("{HN_HOST_URL}/item?id={story_id}"))
             .call()?
             .into_string()?;
+
+        // The story returned by HN can have multiple pages,
+        // we need to make additional requests for each page and
+        // concatenate all the responses to get the story's whole content.
+        let mut curr_page_content = content.clone();
+
+        while let Some(cap) = morelink_rg.captures(&curr_page_content) {
+            let next_page_link = cap.name("link").unwrap().as_str().replace("&amp;", "&");
+
+            let next_page_content = self
+                .client
+                .get(&format!("{HN_HOST_URL}/{next_page_link}"))
+                .call()?
+                .into_string()?;
+
+            content.push_str(&next_page_content);
+            curr_page_content = next_page_content;
+        }
 
         Ok(content)
     }

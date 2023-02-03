@@ -89,7 +89,7 @@ fn animation(width: usize, _height: usize, frame_idx: usize) -> cursive_async_vi
         let factor = (frame_idx as f64) / (n_frames as f64);
         let x = (factor * width as f64) as usize;
 
-        let content = crate::utils::combine_styled_strings(vec![
+        let content = crate::utils::combine_styled_strings([
             StyledString::styled(repeat_str("- ", x / 2), style),
             StyledString::styled('ᗧ', style),
             StyledString::styled(repeat_str(" o", width.saturating_sub(x + 1) / 2), style),
@@ -104,7 +104,7 @@ fn animation(width: usize, _height: usize, frame_idx: usize) -> cursive_async_vi
         let factor = (frame_idx as f64) / (n_frames as f64);
         let x = (factor * width as f64) as usize;
 
-        let content = crate::utils::combine_styled_strings(vec![
+        let content = crate::utils::combine_styled_strings([
             StyledString::styled(repeat_str(symbol, x), style.back),
             StyledString::styled(repeat_str(symbol, width - x), style.front),
         ]);

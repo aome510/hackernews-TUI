@@ -49,11 +49,17 @@ pub fn shorten_url(url: &str) -> String {
     }
 }
 /// Combine multiple styled strings into a single styled string
-pub fn combine_styled_strings(strings: Vec<StyledString>) -> StyledString {
-    strings.into_iter().fold(StyledString::new(), |mut acc, s| {
-        acc.append(s);
-        acc
-    })
+pub fn combine_styled_strings<S>(strings: S) -> StyledString
+where
+    S: Into<Vec<StyledString>>,
+{
+    strings
+        .into()
+        .into_iter()
+        .fold(StyledString::new(), |mut acc, s| {
+            acc.append(s);
+            acc
+        })
 }
 
 /// decode a HTML encoded string
