@@ -234,6 +234,8 @@ impl Story {
 }
 
 impl HnItem {
+    /// gets the dispay text of the item, which depends on the item's states
+    /// (e.g `vote_status`, `display_state`, etc)
     pub fn text(&self, vote_status: Option<bool>) -> StyledString {
         let theme = config::get_config_theme();
 

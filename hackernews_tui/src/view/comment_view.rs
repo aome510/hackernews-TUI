@@ -214,8 +214,7 @@ impl CommentView {
         self.update_item_text_content(id);
     }
 
-    /// Update the `id`-th item's text content based on its state-based text,
-    /// which changes depending on the item's state.
+    /// Update the `id`-th item's text content based on its state-based text
     pub fn update_item_text_content(&mut self, id: usize) {
         let new_content = self.items[id].text(self.get_vote_status(self.items[id].id));
         self.get_item_view_mut(id)
@@ -306,7 +305,7 @@ fn construct_comment_main_view(
                     }
                 });
 
-                // assume the vote request always succeed because we don't want users
+                // assume the vote request always succeeds because we don't want users
                 // to feel a delay as a result of the request's latency when voting.
                 *upvoted = !(*upvoted);
                 s.update_item_text_content(id);

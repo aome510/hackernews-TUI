@@ -380,7 +380,7 @@ impl HNClient {
 
         // The story returned by HN can have multiple pages,
         // we need to make additional requests for each page and
-        // concatenate all the responses to from the story's content.
+        // concatenate all the responses to get the story's whole content.
         let mut curr_page_content = content.clone();
 
         while let Some(cap) = morelink_rg.captures(&curr_page_content) {
