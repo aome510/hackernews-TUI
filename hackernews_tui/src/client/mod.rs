@@ -65,12 +65,20 @@ impl HNClient {
     }
 
     pub fn get_story_hidden_data(&self, story_id: u32) -> Result<StoryHiddenData> {
-        let content = log!(
-            self.get_story_page_content(story_id)?,
-            format!("get story (id={story_id}) page content")
+        // Parallelize two tasks using [`rayon::join`](https://docs.rs/rayon/latest/rayon/fn.join.html)
+        let (content, comment_receiver) = rayon::join(
+            || {
+                log!(
+                    self.get_story_page_content(story_id),
+                    format!("get story (id={story_id}) page content")
+                )
+            },
+            || self.lazy_load_story_comments(story_id),
         );
+        let content = content?;
+        let comment_receiver = comment_receiver?;
+
         let vote_state = self.parse_story_vote_data(&content)?;
-        let comment_receiver = self.lazy_load_story_comments(story_id)?;
 
         Ok(StoryHiddenData {
             comment_receiver,
