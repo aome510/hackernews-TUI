@@ -6,7 +6,9 @@
 
 use_page_scrolling = true
 use_pacman_loading = true
-url_open_command = { command = "open", options = [] }
+# url_open_command = { command = "open", options = [] } # macos
+# url_open_command = { command = "xdg-open", options = [] } # linux
+# url_open_command = { command = "start", options = [] } # windows
 article_parse_command = { command = "article_md", options = [ "--format", "html" ] }
 client_timeout = 32
 
