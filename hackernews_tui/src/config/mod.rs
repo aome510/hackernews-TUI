@@ -48,8 +48,19 @@ impl Default for Config {
         Config {
             use_page_scrolling: true,
             use_pacman_loading: true,
+            #[cfg(all(unix, not(target_os = "macos")))]
+            url_open_command: Command {
+                command: "xdg-open".to_string(),
+                options: vec![],
+            },
+            #[cfg(target_os = "macos")]
             url_open_command: Command {
                 command: "open".to_string(),
+                options: vec![],
+            },
+            #[cfg(target_os = "windows")]
+            url_open_command: Command {
+                command: "start".to_string(),
                 options: vec![],
             },
             article_parse_command: Command {

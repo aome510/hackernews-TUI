@@ -1,6 +1,6 @@
 # hackernews-TUI
 
-`hackernews_tui` is a fast and [customizable](https://github.com/aome510/hackernews-TUI/blob/main/doc/config.md) application for browsing Hacker News on the terminal.
+`hackernews_tui` is a fast and [customizable](https://github.com/aome510/hackernews-TUI/blob/main/docs/config.md) application for browsing Hacker News on the terminal.
 
 `hackernews_tui` is written in Rust with the help of [Cursive TUI library](https://github.com/gyscos/cursive/). It uses [HN Algolia APIs](https://hn.algolia.com/api/) and [HN Official APIs](https://github.com/HackerNews/API) to get Hacker News data.
 
@@ -140,7 +140,7 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 
 ![Example of a Help View](https://user-images.githubusercontent.com/40011582/147393555-5ca346ca-b59a-4a7f-ab53-b1ec7025eca4.png)
 
-The below sections will list the application's default shortcuts, which can be customized by changing the [key mappings](https://github.com/aome510/hackernews-TUI/blob/main/doc/config.md#keymap) in the user's config file.
+The below sections will list the application's default shortcuts, which can be customized by changing the [key mappings](https://github.com/aome510/hackernews-TUI/blob/main/docs/config.md#keymap) in the user's config file.
 
 For more information about configuring the application's key mappings or defining custom shortcuts, please refer to the [config documentation](https://github.com/aome510/hackernews-TUI/blob/main/doc/config.md#keymap).
 

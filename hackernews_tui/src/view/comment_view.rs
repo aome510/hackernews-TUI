@@ -273,7 +273,7 @@ fn construct_comment_main_view(
             s.try_update_comments();
 
             match *e {
-                Event::Char(c) if ('0'..='9').contains(&c) => {
+                Event::Char(c) if c.is_ascii_digit() => {
                     s.raw_command.push(c);
                 }
                 _ => {

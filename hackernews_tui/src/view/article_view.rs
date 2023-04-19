@@ -110,7 +110,7 @@ fn construct_article_main_view(article: Article) -> OnEventView<ArticleView> {
     OnEventView::new(ArticleView::new(article))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
             match *e {
-                Event::Char(c) if ('0'..='9').contains(&c) => {
+                Event::Char(c) if c.is_ascii_digit() => {
                     s.raw_command.push(c);
                 }
                 _ => {
