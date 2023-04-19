@@ -142,7 +142,7 @@ In each `View`, press `?` to see a list of supported keyboard shortcuts and thei
 
 The below sections will list the application's default shortcuts, which can be customized by changing the [key mappings](https://github.com/aome510/hackernews-TUI/blob/main/docs/config.md#keymap) in the user's config file.
 
-For more information about configuring the application's key mappings or defining custom shortcuts, please refer to the [config docsumentation](https://github.com/aome510/hackernews-TUI/blob/main/doc/config.md#keymap).
+For more information about configuring the application's key mappings or defining custom shortcuts, please refer to the [config documentation](https://github.com/aome510/hackernews-TUI/blob/main/doc/config.md#keymap).
 
 ### Global shortcuts
 
