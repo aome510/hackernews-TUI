@@ -265,7 +265,8 @@ fn construct_comment_main_view(client: &'static client::HNClient, data: PageData
 
     let comment_view_keymap = config::get_comment_view_keymap().clone();
 
-    let page_url = data.url.clone();
+    let article_url = data.url.clone();
+    let page_url = format!("{}/item?id={}", client::HN_HOST_URL, data.root_item.id);
 
     OnEventView::new(CommentView::new(data))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
@@ -388,13 +389,13 @@ fn construct_comment_main_view(client: &'static client::HNClient, data: PageData
             Some(EventResult::Consumed(None))
         })
         .on_pre_event(comment_view_keymap.open_article_in_browser, {
-            let url = page_url.clone();
+            let url = article_url.clone();
             move |_| {
                 utils::open_url_in_browser(&url);
             }
         })
         .on_pre_event(comment_view_keymap.open_article_in_article_view, {
-            let url = page_url.clone();
+            let url = article_url;
             move |s| {
                 if !url.is_empty() {
                     article_view::construct_and_add_new_article_view(s, &url)
@@ -402,7 +403,7 @@ fn construct_comment_main_view(client: &'static client::HNClient, data: PageData
             }
         })
         .on_pre_event(comment_view_keymap.open_story_in_browser, {
-            let url = page_url.clone();
+            let url = page_url;
             move |_| {
                 utils::open_url_in_browser(&url);
             }
