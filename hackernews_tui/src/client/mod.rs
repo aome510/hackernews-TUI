@@ -7,7 +7,7 @@ use std::collections::HashMap;
 // re-export
 pub use query::{StoryNumericFilters, StorySortMode};
 
-use crate::prelude::*;
+use crate::{prelude::*, utils::decode_html};
 use model::*;
 use rayon::prelude::*;
 
@@ -65,50 +65,89 @@ impl HNClient {
     }
 
     pub fn get_page_data(&self, item_id: u32) -> Result<PageData> {
+        // get the root item in the page
+        let request_url = format!("{HN_OFFICIAL_PREFIX}/item/{item_id}.json");
+        let item = log!(
+            self.client
+                .get(&request_url)
+                .call()?
+                .into_json::<ItemResponse>()?,
+            format!("get item (id={item_id}) using {request_url}")
+        );
+
+        let url = item
+            .url
+            .unwrap_or(format!("{HN_HOST_URL}/item?id={item_id}"));
+        let title = item.title.unwrap_or_default();
+
+        let text = decode_html(&item.text.unwrap_or_default());
+
+        // parse the root item of the page
+        let root_item: HnItem = match item.typ.as_str() {
+            "story" => Story {
+                id: item_id,
+                url: url.clone(),
+                author: item.by.unwrap_or_default(),
+                points: item.score.unwrap_or_default(),
+                num_comments: item.descendants.unwrap_or_default(),
+                time: item.time,
+                title: title.clone(),
+                content: text,
+            }
+            .into(),
+            "comment" => Comment {
+                id: item_id,
+                level: 0,
+                n_children: 0,
+                author: item.by.unwrap_or_default(),
+                time: item.time,
+                content: text,
+            }
+            .into(),
+            typ => {
+                anyhow::bail!("unknown item type: {typ}");
+            }
+        };
+
         // Parallelize two tasks using [`rayon::join`](https://docs.rs/rayon/latest/rayon/fn.join.html)
-        let (content, comment_receiver) = rayon::join(
+        let (vote_state, comment_receiver) = rayon::join(
             || {
+                // get the page content
                 log!(
-                    self.get_page_content(item_id),
+                    {
+                        let content = self.get_page_content(item_id)?;
+                        self.parse_vote_data(&content)
+                    },
                     format!("get page content (id={item_id}) ")
                 )
             },
-            || self.lazy_load_comments(item_id),
+            // lazily load the page's top comments
+            || self.lazy_load_comments(item.kids),
         );
-        let content = content?;
+        let vote_state = vote_state?;
         let comment_receiver = comment_receiver?;
 
-        let vote_state = self.parse_vote_data(&content)?;
-
         Ok(PageData {
+            title,
+            url,
+            root_item,
             comment_receiver,
             vote_state,
         })
     }
 
-    /// lazily loads children comments of a Hacker News item
-    pub fn lazy_load_comments(&self, item_id: u32) -> Result<CommentReceiver> {
-        // retrieve the top comments
-        let request_url = format!("{HN_OFFICIAL_PREFIX}/item/{item_id}.json");
-        let mut ids = log!(
-            self.client
-                .get(&request_url)
-                .call()?
-                .into_json::<ItemResponse>()?
-                .kids,
-            format!("get item (id={item_id}) using {request_url}")
-        );
-
+    /// lazily loads comments of a Hacker News item
+    fn lazy_load_comments(&self, mut comment_ids: Vec<u32>) -> Result<CommentReceiver> {
         let (sender, receiver) = crossbeam_channel::bounded(32);
 
         // loads the first 5 top comments to ensure the corresponding `CommentView` has data to render
-        self.load_comments(&sender, &mut ids, 5)?;
+        self.load_comments(&sender, &mut comment_ids, 5)?;
         std::thread::spawn({
             let client = self.clone();
             let sleep_dur = std::time::Duration::from_millis(1000);
             move || {
-                while !ids.is_empty() {
-                    if let Err(err) = client.load_comments(&sender, &mut ids, 5) {
+                while !comment_ids.is_empty() {
+                    if let Err(err) = client.load_comments(&sender, &mut comment_ids, 5) {
                         warn!("encountered an error when loading comments: {}", err);
                         break;
                     }

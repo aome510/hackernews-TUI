@@ -114,7 +114,7 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &'static client::HNClient) {
 /// Initialize the application's UI
 pub fn init_ui(
     client: &'static client::HNClient,
-    start_id: Option<usize>,
+    start_id: Option<u32>,
 ) -> cursive::CursiveRunnable {
     let mut s = cursive::default();
 
@@ -135,7 +135,9 @@ pub fn init_ui(
     set_up_global_callbacks(&mut s, client);
 
     match start_id {
-        Some(id) => todo!(),
+        Some(id) => {
+            comment_view::construct_and_add_new_comment_view(&mut s, client, id, false);
+        }
         None => {
             // render `front_page` story view as the application's startup view if no start id is specified
             story_view::construct_and_add_new_story_view(

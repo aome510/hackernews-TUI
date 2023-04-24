@@ -37,7 +37,12 @@ pub struct Comment {
 }
 
 pub struct PageData {
-    /// a channel to lazily load items in the page
+    pub title: String,
+    pub url: String,
+
+    pub root_item: HnItem,
+
+    /// a channel to lazily load items/comments in the page
     pub comment_receiver: CommentReceiver,
     /// the voting state of items in the page
     pub vote_state: HashMap<String, VoteData>,
