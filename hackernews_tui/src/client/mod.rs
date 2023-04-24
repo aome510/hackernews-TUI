@@ -112,13 +112,13 @@ impl HNClient {
         // Parallelize two tasks using [`rayon::join`](https://docs.rs/rayon/latest/rayon/fn.join.html)
         let (vote_state, comment_receiver) = rayon::join(
             || {
-                // get the page content
+                // get the page's vote state
                 log!(
                     {
                         let content = self.get_page_content(item_id)?;
                         self.parse_vote_data(&content)
                     },
-                    format!("get page content (id={item_id}) ")
+                    format!("get page's vote state of item (id={item_id}) ")
                 )
             },
             // lazily load the page's top comments

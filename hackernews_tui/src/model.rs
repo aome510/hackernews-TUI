@@ -36,10 +36,14 @@ pub struct Comment {
     pub content: String,
 }
 
+/// A Hacker News page data.
+///
+/// The page data is mainly used to construct a comment view.
 pub struct PageData {
     pub title: String,
     pub url: String,
 
+    /// the root item in the page
     pub root_item: HnItem,
 
     /// a channel to lazily load items/comments in the page

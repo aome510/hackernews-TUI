@@ -415,11 +415,6 @@ fn construct_comment_main_view(client: &'static client::HNClient, data: PageData
         .full_height()
 }
 
-/// Construct a comment view of a given story.
-///
-/// # Arguments:
-/// * `story`: a Hacker News story
-/// * `receiver`: a "subscriber" channel that gets comments asynchronously from another thread
 pub fn construct_comment_view(client: &'static client::HNClient, data: PageData) -> impl View {
     let title = format!("Comment View - {}", data.title,);
     let main_view = construct_comment_main_view(client, data);
@@ -434,7 +429,7 @@ pub fn construct_comment_view(client: &'static client::HNClient, data: PageData)
     view
 }
 
-/// Retrieve comments of a story and construct a comment view of that story
+/// Retrieve comments in a Hacker News item and construct a comment view of that item
 pub fn construct_and_add_new_comment_view(
     s: &mut Cursive,
     client: &'static client::HNClient,
