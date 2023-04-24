@@ -14,7 +14,7 @@ const DEFAULT_LOG_FILE: &str = "hn-tui.log";
 use clap::*;
 use prelude::*;
 
-fn run(auth: Option<config::Auth>) {
+fn run(auth: Option<config::Auth>, start_id: Option<usize>) {
     // setup HN Client
     let client = client::init_client();
 
@@ -95,6 +95,13 @@ fn parse_args(config_dir: std::path::PathBuf, cache_dir: std::path::PathBuf) -> 
                 .help("Path to a folder to store application's logs")
                 .next_line_help(true),
         )
+        .arg(
+            Arg::new("start_id")
+                .short('i')
+                .value_parser(clap::value_parser!(u32))
+                .help("The Hacker News item's id to start the application with")
+                .next_line_help(true),
+        )
         .get_matches()
 }
 
@@ -140,5 +147,6 @@ fn main() {
         args.get_one::<String>("auth")
             .expect("`auth` argument should have a default value"),
     );
-    run(auth);
+    let start_id = args.get_one::<u32>("start_id").cloned();
+    run(auth, start_id);
 }

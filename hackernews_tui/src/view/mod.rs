@@ -112,7 +112,10 @@ fn set_up_global_callbacks(s: &mut Cursive, client: &'static client::HNClient) {
 }
 
 /// Initialize the application's UI
-pub fn init_ui(client: &'static client::HNClient) -> cursive::CursiveRunnable {
+pub fn init_ui(
+    client: &'static client::HNClient,
+    start_id: Option<usize>,
+) -> cursive::CursiveRunnable {
     let mut s = cursive::default();
 
     // initialize `cursive` color palette which is determined by the application's theme
@@ -131,16 +134,21 @@ pub fn init_ui(client: &'static client::HNClient) -> cursive::CursiveRunnable {
 
     set_up_global_callbacks(&mut s, client);
 
-    // render `front_page` story view as the application's startup view
-    story_view::construct_and_add_new_story_view(
-        &mut s,
-        client,
-        "front_page",
-        client::StorySortMode::None,
-        0,
-        client::StoryNumericFilters::default(),
-        false,
-    );
+    match start_id {
+        Some(id) => todo!(),
+        None => {
+            // render `front_page` story view as the application's startup view if no start id is specified
+            story_view::construct_and_add_new_story_view(
+                &mut s,
+                client,
+                "front_page",
+                client::StorySortMode::None,
+                0,
+                client::StoryNumericFilters::default(),
+                false,
+            );
+        }
+    }
 
     s
 }
