@@ -168,9 +168,9 @@ pub fn construct_story_main_view(
             let id = s.get_focus_index();
             // the story struct hasn't had any comments inside yet,
             // so it can be cloned without greatly affecting performance
-            let story = s.stories[id].clone();
+            let item_id = s.stories[id].id;
             Some(EventResult::with_cb({
-                move |s| comment_view::construct_and_add_new_comment_view(s, client, &story, false)
+                move |s| comment_view::construct_and_add_new_comment_view(s, client, item_id, false)
             }))
         })
         // open external link shortcuts

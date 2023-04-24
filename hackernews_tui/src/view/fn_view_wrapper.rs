@@ -31,7 +31,7 @@ macro_rules! impl_view_fns_for_fn_view_wrapper {
             self.get_view_mut().take_focus(source)
         }
 
-        fn call_on_any<'a>(&mut self, selector: &Selector<'_>, callback: AnyCb<'a>) {
+        fn call_on_any(&mut self, selector: &Selector<'_>, callback: AnyCb<'_>) {
             self.get_view_mut().call_on_any(selector, callback)
         }
 

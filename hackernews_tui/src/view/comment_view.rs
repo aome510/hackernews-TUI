@@ -8,7 +8,7 @@ type SingleItemView = HideableView<PaddedView<text_view::TextView>>;
 pub struct CommentView {
     view: ScrollView<LinearLayout>,
     items: Vec<HnItem>,
-    data: StoryHiddenData,
+    data: PageData,
 
     raw_command: String,
 }
@@ -23,23 +23,24 @@ impl ViewWrapper for CommentView {
 }
 
 impl CommentView {
-    pub fn new(story: &Story, data: StoryHiddenData) -> Self {
-        // story as the first item in the comment view
-        let item: HnItem = story.clone().into();
-
+    pub fn new(data: PageData) -> Self {
         let mut view = CommentView {
             view: LinearLayout::vertical()
                 .child(HideableView::new(PaddedView::lrtb(
-                    item.level * 2 + 1,
+                    1,
                     1,
                     0,
                     1,
                     text_view::TextView::new(
-                        item.text(data.vote_state.get(&item.id.to_string()).map(|v| v.upvoted)),
+                        data.root_item.text(
+                            data.vote_state
+                                .get(&data.root_item.id.to_string())
+                                .map(|v| v.upvoted),
+                        ),
                     ),
                 )))
                 .scrollable(),
-            items: vec![item],
+            items: vec![data.root_item.clone()],
             raw_command: String::new(),
             data,
         };
@@ -255,11 +256,7 @@ impl ScrollViewContainer for CommentView {
     }
 }
 
-fn construct_comment_main_view(
-    client: &'static client::HNClient,
-    story: &Story,
-    data: StoryHiddenData,
-) -> impl View {
+fn construct_comment_main_view(client: &'static client::HNClient, data: PageData) -> impl View {
     let is_suffix_key = |c: &Event| -> bool {
         let comment_view_keymap = config::get_comment_view_keymap();
         comment_view_keymap.open_link_in_browser.has_event(c)
@@ -268,7 +265,10 @@ fn construct_comment_main_view(
 
     let comment_view_keymap = config::get_comment_view_keymap().clone();
 
-    OnEventView::new(CommentView::new(story, data))
+    let article_url = data.url.clone();
+    let page_url = format!("{}/item?id={}", client::HN_HOST_URL, data.root_item.id);
+
+    OnEventView::new(CommentView::new(data))
         .on_pre_event_inner(EventTrigger::from_fn(|_| true), move |s, e| {
             s.try_update_comments();
 
@@ -389,13 +389,13 @@ fn construct_comment_main_view(
             Some(EventResult::Consumed(None))
         })
         .on_pre_event(comment_view_keymap.open_article_in_browser, {
-            let url = story.get_url().into_owned();
+            let url = article_url.clone();
             move |_| {
                 utils::open_url_in_browser(&url);
             }
         })
         .on_pre_event(comment_view_keymap.open_article_in_article_view, {
-            let url = story.url.clone();
+            let url = article_url;
             move |s| {
                 if !url.is_empty() {
                     article_view::construct_and_add_new_article_view(s, &url)
@@ -403,7 +403,7 @@ fn construct_comment_main_view(
             }
         })
         .on_pre_event(comment_view_keymap.open_story_in_browser, {
-            let url = story.story_url();
+            let url = page_url;
             move |_| {
                 utils::open_url_in_browser(&url);
             }
@@ -415,23 +415,12 @@ fn construct_comment_main_view(
         .full_height()
 }
 
-/// Construct a comment view of a given story.
-///
-/// # Arguments:
-/// * `story`: a Hacker News story
-/// * `receiver`: a "subscriber" channel that gets comments asynchronously from another thread
-pub fn construct_comment_view(
-    client: &'static client::HNClient,
-    story: &Story,
-    data: StoryHiddenData,
-) -> impl View {
-    let main_view = construct_comment_main_view(client, story, data);
+pub fn construct_comment_view(client: &'static client::HNClient, data: PageData) -> impl View {
+    let title = format!("Comment View - {}", data.title,);
+    let main_view = construct_comment_main_view(client, data);
 
     let mut view = LinearLayout::vertical()
-        .child(utils::construct_view_title_bar(&format!(
-            "Comment View - {}",
-            story.plain_title()
-        )))
+        .child(utils::construct_view_title_bar(&title))
         .child(main_view)
         .child(utils::construct_footer_view::<CommentView>());
     view.set_focus_index(1)
@@ -440,14 +429,14 @@ pub fn construct_comment_view(
     view
 }
 
-/// Retrieve comments of a story and construct a comment view of that story
+/// Retrieve comments in a Hacker News item and construct a comment view of that item
 pub fn construct_and_add_new_comment_view(
     s: &mut Cursive,
     client: &'static client::HNClient,
-    story: &Story,
+    item_id: u32,
     pop_layer: bool,
 ) {
-    let async_view = async_view::construct_comment_view_async(s, client, story);
+    let async_view = async_view::construct_comment_view_async(s, client, item_id);
     if pop_layer {
         s.pop_layer();
     }

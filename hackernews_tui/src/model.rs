@@ -36,8 +36,19 @@ pub struct Comment {
     pub content: String,
 }
 
-pub struct StoryHiddenData {
+/// A Hacker News page data.
+///
+/// The page data is mainly used to construct a comment view.
+pub struct PageData {
+    pub title: String,
+    pub url: String,
+
+    /// the root item in the page
+    pub root_item: HnItem,
+
+    /// a channel to lazily load items/comments in the page
     pub comment_receiver: CommentReceiver,
+    /// the voting state of items in the page
     pub vote_state: HashMap<String, VoteData>,
 }
 
@@ -96,10 +107,7 @@ impl From<Story> for HnItem {
             ),
         ]);
 
-        // The HTML story text returned by HN Algolia APIs doesn't wrap a paragraph inside a `<p><\p>` tag pair.
-        // Instead, it seems to use `<p>` to represent a paragraph break.
-        // Replace `<p>` with linebreaks to make the text easier to parse.
-        let mut story_text = story.content.replace("<p>", "\n\n");
+        let mut story_text = story.content;
 
         let minimized_text = if story_text.is_empty() {
             metadata.clone()
