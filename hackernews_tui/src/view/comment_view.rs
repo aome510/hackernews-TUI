@@ -8,7 +8,7 @@ type SingleItemView = HideableView<PaddedView<text_view::TextView>>;
 pub struct CommentView {
     view: ScrollView<LinearLayout>,
     items: Vec<HnItem>,
-    data: StoryHiddenData,
+    data: PageData,
 
     raw_command: String,
 }
@@ -23,7 +23,7 @@ impl ViewWrapper for CommentView {
 }
 
 impl CommentView {
-    pub fn new(story: &Story, data: StoryHiddenData) -> Self {
+    pub fn new(story: &Story, data: PageData) -> Self {
         // story as the first item in the comment view
         let item: HnItem = story.clone().into();
 
@@ -258,7 +258,7 @@ impl ScrollViewContainer for CommentView {
 fn construct_comment_main_view(
     client: &'static client::HNClient,
     story: &Story,
-    data: StoryHiddenData,
+    data: PageData,
 ) -> impl View {
     let is_suffix_key = |c: &Event| -> bool {
         let comment_view_keymap = config::get_comment_view_keymap();
@@ -420,11 +420,7 @@ fn construct_comment_main_view(
 /// # Arguments:
 /// * `story`: a Hacker News story
 /// * `receiver`: a "subscriber" channel that gets comments asynchronously from another thread
-pub fn construct_comment_view(
-    client: &'static client::HNClient,
-    story: &Story,
-    data: StoryHiddenData,
-) -> impl View {
+pub fn construct_comment_view(client: &'static client::HNClient, data: PageData) -> impl View {
     let main_view = construct_comment_main_view(client, story, data);
 
     let mut view = LinearLayout::vertical()
@@ -444,10 +440,10 @@ pub fn construct_comment_view(
 pub fn construct_and_add_new_comment_view(
     s: &mut Cursive,
     client: &'static client::HNClient,
-    story: &Story,
+    item_id: u32,
     pop_layer: bool,
 ) {
-    let async_view = async_view::construct_comment_view_async(s, client, story);
+    let async_view = async_view::construct_comment_view_async(s, client, item_id);
     if pop_layer {
         s.pop_layer();
     }

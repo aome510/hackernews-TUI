@@ -14,7 +14,7 @@ const DEFAULT_LOG_FILE: &str = "hn-tui.log";
 use clap::*;
 use prelude::*;
 
-fn run(auth: Option<config::Auth>, start_id: Option<usize>) {
+fn run(auth: Option<config::Auth>, start_id: Option<u32>) {
     // setup HN Client
     let client = client::init_client();
 
@@ -26,7 +26,7 @@ fn run(auth: Option<config::Auth>, start_id: Option<usize>) {
     }
 
     // setup the application's UI
-    let s = view::init_ui(client);
+    let s = view::init_ui(client, start_id);
 
     // use `cursive_buffered_backend` crate to fix the flickering issue
     // when using `cursive` with `crossterm_backend` (See https://github.com/gyscos/Cursive/issues/142)

@@ -60,8 +60,8 @@ pub struct StoryResponse {
 }
 
 #[derive(Debug, Deserialize)]
-/// HNStoryResponse represents the story data received from the official HackerNews APIs
-pub struct HNStoryResponse {
+/// ItemResponse represents the item data received from the official HackerNews APIs
+pub struct ItemResponse {
     #[serde(default)]
     pub kids: Vec<u32>,
 }

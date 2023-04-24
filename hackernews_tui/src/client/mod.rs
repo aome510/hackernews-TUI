@@ -64,38 +64,39 @@ impl HNClient {
         Ok(item)
     }
 
-    pub fn get_story_hidden_data(&self, story_id: u32) -> Result<StoryHiddenData> {
+    pub fn get_page_data(&self, item_id: u32) -> Result<PageData> {
         // Parallelize two tasks using [`rayon::join`](https://docs.rs/rayon/latest/rayon/fn.join.html)
         let (content, comment_receiver) = rayon::join(
             || {
                 log!(
-                    self.get_story_page_content(story_id),
-                    format!("get story (id={story_id}) page content")
+                    self.get_page_content(item_id),
+                    format!("get page content (id={item_id}) ")
                 )
             },
-            || self.lazy_load_story_comments(story_id),
+            || self.lazy_load_comments(item_id),
         );
         let content = content?;
         let comment_receiver = comment_receiver?;
 
-        let vote_state = self.parse_story_vote_data(&content)?;
+        let vote_state = self.parse_vote_data(&content)?;
 
-        Ok(StoryHiddenData {
+        Ok(PageData {
             comment_receiver,
             vote_state,
         })
     }
 
-    pub fn lazy_load_story_comments(&self, story_id: u32) -> Result<CommentReceiver> {
-        // retrieve the top comments of a story
-        let request_url = format!("{HN_OFFICIAL_PREFIX}/item/{story_id}.json");
+    /// lazily loads children comments of a Hacker News item
+    pub fn lazy_load_comments(&self, item_id: u32) -> Result<CommentReceiver> {
+        // retrieve the top comments
+        let request_url = format!("{HN_OFFICIAL_PREFIX}/item/{item_id}.json");
         let mut ids = log!(
             self.client
                 .get(&request_url)
                 .call()?
-                .into_json::<HNStoryResponse>()?
+                .into_json::<ItemResponse>()?
                 .kids,
-            format!("get story (id={story_id}) using {request_url}")
+            format!("get item (id={item_id}) using {request_url}")
         );
 
         let (sender, receiver) = crossbeam_channel::bounded(32);
@@ -369,18 +370,18 @@ impl HNClient {
         }
     }
 
-    pub fn get_story_page_content(&self, story_id: u32) -> Result<String> {
+    /// gets the HTML page content of a Hacker News item
+    pub fn get_page_content(&self, item_id: u32) -> Result<String> {
         let morelink_rg = regex::Regex::new("<a.*?href='(?P<link>.*?)'.*class='morelink'.*?>")?;
 
         let mut content = self
             .client
-            .get(&format!("{HN_HOST_URL}/item?id={story_id}"))
+            .get(&format!("{HN_HOST_URL}/item?id={item_id}"))
             .call()?
             .into_string()?;
 
-        // The story returned by HN can have multiple pages,
-        // we need to make additional requests for each page and
-        // concatenate all the responses to get the story's whole content.
+        // A Hacker News item can have multiple pages, so
+        // we need to make additional requests for each page and concatenate all the responses.
         let mut curr_page_content = content.clone();
 
         while let Some(cap) = morelink_rg.captures(&curr_page_content) {
@@ -399,12 +400,12 @@ impl HNClient {
         Ok(content)
     }
 
-    /// Parse a story's vote data
+    /// Parse vote data of items in a page.
     ///
     /// The vote data is represented by a hashmap from `id` to a struct consisting of
     /// `auth` and `upvoted` (false=no vote, true=has vote), in which `id` is
     /// is an item's id and `auth` is a string for authentication purpose when voting.
-    pub fn parse_story_vote_data(&self, page_content: &str) -> Result<HashMap<String, VoteData>> {
+    pub fn parse_vote_data(&self, page_content: &str) -> Result<HashMap<String, VoteData>> {
         let upvote_rg =
             regex::Regex::new("<a.*?id='up_(?P<id>.*?)'.*?auth=(?P<auth>[0-9a-z]*).*?>")?;
         let unvote_rg =

@@ -7,16 +7,13 @@ use cursive_async_view::AsyncView;
 pub fn construct_comment_view_async(
     siv: &mut Cursive,
     client: &'static client::HNClient,
-    story: &Story,
+    item_id: u32,
 ) -> impl View {
-    let id = story.id;
-
-    AsyncView::new_with_bg_creator(siv, move || Ok(client.get_story_hidden_data(id)), {
-        let story = story.clone();
+    AsyncView::new_with_bg_creator(siv, move || Ok(client.get_page_data(item_id)), {
         move |result: Result<_>| {
             ResultView::new(
-                result.with_context(|| format!("failed to load comments from story (id={id})")),
-                |receiver| comment_view::construct_comment_view(client, &story, receiver),
+                result.with_context(|| format!("failed to load comments from item (id={item_id})")),
+                |data| comment_view::construct_comment_view(client, data),
             )
         }
     })

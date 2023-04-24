@@ -36,8 +36,10 @@ pub struct Comment {
     pub content: String,
 }
 
-pub struct StoryHiddenData {
+pub struct PageData {
+    /// a channel to lazily load items in the page
     pub comment_receiver: CommentReceiver,
+    /// the voting state of items in the page
     pub vote_state: HashMap<String, VoteData>,
 }
 
