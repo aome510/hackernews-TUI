@@ -130,6 +130,11 @@ pub fn init_ui(
             .set_color("highlight", theme.palette.selection_background.into());
         t.palette
             .set_color("highlight_text", theme.palette.selection_foreground.into());
+
+        // `cursive_core` uses `Effect::Reverse` for highlighting focused views
+        // since the version `v0.3.7`. The below changes are to remove the reverse effect.
+        t.palette[PaletteStyle::Highlight] = ColorStyle::highlight().into();
+        t.palette[PaletteStyle::HighlightInactive] = ColorStyle::highlight_inactive().into();
     });
 
     set_up_global_callbacks(&mut s, client);
