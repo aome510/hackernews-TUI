@@ -25,7 +25,7 @@ markup5ever = "0.11.0"
 tendril = "0.4.3"
 
 # tracing/log related deps
-tracing = "0.1.38"
+tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 log = "0.4.17"
 
