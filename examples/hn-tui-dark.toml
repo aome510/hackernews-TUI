@@ -1,0 +1,159 @@
+# Example configuration file - Dark Mode
+
+# ---------------------------------
+# general
+# ---------------------------------
+
+use_page_scrolling = true
+use_pacman_loading = true
+# url_open_command = { command = "open", options = [] } # macos
+# url_open_command = { command = "xdg-open", options = [] } # linux
+# url_open_command = { command = "start", options = [] } # windows
+article_parse_command = { command = "article_md", options = [ "--format", "html" ] }
+client_timeout = 32
+
+# ---------------------------------
+# theme
+# ---------------------------------
+
+[theme.palette]
+background = "#1d1f21"
+foreground = "#de935f"
+selection_background = "#cd824e"
+selection_foreground = "#1d1f21"
+black = "#000000"
+blue = "#0033bb"
+cyan = "#00aaaa"
+green = "#00aa00"
+magenta = "#aa00aa"
+red = "#aa0000"
+white = "#aaaaaa"
+yellow = "#aaaa00"
+light_black = "#555555"
+light_white = "#ffffff"
+light_red = "#ff5555"
+light_magenta = "#5555ff"
+light_green = "#55ff55"
+light_cyan = "#55ffff"
+light_blue = "#5555ff"
+light_yellow = "#ffff55"
+
+[theme.component_style]
+title_bar = { front = "black", back = "#ff6600", effect = "bold" }
+matched_highlight = { front = "black", back = "#ffff55"}
+metadata = { front = "#626262" }
+username = { effect = "bold" }
+loading_bar = { front = "#de935f", back = "#1d1f21"}
+header = { front = "black", effect = "bold" }
+quote = { front = "#677280" }
+italic = { effect = "italic" }
+bold = { effect = "bold" }
+single_code_block = { back = "light black", front = "#c8c8c8"}
+multiline_code_block = { front = "light black", effect = "bold" }
+link = { front = "#a3a6a4" }
+link_id = { front = "black", back = "#ff6600"}
+current_story_tag = { front = "light white" }
+ask_hn = { front = "red", effect = "bold" }
+tell_hn = { front = "yellow", effect = "bold" }
+show_hn = { front = "blue", effect = "bold" }
+launch_hn = { front = "green", effect = "bold" }
+
+# ---------------------------------
+# keymap
+# ---------------------------------
+
+[keymap.global_keymap]
+open_help_dialog = "?"
+quit = ["q", "C-c"]
+close_dialog = "esc"
+goto_previous_view = ["backspace", "C-p"]
+goto_search_view = ["/", "C-s"]
+goto_front_page_view = "f1"
+goto_all_stories_view = "f2"
+goto_ask_hn_view = "f3"
+goto_show_hn_view = "f4"
+goto_jobs_view = "f5"
+
+[keymap.edit_keymap]
+move_cursor_left = ["left", "C-b"]
+move_cursor_right = ["right", "C-f"]
+move_cursor_to_begin = ["home", "C-a"]
+move_cursor_to_end = ["end", "C-e"]
+backward_delete_char = "backspace"
+
+[keymap.scroll_keymap]
+up = ["up", "k"]
+down = ["down", "j"]
+page_up = ["page_up", "u"]
+page_down = ["page_down", "d"]
+top = ["home", "g"]
+bottom = ["end", "G"]
+
+[keymap.story_view_keymap]
+next_story = "j"
+prev_story = "k"
+goto_story = "g"
+next_page = "n"
+prev_page = "p"
+cycle_sort_mode = "d"
+open_article_in_browser = "o"
+open_article_in_article_view = "O"
+open_story_in_browser = "s"
+goto_story_comment_view = "enter"
+next_story_tag = "l"
+prev_story_tag = "h"
+
+[keymap.search_view_keymap]
+to_navigation_mode = "esc"
+to_search_mode = "i"
+
+[keymap.comment_view_keymap]
+next_comment = "j"
+prev_comment = "k"
+next_top_level_comment = "n"
+prev_top_level_comment = "p"
+next_leq_level_comment = "l"
+prev_leq_level_comment = "h"
+parent_comment = "u"
+open_comment_in_browser = "c"
+open_story_in_browser = "s"
+open_article_in_browser = "a"
+open_article_in_article_view = "A"
+open_link_in_browser = "o"
+open_link_in_article_view = "O"
+toggle_collapse_comment = "tab"
+
+[keymap.article_view_keymap]
+open_article_in_browser = "a"
+open_link_in_browser = "o"
+open_link_in_article_view = "O"
+open_link_dialog = "l"
+
+[keymap.link_dialog_keymap]
+next = ["j", "down"]
+prev = ["k", "up"]
+open_link_in_browser = ["o", "enter"]
+open_link_in_article_view = "O"
+
+
+# ---------------------
+# custom keymap
+# ---------------------
+
+# [[keymap.custom_keymaps]]
+# key = "M-1"
+# tag = "story"
+# by_date = false
+# [keymap.custom_keymaps.numeric_filters]
+# elapsed_days_interval = {start = 0, end = 3} # stories posted between now and 3 days ago
+# points_interval = {start = 10} # stories with points >= 10
+# num_comments_interval = {}
+#
+# [[keymap.custom_keymaps]]
+# key = "M-2"
+# tag = "show_hn"
+# by_date = true
+# [keymap.custom_keymaps.numeric_filters]
+# elapsed_days_interval = {}
+# points_interval = {start = 50, end = 200}
+# num_comments_interval = {end = 100}
