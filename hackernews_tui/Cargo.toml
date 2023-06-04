@@ -1,6 +1,6 @@
 [package]
 name = "hackernews_tui"
-version = "0.13.1"
+version = "0.13.2"
 authors = ["Thang Pham <phamducthang1234@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -25,12 +25,12 @@ markup5ever = "0.11.0"
 tendril = "0.4.3"
 
 # tracing/log related deps
-tracing = "0.1.3"
+tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 log = "0.4.18"
 
 # serde related deps
-serde = { version = "1.0.160", features = ["derive"] }
+serde = { version = "1.0.163", features = ["derive"] }
 serde_json = "1.0.96"
 
 # others
@@ -40,11 +40,11 @@ rayon = "1.7.0"
 regex = "1.8.3"
 once_cell = "1.17.2"
 toml = "0.7.4"
-clap = { version = "4.3.1", features = ["string"] }
+clap = { version = "4.3.0", features = ["string"] }
 dirs-next = "2.0.0"
 url = "2.3.1"
 config_parser2 = { version = "0.1.4", path = "../config_parser" }
 crossbeam-channel = "0.5.8"
 unicode-width = "0.1.10"
-comfy-table = "6.2"
+comfy-table = "6.2.0"
 html-escape = "0.2.13"
