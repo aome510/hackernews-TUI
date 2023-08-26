@@ -376,27 +376,65 @@ impl HNClient {
         let output = std::process::Command::new(&article_parse_command.command)
             .args(&article_parse_command.options)
             .arg(url)
-            .output()?;
+            .output();
 
-        if output.status.success() {
-            match serde_json::from_slice::<Article>(&output.stdout) {
-                Ok(mut article) => {
-                    // Replace a tab character by 4 spaces as it's possible
-                    // that the terminal cannot render the tab character.
-                    article.content = article.content.replace('\t', "    ");
+        match output {
+            Ok(output) => {
+                if output.status.success() {
+                    match serde_json::from_slice::<Article>(&output.stdout) {
+                        Ok(mut article) => {
+                            // Replace a tab character by 4 spaces as it's possible
+                            // that the terminal cannot render the tab character.
+                            article.content = article.content.replace('\t', "    ");
 
-                    article.url = url.to_string();
-                    Ok(article)
-                }
-                Err(err) => {
-                    let stdout = std::str::from_utf8(&output.stdout)?;
-                    warn!("failed to deserialize {} into an `Article` struct:", stdout);
-                    Err(anyhow::anyhow!(err))
+                            article.url = url.to_string();
+                            Ok(article)
+                        }
+                        Err(err) => {
+                            let stdout = std::str::from_utf8(&output.stdout)?;
+                            warn!("failed to deserialize {} into an `Article` struct:", stdout);
+                            Err(anyhow::anyhow!(err))
+                        }
+                    }
+                } else {
+                    let stderr = std::str::from_utf8(&output.stderr)?.to_string();
+                    Err(anyhow::anyhow!(stderr))
                 }
             }
-        } else {
-            let stderr = std::str::from_utf8(&output.stderr)?.to_string();
-            Err(anyhow::anyhow!(stderr))
+            Err(_) => {
+                // fallback to the `readable-readability` crate if the command fails
+                let html = ureq::AgentBuilder::new()
+                    .timeout(std::time::Duration::from_secs(config::get_config().client_timeout))
+                    .build()
+                    .get(url)
+                    .call()
+                    .map_err(|why| anyhow::anyhow!("failed to get url: {why}"))?
+                    .into_string()
+                    .map_err(|why| anyhow::anyhow!("failed to turn the response into string: {why}"))?;
+                let (nodes, metadata) = readable_readability::Readability::new()
+                    .base_url(url::Url::parse(url)
+                        .map_err(|why| anyhow::anyhow!("failed to parse url: {why}"))?)
+                    .parse(&html);
+
+                let mut text = vec![];
+                nodes.serialize(&mut text)
+                    .map_err(|why| anyhow::anyhow!("failed to serialize nodes: {why}"))?;
+                let title = metadata.page_title
+                    .or(metadata.article_title)
+                    .unwrap_or("(no title)".to_string());
+                let content = std::str::from_utf8(&text)
+                    .map_err(|why| anyhow::anyhow!("failed to turn the text into string: {why}"))?
+                    .replace('\t', "    ")
+                    .to_string();
+
+                Ok(Article {
+                    title,
+                    content,
+                    author: metadata.byline,
+                    url: url.to_string(),
+                    date_published: None,
+                })
+            }
         }
     }
 
