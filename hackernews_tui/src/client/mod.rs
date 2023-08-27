@@ -1,15 +1,17 @@
-// modules
-mod model;
-mod query;
-
 use std::collections::HashMap;
 
+use anyhow::Context;
+use rayon::prelude::*;
+
+use model::*;
 // re-export
 pub use query::{StoryNumericFilters, StorySortMode};
 
 use crate::{prelude::*, utils::decode_html};
-use model::*;
-use rayon::prelude::*;
+
+// modules
+mod model;
+mod query;
 
 const HN_ALGOLIA_PREFIX: &str = "https://hn.algolia.com/api/v1";
 const HN_OFFICIAL_PREFIX: &str = "https://hacker-news.firebaseio.com/v0";
@@ -53,8 +55,8 @@ impl HNClient {
     /// Get data of a HN item based on its id then parse the data
     /// to a corresponding struct representing that item
     pub fn get_item_from_id<T>(&self, id: u32) -> Result<T>
-    where
-        T: serde::de::DeserializeOwned,
+        where
+            T: serde::de::DeserializeOwned,
     {
         let request_url = format!("{HN_ALGOLIA_PREFIX}/items/{id}");
         let item = log!(
@@ -105,7 +107,7 @@ impl HNClient {
                 title: title.clone(),
                 content: text,
             }
-            .into(),
+                .into(),
             "comment" => Comment {
                 id: item_id,
                 level: 0,
@@ -114,7 +116,7 @@ impl HNClient {
                 time: item.time,
                 content: text,
             }
-            .into(),
+                .into(),
             typ => {
                 anyhow::bail!("unknown item type: {typ}");
             }
@@ -408,22 +410,22 @@ impl HNClient {
                     .build()
                     .get(url)
                     .call()
-                    .map_err(|why| anyhow::anyhow!("failed to get url: {why}"))?
+                    .with_context(|| "failed to get url")?
                     .into_string()
-                    .map_err(|why| anyhow::anyhow!("failed to turn the response into string: {why}"))?;
+                    .with_context(|| "failed to turn the response into string")?;
                 let (nodes, metadata) = readable_readability::Readability::new()
                     .base_url(url::Url::parse(url)
-                        .map_err(|why| anyhow::anyhow!("failed to parse url: {why}"))?)
+                        .with_context(|| "failed to parse url")?)
                     .parse(&html);
 
                 let mut text = vec![];
                 nodes.serialize(&mut text)
-                    .map_err(|why| anyhow::anyhow!("failed to serialize nodes: {why}"))?;
+                    .with_context(|| "failed to serialize nodes")?;
                 let title = metadata.page_title
                     .or(metadata.article_title)
                     .unwrap_or("(no title)".to_string());
                 let content = std::str::from_utf8(&text)
-                    .map_err(|why| anyhow::anyhow!("failed to turn the text into string: {why}"))?
+                    .with_context(|| "failed to turn the text into string")?
                     .replace('\t', "    ")
                     .to_string();
 
