@@ -373,7 +373,7 @@ impl HNClient {
         Ok(response.into())
     }
 
-    pub fn get_article(url: &str) -> Result<Article> {
+    pub fn get_article(&self, url: &str) -> Result<Article> {
         let article_parse_command = &config::get_config().article_parse_command;
         let output = std::process::Command::new(&article_parse_command.command)
             .args(&article_parse_command.options)
@@ -405,9 +405,7 @@ impl HNClient {
             }
             Err(_) => {
                 // fallback to the `readable-readability` crate if the command fails
-                let html = ureq::AgentBuilder::new()
-                    .timeout(std::time::Duration::from_secs(config::get_config().client_timeout))
-                    .build()
+                let html = self.client
                     .get(url)
                     .call()
                     .with_context(|| "failed to get url")?

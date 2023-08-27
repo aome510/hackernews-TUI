@@ -369,10 +369,10 @@ fn construct_comment_main_view(client: &'static client::HNClient, data: PageData
         })
         .on_pre_event_inner(
             comment_view_keymap.open_link_in_article_view,
-            |s, _| match s.raw_command.parse::<usize>() {
+            move |s, _| match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    utils::open_ith_link_in_article_view(&s.items[s.get_focus_index()].links, num)
+                    utils::open_ith_link_in_article_view(client, &s.items[s.get_focus_index()].links, num)
                 }
                 Err(_) => None,
             },
@@ -398,7 +398,7 @@ fn construct_comment_main_view(client: &'static client::HNClient, data: PageData
             let url = article_url;
             move |s| {
                 if !url.is_empty() {
-                    article_view::construct_and_add_new_article_view(s, &url)
+                    article_view::construct_and_add_new_article_view(client, s, &url)
                 }
             }
         })

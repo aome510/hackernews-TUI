@@ -3,6 +3,7 @@ use crate::prelude::*;
 use anyhow::Context;
 use cursive_aligned_view::Alignable;
 use cursive_async_view::AsyncView;
+use crate::client;
 
 pub fn construct_comment_view_async(
     siv: &mut Cursive,
@@ -51,7 +52,7 @@ pub fn construct_story_view_async(
     .full_screen()
 }
 
-pub fn construct_article_view_async(siv: &mut Cursive, article_url: &str) -> impl View {
+pub fn construct_article_view_async(client: &'static client::HNClient, siv: &mut Cursive, article_url: &str) -> impl View {
     let err_context = format!(
         "Failed to execute the command:\n\
          `{} {}`.\n\n\
@@ -64,12 +65,12 @@ pub fn construct_article_view_async(siv: &mut Cursive, article_url: &str) -> imp
         siv,
         {
             let article_url = article_url.to_owned();
-            move || Ok(client::HNClient::get_article(&article_url))
+            move || Ok(client::HNClient::get_article(client, &article_url))
         },
         move |result| {
             let err_context = err_context.clone();
             ResultView::new(result.with_context(|| err_context), |article| {
-                article_view::construct_article_view(article)
+                article_view::construct_article_view(client, article)
             })
         },
     )

@@ -47,7 +47,7 @@ impl LinkDialog {
     }
 }
 
-pub fn get_link_dialog(links: &[String]) -> impl View {
+pub fn get_link_dialog(client: &'static client::HNClient, links: &[String]) -> impl View {
     let view = LinkDialog::new(links);
     let link_dialog_keymap = config::get_link_dialog_keymap().clone();
 
@@ -87,6 +87,7 @@ pub fn get_link_dialog(links: &[String]) -> impl View {
             let links = links.to_owned();
             move |s, _| {
                 utils::open_ith_link_in_article_view(
+                    client,
                     &links,
                     s.content().get_inner().get_focus_index() + 1,
                 )

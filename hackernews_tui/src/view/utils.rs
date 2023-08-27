@@ -74,11 +74,11 @@ pub fn open_url_in_browser(url: &str) {
 
 /// open in article view the `i`-th link.
 /// Note that the link index starts with `1`.
-pub fn open_ith_link_in_article_view(links: &[String], i: usize) -> Option<EventResult> {
+pub fn open_ith_link_in_article_view(client: &'static client::HNClient, links: &[String], i: usize) -> Option<EventResult> {
     if i > 0 && i <= links.len() {
         Some(EventResult::with_cb({
             let url = links[i - 1].clone();
-            move |s| article_view::construct_and_add_new_article_view(s, &url)
+            move |s| article_view::construct_and_add_new_article_view(client, s, &url)
         }))
     } else {
         Some(EventResult::Consumed(None))

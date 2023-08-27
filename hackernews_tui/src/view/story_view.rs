@@ -186,7 +186,7 @@ pub fn construct_story_main_view(
                 let url = s.stories[id].url.clone();
                 if !url.is_empty() {
                     Some(EventResult::with_cb({
-                        move |s| article_view::construct_and_add_new_article_view(s, &url)
+                        move |s| article_view::construct_and_add_new_article_view(client, s, &url)
                     }))
                 } else {
                     Some(EventResult::Consumed(None))
