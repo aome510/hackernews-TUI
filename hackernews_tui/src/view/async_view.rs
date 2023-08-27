@@ -54,11 +54,10 @@ pub fn construct_story_view_async(
 
 pub fn construct_article_view_async(client: &'static client::HNClient, siv: &mut Cursive, article_url: &str) -> impl View {
     let err_context = format!(
-        "Failed to execute the command:\n\
-         `{} {}`.\n\n\
-         Please make sure you have configured the `article_parse_command` option as described in the below link:\n\
+        "Failed to parse an article into readable text:\n\
+         `{}`.\n\n\
+         Please review your configuration as described in the below link, and try again\n\
          \"https://github.com/aome510/hackernews-TUI/blob/main/docs/config.md#article-parse-command\"",
-        config::get_config().article_parse_command,
         article_url);
 
     AsyncView::new_with_bg_creator(
