@@ -372,7 +372,11 @@ fn construct_comment_main_view(client: &'static client::HNClient, data: PageData
             move |s, _| match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    utils::open_ith_link_in_article_view(client, &s.items[s.get_focus_index()].links, num)
+                    utils::open_ith_link_in_article_view(
+                        client,
+                        &s.items[s.get_focus_index()].links,
+                        num,
+                    )
                 }
                 Err(_) => None,
             },

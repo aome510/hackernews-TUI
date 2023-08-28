@@ -1,9 +1,9 @@
 use super::{article_view, comment_view, result_view::ResultView, story_view};
+use crate::client;
 use crate::prelude::*;
 use anyhow::Context;
 use cursive_aligned_view::Alignable;
 use cursive_async_view::AsyncView;
-use crate::client;
 
 pub fn construct_comment_view_async(
     siv: &mut Cursive,
@@ -52,7 +52,11 @@ pub fn construct_story_view_async(
     .full_screen()
 }
 
-pub fn construct_article_view_async(client: &'static client::HNClient, siv: &mut Cursive, article_url: &str) -> impl View {
+pub fn construct_article_view_async(
+    client: &'static client::HNClient,
+    siv: &mut Cursive,
+    article_url: &str,
+) -> impl View {
     let err_context = format!(
         "Failed to parse an article into readable text:\n\
          `{}`.\n\n\

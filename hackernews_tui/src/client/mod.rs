@@ -55,8 +55,8 @@ impl HNClient {
     /// Get data of a HN item based on its id then parse the data
     /// to a corresponding struct representing that item
     pub fn get_item_from_id<T>(&self, id: u32) -> Result<T>
-        where
-            T: serde::de::DeserializeOwned,
+    where
+        T: serde::de::DeserializeOwned,
     {
         let request_url = format!("{HN_ALGOLIA_PREFIX}/items/{id}");
         let item = log!(
@@ -107,7 +107,7 @@ impl HNClient {
                 title: title.clone(),
                 content: text,
             }
-                .into(),
+            .into(),
             "comment" => Comment {
                 id: item_id,
                 level: 0,
@@ -116,7 +116,7 @@ impl HNClient {
                 time: item.time,
                 content: text,
             }
-                .into(),
+            .into(),
             typ => {
                 anyhow::bail!("unknown item type: {typ}");
             }
@@ -405,21 +405,23 @@ impl HNClient {
             }
             Err(_) => {
                 // fallback to the `readable-readability` crate if the command fails
-                let html = self.client
+                let html = self
+                    .client
                     .get(url)
                     .call()
                     .with_context(|| "failed to get url")?
                     .into_string()
                     .with_context(|| "failed to turn the response into string")?;
                 let (nodes, metadata) = readable_readability::Readability::new()
-                    .base_url(url::Url::parse(url)
-                        .with_context(|| "failed to parse url")?)
+                    .base_url(url::Url::parse(url).with_context(|| "failed to parse url")?)
                     .parse(&html);
 
                 let mut text = vec![];
-                nodes.serialize(&mut text)
+                nodes
+                    .serialize(&mut text)
                     .with_context(|| "failed to serialize nodes")?;
-                let title = metadata.page_title
+                let title = metadata
+                    .page_title
                     .or(metadata.article_title)
                     .unwrap_or("(no title)".to_string());
                 let content = std::str::from_utf8(&text)

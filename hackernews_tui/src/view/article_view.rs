@@ -98,7 +98,10 @@ impl ScrollViewContainer for ArticleView {
     }
 }
 
-fn construct_article_main_view(client: &'static client::HNClient, article: Article) -> OnEventView<ArticleView> {
+fn construct_article_main_view(
+    client: &'static client::HNClient,
+    article: Article,
+) -> OnEventView<ArticleView> {
     let is_suffix_key = |c: &Event| -> bool {
         let article_view_keymap = config::get_article_view_keymap();
         article_view_keymap.open_link_in_browser.has_event(c)
@@ -174,7 +177,11 @@ pub fn construct_article_view(client: &'static client::HNClient, article: Articl
 }
 
 /// Retrieve an article from a given `url` and construct an article view of that article
-pub fn construct_and_add_new_article_view(client: &'static client::HNClient, s: &mut Cursive, url: &str) {
+pub fn construct_and_add_new_article_view(
+    client: &'static client::HNClient,
+    s: &mut Cursive,
+    url: &str,
+) {
     let async_view = async_view::construct_article_view_async(client, s, url);
     s.screen_mut().add_transparent_layer(Layer::new(async_view))
 }
