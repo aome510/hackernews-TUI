@@ -44,6 +44,8 @@ An example config file (with some default config values) can be found in [exampl
 2. a command explicitly specified by `article_parse_command` option in your config file
 3. an integrated parser powered by [`readable-readability`](https://crates.io/crates/readable-readability) crate 
 
+Please note that if you want to use the integrated parser, you **must** uninstall (1) `article_md` from your `$PATH`, and (2) remove `article_parse_command` setting from your config file. There is no way to explicitly specify to use the integrated parser.
+
 You can specify another tool with the `article_parse_command` config option. An `article_parse_command` must be a command that returns result with the following schema:
 
 ```typescript
@@ -64,7 +66,6 @@ One alternative is [`mercury-parser`](https://github.com/postlight/mercury-parse
 article_parse_command = { command = 'mercury-parser', options = [] }
 ```
 
-Please note that if you want to use the integrated parser, you **must** uninstall (1) `article_md` from your `$PATH`, and (2) remove `article_parse_command` setting from your config file. There is no way to explicitly specify to use the integrated parser.
 
 ## Theme
 
