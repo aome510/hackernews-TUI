@@ -1,15 +1,17 @@
-// modules
-mod model;
-mod query;
-
 use std::collections::HashMap;
 
+use anyhow::Context;
+use rayon::prelude::*;
+
+use model::*;
 // re-export
 pub use query::{StoryNumericFilters, StorySortMode};
 
 use crate::{prelude::*, utils::decode_html};
-use model::*;
-use rayon::prelude::*;
+
+// modules
+mod model;
+mod query;
 
 const HN_ALGOLIA_PREFIX: &str = "https://hn.algolia.com/api/v1";
 const HN_OFFICIAL_PREFIX: &str = "https://hacker-news.firebaseio.com/v0";
@@ -371,32 +373,70 @@ impl HNClient {
         Ok(response.into())
     }
 
-    pub fn get_article(url: &str) -> Result<Article> {
+    pub fn get_article(&self, url: &str) -> Result<Article> {
         let article_parse_command = &config::get_config().article_parse_command;
         let output = std::process::Command::new(&article_parse_command.command)
             .args(&article_parse_command.options)
             .arg(url)
-            .output()?;
+            .output();
 
-        if output.status.success() {
-            match serde_json::from_slice::<Article>(&output.stdout) {
-                Ok(mut article) => {
-                    // Replace a tab character by 4 spaces as it's possible
-                    // that the terminal cannot render the tab character.
-                    article.content = article.content.replace('\t', "    ");
+        match output {
+            Ok(output) => {
+                if output.status.success() {
+                    match serde_json::from_slice::<Article>(&output.stdout) {
+                        Ok(mut article) => {
+                            // Replace a tab character by 4 spaces as it's possible
+                            // that the terminal cannot render the tab character.
+                            article.content = article.content.replace('\t', "    ");
 
-                    article.url = url.to_string();
-                    Ok(article)
-                }
-                Err(err) => {
-                    let stdout = std::str::from_utf8(&output.stdout)?;
-                    warn!("failed to deserialize {} into an `Article` struct:", stdout);
-                    Err(anyhow::anyhow!(err))
+                            article.url = url.to_string();
+                            Ok(article)
+                        }
+                        Err(err) => {
+                            let stdout = std::str::from_utf8(&output.stdout)?;
+                            warn!("failed to deserialize {} into an `Article` struct:", stdout);
+                            Err(anyhow::anyhow!(err))
+                        }
+                    }
+                } else {
+                    let stderr = std::str::from_utf8(&output.stderr)?.to_string();
+                    Err(anyhow::anyhow!(stderr))
                 }
             }
-        } else {
-            let stderr = std::str::from_utf8(&output.stderr)?.to_string();
-            Err(anyhow::anyhow!(stderr))
+            Err(_) => {
+                // fallback to the `readable-readability` crate if the command fails
+                let html = self
+                    .client
+                    .get(url)
+                    .call()
+                    .with_context(|| "failed to get url")?
+                    .into_string()
+                    .with_context(|| "failed to turn the response into string")?;
+                let (nodes, metadata) = readable_readability::Readability::new()
+                    .base_url(url::Url::parse(url).with_context(|| "failed to parse url")?)
+                    .parse(&html);
+
+                let mut text = vec![];
+                nodes
+                    .serialize(&mut text)
+                    .with_context(|| "failed to serialize nodes")?;
+                let title = metadata
+                    .page_title
+                    .or(metadata.article_title)
+                    .unwrap_or("(no title)".to_string());
+                let content = std::str::from_utf8(&text)
+                    .with_context(|| "failed to turn the text into string")?
+                    .replace('\t', "    ")
+                    .to_string();
+
+                Ok(Article {
+                    title,
+                    content,
+                    author: metadata.byline,
+                    url: url.to_string(),
+                    date_published: None,
+                })
+            }
         }
     }
 

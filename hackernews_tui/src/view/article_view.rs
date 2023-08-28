@@ -98,7 +98,10 @@ impl ScrollViewContainer for ArticleView {
     }
 }
 
-fn construct_article_main_view(article: Article) -> OnEventView<ArticleView> {
+fn construct_article_main_view(
+    client: &'static client::HNClient,
+    article: Article,
+) -> OnEventView<ArticleView> {
     let is_suffix_key = |c: &Event| -> bool {
         let article_view_keymap = config::get_article_view_keymap();
         article_view_keymap.open_link_in_browser.has_event(c)
@@ -121,11 +124,11 @@ fn construct_article_main_view(article: Article) -> OnEventView<ArticleView> {
             };
             None
         })
-        .on_pre_event_inner(article_view_keymap.open_link_dialog, |s, _| {
+        .on_pre_event_inner(article_view_keymap.open_link_dialog, move |s, _| {
             Some(EventResult::with_cb({
                 let links = s.links.clone();
                 move |s| {
-                    s.add_layer(link_dialog::get_link_dialog(&links));
+                    s.add_layer(link_dialog::get_link_dialog(client, &links));
                 }
             }))
         })
@@ -140,10 +143,10 @@ fn construct_article_main_view(article: Article) -> OnEventView<ArticleView> {
         })
         .on_pre_event_inner(
             article_view_keymap.open_link_in_article_view,
-            |s, _| match s.raw_command.parse::<usize>() {
+            move |s, _| match s.raw_command.parse::<usize>() {
                 Ok(num) => {
                     s.raw_command.clear();
-                    utils::open_ith_link_in_article_view(&s.links, num)
+                    utils::open_ith_link_in_article_view(client, &s.links, num)
                 }
                 Err(_) => None,
             },
@@ -159,9 +162,9 @@ fn construct_article_main_view(article: Article) -> OnEventView<ArticleView> {
 }
 
 /// Construct an article view of an article
-pub fn construct_article_view(article: Article) -> impl View {
+pub fn construct_article_view(client: &'static client::HNClient, article: Article) -> impl View {
     let desc = format!("Article View - {}", article.title);
-    let main_view = construct_article_main_view(article).full_height();
+    let main_view = construct_article_main_view(client, article).full_height();
 
     let mut view = LinearLayout::vertical()
         .child(utils::construct_view_title_bar(&desc))
@@ -174,7 +177,11 @@ pub fn construct_article_view(article: Article) -> impl View {
 }
 
 /// Retrieve an article from a given `url` and construct an article view of that article
-pub fn construct_and_add_new_article_view(s: &mut Cursive, url: &str) {
-    let async_view = async_view::construct_article_view_async(s, url);
+pub fn construct_and_add_new_article_view(
+    client: &'static client::HNClient,
+    s: &mut Cursive,
+    url: &str,
+) {
+    let async_view = async_view::construct_article_view_async(client, s, url);
     s.screen_mut().add_transparent_layer(Layer::new(async_view))
 }

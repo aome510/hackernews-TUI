@@ -1,4 +1,5 @@
 use super::{article_view, comment_view, result_view::ResultView, story_view};
+use crate::client;
 use crate::prelude::*;
 use anyhow::Context;
 use cursive_aligned_view::Alignable;
@@ -51,25 +52,28 @@ pub fn construct_story_view_async(
     .full_screen()
 }
 
-pub fn construct_article_view_async(siv: &mut Cursive, article_url: &str) -> impl View {
+pub fn construct_article_view_async(
+    client: &'static client::HNClient,
+    siv: &mut Cursive,
+    article_url: &str,
+) -> impl View {
     let err_context = format!(
-        "Failed to execute the command:\n\
-         `{} {}`.\n\n\
-         Please make sure you have configured the `article_parse_command` option as described in the below link:\n\
+        "Failed to parse an article into readable text:\n\
+         `{}`.\n\n\
+         Please review your configuration as described in the below link, and try again\n\
          \"https://github.com/aome510/hackernews-TUI/blob/main/docs/config.md#article-parse-command\"",
-        config::get_config().article_parse_command,
         article_url);
 
     AsyncView::new_with_bg_creator(
         siv,
         {
             let article_url = article_url.to_owned();
-            move || Ok(client::HNClient::get_article(&article_url))
+            move || Ok(client::HNClient::get_article(client, &article_url))
         },
         move |result| {
             let err_context = err_context.clone();
             ResultView::new(result.with_context(|| err_context), |article| {
-                article_view::construct_article_view(article)
+                article_view::construct_article_view(client, article)
             })
         },
     )

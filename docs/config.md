@@ -38,9 +38,15 @@ An example config file (with some default config values) can be found in [exampl
 
 ### Article Parse Command
 
-To enable viewing an article's content in reader mode with `ArticleView`, user will need to install **additional** tools and specify the `article_parse_command` config option.
+`hackernews-TUI` will display an article's content in reader mode with `ArticleView`. To parse the article's content into a readable text, it will use a command in the following precedence: 
 
-An `article_parse_command` must be a command that returns result with the following schema:
+1. [`article_md`](https://github.com/aome510/article-md-cli) in your `$PATH`
+2. a command explicitly specified by `article_parse_command` option in your config file
+3. an integrated parser powered by [`readable-readability`](https://crates.io/crates/readable-readability) crate 
+
+Please note that if you want to use the integrated parser, you **must** uninstall (1) `article_md` from your `$PATH`, and (2) remove `article_parse_command` setting from your config file. There is no way to explicitly specify to use the integrated parser.
+
+You can specify another tool with the `article_parse_command` config option. An `article_parse_command` must be a command that returns result with the following schema:
 
 ```typescript
 type result_schema = {
@@ -52,15 +58,14 @@ type result_schema = {
 };
 ```
 
-The returned `content` **must** be a **HTML string** respresenting the article's content in reader mode.
-
-By default, `hackernews-TUI` uses [`article_md`](https://github.com/aome510/article-md-cli) as the default command for parsing articles.
+The returned `content` **must** be an **HTML string** representing the article's content in reader mode.
 
 One alternative is [`mercury-parser`](https://github.com/postlight/mercury-parser#installation):
 
 ```toml
 article_parse_command = { command = 'mercury-parser', options = [] }
 ```
+
 
 ## Theme
 
