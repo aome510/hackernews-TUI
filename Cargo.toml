@@ -1,2 +1,4 @@
 [workspace]
 members = ["hackernews_tui", "config_parser", "config_parser_derive"]
+
+resolver = "2"

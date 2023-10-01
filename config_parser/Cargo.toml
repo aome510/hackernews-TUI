@@ -1,6 +1,6 @@
 [package]
 name = "config_parser2"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["Thang Pham <phamducthang1234@gmail.com>"]
 edition = "2018"
 license = "MIT"
@@ -9,7 +9,7 @@ repository = "https://github.com/aome510/hackernews-TUI"
 keywords = ["config", "parser", "toml"]
 
 [dependencies]
-toml = "0.7.0"
-serde = { version = "1.0.152", features = ["derive"] }
-anyhow = "1.0.68"
-config_parser_derive = { version = "0.1.2", path = "../config_parser_derive" }
+toml = "0.8.1"
+serde = { version = "1.0.188", features = ["derive"] }
+anyhow = "1.0.75"
+config_parser_derive = { version = "0.1.3", path = "../config_parser_derive" }
