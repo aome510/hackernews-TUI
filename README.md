@@ -85,6 +85,12 @@ ln -sf $PWD/target/release/hackernews_tui /usr/local/bin
 
 to link the executable binary to `/usr/local/bin` folder.
 
+### Windows
+
+#### Via Scoop
+
+Run `scoop install hackernews-tui` to install the application.
+
 ### macOS
 
 #### Via MacPorts
