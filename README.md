@@ -37,7 +37,7 @@ Application's prebuilt binaries can be found in the [Releases Page](https://gith
 
 ### Using cargo
 
-Install the latest version from [crates.io](https://crates.io/crates/hackernews_tui) by running `cargo install hackernews_tui`.
+Install the latest version from [crates.io](https://crates.io/crates/hackernews_tui) by running `cargo install hackernews_tui --locked`.
 
 ### Docker image
 
