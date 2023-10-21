@@ -59,10 +59,10 @@ pub struct VoteData {
 }
 
 #[derive(Debug, Clone)]
-/// A HackerNews item which can be either a story or a comment.
+/// A Hacker News item which can be either a story or a comment.
 ///
-/// This struct is a shared representation between a story and
-/// a comment for rendering the item's content.
+/// This struct is a shared representation between a story and a comment
+/// and is used to render their content.
 pub struct HnItem {
     pub id: u32,
     pub level: usize,
@@ -107,19 +107,18 @@ impl From<Story> for HnItem {
             ),
         ]);
 
-        let mut story_text = story.content;
+        // parse story's HTML content
+        let result = parse_hn_html_text(story.content, Style::default(), 0);
 
-        let minimized_text = if story_text.is_empty() {
+        // construct a minimized text representing the collapsed story's content
+        let minimized_text = if result.content.source().is_empty() {
             metadata.clone()
         } else {
-            story_text = format!("\n{story_text}");
-
             utils::combine_styled_strings([metadata.clone(), StyledString::plain("... (more)")])
         };
 
-        let mut text = metadata;
-        let result = parse_hn_html_text(story_text, Style::default(), 0);
-        text.append(result.s);
+        let text =
+            utils::combine_styled_strings([metadata, StyledString::plain("\n"), result.content]);
 
         HnItem {
             id: story.id,
@@ -144,17 +143,20 @@ impl From<Comment> for HnItem {
             ),
         ]);
 
-        let mut text = utils::combine_styled_strings([metadata.clone(), StyledString::plain("\n")]);
+        // constructs a minimized text representing the collapsed comment's content
         let minimized_text = utils::combine_styled_strings([
-            metadata,
+            metadata.clone(),
             StyledString::styled(
                 format!("({} more)", comment.n_children + 1),
                 component_style.metadata,
             ),
         ]);
 
+        // parse the comment's content
         let result = parse_hn_html_text(comment.content, Style::default(), 0);
-        text.append(result.s);
+
+        let text =
+            utils::combine_styled_strings([metadata, StyledString::plain("\n"), result.content]);
 
         HnItem {
             id: comment.id,

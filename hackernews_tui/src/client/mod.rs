@@ -77,9 +77,7 @@ impl HNClient {
             format!("get item (id={item_id}) using {request_url}")
         );
 
-        // The item's text returned from HN official APIs may have `<p>` tags representing
-        // paragraph breaks. Convert `<p>` tags to newlines to make the text easier to read.
-        let text = decode_html(&item.text.unwrap_or_default()).replace("<p>", "\n\n");
+        let text = decode_html(&item.text.unwrap_or_default());
 
         // Construct the shortened text to represent the page's title if not exist
         let chars = text.replace('\n', " ").chars().collect::<Vec<_>>();
