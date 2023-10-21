@@ -24,16 +24,16 @@ static HN_TEXT_RE: Lazy<Regex> = Lazy::new(|| {
     .unwrap()
 });
 
-/// A HTML parsed result.
+/// Parsed result of a HTML text
 #[derive(Debug, Default)]
-pub struct HTMLParsedResult {
-    /// a styled string representing the decorated HTML content
-    pub s: StyledString,
+pub struct HTMLTextParsedResult {
+    /// parsed HTML content
+    pub content: StyledString,
     /// a list of links inside the HTML document
     pub links: Vec<String>,
 }
 
-/// A HTML table parsed result.
+/// Parsed result of a HTML table
 #[derive(Debug, Default)]
 pub struct HTMLTableParsedResult {
     /// a list of links inside the HTML document
@@ -44,9 +44,10 @@ pub struct HTMLTableParsedResult {
     pub rows: Vec<Vec<StyledString>>,
 }
 
-impl HTMLParsedResult {
-    pub fn merge(&mut self, mut other: HTMLParsedResult) {
-        self.s.append(other.s);
+impl HTMLTextParsedResult {
+    /// merge two HTML parsed results
+    pub fn merge(&mut self, mut other: HTMLTextParsedResult) {
+        self.content.append(other.content);
         self.links.append(&mut other.links);
     }
 }

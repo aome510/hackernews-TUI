@@ -24,7 +24,7 @@ impl ViewWrapper for ArticleView {
 
             match self.article.parse(self.width.saturating_sub(5)) {
                 Ok(result) => {
-                    self.set_article_content(result.s);
+                    self.set_article_content(result.content);
                     self.links = result.links;
                 }
                 Err(err) => {
