@@ -1,4 +1,4 @@
-use super::html::HTMLParsedResult;
+use super::html::HTMLTextParsedResult;
 use super::rcdom::{Handle, NodeData, RcDom};
 use crate::parser::html::HTMLTableParsedResult;
 use crate::prelude::*;
@@ -40,7 +40,7 @@ impl Article {
     /// # Arguments:
     /// * `max_width`: the maximum width of the parsed content. This is mostly used
     /// to construct a HTML table using `comfy_table`.
-    pub fn parse(&self, max_width: usize) -> Result<HTMLParsedResult> {
+    pub fn parse(&self, max_width: usize) -> Result<HTMLTextParsedResult> {
         debug!("parse article ({:?})", self);
 
         // parse HTML content into DOM node(s)
@@ -90,7 +90,7 @@ impl Article {
         base_link_id: usize,
         mut style: Style,
         mut args: ArticleParseArgs,
-    ) -> (HTMLParsedResult, bool) {
+    ) -> (HTMLTextParsedResult, bool) {
         // TODO: handle parsing <ol> tags correctly
 
         debug!(
@@ -98,13 +98,13 @@ impl Article {
             node, style, args
         );
 
-        let mut result = HTMLParsedResult::default();
+        let mut result = HTMLTextParsedResult::default();
         let mut suffix = StyledString::new();
 
         let mut visit_block_element_cb = || {
             if !args.is_first_element_in_block {
-                result.s.append_plain("\n\n");
-                result.s.append_styled(&args.prefix, style);
+                result.content.append_plain("\n\n");
+                result.content.append_styled(&args.prefix, style);
             }
             args.is_first_element_in_block = true;
         };
@@ -128,7 +128,7 @@ impl Article {
 
                 has_non_ws_text |= !text.trim().is_empty();
 
-                result.s.append_styled(text, style);
+                result.content.append_styled(text, style);
             }
             NodeData::Element {
                 ref name,
@@ -151,7 +151,9 @@ impl Article {
                         style = style.combine(component_style.header);
                     }
                     expanded_name!(html "br") => {
-                        result.s.append_styled(format!("\n{}", args.prefix), style);
+                        result
+                            .content
+                            .append_styled(format!("\n{}", args.prefix), style);
                     }
                     expanded_name!(html "p") => visit_block_element_cb(),
                     expanded_name!(html "code") => {
@@ -169,7 +171,7 @@ impl Article {
 
                         style = style.combine(component_style.multiline_code_block);
 
-                        result.s.append_styled("  ", style);
+                        result.content.append_styled("  ", style);
                     }
                     expanded_name!(html "blockquote") => {
                         visit_block_element_cb();
@@ -177,7 +179,7 @@ impl Article {
                         args.prefix = format!("{}▎ ", args.prefix);
                         style = style.combine(component_style.quote);
 
-                        result.s.append_styled("▎ ", style);
+                        result.content.append_styled("▎ ", style);
                     }
                     expanded_name!(html "table") => {
                         let mut table_result = HTMLTableParsedResult::default();
@@ -211,7 +213,7 @@ impl Article {
                             table.add_row(row.into_iter().map(|c| c.source().to_owned()));
                         }
 
-                        result.s.append_styled(format!("\n\n{table}"), style);
+                        result.content.append_styled(format!("\n\n{table}"), style);
 
                         return (result, true);
                     }
@@ -225,7 +227,7 @@ impl Article {
                         args.is_first_element_in_block = true;
 
                         result
-                            .s
+                            .content
                             .append_styled(format!("\n{}• ", args.prefix), style);
                     }
                     expanded_name!(html "img") => {
@@ -240,10 +242,12 @@ impl Article {
                         };
 
                         if !args.is_first_element_in_block {
-                            result.s.append_plain("\n\n");
+                            result.content.append_plain("\n\n");
                         }
-                        result.s.append_styled(&img_desc, style);
-                        result.s.append_styled(" (image)", component_style.metadata);
+                        result.content.append_styled(&img_desc, style);
+                        result
+                            .content
+                            .append_styled(" (image)", component_style.metadata);
                     }
                     expanded_name!(html "a") => {
                         // find `href` attribute of an <a> tag
@@ -291,7 +295,7 @@ impl Article {
             }
         });
 
-        result.s.append(suffix);
+        result.content.append(suffix);
         (result, has_non_ws_text)
     }
 
@@ -331,7 +335,7 @@ impl Article {
                         );
 
                         result.links.append(&mut child_result.links);
-                        s.append(child_result.s);
+                        s.append(child_result.content);
                     });
 
                     if !is_header {
