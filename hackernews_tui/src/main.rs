@@ -130,6 +130,9 @@ fn init_auth(auth_file_str: &str) -> Option<config::Auth> {
 }
 
 fn main() {
+    let d = ureq::head("https://google.com").call().unwrap();
+    println!("{d:?}");
+
     let (config_dir, cache_dir) = init_app_dirs();
     let args = parse_args(config_dir, cache_dir);
 
