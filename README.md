@@ -273,7 +273,7 @@ User can also specify the path to config file when running the application with 
 hackernews_tui -c ~/.config/hn-tui.toml
 ```
 
-For further information about the application's configurations, please refer to the [example config file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml) and the [config documentation](https://github.com/aome510/hackernews-TUI/blob/main/config.md).
+For further information about the application's configurations, please refer to the [example config file](https://github.com/aome510/hackernews-TUI/blob/main/examples/hn-tui.toml) and the [config documentation](https://github.com/aome510/hackernews-TUI/blob/main/docs/config.md).
 
 ## Authentication
 
