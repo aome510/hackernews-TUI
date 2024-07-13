@@ -62,7 +62,6 @@ pub struct StoryResponse {
 #[derive(Debug, Deserialize)]
 /// ItemResponse represents the item data received from the official HackerNews APIs
 pub struct ItemResponse {
-    pub id: u32,
     pub by: Option<String>,
     pub text: Option<String>,
     pub title: Option<String>,
