@@ -39,7 +39,7 @@ impl Article {
     ///
     /// # Arguments:
     /// * `max_width`: the maximum width of the parsed content. This is mostly used
-    /// to construct a HTML table using `comfy_table`.
+    ///    to construct a HTML table using `comfy_table`.
     pub fn parse(&self, max_width: usize) -> Result<HTMLTextParsedResult> {
         debug!("parse article ({:?})", self);
 
