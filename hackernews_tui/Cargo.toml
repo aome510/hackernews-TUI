@@ -20,8 +20,8 @@ cursive_buffered_backend = "0.6.1"
 cursive-aligned-view = "0.6.0"
 
 # html5ever related deps
-html5ever = "0.26.0"
-markup5ever = "0.11.0"
+html5ever = "0.27.0"
+markup5ever = "0.12.1"
 tendril = "0.4.3"
 
 # internal article view dep
@@ -29,25 +29,25 @@ readable-readability = "0.4.0"
 
 # tracing/log related deps
 tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
-log = "0.4.20"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+log = "0.4.22"
 
 # serde related deps
-serde = { version = "1.0.189", features = ["derive"] }
-serde_json = "1.0.107"
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = "1.0.120"
 
 # others
-ureq = { version = "2.8.0", features = ["json", "cookies"] }
-anyhow = "1.0.75"
-rayon = "1.8.0"
-regex = "1.10.2"
-once_cell = "1.18.0"
-toml = "0.8.2"
-clap = { version = "4.4.6", features = ["string"] }
+ureq = { version = "2.10.0", features = ["json", "cookies"] }
+anyhow = "1.0.86"
+rayon = "1.10.0"
+regex = "1.10.5"
+once_cell = "1.19.0"
+toml = "0.8.14"
+clap = { version = "4.5.8", features = ["string"] }
 dirs-next = "2.0.0"
-url = "2.4.1"
+url = "2.5.2"
 config_parser2 = { version = "0.1.5", path = "../config_parser" }
-crossbeam-channel = "0.5.8"
-unicode-width = "0.1.11"
-comfy-table = "7.1.0"
+crossbeam-channel = "0.5.13"
+unicode-width = "0.1.13"
+comfy-table = "7.1.1"
 html-escape = "0.2.13"
