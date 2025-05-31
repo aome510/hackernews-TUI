@@ -246,7 +246,7 @@ impl HNClient {
     /// Reorder a list of stories to follow the same order as another list of story IDs.
     ///
     /// Needs to do this because stories returned by Algolia APIs are sorted by `points`,
-    /// reoder those stories to match the list shown up in the HackerNews website,
+    /// reorder those stories to match the list shown up in the HackerNews website,
     /// which has the same order as the list of IDs returned from the official API.
     fn reorder_stories_based_on_ids(&self, stories: Vec<Story>, ids: &[u32]) -> Vec<Story> {
         let mut stories = stories;
@@ -326,7 +326,7 @@ impl HNClient {
 
     /// Get a list of stories filtering on a specific tag.
     ///
-    /// Depending on the specifed `sort_mode`, stories are retrieved based on
+    /// Depending on the specified `sort_mode`, stories are retrieved based on
     /// the Algolia API or a combination of Algolia API and the Official API.
     pub fn get_stories_by_tag(
         &self,

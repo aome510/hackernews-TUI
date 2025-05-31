@@ -111,7 +111,7 @@ fn init_app_dirs() -> (std::path::PathBuf, std::path::PathBuf) {
     let home_dir = dirs_next::home_dir().expect("failed to get user's home dir");
 
     // Try to find application's config file in the user's config dir.
-    // If not found, fallback to use `$HOME/.config` (for backward compability reason)
+    // If not found, fallback to use `$HOME/.config` (for backward compatibility reason)
     if !config_dir.join(DEFAULT_CONFIG_FILE).exists() {
         config_dir = home_dir.join(".config");
     }

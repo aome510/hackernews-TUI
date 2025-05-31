@@ -120,7 +120,7 @@ impl Article {
                     content.replace('\n', &format!("\n{}", args.prefix))
                 } else {
                     // Otherwise, consecutive whitespaces are ignored for non-pre elements.
-                    // This is to prevent reader-mode engine from adding unneccesary line wraps/indents in a paragraph.
+                    // This is to prevent reader-mode engine from adding unnecessary line wraps/indents in a paragraph.
                     WS_RE.replace_all(&content, " ").to_string()
                 };
                 let text = decode_html(&text);
