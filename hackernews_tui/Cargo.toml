@@ -37,7 +37,7 @@ serde = { version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.120"
 
 # others
-ureq = { version = "2.10.0", features = ["json", "cookies"] }
+ureq = { version = "2.10.0", features = ["json", "cookies", "proxy-from-env", "socks-proxy"] }
 anyhow = "1.0.86"
 rayon = "1.10.0"
 regex = "1.10.5"
