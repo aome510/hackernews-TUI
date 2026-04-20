@@ -394,11 +394,11 @@ impl HasHelpView for comment_view::CommentView {
                 vec![
                     Command::new(
                         comment_view_keymap.open_article_in_browser.to_string(),
-                        "Open in browser the dicussed article",
+                        "Open in browser the discussed article",
                     ),
                     Command::new(
                         comment_view_keymap.open_article_in_article_view.to_string(),
-                        "Open in article view the dicussed article",
+                        "Open in article view the discussed article",
                     ),
                     Command::new(
                         comment_view_keymap.open_story_in_browser.to_string(),

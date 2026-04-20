@@ -303,7 +303,7 @@ By default, the application creates the `hn-tui.log` log file inside the [user's
   - [x] front-page stories like the official site
   - [ ] real-time updating
 - [x] implement smarter lazy-loading comment functionality
-- add crediential support to allow
+- add credential support to allow
   - [x] authentication
   - [x] upvote/downvote
   - [ ] add comment
