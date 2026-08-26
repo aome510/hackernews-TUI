@@ -145,9 +145,9 @@ impl Default for ComponentStyle {
 
 #[derive(Default, Clone, Copy, Debug, Deserialize)]
 pub struct Style {
-    front: Option<Color>,
-    back: Option<Color>,
-    effect: Option<Effect>,
+    pub(super) front: Option<Color>,
+    pub(super) back: Option<Color>,
+    pub(super) effect: Option<Effect>,
 }
 
 config_parser_impl!(Style);

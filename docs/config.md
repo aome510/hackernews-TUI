@@ -11,6 +11,7 @@ An example config file (with some default config values) can be found in [exampl
 - [General](#general)
   - [Article Parse Command](#article-parse-command)
 - [Theme](#theme)
+  - [System Theme](#system-theme)
   - [Default Theme](#default-theme)
   - [Palette](#palette)
   - [Component Style](#component-style)
@@ -24,6 +25,7 @@ An example config file (with some default config values) can be found in [exampl
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
 | `use_page_scrolling`    | whether to enable page-like scrolling behavior, which automatically adjusts the view based on the scrolling direction | `true`                                                       |
 | `use_pacman_loading`    | whether to use a pacman loading screen or a plain loading screen                                                      | `true`                                                       |
+| `follow_system_theme`   | whether to derive the application's theme from the system's color scheme, see [System Theme](#system-theme)            | `true`                                                       |
 | `url_open_command`      | the command the application uses to open an url in browser                                                            | See [notes](#notes) [1]                                      |
 | `article_parse_command` | the command the application uses to parse an article into a readable text                                             | `{ command = 'article_md', options = ['--format', 'html'] }` |
 | `client_timeout`        | the timeout (in seconds) when the application's client makes an API request                                           | `32`                                                         |
@@ -73,6 +75,27 @@ An application's theme has two components:
 
 1. `palette`: the theme's color palette
 2. `component_style`: styles for application's components
+
+### System Theme
+
+On [Omarchy](https://omarchy.org), the application follows the system's color scheme by
+default: it reads the palette of the currently applied theme from
+`$XDG_STATE_HOME/omarchy/current/theme/colors.toml` (`$HOME/.local/state/...` by default)
+and derives both the `palette` and the `component_style` from it. The palette is resolved
+the same way Omarchy resolves it for terminal emulators, so the application's colors match
+the rest of the system.
+
+The system's colors are applied *before* the user's config file, so any `theme` option
+specified in the config file takes precedence over them. To ignore the system's color
+scheme altogether and use the [default theme](#default-theme) as the base:
+
+```toml
+follow_system_theme = false
+```
+
+The theme is read on startup, so the application needs to be restarted to pick up a
+`omarchy theme set`. On a system that doesn't expose such a color scheme, this option has
+no effect.
 
 ### Default theme
 
