@@ -1,5 +1,6 @@
 // modules
 mod keybindings;
+mod omarchy;
 mod theme;
 
 // re-export
@@ -14,6 +15,7 @@ use serde::Deserialize;
 pub struct Config {
     pub use_page_scrolling: bool,
     pub use_pacman_loading: bool,
+    pub follow_system_theme: bool,
     pub client_timeout: u64,
     pub url_open_command: Command,
     pub article_parse_command: Command,
@@ -38,8 +40,26 @@ impl Config {
         let config_str = std::fs::read_to_string(file)?;
         let value = toml::from_str::<toml::Value>(&config_str)?;
         let mut config = Self::default();
+
+        // the system's color scheme is applied *before* parsing the config file so that
+        // the theme options specified by the user take precedence over the system's colors
+        if value
+            .get("follow_system_theme")
+            .and_then(toml::Value::as_bool)
+            .unwrap_or(config.follow_system_theme)
+        {
+            config.apply_system_theme();
+        }
+
         config.parse(value)?;
         Ok(config)
+    }
+
+    /// Uses the system's color scheme, if there is one, as the application's theme
+    fn apply_system_theme(&mut self) {
+        if let Some(theme) = omarchy::get_system_theme() {
+            self.theme = theme;
+        }
     }
 }
 
@@ -48,6 +68,7 @@ impl Default for Config {
         Config {
             use_page_scrolling: true,
             use_pacman_loading: true,
+            follow_system_theme: true,
             #[cfg(all(unix, not(target_os = "macos")))]
             url_open_command: Command {
                 command: "xdg-open".to_string(),
@@ -112,7 +133,11 @@ pub fn load_config(config_file_str: &str) {
                 "failed to load configurations from the file {config_file_str}: {err:#}\
                  \nUse the default configurations instead",
             );
-            Config::default()
+            let mut config = Config::default();
+            if config.follow_system_theme {
+                config.apply_system_theme();
+            }
+            config
         }
         Ok(config) => config,
     };
